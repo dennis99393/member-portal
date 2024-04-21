@@ -1,10 +1,11 @@
 package org.dallasmakerspace.thymeleaf.server.plugins
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.response.*
-import io.ktor.server.thymeleaf.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.respond
+import io.ktor.server.thymeleaf.ThymeleafContent
 
 fun Application.configureStatusPages() {
   install(StatusPages) {

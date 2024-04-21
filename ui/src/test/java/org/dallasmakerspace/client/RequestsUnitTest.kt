@@ -1,17 +1,20 @@
 package org.dallasmakerspace.client
 
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.auth.*
-import io.ktor.client.plugins.auth.providers.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.jackson.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
+import io.ktor.client.plugins.auth.providers.basic
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.serialization.jackson.jackson
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -87,7 +90,7 @@ class RequestsUnitTest {
     runBlocking {
       try {
         client.get("/this-does-not-exist")
-      } catch (exception: ClientRequestException) {
+      } catch (ignored: ClientRequestException) {
         return@runBlocking
       }
       fail("Did not throw an exception!")
@@ -114,18 +117,5 @@ class RequestsUnitTest {
     runBlocking {
       with(noAuthClient.get("/cars")) { assertEquals(HttpStatusCode.Unauthorized, status) }
     }
-  }
-
-  private fun startEmbeddedServer(): NettyApplicationEngine {
-    val env = applicationEngineEnvironment {
-      module {}
-      connector {
-        host = "0.0.0.0"
-        port = 8080
-      }
-    }
-    val server = embeddedServer(Netty, env)
-    server.start(false)
-    return server
   }
 }

@@ -43,6 +43,7 @@ plugins {
   id("io.ktor.plugin") version "2.3.5"
   id("org.jetbrains.kotlinx.kover") version "0.7.6"
   id("com.ncorti.ktfmt.gradle") version "0.18.0"
+  id("io.gitlab.arturbosch.detekt") version "1.23.6"
 }
 
 application {

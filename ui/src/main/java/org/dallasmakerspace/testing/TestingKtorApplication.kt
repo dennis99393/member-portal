@@ -1,7 +1,7 @@
 package org.dallasmakerspace.testing
 
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import org.dallasmakerspace.testing.plugins.configureRouting
 
 fun main() {

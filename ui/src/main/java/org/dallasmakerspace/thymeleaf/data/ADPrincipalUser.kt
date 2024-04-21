@@ -1,6 +1,6 @@
 package org.dallasmakerspace.thymeleaf.data
 
-import io.ktor.server.auth.*
+import io.ktor.server.auth.Principal
 import kotlinx.serialization.Serializable
 
 @Serializable

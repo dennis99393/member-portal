@@ -1,6 +1,6 @@
 package org.dallasmakerspace.thymeleaf.data
 
-import io.ktor.http.*
+import io.ktor.http.Parameters
 
 object DataHolder {
 
