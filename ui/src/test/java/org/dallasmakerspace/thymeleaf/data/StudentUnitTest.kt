@@ -9,44 +9,48 @@ class StudentUnitTest {
 
   @Test
   fun `when fullName is called then should return firstName and lastName`() {
-    val student = Student(
-        id = "1",
-        firstName = "John",
-        lastName = "Doe",
-        gradeList = ArrayList(),
-    )
+    val student =
+        Student(
+            id = "1",
+            firstName = "John",
+            lastName = "Doe",
+            gradeList = ArrayList(),
+        )
 
     assertEquals("John Doe", student.fullName)
   }
 
   @Test
   fun `when hasAllGrades is called then should return true if all grades are filled`() {
-    val student = Student(
-        id = "1",
-        firstName = "John",
-        lastName = "Doe",
-        gradeList = listOf(
-            Grade(id = "1", subject = "Reading", gradeValue = GradeValue.A),
-            Grade(id = "2", subject = "Writing", gradeValue = GradeValue.A),
-        ),
-    )
+    val student =
+        Student(
+            id = "1",
+            firstName = "John",
+            lastName = "Doe",
+            gradeList =
+                listOf(
+                    Grade(id = "1", subject = "Reading", gradeValue = GradeValue.A),
+                    Grade(id = "2", subject = "Writing", gradeValue = GradeValue.A),
+                ),
+        )
 
     assertTrue(student.hasAllGrades)
   }
 
   @Test
   fun `when hasAllGrades is called then should return false if some grade value is null`() {
-    val student = Student(
-        id = "1",
-        firstName = "John",
-        lastName = "Doe",
-        gradeList = listOf(
-            Grade(id = "1", subject = "Reading", gradeValue = GradeValue.A),
-            Grade(id = "2", subject = "Writing"),
-        ),
-    )
+    val student =
+        Student(
+            id = "1",
+            firstName = "John",
+            lastName = "Doe",
+            gradeList =
+                listOf(
+                    Grade(id = "1", subject = "Reading", gradeValue = GradeValue.A),
+                    Grade(id = "2", subject = "Writing"),
+                ),
+        )
 
     assertFalse(student.hasAllGrades)
   }
-
 }

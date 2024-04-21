@@ -11,15 +11,15 @@ import org.dallasmakerspace.testing.data.CarStorageMock
 fun Application.configureRouting() {
   routing {
     route("cars") {
-      get {
-        call.respond(CarStorageMock.carStorage)
-      }
+      get { call.respond(CarStorageMock.carStorage) }
       get("{id?}") {
         val id = call.parameters["id"]
-        val car = CarStorageMock.carStorage.find { it.id == id } ?: return@get call.respondText(
-            text = "car.not.found",
-            status = HttpStatusCode.NotFound,
-        )
+        val car =
+            CarStorageMock.carStorage.find { it.id == id }
+                ?: return@get call.respondText(
+                    text = "car.not.found",
+                    status = HttpStatusCode.NotFound,
+                )
         call.respond(car)
       }
       post {
@@ -29,10 +29,12 @@ fun Application.configureRouting() {
       }
       put("{id?}") {
         val id = call.parameters["id"]
-        val car = CarStorageMock.carStorage.find { it.id == id } ?: return@put call.respondText(
-            text = "car.not.found",
-            status = HttpStatusCode.NotFound,
-        )
+        val car =
+            CarStorageMock.carStorage.find { it.id == id }
+                ?: return@put call.respondText(
+                    text = "car.not.found",
+                    status = HttpStatusCode.NotFound,
+                )
         val carUpdate = call.receive<Car>()
         car.brand = carUpdate.brand
         car.price = carUpdate.price

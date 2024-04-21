@@ -1,10 +1,10 @@
 package org.dallasmakerspace.thymeleaf.data
 
 data class Student(
-  val id: String,
-  val firstName: String,
-  val lastName: String,
-  val gradeList: List<Grade>,
+    val id: String,
+    val firstName: String,
+    val lastName: String,
+    val gradeList: List<Grade>,
 ) {
   val fullName: String
     get() = "$firstName $lastName"

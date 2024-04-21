@@ -5,7 +5,5 @@ import io.ktor.server.netty.*
 import org.dallasmakerspace.testing.plugins.configureRouting
 
 fun main() {
-  embeddedServer(Netty, port = 8000, host = "0.0.0.0") {
-    configureRouting()
-  }.start(wait = true)
+  embeddedServer(Netty, port = 8000, host = "0.0.0.0") { configureRouting() }.start(wait = true)
 }

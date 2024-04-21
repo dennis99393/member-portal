@@ -1,6 +1,7 @@
 package org.dallasmakerspace.client
 
-const val CARS = """
+const val CARS =
+    """
     [
         {
             "id": 0,
@@ -15,17 +16,18 @@ const val CARS = """
     ]
 """
 
-val DRIVERS = listOf(
-    """
+val DRIVERS =
+    listOf(
+        """
         {
             "id": 0,
             "name": "John"
         }
     """,
-    """
+        """
         {
             "id": 1,
             "name": "Mike"
         }
     """,
-)
+    )

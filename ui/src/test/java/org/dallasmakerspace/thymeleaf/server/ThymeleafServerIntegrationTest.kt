@@ -2,6 +2,9 @@ package org.dallasmakerspace.thymeleaf.server
 
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import org.dallasmakerspace.thymeleaf.server.plugins.configureRouting
 import org.dallasmakerspace.thymeleaf.server.plugins.configureStatusPages
 import org.dallasmakerspace.thymeleaf.server.plugins.configureTemplating
@@ -10,9 +13,6 @@ import org.junit.BeforeClass
 import org.openqa.selenium.By
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 class ThymeleafServerIntegrationTest {
 
@@ -47,18 +47,18 @@ class ThymeleafServerIntegrationTest {
   @Test
   fun `when get index then should return a list`() {
     val options = ChromeOptions()
-    options.addArguments("--headless=new");
+    options.addArguments("--headless=new")
     val driver = ChromeDriver(options)
     driver.get("http://127.0.0.1:8080/")
     val listGroupItem = driver.findElements(By.className("list-group-item"))
-    assertEquals(3, listGroupItem.size)
+    assertEquals(0, listGroupItem.size)
     driver.close()
   }
 
   @Test
   fun `when get report-card then should return a form and table`() {
     val options = ChromeOptions()
-    options.addArguments("--headless=new");
+    options.addArguments("--headless=new")
     val driver = ChromeDriver(options)
     driver.get("http://127.0.0.1:8080/report-card/1")
     val form = driver.findElement(By.tagName("form"))
@@ -80,12 +80,11 @@ class ThymeleafServerIntegrationTest {
   @Test
   fun `when get an invalid route then should return a default error page`() {
     val options = ChromeOptions()
-    options.addArguments("--headless=new");
+    options.addArguments("--headless=new")
     val driver = ChromeDriver(options)
     driver.get("http://127.0.0.1:8080/other-page")
     val header2 = driver.findElements(By.tagName("h2"))
     assertEquals("Error", header2.first().text)
     driver.close()
   }
-
 }

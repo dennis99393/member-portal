@@ -8,13 +8,13 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.testing.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import org.dallasmakerspace.testing.data.Car
 import org.dallasmakerspace.testing.data.CarStorageMock
 import org.dallasmakerspace.testing.plugins.configureContentNegotiation
 import org.dallasmakerspace.testing.plugins.configureRouting
 import org.junit.Before
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class CarRouteTests {
 
@@ -77,10 +77,11 @@ class CarRouteTests {
   fun `when post cars then should create a car and return it`() = testApplication {
     val client = configureServerAndGetClient()
 
-    val response = client.post("/cars") {
-      contentType(ContentType.Application.Json)
-      setBody(Car(id = "2", brand = "Audi", price = 11_000.0))
-    }
+    val response =
+        client.post("/cars") {
+          contentType(ContentType.Application.Json)
+          setBody(Car(id = "2", brand = "Audi", price = 11_000.0))
+        }
     val responseBody: Car = response.body()
 
     assertEquals(HttpStatusCode.Created, response.status)
@@ -95,10 +96,11 @@ class CarRouteTests {
 
     CarStorageMock.carStorage.add(Car(id = "1", brand = "BMW", price = 10_000.0))
 
-    val response = client.put("/cars/1") {
-      contentType(ContentType.Application.Json)
-      setBody(Car(id = "1", brand = "Audi", price = 11_000.0))
-    }
+    val response =
+        client.put("/cars/1") {
+          contentType(ContentType.Application.Json)
+          setBody(Car(id = "1", brand = "Audi", price = 11_000.0))
+        }
     val responseBody: Car = response.body()
 
     assertEquals(HttpStatusCode.OK, response.status)
@@ -113,10 +115,11 @@ class CarRouteTests {
 
     CarStorageMock.carStorage.add(Car(id = "1", brand = "BMW", price = 10_000.0))
 
-    val response = client.put("/cars/2") {
-      contentType(ContentType.Application.Json)
-      setBody(Car(id = "1", brand = "Audi", price = 11_000.0))
-    }
+    val response =
+        client.put("/cars/2") {
+          contentType(ContentType.Application.Json)
+          setBody(Car(id = "1", brand = "Audi", price = 11_000.0))
+        }
 
     val responseText = response.bodyAsText()
 
@@ -150,7 +153,6 @@ class CarRouteTests {
 
     assertEquals(HttpStatusCode.NotFound, response.status)
     assertEquals("car.not.found", responseText)
-
   }
 
   private fun ApplicationTestBuilder.configureServerAndGetClient(): HttpClient {
@@ -158,12 +160,7 @@ class CarRouteTests {
       configureRouting()
       configureContentNegotiation()
     }
-    val client = createClient {
-      install(ContentNegotiation) {
-        jackson()
-      }
-    }
+    val client = createClient { install(ContentNegotiation) { jackson() } }
     return client
   }
-
 }

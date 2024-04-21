@@ -16,5 +16,4 @@ enum class GradeValue(val displayValue: String) {
   D_MINUS("D-"),
   F("F"),
   EMPTY("")
-
 }

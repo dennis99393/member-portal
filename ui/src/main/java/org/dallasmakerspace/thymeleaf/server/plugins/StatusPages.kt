@@ -9,7 +9,9 @@ import io.ktor.server.thymeleaf.*
 fun Application.configureStatusPages() {
   install(StatusPages) {
     status(HttpStatusCode.NotFound) { call, status ->
-      call.respond(status = status, ThymeleafContent("error404", mapOf("message" to "Sorry! Page was not found.")))
+      call.respond(
+          status = status,
+          ThymeleafContent("error404", mapOf("message" to "Sorry! Page was not found.")))
     }
   }
 }

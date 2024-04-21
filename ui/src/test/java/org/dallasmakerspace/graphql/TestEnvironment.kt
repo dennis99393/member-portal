@@ -10,7 +10,8 @@ import io.ktor.server.testing.*
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-const val OBJECT_BY_ID_TEST_QUERY = """
+const val OBJECT_BY_ID_TEST_QUERY =
+    """
     {
         objectById(id: 0) {
             id
@@ -20,12 +21,9 @@ const val OBJECT_BY_ID_TEST_QUERY = """
 
 fun graphQlTestEnvironment(testFunction: suspend (HttpClient) -> Unit) {
   testApplication {
-    application {
-    }
+    application {}
     val client = createClient {
-      install(ContentNegotiation) {
-        json()
-      }
+      install(ContentNegotiation) { json() }
       install(WebSockets)
     }
     testFunction(client)

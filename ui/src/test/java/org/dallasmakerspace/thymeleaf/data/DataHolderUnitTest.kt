@@ -27,13 +27,15 @@ class DataHolderUnitTest {
 
   @Test
   fun `when updateGrades is called  then should update grades for a specific Student`() {
-    val parameters = ParametersBuilder()
-        .apply {
-          append("1", "A")
-          append("2", "B")
-          append("3", "C")
-          append("4", "D")
-        }.build()
+    val parameters =
+        ParametersBuilder()
+            .apply {
+              append("1", "A")
+              append("2", "B")
+              append("3", "C")
+              append("4", "D")
+            }
+            .build()
 
     DataHolder.updateGrades("1", parameters)
 
@@ -44,5 +46,4 @@ class DataHolderUnitTest {
     assertEquals(GradeValue.C, student.gradeList.first { it.id == "3" }.gradeValue)
     assertEquals(GradeValue.D, student.gradeList.first { it.id == "4" }.gradeValue)
   }
-
 }

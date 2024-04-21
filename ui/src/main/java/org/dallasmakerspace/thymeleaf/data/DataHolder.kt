@@ -9,40 +9,38 @@ object DataHolder {
   fun findStudentById(id: String?) = getStudentList().first { student -> student.id == id }
 
   fun updateGrades(studentId: String?, parameters: Parameters) {
-    findStudentById(studentId)
-        .gradeList.forEach { grade ->
-          grade.apply {
-            gradeValue = parameters[grade.id]?.let { GradeValue.valueOf(it) }
-          }
-        }
+    findStudentById(studentId).gradeList.forEach { grade ->
+      grade.apply { gradeValue = parameters[grade.id]?.let { GradeValue.valueOf(it) } }
+    }
   }
 
-  private val studentsList = listOf(
-      Student(
-          id = "1",
-          firstName = "Michael",
-          lastName = "Smith",
-          gradeList = createGradeList(),
-      ),
-      Student(
-          id = "2",
-          firstName = "Mary",
-          lastName = "Johnson",
-          gradeList = createGradeList(),
-      ),
-      Student(
-          id = "3",
-          firstName = "John",
-          lastName = "Doe",
-          gradeList = createGradeList(),
-      ),
-  )
+  private val studentsList =
+      listOf(
+          Student(
+              id = "1",
+              firstName = "Michael",
+              lastName = "Smith",
+              gradeList = createGradeList(),
+          ),
+          Student(
+              id = "2",
+              firstName = "Mary",
+              lastName = "Johnson",
+              gradeList = createGradeList(),
+          ),
+          Student(
+              id = "3",
+              firstName = "John",
+              lastName = "Doe",
+              gradeList = createGradeList(),
+          ),
+      )
 
-  private fun createGradeList() = listOf(
-      Grade(id = "1", subject = "Reading"),
-      Grade(id = "2", subject = "Writing"),
-      Grade(id = "3", subject = "Science"),
-      Grade(id = "4", subject = "Mathematics"),
-  )
-
+  private fun createGradeList() =
+      listOf(
+          Grade(id = "1", subject = "Reading"),
+          Grade(id = "2", subject = "Writing"),
+          Grade(id = "3", subject = "Science"),
+          Grade(id = "4", subject = "Mathematics"),
+      )
 }

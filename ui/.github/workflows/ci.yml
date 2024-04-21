@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    name: Build, Test, and Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '20'
+
+      - name: Run ktfmtCheck
+        run: ./gradlew ktfmtCheck
+
+      - name: Run Tests and Coverage
+        run: |
+          ./gradlew test
+
+      - name: Generate kover coverage report
+        run: ./gradlew koverXmlReport
+
+      - name: Add coverage report to PR
+        id: kover
+        uses: mi-kas/kover-report@v1
+        with:
+          path: |
+            ${{ github.workspace }}/build/reports/kover/report.xml
+          title: Code Coverage
+          update-comment: true
+          min-coverage-overall: 50
+          min-coverage-changed-files: 50
+          coverage-counter-type: LINE

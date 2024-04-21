@@ -15,9 +15,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
+import java.io.File
 import org.dallasmakerspace.thymeleaf.data.DataHolder
 import org.dallasmakerspace.thymeleaf.data.GradeValue
-import java.io.File
 
 fun Application.configureRouting() {
   install(Sessions) { cookie<UserSession>("user_session", SessionStorageMemory()) }
@@ -41,11 +41,12 @@ fun Application.configureRouting() {
             requestMethod = HttpMethod.Post,
             clientId = "member-profile",
             clientSecret = "dummy-secret-for-dev-mode",
-            defaultScopes = listOf("openid", "profile", "email"),)
+            defaultScopes = listOf("openid", "profile", "email"),
+        )
       }
       client = httpClient
     }
-    session<UserSession> ("auth_session") {
+    session<UserSession>("auth_session") {
       validate { session ->
         if (session.accessToken != null) {
           session
@@ -53,18 +54,13 @@ fun Application.configureRouting() {
           null
         }
       }
-      challenge {
-        call.respondRedirect("/login", permanent = false)
-      }
+      challenge { call.respondRedirect("/login", permanent = false) }
     }
   }
 
   routing {
     authenticate("DMS") {
-
-      get("/login") {
-        call.respondRedirect("/", permanent = false)
-      }
+      get("/login") { call.respondRedirect("/", permanent = false) }
 
       get("/oidc-callback") {
         val principal: OAuthAccessTokenResponse.OAuth2? = call.authentication.principal()
@@ -73,7 +69,7 @@ fun Application.configureRouting() {
           return@get
         }
         val session = call.sessions.getOrSet { UserSession() }
-        session.accessToken = principal.accessToken.toString()
+        session.accessToken = principal.accessToken
         session.idHint = principal.extraParameters["id_token"]
 
         call.respondRedirect("/", permanent = false)
@@ -87,9 +83,6 @@ fun Application.configureRouting() {
         // Get the JSON response and convert it to a map needed for Thymeleaf
         val jsonMap = getUserInfo(httpClient, session)
 
-        // Save the user info in the session
-        //call.sessions.set(session.copy(adPrincipalUser = jsonMap))
-        // session.adPrincipalUser = jsonMap//ADPrincipalUser.fromMap(jsonMap)
         call.respond(ThymeleafContent("index", jsonMap ?: mapOf()))
         return@get
       }
@@ -104,8 +97,6 @@ fun Application.configureRouting() {
       }
       call.respond(ThymeleafContent("profile", getUserInfo(httpClient, session) ?: mapOf()))
     }
-
-
 
     get("/report-card/{id}") {
       call.respond(
@@ -127,15 +118,11 @@ fun Application.configureRouting() {
   }
 }
 
-private suspend fun getUserInfo(
-  httpClient: HttpClient,
-  session: UserSession
-): Map<String, Any> {
-  val resp = httpClient.get("http://localhost:8080/realms/DMS/protocol/openid-connect/userinfo") {
-    headers {
-      append(HttpHeaders.Authorization, "Bearer ${session.accessToken}")
-    }
-  }
+private suspend fun getUserInfo(httpClient: HttpClient, session: UserSession): Map<String, Any> {
+  val resp =
+      httpClient.get("http://localhost:8080/realms/DMS/protocol/openid-connect/userinfo") {
+        headers { append(HttpHeaders.Authorization, "Bearer ${session.accessToken}") }
+      }
   if (resp.status.isSuccess()) {
     return resp.body<Map<String, Any>>()
   }
@@ -143,7 +130,7 @@ private suspend fun getUserInfo(
 }
 
 data class UserSession(
-  var accessToken: String? = null,
-  var idHint: String? = null,
-  var adPrincipalUser: Map<String, Any> = mapOf()//ADPrincipalUser? = null
+    var accessToken: String? = null,
+    var idHint: String? = null,
+    var adPrincipalUser: Map<String, Any> = mapOf() // ADPrincipalUser? = null
 ) : Principal

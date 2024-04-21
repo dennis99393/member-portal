@@ -12,38 +12,30 @@ import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import kotlinx.coroutines.runBlocking
-import org.junit.AfterClass
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import kotlinx.coroutines.runBlocking
+import org.junit.AfterClass
 
 class RequestsUnitTest {
 
   companion object {
 
-    private val client = HttpClient(mockEngine) {
-      expectSuccess = true
-      install(ContentNegotiation) {
-        jackson()
-      }
-      install(Auth) {
-        basic {
-          credentials {
-            BasicAuthCredentials(username = "baeldung", password = "baeldung")
+    private val client =
+        HttpClient(mockEngine) {
+          expectSuccess = true
+          install(ContentNegotiation) { jackson() }
+          install(Auth) {
+            basic {
+              credentials { BasicAuthCredentials(username = "baeldung", password = "baeldung") }
+              sendWithoutRequest { _ -> true }
+            }
           }
-          sendWithoutRequest { _ -> true }
         }
-      }
-    }
 
-
-    private val noAuthClient = HttpClient(mockEngine) {
-      install(ContentNegotiation) {
-        jackson()
-      }
-    }
+    private val noAuthClient = HttpClient(mockEngine) { install(ContentNegotiation) { jackson() } }
 
     @JvmStatic
     @AfterClass
@@ -117,20 +109,16 @@ class RequestsUnitTest {
     }
   }
 
-
   @Test
   fun `when not sending authentication then should not succeed`() {
     runBlocking {
-      with(noAuthClient.get("/cars")) {
-        assertEquals(HttpStatusCode.Unauthorized, status)
-      }
+      with(noAuthClient.get("/cars")) { assertEquals(HttpStatusCode.Unauthorized, status) }
     }
   }
 
   private fun startEmbeddedServer(): NettyApplicationEngine {
     val env = applicationEngineEnvironment {
-      module {
-      }
+      module {}
       connector {
         host = "0.0.0.0"
         port = 8080
@@ -140,5 +128,4 @@ class RequestsUnitTest {
     server.start(false)
     return server
   }
-
 }
