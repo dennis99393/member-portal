@@ -1,0 +1,11 @@
+services:
+  keycloak:
+    extends:
+      file: ./dms-ad-openldap/docker-compose.yml
+      service: keycloak
+    networks:
+      member-profile:
+        aliases:
+          - keycloak
+networks:
+  member-profile:
