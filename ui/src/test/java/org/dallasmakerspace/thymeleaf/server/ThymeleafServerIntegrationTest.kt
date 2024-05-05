@@ -87,7 +87,7 @@ class ThymeleafServerIntegrationTest {
     val driver = ChromeDriver(options)
     driver.get("http://127.0.0.1:8080/other-page")
     val header2 = driver.findElements(By.tagName("h2"))
-    assertEquals("Error", header2.first().text)
+    assertEquals("Error - Not Found (404)", header2.first().text)
     driver.close()
   }
 }

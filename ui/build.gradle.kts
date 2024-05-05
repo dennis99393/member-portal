@@ -19,7 +19,7 @@ dependencies {
   implementation ("com.google.dagger", "dagger", daggerVersion)
   ksp ("com.google.dagger","dagger-compiler",daggerVersion)
   implementation("com.squareup.okhttp3:okhttp:4.12.0")
-  //implementation("io.ktor", "ktor-client-auth", ktorVersion)
+  implementation("io.ktor", "ktor-client-auth", ktorVersion)
   implementation("io.ktor", "ktor-client-cio", ktorVersion)
   implementation("io.ktor", "ktor-client-content-negotiation", ktorVersion)
   implementation("io.ktor", "ktor-client-core", ktorVersion)
