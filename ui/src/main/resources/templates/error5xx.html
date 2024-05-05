@@ -10,8 +10,11 @@
 </head>
 <body>
 <div class="container">
-    <h2>Error - Not Found (404)</h2>
+    <h2>Server Error</h2>
     <p th:text="${message}"/>
+    <p>Details:</p>
+    <p th:text="${cause}"/>
+    <p><a th:href="${sso_profile_url}" target="_blank">SSO Profile</a></p>
 </div>
 <script crossorigin="anonymous"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"

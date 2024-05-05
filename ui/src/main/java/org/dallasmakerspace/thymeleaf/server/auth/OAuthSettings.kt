@@ -7,7 +7,8 @@ data class OAuthSettings(
     val authorizeUrl: String,
     val accessTokenUrl: String,
     val clientId: String,
-    val clientSecret: String
+    val clientSecret: String,
+    val ssoProfileUrl: String
 )
 
 fun getOAuthSettings(config: ApplicationConfig): OAuthSettings {
@@ -32,6 +33,11 @@ fun getOAuthSettings(config: ApplicationConfig): OAuthSettings {
             "client secret is not configured"
           }
           .getString()
+  val profileUrl =
+      requireNotNull(config.propertyOrNull("app.oidc.sso-profile-url")) {
+            "sso profile url is not configured"
+          }
+          .getString()
 
-  return OAuthSettings(baseUrl, authorizeUrl, accessTokenUrl, clientId, clientSecret)
+  return OAuthSettings(baseUrl, authorizeUrl, accessTokenUrl, clientId, clientSecret, profileUrl)
 }

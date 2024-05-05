@@ -1,10 +1,11 @@
 description = "Web UI for Member Profiles"
 
-val graphQLKotlinVersion = "7.0.1"
+
 val ktorVersion = "2.3.5"
+val daggerVersion = "2.48"
 val kotlinxVersion = "1.6.0"
 val logbackVersion = "1.4.14"
-val kotlinTestUnit = "1.9.10"
+val kotlinTestUnit = "1.9.23"
 val seleniumVersion = "4.19.1"
 
 
@@ -15,10 +16,14 @@ repositories {
 dependencies {
 
   implementation("ch.qos.logback", "logback-classic", logbackVersion)
-  implementation("io.ktor", "ktor-client-auth", ktorVersion)
+  implementation ("com.google.dagger", "dagger", daggerVersion)
+  ksp ("com.google.dagger","dagger-compiler",daggerVersion)
+  implementation("com.squareup.okhttp3:okhttp:4.12.0")
+  //implementation("io.ktor", "ktor-client-auth", ktorVersion)
   implementation("io.ktor", "ktor-client-cio", ktorVersion)
   implementation("io.ktor", "ktor-client-content-negotiation", ktorVersion)
   implementation("io.ktor", "ktor-client-core", ktorVersion)
+  implementation("io.ktor","ktor-client-logging", ktorVersion)
   implementation("io.ktor", "ktor-serialization-gson-jvm", ktorVersion)
   implementation("io.ktor", "ktor-serialization-jackson", ktorVersion)
   implementation("io.ktor", "ktor-server-auth", ktorVersion)
@@ -27,6 +32,7 @@ dependencies {
   implementation("io.ktor", "ktor-server-status-pages", ktorVersion)
   implementation("io.ktor", "ktor-server-thymeleaf-jvm", ktorVersion)
   implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", kotlinxVersion)
+
 
 
   testImplementation("io.ktor", "ktor-client-mock", ktorVersion)
@@ -38,8 +44,9 @@ dependencies {
 }
 
 plugins {
-  kotlin("jvm") version "1.9.10"
-  kotlin("plugin.serialization") version "1.9.10"
+  kotlin("jvm") version "1.9.23"
+  kotlin("plugin.serialization") version "1.9.23"
+  id ("com.google.devtools.ksp") version "1.9.23-1.0.20"
   id("io.ktor.plugin") version "2.3.5"
   id("org.jetbrains.kotlinx.kover") version "0.7.6"
   id("com.ncorti.ktfmt.gradle") version "0.18.0"
