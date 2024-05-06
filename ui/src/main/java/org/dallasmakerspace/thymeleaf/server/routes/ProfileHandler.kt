@@ -31,7 +31,7 @@ class ProfileHandler @Inject constructor(private val userInfoProvider: UserInfoP
         jsonMap["membership_duration"] = "2.2 years"
         val username = jsonMap["preferred_username"] as String?
         if (usernameRequested != username) {
-          call.respond(ThymeleafContent("profile-private", jsonMap))
+          call.respond(ThymeleafContent("profile-private", mapOf("preferred_username" to "$usernameRequested")))
         } else {
           call.respond(ThymeleafContent("profile", jsonMap))
         }
