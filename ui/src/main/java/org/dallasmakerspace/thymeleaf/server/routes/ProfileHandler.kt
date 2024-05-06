@@ -29,9 +29,15 @@ class ProfileHandler @Inject constructor(private val userInfoProvider: UserInfoP
         jsonMap = userInfoProvider.getUserInfo(accessToken).toMutableMap()
         jsonMap["join_date"] = "Apr 2022"
         jsonMap["membership_duration"] = "2.2 years"
+        /*
+        TODO: Set talk username from API response
+        jsonMap["talk_username"] =
+        */
         val username = jsonMap["preferred_username"] as String?
         if (usernameRequested != username) {
-          call.respond(ThymeleafContent("profile-private", mapOf("preferred_username" to "$usernameRequested")))
+          call.respond(
+              ThymeleafContent(
+                  "profile-private", mapOf("preferred_username" to "$usernameRequested")))
         } else {
           call.respond(ThymeleafContent("profile", jsonMap))
         }

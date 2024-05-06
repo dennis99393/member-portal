@@ -84,12 +84,9 @@ private fun getOAuthServerSettings(
       clientSecret = settings.clientSecret,
       defaultScopes = listOf("openid", "profile", "email"),
       onStateCreated = { call, state ->
-        //saves new state with redirect url value
-        call.request.queryParameters["redirectUrl"]?.let {
-          RouteFactory.redirects[state] = it
-        }
-      }
-  )
+        // saves new state with redirect url value
+        call.request.queryParameters["redirectUrl"]?.let { RouteFactory.redirects[state] = it }
+      })
 }
 
 private suspend fun handleReportCardGet(call: ApplicationCall) {

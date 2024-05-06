@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="initial-scale=1, width=device-width" />
@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <title th:text="'@' + ${preferred_username}"></title>
 </head>
 <body>
 <div class="profile">
@@ -82,9 +83,13 @@
 
                 <div class="frame-wrapper">
                     <div class="talk-member-parent">
-                        <b class="talk-member">Talk: @mandarlimaye</b>
+                        <b class="talk-member">Talk:
+                            <span th:if="${talk_username}"><a th:href="|https://talk.dallasmakerspace.org/u/${talk_username}/summary|" target="_blank"><span th:text="|@${talk_username}|"></span></a></span>
+                            <span th:unless="${talk_username}">Not Linked</span>
+                        </b>
                         <div class="unlink-account" id="unlinkAccountText">
-                            Unlink Account
+                            <span th:if="${talk_username}"><a th:href="${talk_username}">Unlink Account</a></span>
+                            <span th:unless="${talk_username}"><a th:href="${talk_username}">Link Account</a></span>
                         </div>
                     </div>
                 </div>

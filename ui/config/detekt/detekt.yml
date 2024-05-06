@@ -16,3 +16,5 @@ config:
 style:
   WildcardImport:
     excludeImports: ['java.util.*', 'io.ktor.*']
+  ForbiddenComment:
+    allowedPatterns: 'TODO'
