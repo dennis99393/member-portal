@@ -54,7 +54,9 @@ fun Application.configureRouting() {
     }
 
     get(RouteFactory.Paths.INDEX.path) { RouteFactory.getHandler(call)?.handle(call) }
-    get(RouteFactory.Paths.PROFILE.path) { RouteFactory.getHandler(call)?.handle(call) }
+    get(RouteFactory.Paths.PROFILE.path) {
+      RouteFactory.getHandler(call)?.handle(call)
+    }
     get("/report-card/{id}") { handleReportCardGet(call) }
     post("/report-card/{id}") { handleReportCardPost(call) }
     staticFiles(RouteFactory.Paths.STATIC.path, File("static"))

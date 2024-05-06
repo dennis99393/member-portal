@@ -19,7 +19,8 @@ class IndexHandler @Inject constructor(private val userInfoProvider: UserInfoPro
     if (accessToken != null) {
       val jsonMap: Map<String, Any>?
       try {
-        jsonMap = userInfoProvider.getUserInfo(accessToken)
+        jsonMap = userInfoProvider.getUserInfo(accessToken).toMutableMap()
+        jsonMap["profile_url"] = "./profile/~${jsonMap["preferred_username"]}"
       } catch (e: AuthException) {
         call.sessions.clear<UserSession>()
         Log.e("Failed to get user info", e)

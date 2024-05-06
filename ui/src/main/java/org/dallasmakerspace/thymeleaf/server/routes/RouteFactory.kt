@@ -9,8 +9,13 @@ import org.dallasmakerspace.thymeleaf.server.routes.di.RoutesModule
 object RouteFactory {
 
   fun getHandler(call: ApplicationCall): IRouteHandler? {
-    val path = call.request.uri
+    val path = sanitizePathInternal(call.request.uri)
     return getHandler(path)
+  }
+
+  private fun sanitizePathInternal(path: String): String {
+    // Replace "~.*" with "~{preferred_username}"
+    return path.replace("~.*".toRegex(), "~{preferred_username}")
   }
 
   fun getHandler(path: String): IRouteHandler? {
@@ -22,7 +27,7 @@ object RouteFactory {
     INDEX("/"),
     LOGIN("/login"),
     OIDC_CALLBACK("/oidc-callback"),
-    PROFILE("/profile"),
+    PROFILE("/profile/~{preferred_username}"),
     STATIC("/static"),
   }
 }

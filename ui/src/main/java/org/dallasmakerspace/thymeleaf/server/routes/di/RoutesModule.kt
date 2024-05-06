@@ -24,7 +24,7 @@ class RoutesModule {
 
   @IntoMap
   @Provides
-  @StringKey("/profile")
+  @StringKey("/profile/~{preferred_username}")
   fun providesProfileHandler(userInfoProvider: UserInfoProvider): IRouteHandler =
       ProfileHandler(userInfoProvider)
 
