@@ -70,8 +70,8 @@ jobs:
 
       - uses: actions/delete-package-versions@v5
         with:
-          package-name: 'member-profile-ui'
-          package-type: 'docker'
+          package-name: dallas-makerspace/${{ github.event.repository.name }}:latest
+          package-type: 'container'
           min-versions-to-keep: 5
 
   deploy:
