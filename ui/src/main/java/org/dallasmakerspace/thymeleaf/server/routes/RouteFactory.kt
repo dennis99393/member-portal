@@ -7,6 +7,7 @@ import javax.inject.Singleton
 import org.dallasmakerspace.thymeleaf.server.routes.di.RoutesModule
 
 object RouteFactory {
+  val redirects = mutableMapOf<String, String>()
 
   fun getHandler(call: ApplicationCall): IRouteHandler? {
     val path = sanitizePathInternal(call.request.uri)

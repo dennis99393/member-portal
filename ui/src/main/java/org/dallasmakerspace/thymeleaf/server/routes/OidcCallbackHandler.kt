@@ -17,6 +17,11 @@ class OidcCallbackHandler @Inject constructor() : IRouteHandler {
     val session = call.sessions.getOrSet { UserSession() }
     session.accessToken = principal.accessToken
     session.idHint = principal.extraParameters["id_token"]
+    val state = principal.state
+    RouteFactory.redirects[state]?.let { redirect ->
+      call.respondRedirect(redirect)
+      return
+    }
 
     call.respondRedirect("/", permanent = false)
   }

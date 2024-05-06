@@ -5,15 +5,15 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
 import org.dallasmakerspace.thymeleaf.server.common.Log
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
-import javax.inject.Inject
 
 class ProfileHandler @Inject constructor(private val userInfoProvider: UserInfoProvider) :
     IRouteHandler {
@@ -42,10 +42,12 @@ class ProfileHandler @Inject constructor(private val userInfoProvider: UserInfoP
       }
     } else {
       val currentUri = call.request.uri
-      val encodedUri = withContext(Dispatchers.IO) {
-        URLEncoder.encode(currentUri, StandardCharsets.UTF_8.toString())
-      }
-      call.respondRedirect("${RouteFactory.Paths.LOGIN.path}?redirectUri=$encodedUri", permanent = false)
+      val encodedUri =
+          withContext(Dispatchers.IO) {
+            URLEncoder.encode(currentUri, StandardCharsets.UTF_8.toString())
+          }
+      call.respondRedirect(
+          "${RouteFactory.Paths.LOGIN.path}?redirectUrl=$encodedUri", permanent = false)
     }
   }
 }
