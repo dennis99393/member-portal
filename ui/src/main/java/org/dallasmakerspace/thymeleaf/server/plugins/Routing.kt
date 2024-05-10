@@ -55,6 +55,10 @@ fun Application.configureRouting() {
 
     get(RouteFactory.Paths.INDEX.path) { RouteFactory.getHandler(call)?.handle(call) }
     get(RouteFactory.Paths.PROFILE.path) { RouteFactory.getHandler(call)?.handle(call) }
+    get(RouteFactory.Paths.DISCOURSE_LINK.path) { RouteFactory.getHandler(call)?.handle(call) }
+    get(RouteFactory.Paths.DISCOURSE_CALLBACK.path) {
+      RouteFactory.getHandler(RouteFactory.Paths.DISCOURSE_CALLBACK.path)?.handle(call)
+    }
     get("/report-card/{id}") { handleReportCardGet(call) }
     post("/report-card/{id}") { handleReportCardPost(call) }
     staticFiles(RouteFactory.Paths.STATIC.path, File("static"))

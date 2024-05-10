@@ -4,7 +4,8 @@ import dagger.Component
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import javax.inject.Singleton
-import org.dallasmakerspace.thymeleaf.server.routes.di.RoutesModule
+import org.dallasmakerspace.thymeleaf.server.di.DiscourseModule
+import org.dallasmakerspace.thymeleaf.server.di.RoutesModule
 
 object RouteFactory {
   val redirects = mutableMapOf<String, String>()
@@ -29,12 +30,15 @@ object RouteFactory {
     LOGIN("/login"),
     OIDC_CALLBACK("/oidc-callback"),
     PROFILE("/profile/~{preferred_username}"),
+    DISCOURSE_LINK("/link-discourse"),
+    DISCOURSE_UNLINK("/unlink-discourse"),
+    DISCOURSE_CALLBACK("/discourse-callback"),
     STATIC("/static"),
   }
 }
 
 @Singleton
-@Component(modules = [RoutesModule::class])
+@Component(modules = [RoutesModule::class, DiscourseModule::class])
 interface RoutesComponent {
   fun getRoutesMap(): Map<String, IRouteHandler>
 }

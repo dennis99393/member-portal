@@ -1,4 +1,4 @@
-package org.dallasmakerspace.thymeleaf.server.routes.di
+package org.dallasmakerspace.thymeleaf.server.di
 
 import dagger.Module
 import dagger.Provides
