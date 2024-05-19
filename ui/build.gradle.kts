@@ -54,7 +54,7 @@ plugins {
 }
 
 application {
-  mainClass.set("org.dallasmakerspace.thymeleaf.server.ThymeleafKtorApplicationKt")
+  mainClass.set("org.dallasmakerspace.thymeleaf.server.MemberProfileUiApplicationKt")
   applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
 }
 
