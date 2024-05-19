@@ -55,7 +55,8 @@ plugins {
 
 application {
   mainClass.set("org.dallasmakerspace.thymeleaf.server.MemberProfileUiApplicationKt")
-  applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
+  val isDevelopment: Boolean = project.ext.has("development")
+  applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
 kotlin {
