@@ -1,0 +1,20 @@
+build:
+  maxIssues: 0
+  excludeCorrectable: false
+  weights:
+  # complexity: 2
+  # LongParameterList: 1
+  # style: 1
+  # comments: 1
+
+config:
+  validation: true
+  warningsAsErrors: false
+  checkExhaustiveness: false
+  # when writing own rules with new properties, exclude the property path e.g.: 'my_rule_set,.*>.*>[my_property]'
+  excludes: ''
+style:
+  WildcardImport:
+    excludeImports: ['java.util.*', 'io.ktor.*']
+  ForbiddenComment:
+    allowedPatterns: 'TODO'
