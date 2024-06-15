@@ -3,9 +3,9 @@ package org.dallasmakerspace
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import org.dallasmakerspace.plugins.configureRouting
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import org.dallasmakerspace.plugins.configureRouting
 
 class ApplicationTest {
   @Test

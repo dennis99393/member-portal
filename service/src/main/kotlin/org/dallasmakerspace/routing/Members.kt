@@ -10,12 +10,9 @@ class Members(val sort: String? = "new") {
       val parent: Members = Members(),
       val username: String,
       val discourseUsername: String? = null,
-      val discourseAvatarUrl: String? = null
+      val discourseAvatarUrl: String? = null,
+      val discordUserId: String? = null,
   ) {
-    override fun toString(): String {
-      return "DMSMember(username='$username', discourseUsername=$discourseUsername)"
-    }
-
     @Resource("update") class Update(val parent: DMSMember)
   }
 }

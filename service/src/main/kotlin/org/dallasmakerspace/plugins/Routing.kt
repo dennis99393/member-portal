@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.plugins.swagger.*
 import io.ktor.server.request.*
 import io.ktor.server.resources.*
 import io.ktor.server.resources.patch
@@ -38,20 +39,21 @@ fun Application.configureRouting() {
     val memberService: MemberService = DaggerAppComponent.create().getMemberService()
 
     get("/") { call.respondRedirect("/openapi", permanent = false) }
+    swaggerUI(path = "openapi")
 
     authenticate(ApiKeyAuthProvider.X_API_KEY) {
       get<Members.DMSMember> { memberRequest ->
         val member = memberService.getMember(memberRequest.username)
         call.respond(ApiResponse(Status.SUCCESS, "Member ${memberRequest.username}", member))
       }
-    }
 
-    patch<Members.DMSMember.Update> { update ->
-      // Update member ...
-      val updatedMember = call.receive<Members.DMSMember>()
-      memberService.updateMember(update.parent.username, routeObjectToModel(updatedMember))
-      call.respond(
-          ApiResponse(Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember))
+      patch<Members.DMSMember.Update> { update ->
+        // Update member ...
+        val updatedMember = call.receive<Members.DMSMember>()
+        memberService.updateMember(update.parent.username, routeObjectToModel(updatedMember))
+        call.respond(
+            ApiResponse(Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember))
+      }
     }
   }
 }
@@ -60,7 +62,9 @@ fun routeObjectToModel(it: Members.DMSMember): org.dallasmakerspace.models.DMSMe
   return org.dallasmakerspace.models.DMSMember(
       it.username,
       discourseUsername = it.discourseUsername,
-      discourseAvatarUrl = it.discourseAvatarUrl)
+      discourseAvatarUrl = it.discourseAvatarUrl,
+      discordUserId = it.discordUserId,
+    )
 }
 
 @Serializable data class ApiResponse<T>(val status: Status, val message: String, val data: T?)

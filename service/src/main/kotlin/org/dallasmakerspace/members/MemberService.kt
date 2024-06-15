@@ -1,10 +1,10 @@
 package org.dallasmakerspace.members
 
-import javax.inject.Inject
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.discourse.DiscourseService
 import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.models.DMSMember
+import javax.inject.Inject
 
 class MemberService
 @Inject
@@ -30,8 +30,10 @@ constructor(
     // If member is not active in AD then throw an exception.
     // TODO(mandarl): Throw if member is not active in AD.
     val dbMember = memberRepository.getMemberOrInsert(username)
+    var propertiesUpdated = false
     // Figure out which properties have been updated by comparing dbMember and memberFromApi.
     if (dbMember.discourseUsername != memberFromApi.discourseUsername) {
+      propertiesUpdated = true
       if (memberFromApi.discourseUsername == null) {
         // Remove the member from the discourse group.
         discourseService.removeUserFromDmsMembersV2Group(requireNotNull(dbMember.discourseUsername))
@@ -39,6 +41,11 @@ constructor(
         // Add the member to the discourse group.
         discourseService.addUserToDmsMembersV2Group(requireNotNull(memberFromApi.discourseUsername))
       }
+    }
+    if (dbMember.discordUserId != memberFromApi.discordUserId) {
+      propertiesUpdated = true
+    }
+    if (propertiesUpdated) {
       // Update the member in the database.
       memberRepository.updateMember(username, memberFromApi)
     }

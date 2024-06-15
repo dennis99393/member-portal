@@ -8,5 +8,6 @@ data class DMSMember(
     val avatarUrl: String? = null,
     var discourseUsername: String? = null,
     var discourseAvatarUrl: String? = null,
+    var discordUserId: String? = null,
     var groups: List<DMSGroup>? = null
 )

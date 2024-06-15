@@ -17,6 +17,7 @@ object ProfileTable : IdTable<String>("profile") {
   val avatarUrl: Column<String?> = varchar("avatar_url", 2083).nullable()
   val discourseUsername: Column<String?> = varchar("discourse_username", 100).nullable()
   val discourseAvatarUrl: Column<String?> = varchar("discourse_avatar_url", 2083).nullable()
+  val discordUserId: Column<String?> = varchar("discord_userid", 100).nullable()
   val attributes: Column<String?> = text("attributes").nullable()
   override val id: Column<EntityID<String>>
     get() = username
@@ -28,6 +29,7 @@ class ProfileDAO(username: EntityID<String>) : Entity<String>(username) {
   var avatarUrl by ProfileTable.avatarUrl
   var discourseUsername by ProfileTable.discourseUsername
   var discourseAvatarUrl by ProfileTable.discourseAvatarUrl
+  var discordUserId by ProfileTable.discordUserId
   var attributes by ProfileTable.attributes
 }
 
@@ -35,4 +37,4 @@ suspend fun <T> suspendTransaction(block: Transaction.() -> T): T =
     newSuspendedTransaction(Dispatchers.IO, statement = block)
 
 fun daoToModel(dao: ProfileDAO) =
-    DMSMember(dao.id.value, dao.avatarUrl, dao.discourseUsername, dao.discourseAvatarUrl, null)
+    DMSMember(dao.id.value, dao.avatarUrl, dao.discourseUsername, dao.discourseAvatarUrl, dao.discordUserId, null)

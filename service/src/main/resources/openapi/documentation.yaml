@@ -3,9 +3,22 @@ info:
   title: "member-profile-service"
   description: "API for accessing DMS member profile info"
   version: "0.0.1"
+servers:
+    - url: "http://localhost:8081"
+      description: "Local development server"
+    - url: "https://api/member-profile-service/v1"
+      description: "Production server (TODO)"
+tags:
+  - name: members
+    description: Get and update member profile info
+    externalDocs:
+      description: Docs on source
+      url: https://source.dallasmakerspace.org/display/INFRASTRUC
 paths:
   /members/{username}:
     get:
+      tags:
+        - "members"
       description: "Get a member's data by username"
       parameters:
         - in: path
@@ -20,34 +33,29 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DMSMember'
-              examples:
-                Example#1:
-                  value:
-                    username: "exampleUser"
-                    discourseUsername: "exampleDiscourseUsername"
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - $ref: '#/components/schemas/DMSMember'
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
           description: "Not Found"
           content:
             text/plain:
               schema:
                 type: "string"
-              examples:
-                Example#1:
-                  value: "Member not found"
         "500":
           description: "Internal Server Error"
           content:
             text/plain:
               schema:
                 type: "string"
-              examples:
-                Example#1:
-                  value: "Internal Server Error"
   # Endpoint to update member properties
   /members/{username}/update:
     patch:
-      description: "Update a member's discourseUsername"
+      tags:
+        - "members"
+      description: "Update a member's profile info"
       parameters:
         - in: path
           name: username
@@ -68,36 +76,26 @@ paths:
             text/plain:
               schema:
                 type: "string"
-              examples:
-                Example#1:
-                  value: "discourse username updated"
         "400":
           description: "Bad Request"
           content:
             text/plain:
               schema:
                 type: "string"
-              examples:
-                Example#1:
-                  value: "Invalid discourse_id"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
         "404":
           description: "Not Found"
           content:
             text/plain:
               schema:
                 type: "string"
-              examples:
-                Example#1:
-                  value: "Member not found"
         "500":
           description: "Internal Server Error"
           content:
             text/plain:
               schema:
                 type: "string"
-              examples:
-                Example#1:
-                  value: "Internal Server Error"
 components:
   schemas:
     DMSMember:
@@ -109,3 +107,46 @@ components:
           type: string
         discourseAvatarUrl:
           type: string
+        discordUserId:
+          type: string
+    APIResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: "X-Api-Key"
+      required: true
+      schema:
+        type: string
+        default: "dummy-key-for-dev"
+      description: "API key for authentication"
+    ApiClientHeader:
+      type: apiKey
+      in: header
+      name: "X-Api-Client"
+      required: true
+      schema:
+        type: string
+        default: "member-profile-ui"
+      description: "API client identifier"
+  responses:
+    UnauthorizedError:
+      description: "API key/client id is missing or invalid"
+      headers:
+        X-Client-Id:
+          schema:
+            type: string
+          description: "Client identifier (can be public)."
+        X-Api-Key:
+          schema:
+            type: string
+          description: "API Key (keep secure)."
+security:
+  - ApiKeyHeader: []
+    ApiClientHeader: []
