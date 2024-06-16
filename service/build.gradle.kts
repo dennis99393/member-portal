@@ -15,7 +15,6 @@ plugins {
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
 }
 
-group = "org.dallasmakerspace"
 version = "0.0.1"
 
 application {

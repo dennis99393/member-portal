@@ -1,1 +1,1 @@
-rootProject.name = "org.dallasmakerspace.member-profile-service"
+rootProject.name = "member-profile-service"
