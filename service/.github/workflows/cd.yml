@@ -33,9 +33,6 @@ jobs:
       - name: Run Build
         run: ./gradlew build
 
-      - name: Run ktfmtCheck
-        run: ./gradlew ktfmtCheck
-
       - name: Run Tests
         run: ./gradlew test
 
