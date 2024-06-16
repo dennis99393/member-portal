@@ -7,12 +7,11 @@ import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.members.MemberService
 
 @Singleton
-@Component(modules = [AppModule::class, DiscourseModule::class])
+@Component(modules = [AppModule::class, ActiveDirectoryModule::class, DiscourseModule::class])
 interface AppComponent {
   fun inject(application: Application)
 
   fun getAppConfig(): AppConfig
 
   fun getMemberService(): MemberService
-  // fun getAuthProvider(): ApiKeyAuthProvider
 }

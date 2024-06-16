@@ -1,10 +1,10 @@
 package org.dallasmakerspace.members
 
+import javax.inject.Inject
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.discourse.DiscourseService
 import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.models.DMSMember
-import javax.inject.Inject
 
 class MemberService
 @Inject

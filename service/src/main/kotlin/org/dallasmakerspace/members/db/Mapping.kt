@@ -37,4 +37,10 @@ suspend fun <T> suspendTransaction(block: Transaction.() -> T): T =
     newSuspendedTransaction(Dispatchers.IO, statement = block)
 
 fun daoToModel(dao: ProfileDAO) =
-    DMSMember(dao.id.value, dao.avatarUrl, dao.discourseUsername, dao.discourseAvatarUrl, dao.discordUserId, null)
+    DMSMember(
+        dao.id.value,
+        dao.avatarUrl,
+        dao.discourseUsername,
+        dao.discourseAvatarUrl,
+        dao.discordUserId,
+        null)

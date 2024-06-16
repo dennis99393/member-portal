@@ -14,7 +14,7 @@ private const val INITIAL_LDAP_CONNECTIONS = 3
 private const val MAX_LDAP_CONNECTIONS = 5
 
 @Singleton
-class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) {
+class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveDirectoryClient {
   private val ldapUser = appConfig.requireStringProperty("app.ldap.user")
 
   private val ldapPass = appConfig.requireStringProperty("app.ldap.password")
@@ -28,7 +28,7 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) {
           INITIAL_LDAP_CONNECTIONS,
           MAX_LDAP_CONNECTIONS)
 
-  fun getUser(username: String): Map<String, Any?> {
+  override fun getUser(username: String): Map<String, Any?> {
     val filter =
         Filter.createANDFilter(
             listOf(

@@ -3,13 +3,15 @@ package org.dallasmakerspace.activedirectory
 import dagger.Reusable
 import javax.inject.Inject
 
-private const val i = 3
+private const val GROUP_NAME_PREFIX_LENGTH = 3
+
 
 @Reusable
 class ActiveDirectoryService
 @Inject
-constructor(private val activeDirectoryClient: ActiveDirectoryClient) {
-  fun getMember(username: String): ADUser {
+constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActiveDirectoryService {
+  /** {@inheritDoc} */
+  override fun getMember(username: String): ADUser {
     val memberMap: Map<String, Any?> = activeDirectoryClient.getUser(username)
     val memberOf = memberMap["memberOf"]
     val groups =
@@ -21,6 +23,9 @@ constructor(private val activeDirectoryClient: ActiveDirectoryClient) {
         }
     return ADUser(
         cn = memberMap["cn"].toString(),
+        firstName = memberMap["firstName"].toString(),
+        lastName = memberMap["lastName"].toString(),
+        displayName = memberMap["displayName"].toString(),
         mail = memberMap["mail"].toString(),
         objectGuid = memberMap["objectGuid"].toString(),
         groups = groups)
@@ -36,7 +41,7 @@ constructor(private val activeDirectoryClient: ActiveDirectoryClient) {
   private fun parseGroups(list: List<String>?): List<ADGroup> {
     return list?.map {
       val parts = it.split(",")
-      val startIndex = 3 // to remove "cn=" from the start of the string.
+      val startIndex = GROUP_NAME_PREFIX_LENGTH // to remove "cn=" from the start of the string.
       val cn = parts.first().substring(startIndex)
       val dn = it
       ADGroup(cn, distinguishedName = dn, objectGuid = null)

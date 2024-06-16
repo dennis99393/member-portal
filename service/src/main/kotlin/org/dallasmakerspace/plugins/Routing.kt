@@ -65,7 +65,7 @@ fun routeObjectToModel(it: Members.DMSMember): org.dallasmakerspace.models.DMSMe
       discourseUsername = it.discourseUsername,
       discourseAvatarUrl = it.discourseAvatarUrl,
       discordUserId = it.discordUserId,
-    )
+  )
 }
 
 @Serializable data class ApiResponse<T>(val status: Status, val message: String, val data: T?)

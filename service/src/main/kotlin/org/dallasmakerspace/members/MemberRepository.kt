@@ -1,5 +1,6 @@
 package org.dallasmakerspace.members
 
+import javax.inject.Inject
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.members.db.ProfileDAO
 import org.dallasmakerspace.members.db.ProfileTable
@@ -7,7 +8,6 @@ import org.dallasmakerspace.members.db.daoToModel
 import org.dallasmakerspace.members.db.suspendTransaction
 import org.dallasmakerspace.models.DMSMember
 import org.jetbrains.exposed.sql.Database
-import javax.inject.Inject
 
 /**
  * Manages member data. Fetches and updates member data. Contains validation and orchestration logic
