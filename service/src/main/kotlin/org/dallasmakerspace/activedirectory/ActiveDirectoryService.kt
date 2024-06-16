@@ -5,7 +5,6 @@ import javax.inject.Inject
 
 private const val GROUP_NAME_PREFIX_LENGTH = 3
 
-
 @Reusable
 class ActiveDirectoryService
 @Inject
