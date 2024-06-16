@@ -53,6 +53,8 @@ plugins {
   id("io.gitlab.arturbosch.detekt") version "1.23.6"
 }
 
+version = "0.0.1"
+
 application {
   mainClass.set("org.dallasmakerspace.thymeleaf.server.MemberProfileUiApplicationKt")
   val isDevelopment: Boolean = project.ext.has("development")
