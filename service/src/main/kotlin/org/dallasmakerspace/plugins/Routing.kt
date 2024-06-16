@@ -61,6 +61,7 @@ fun Application.configureRouting() {
 fun routeObjectToModel(it: Members.DMSMember): org.dallasmakerspace.models.DMSMember {
   return org.dallasmakerspace.models.DMSMember(
       it.username,
+      avatarUrl = it.avatarUrl,
       discourseUsername = it.discourseUsername,
       discourseAvatarUrl = it.discourseAvatarUrl,
       discordUserId = it.discordUserId,

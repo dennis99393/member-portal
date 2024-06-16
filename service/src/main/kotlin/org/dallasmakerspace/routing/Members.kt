@@ -9,6 +9,7 @@ class Members(val sort: String? = "new") {
   class DMSMember(
       val parent: Members = Members(),
       val username: String,
+      val avatarUrl: String? = null,
       val discourseUsername: String? = null,
       val discourseAvatarUrl: String? = null,
       val discordUserId: String? = null,

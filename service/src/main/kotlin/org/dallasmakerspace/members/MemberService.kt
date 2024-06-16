@@ -32,6 +32,9 @@ constructor(
     val dbMember = memberRepository.getMemberOrInsert(username)
     var propertiesUpdated = false
     // Figure out which properties have been updated by comparing dbMember and memberFromApi.
+    if (dbMember.avatarUrl != memberFromApi.avatarUrl) {
+      propertiesUpdated = true
+    }
     if (dbMember.discourseUsername != memberFromApi.discourseUsername) {
       propertiesUpdated = true
       if (memberFromApi.discourseUsername == null) {

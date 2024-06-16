@@ -103,6 +103,8 @@ components:
       properties:
         username:
           type: string
+        avatarUrl:
+          type: string
         discourseUsername:
           type: string
         discourseAvatarUrl:

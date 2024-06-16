@@ -52,6 +52,7 @@ class MemberRepository @Inject constructor(val appConfig: AppConfig) {
       val existingMember =
           ProfileDAO.findById(username)
               ?: throw IllegalArgumentException("Member does not exist in DB: $username")
+      existingMember.avatarUrl = member.avatarUrl
       existingMember.discourseUsername = member.discourseUsername
       existingMember.discourseAvatarUrl = member.discourseAvatarUrl
       existingMember.discordUserId = member.discordUserId
