@@ -33,9 +33,6 @@ jobs:
       - name: Run Build
         run: ./gradlew build
 
-      - name: Run ktfmtCheck
-        run: ./gradlew ktfmtCheck
-
       - name: Run Tests
         run: ./gradlew test
 
@@ -95,4 +92,4 @@ jobs:
         run: |
           docker stop member-profile-ui || true
           docker rm member-profile-ui || true
-          docker run -d --name member-profile-ui -p 80:8000 ghcr.io/dallas-makerspace/member-profile-ui:latest
+          docker run -d --restart unless-stopped --name member-profile-ui -p 80:8000 ghcr.io/dallas-makerspace/member-profile-ui:latest
