@@ -26,7 +26,7 @@ fun Application.configureStatusPages() {
               "error5xx",
               mapOf(
                   "message" to "There was an error processing your request.",
-                  "cause" to "$cause: ${cause.stackTraceToString()}",
+                  "cause" to "$cause:\n ${cause.stackTraceToString()}",
                   "sso_profile_url" to ssoProfileUrl)))
     }
   }
