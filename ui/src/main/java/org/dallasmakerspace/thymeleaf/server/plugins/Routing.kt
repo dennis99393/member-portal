@@ -19,11 +19,13 @@ import org.dallasmakerspace.thymeleaf.data.DataHolder
 import org.dallasmakerspace.thymeleaf.data.GradeValue
 import org.dallasmakerspace.thymeleaf.server.auth.OAuthSettings
 import org.dallasmakerspace.thymeleaf.server.auth.getOAuthSettings
+import org.dallasmakerspace.thymeleaf.server.di.AppComponent
+import org.dallasmakerspace.thymeleaf.server.di.DaggerAppComponent
 import org.dallasmakerspace.thymeleaf.server.routes.RouteFactory
 
 fun Application.configureRouting() {
-  val config = ApplicationConfig(null)
-  val settings = getOAuthSettings(config)
+  val appConfig = DaggerAppComponent.create().getAppConfig()
+  val settings = getOAuthSettings(appConfig)
   val httpClient = getHttpClient()
 
   install(Webjars) { path = "assets" }

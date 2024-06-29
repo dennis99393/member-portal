@@ -4,13 +4,14 @@ import io.ktor.server.config.*
 import java.util.*
 import javax.inject.Inject
 import kotlin.random.Random
+import org.dallasmakerspace.thymeleaf.server.common.AppConfig
 
 private const val NONCE_RANGE_START = 1000000
 private const val NONCE_RANGE_END = 9999999
 
-class DiscourseSSOProvider @Inject constructor(private val discourseUtil: DiscourseUtil) {
-
-  private val config = ApplicationConfig(null)
+class DiscourseSSOProvider
+@Inject
+constructor(private val discourseUtil: DiscourseUtil, private val appConfig: AppConfig) {
 
   fun getDiscourseSSOConnectUrl(): String {
     val (urlEncodedBase64Payload, signature) = getPayloadAndSignature()
@@ -18,10 +19,7 @@ class DiscourseSSOProvider @Inject constructor(private val discourseUtil: Discou
   }
 
   private fun getPayloadAndSignature(): Pair<String, String> {
-    val redirectUrl =
-        requireNotNull(config.propertyOrNull("app.discourse.redirect-url")?.getString()) {
-          "discourse redirect url is not configured"
-        }
+    val redirectUrl = appConfig.requireStringProperty("app.discourse.redirect-url")
     val randomNonce = Random.nextInt(NONCE_RANGE_START, NONCE_RANGE_END).toString()
     val payload = "nonce=$randomNonce&return_sso_url=$redirectUrl"
     val base64Payload = Base64.getEncoder().encodeToString(payload.toByteArray())

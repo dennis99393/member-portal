@@ -14,11 +14,11 @@ import org.dallasmakerspace.thymeleaf.server.routes.IRouteHandler
 @Module
 class DiscourseModule {
 
-  @Provides fun providesDiscourseUtil(): DiscourseUtil = DiscourseUtil()
+//  @Provides fun providesDiscourseUtil(): DiscourseUtil = DiscourseUtil()
 
-  @Provides
+/*  @Provides
   fun providesDiscourseSSOProvider(discourseUtil: DiscourseUtil): DiscourseSSOProvider =
-      DiscourseSSOProvider(discourseUtil)
+      DiscourseSSOProvider(discourseUtil)*/
 
   @IntoMap
   @Provides

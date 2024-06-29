@@ -1,6 +1,6 @@
 package org.dallasmakerspace.thymeleaf.server.auth
 
-import io.ktor.server.config.ApplicationConfig
+import org.dallasmakerspace.thymeleaf.server.common.AppConfig
 
 data class OAuthSettings(
     val baseUrl: String,
@@ -11,33 +11,13 @@ data class OAuthSettings(
     val ssoProfileUrl: String
 )
 
-fun getOAuthSettings(config: ApplicationConfig): OAuthSettings {
-  val baseUrl =
-      requireNotNull(config.propertyOrNull("app.base-url")) { "base Url is not configured" }
-          .getString()
-  val authorizeUrl =
-      requireNotNull(config.propertyOrNull("app.oidc.authorize-url")) {
-            "authorize Url is not configured"
-          }
-          .getString()
-  val accessTokenUrl =
-      requireNotNull(config.propertyOrNull("app.oidc.access-token-url")) {
-            "access token Url is not configured"
-          }
-          .getString()
-  val clientId =
-      requireNotNull(config.propertyOrNull("app.oidc.client-id")) { "client id is not configured" }
-          .getString()
-  val clientSecret =
-      requireNotNull(config.propertyOrNull("app.oidc.client-secret")) {
-            "client secret is not configured"
-          }
-          .getString()
-  val profileUrl =
-      requireNotNull(config.propertyOrNull("app.oidc.sso-profile-url")) {
-            "sso profile url is not configured"
-          }
-          .getString()
+fun getOAuthSettings(appConfig: AppConfig): OAuthSettings {
+  val baseUrl = appConfig.requireStringProperty("app.base-url")
+  val authorizeUrl = appConfig.requireStringProperty("app.oidc.authorize-url")
+  val accessTokenUrl = appConfig.requireStringProperty("app.oidc.access-token-url")
+  val clientId = appConfig.requireStringProperty("app.oidc.client-id")
+  val clientSecret = appConfig.requireStringProperty("app.oidc.client-secret")
+  val profileUrl = appConfig.requireStringProperty("app.oidc.sso-profile-url")
 
   return OAuthSettings(baseUrl, authorizeUrl, accessTokenUrl, clientId, clientSecret, profileUrl)
 }

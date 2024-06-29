@@ -8,10 +8,11 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.server.thymeleaf.ThymeleafContent
 import org.dallasmakerspace.thymeleaf.server.auth.getOAuthSettings
+import org.dallasmakerspace.thymeleaf.server.di.DaggerAppComponent
 
 fun Application.configureStatusPages() {
-  val config = ApplicationConfig(null)
-  val settings = getOAuthSettings(config)
+  val appConfig = DaggerAppComponent.create().getAppConfig()
+  val settings = getOAuthSettings(appConfig)
   val ssoProfileUrl = settings.ssoProfileUrl
   install(StatusPages) {
     status(HttpStatusCode.NotFound) { call, status ->
