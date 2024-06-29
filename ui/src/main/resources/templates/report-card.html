@@ -10,7 +10,7 @@
 </head>
 <body>
 <div class="container">
-    <form action="#" method="post" th:action="@{'~/report-card/'+${student.id}}">
+    <form action="#" method="post" th:action="@{'@/report-card/'+${student.id}}">
         <h3>Name: <span th:text="${student.fullName}"/></h3>
         <table class="table table-striped">
             <thead>

@@ -16,8 +16,8 @@ object RouteFactory {
   }
 
   private fun sanitizePathInternal(path: String): String {
-    // Replace "~.*" with "~{preferred_username}"
-    return path.replace("~.*".toRegex(), "~{preferred_username}")
+    // Replace "@.*" with "@{preferred_username}"
+    return path.replace("@.*".toRegex(), "@{preferred_username}")
   }
 
   fun getHandler(path: String): IRouteHandler? {
@@ -29,7 +29,7 @@ object RouteFactory {
     INDEX("/"),
     LOGIN("/login"),
     OIDC_CALLBACK("/oidc-callback"),
-    PROFILE("/profile/~{preferred_username}"),
+    PROFILE("/profile/@{preferred_username}"),
     DISCOURSE_LINK("/link-discourse"),
     DISCOURSE_UNLINK("/unlink-discourse"),
     DISCOURSE_CALLBACK("/discourse-callback"),
