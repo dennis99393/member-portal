@@ -14,7 +14,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
-import java.io.File
+import io.ktor.server.webjars.*
 import org.dallasmakerspace.thymeleaf.data.DataHolder
 import org.dallasmakerspace.thymeleaf.data.GradeValue
 import org.dallasmakerspace.thymeleaf.server.auth.OAuthSettings
@@ -26,6 +26,7 @@ fun Application.configureRouting() {
   val settings = getOAuthSettings(config)
   val httpClient = getHttpClient()
 
+  install(Webjars) { path = "assets" }
   install(Sessions) { cookie<UserSession>("user_session", SessionStorageMemory()) }
   install(Authentication) {
     oauth("DMS") {
@@ -61,7 +62,7 @@ fun Application.configureRouting() {
     }
     get("/report-card/{id}") { handleReportCardGet(call) }
     post("/report-card/{id}") { handleReportCardPost(call) }
-    staticFiles(RouteFactory.Paths.STATIC.path, File("static"))
+    staticResources(RouteFactory.Paths.STATIC.path, "static")
   }
 }
 

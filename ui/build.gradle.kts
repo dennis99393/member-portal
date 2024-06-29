@@ -31,6 +31,7 @@ dependencies {
   implementation("io.ktor", "ktor-server-netty", ktorVersion)
   implementation("io.ktor", "ktor-server-status-pages", ktorVersion)
   implementation("io.ktor", "ktor-server-thymeleaf-jvm", ktorVersion)
+  implementation("io.ktor:ktor-server-webjars:$ktorVersion")
   implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", kotlinxVersion)
 
 
