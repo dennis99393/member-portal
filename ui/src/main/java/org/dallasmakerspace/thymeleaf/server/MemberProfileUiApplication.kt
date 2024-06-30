@@ -1,6 +1,5 @@
 package org.dallasmakerspace.thymeleaf.server
 
-import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import org.dallasmakerspace.thymeleaf.server.di.DaggerAppComponent

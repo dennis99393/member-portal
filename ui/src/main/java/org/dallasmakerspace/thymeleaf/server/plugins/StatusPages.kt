@@ -3,7 +3,6 @@ package org.dallasmakerspace.thymeleaf.server.plugins
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
-import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.server.thymeleaf.ThymeleafContent
@@ -26,7 +25,7 @@ fun Application.configureStatusPages() {
           ThymeleafContent(
               "error5xx",
               mapOf(
-                  "message" to "There was an error processing your request.",
+                  "message" to "There was an error processing your request. ${cause.message}.",
                   "cause" to "$cause:\n ${cause.stackTraceToString()}",
                   "sso_profile_url" to ssoProfileUrl)))
     }

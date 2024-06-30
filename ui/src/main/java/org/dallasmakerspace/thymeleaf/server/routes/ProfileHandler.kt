@@ -16,7 +16,7 @@ import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
 
 class ProfileHandler @Inject constructor(private val userInfoProvider: UserInfoProvider) :
-    IRouteHandler {
+  AuthRouteHandler(userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
     // Get username requested from path /profile/@{preferred_username}
     val usernameRequested = call.parameters["preferred_username"]

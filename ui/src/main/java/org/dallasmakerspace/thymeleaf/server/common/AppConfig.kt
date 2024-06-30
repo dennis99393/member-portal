@@ -8,7 +8,7 @@ import javax.inject.Singleton
 class AppConfig @Inject constructor() {
   private val config: ApplicationConfig = ApplicationConfig(null)
 
-  fun requireProperty(name: String): ApplicationConfigValue {
+  private fun requireProperty(name: String): ApplicationConfigValue {
     return requireNotNull(config.propertyOrNull(name)) {
       "$TAG/requireProperty $name is not configured"
     }

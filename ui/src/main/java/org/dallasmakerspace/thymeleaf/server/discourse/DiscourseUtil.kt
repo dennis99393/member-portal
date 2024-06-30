@@ -1,10 +1,10 @@
 package org.dallasmakerspace.thymeleaf.server.discourse
 
-import org.dallasmakerspace.thymeleaf.server.common.AppConfig
 import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
+import org.dallasmakerspace.thymeleaf.server.common.AppConfig
 
 class DiscourseUtil @Inject constructor(private val appConfig: AppConfig) {
 
