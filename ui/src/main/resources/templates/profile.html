@@ -71,7 +71,7 @@
                 </div>
             </div>
         </div>
-        <div class="card-linked-accounts">
+        <div th:if="${is_self}" class="card-linked-accounts">
             <div class="linked-accounts">Linked Accounts</div>
             <div class="discourse-icon-1-parent">
                 <img
@@ -84,12 +84,12 @@
                 <div class="frame-wrapper">
                     <div class="talk-member-parent">
                         <b class="talk-member">Talk:
-                            <span th:if="${talk_username}"><a th:href="|https://talk.dallasmakerspace.org/u/${talk_username}/summary|" target="_blank"><span th:text="|@${talk_username}|"></span></a></span>
-                            <span th:unless="${talk_username}">Not Linked</span>
+                            <span th:if="${discourse_username}"><a th:href="|https://talk.dallasmakerspace.org/u/${discourse_username}/summary|" target="_blank"><span th:text="|@${discourse_username}|"></span></a></span>
+                            <span th:unless="${discourse_username}">Not Linked</span>
                         </b>
                         <div class="unlink-account" id="unlinkAccountText">
-                            <span th:if="${talk_username}"><a th:href="${talk_username}">Unlink Account</a></span>
-                            <span th:unless="${talk_username}"><a href="/link-discourse">Link Account</a></span>
+                            <span th:if="${discourse_username}"><a th:href="${discourse_username}">Unlink Account</a></span>
+                            <span th:unless="${discourse_username}"><a href="/link-discourse">Link Account</a></span>
                         </div>
                     </div>
                 </div>

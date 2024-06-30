@@ -21,12 +21,13 @@ constructor(private val appConfig: AppConfig, private val dmsHttpClient: DMSHttp
       }
 
   suspend fun getMember(username: String): DMSMember {
-    val userMap = try {
-      dmsHttpClient.get("$baseUrl/members/$username", authHeaders)
-    } catch (e: Exception) {
-      Log.e("Failed to get member: $username", e)
-      throw MemberServiceException("Failed to get member: $username", e)
-    }
+    val userMap =
+        try {
+          dmsHttpClient.get("$baseUrl/members/$username", authHeaders)
+        } catch (e: Exception) {
+          Log.e("Failed to get member: $username", e)
+          throw MemberServiceException("Failed to get member: $username", e)
+        }
     return DMSMember.fromMap(userMap)
   }
 

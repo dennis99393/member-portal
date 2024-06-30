@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
+import org.dallasmakerspace.thymeleaf.server.memberservice.MemberService
 import org.dallasmakerspace.thymeleaf.server.routes.IRouteHandler
 import org.dallasmakerspace.thymeleaf.server.routes.IndexHandler
 import org.dallasmakerspace.thymeleaf.server.routes.LoginHandler
@@ -25,8 +26,10 @@ class RoutesModule {
   @IntoMap
   @Provides
   @StringKey("/profile/@{preferred_username}")
-  fun providesProfileHandler(userInfoProvider: UserInfoProvider): IRouteHandler =
-      ProfileHandler(userInfoProvider)
+  fun providesProfileHandler(
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService
+  ): IRouteHandler = ProfileHandler(memberService, userInfoProvider)
 
   @IntoMap
   @Provides

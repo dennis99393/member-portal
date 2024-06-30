@@ -3,6 +3,8 @@ package org.dallasmakerspace.thymeleaf.server.discourse
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
+import java.net.URLDecoder
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
@@ -11,8 +13,6 @@ import org.dallasmakerspace.thymeleaf.server.memberservice.MemberService
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
 import org.dallasmakerspace.thymeleaf.server.routes.IRouteHandler
-import java.net.URLDecoder
-import javax.inject.Inject
 
 /**
  * Handles the callback from Discourse after a user has linked their account and decodes the SSO
@@ -95,9 +95,8 @@ constructor(
             ssoMap["username"] ?: throw DiscourseException("Missing discourse username")
         val discourseAvatarUrlUrlEncoded = ssoMap["avatar_url"]
         // URL decode the avatar URL
-        val discourseAvatarUrl = withContext(Dispatchers.IO) {
-          URLDecoder.decode(discourseAvatarUrlUrlEncoded, "UTF-8")
-        }
+        val discourseAvatarUrl =
+            withContext(Dispatchers.IO) { URLDecoder.decode(discourseAvatarUrlUrlEncoded, "UTF-8") }
 
         memberService.linkDiscourseAccount(username, discourseUsername, discourseAvatarUrl)
 

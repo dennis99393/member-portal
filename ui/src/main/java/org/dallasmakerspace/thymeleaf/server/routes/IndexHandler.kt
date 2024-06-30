@@ -7,28 +7,14 @@ import io.ktor.server.thymeleaf.*
 import javax.inject.Inject
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
 import org.dallasmakerspace.thymeleaf.server.common.Log
-import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
-import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
 
 class IndexHandler @Inject constructor(private val userInfoProvider: UserInfoProvider) :
     AuthRouteHandler(userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
+    super.handle(call)
     Log.i("Handle request: ${call.request}")
-    val session = call.sessions.get<UserSession>()
-    val accessToken = session?.accessToken
-    if (accessToken != null) {
-      val jsonMap: Map<String, Any>?
-      try {
-        jsonMap = userInfoProvider.getUserInfo(accessToken).toMutableMap()
-        jsonMap["profile_url"] = "./profile/@${jsonMap["preferred_username"]}"
-      } catch (e: AuthException) {
-        call.sessions.clear<UserSession>()
-        Log.e("Failed to get user info", e)
-        throw e
-      }
-      call.respond(ThymeleafContent("index", jsonMap))
-      return
-    }
-    call.respondRedirect(RouteFactory.Paths.LOGIN.path, permanent = false)
+    val jsonMap: MutableMap<String, Any> = userInfo.toMutableMap()
+    jsonMap["profile_url"] = "./profile/@${jsonMap["preferred_username"]}"
+    call.respond(ThymeleafContent("index", jsonMap))
   }
 }
