@@ -82,7 +82,7 @@ constructor(private val appConfig: AppConfig, private val log: Log) : IDiscourse
       onResponse: suspend (HttpResponse) -> Unit
   ) {
     val baseUrl = DISCOURSE_BASE_URL
-    val apiKey = appConfig.requireProperty("app.discourse.apiKey").getString()
+    val apiKey = appConfig.requireStringProperty("app.discourse.apiKey")
     val url = "$baseUrl/groups/${groupId.id}/members.json"
     val json = """{"usernames": "$memberUsername"}"""
 

@@ -15,19 +15,23 @@ class ActiveDirectoryModule {
 
   @Provides
   fun providesActiveDirectoryClient(appConfig: AppConfig): IActiveDirectoryClient =
-      if (appConfig.requireProperty("ktor.development").getString() == "true") {
+      if (useMockServices(appConfig)) {
         ActiveDirectoryClientMock()
         // ActiveDirectoryClient(appConfig)
       } else {
         ActiveDirectoryClient(appConfig)
       }
 
+  private fun useMockServices(appConfig: AppConfig) =
+      appConfig.requireBooleanProperty("ktor.development") &&
+          appConfig.requireBooleanProperty("app.use-mock-services")
+
   @Provides
   fun provideActiveDirectoryService(
       appConfig: AppConfig,
       activeDirectoryClient: IActiveDirectoryClient
   ): IActiveDirectoryService =
-      if (appConfig.requireProperty("ktor.development").getString() == "true") {
+      if (appConfig.requireBooleanProperty("ktor.development")) {
         ActiveDirectoryServiceMock()
         // ActiveDirectoryService(appConfig, activeDirectoryClient)
       } else {

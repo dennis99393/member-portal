@@ -16,7 +16,11 @@ constructor(
   suspend fun getMember(username: String): DMSMember {
     // Fetch member from active directory.
     val adMember = activeDirectoryService.getMember(username)
+
     val dbMember = memberRepository.getMemberOrInsert(username)
+    dbMember.firstName = adMember.givenName
+    dbMember.lastName = adMember.sn
+    dbMember.displayName = adMember.displayName
     dbMember.groups =
         adMember.groups.map { group ->
           DMSGroup(group.cn, group.distinguishedName, group.objectGuid, null)

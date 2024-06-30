@@ -16,9 +16,9 @@ import org.jetbrains.exposed.sql.Database
 class MemberRepository @Inject constructor(val appConfig: AppConfig) {
 
   init {
-    val dbUrl = appConfig.requireProperty("app.db.url").getString()
-    val dbUser = appConfig.requireProperty("app.db.user").getString()
-    val dbPassword = appConfig.requireProperty("app.db.password").getString()
+    val dbUrl = appConfig.requireStringProperty("app.db.url")
+    val dbUser = appConfig.requireStringProperty("app.db.user")
+    val dbPassword = appConfig.requireStringProperty("app.db.password")
     Database.connect(dbUrl, user = dbUser, password = dbPassword)
   }
 

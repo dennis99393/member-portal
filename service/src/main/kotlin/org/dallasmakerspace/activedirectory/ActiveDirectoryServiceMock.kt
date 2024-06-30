@@ -15,9 +15,9 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
         mapOf(
             "user1" to
                 ADUser(
-                    cn = "user1",
-                    firstName = "User",
-                    lastName = "One",
+                    sAMAccountName = "user1",
+                    givenName = "User",
+                    sn = "One",
                     displayName = "User One",
                     mail = "user1@example.com",
                     objectGuid = "12345678-1234-1234-1234-123456789012",
@@ -30,9 +30,9 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
                                 objectGuid = null))),
             "user2" to
                 ADUser(
-                    cn = "user2",
-                    firstName = "User",
-                    lastName = "Two",
+                    sAMAccountName = "user2",
+                    givenName = "User",
+                    sn = "Two",
                     displayName = "User Two",
                     mail = "user2@example.com",
                     objectGuid = "12345678-1234-1234-1234-123456789013",

@@ -32,20 +32,28 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
     val filter =
         Filter.createANDFilter(
             listOf(
-                Filter.createEqualityFilter("objectClass", "person"),
+                Filter.createEqualityFilter("objectCategory", "person"),
+                Filter.createORFilter(
+                    listOf(
+                        Filter.createEqualityFilter("objectClass", "member"),
+                        Filter.createEqualityFilter("objectClass", "user"))),
                 Filter.createEqualityFilter("sAMAccountName", username)))
     val searchResult =
         ldapPool.search(
-            "ou=Members,dc=dms,dc=local",
+            "DC=dms, DC=local",
             SearchScope.SUB,
             filter,
-            "cn",
+            "sAMAccountName",
+            "givenName",
+            "sn",
+            "displayName",
             "mail",
             "memberOf",
-            "entryUUID",
-        )
+            "objectGUID",
+            "userAccountControl")
     val user = searchResult.searchEntries.firstOrNull()
-    return user?.attributes?.associate { it.name to it.values }
-        ?: throw ADException("User $username not found in AD")
+    return user?.attributes?.associate {
+      it.name to if (it.name == "memberOf") it.values else it.values?.firstOrNull()
+    } ?: throw ADException("User $username not found in AD")
   }
 }

@@ -16,8 +16,8 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
       requireNotNull(authConfig.apiClientHeaderName) { "authConfig.apiClientHeaderName" }
   private val apiKeyHeaderName: String =
       requireNotNull(authConfig.apiKeyHeaderName) { "authConfig.apiKeyHeaderName" }
-  private val apiKey = appConfig.requireProperty("app.api.key").getString()
-  private val apiClient = appConfig.requireProperty("app.api.client").getString()
+  private val apiKey = appConfig.requireStringProperty("app.api.key")
+  private val apiClient = appConfig.requireStringProperty("app.api.client")
 
   private val mapClientsToApiKeys = mapOf(apiClient to apiKey)
 
