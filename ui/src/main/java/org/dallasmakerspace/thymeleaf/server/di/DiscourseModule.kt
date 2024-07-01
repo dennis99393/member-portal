@@ -10,6 +10,7 @@ import org.dallasmakerspace.thymeleaf.server.discourse.DiscourseNonceCache
 import org.dallasmakerspace.thymeleaf.server.discourse.DiscourseSSOProvider
 import org.dallasmakerspace.thymeleaf.server.discourse.DiscourseUtil
 import org.dallasmakerspace.thymeleaf.server.discourse.LinkDiscourseHandler
+import org.dallasmakerspace.thymeleaf.server.discourse.UnlinkDiscourseHandler
 import org.dallasmakerspace.thymeleaf.server.memberservice.MemberService
 import org.dallasmakerspace.thymeleaf.server.routes.IRouteHandler
 
@@ -34,6 +35,18 @@ class DiscourseModule {
           userInfoProvider,
           discourseNonceCache,
           discourseSSOProvider,
+      )
+
+  @IntoMap
+  @Provides
+  @StringKey("/unlink-discourse")
+  fun providesUnlinkDiscourseHandler(
+    memberService: MemberService,
+    userInfoProvider: UserInfoProvider
+  ): IRouteHandler =
+      UnlinkDiscourseHandler(
+          memberService,
+          userInfoProvider
       )
 
   @IntoMap

@@ -19,12 +19,26 @@ class MemberService @Inject constructor(private val memberServiceClient: MemberS
     try { // Patch object
       memberServiceClient.patchMember(username, member)
     } catch (e: HttpException) {
-      Log.e("Failed to patch member: $username", e)
-      throw MemberServiceException("Failed to patch member: $username", e)
+      Log.e("Failed to patch member: $username; member object: $member", e)
+      throw MemberServiceException("Failed to patch member: $username; member object: $member", e)
     }
   }
 
   suspend fun getMember(username: String): DMSMember {
     return memberServiceClient.getMember(username)
+  }
+
+  suspend fun unlinkDiscourseAccount(username: String) {
+    // Get member object
+    val member = memberServiceClient.getMember(username)
+    // Update discourseUserName
+    member.discourseUsername = null
+    member.discourseAvatarUrl = null
+    try { // Patch object
+      memberServiceClient.patchMember(username, member)
+    } catch (e: HttpException) {
+      Log.e("Failed to patch member: $username; member object: $member", e)
+      throw MemberServiceException("Failed to patch member: $username; member object: $member", e)
+    }
   }
 }

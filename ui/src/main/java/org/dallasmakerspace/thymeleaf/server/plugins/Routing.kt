@@ -58,6 +58,7 @@ fun Application.configureRouting() {
     get(RouteFactory.Paths.INDEX.path) { RouteFactory.getHandler(call)?.handle(call) }
     get(RouteFactory.Paths.PROFILE.path) { RouteFactory.getHandler(call)?.handle(call) }
     get(RouteFactory.Paths.DISCOURSE_LINK.path) { RouteFactory.getHandler(call)?.handle(call) }
+    get(RouteFactory.Paths.DISCOURSE_UNLINK.path) { RouteFactory.getHandler(call)?.handle(call) }
     get(RouteFactory.Paths.DISCOURSE_CALLBACK.path) {
       RouteFactory.getHandler(RouteFactory.Paths.DISCOURSE_CALLBACK.path)?.handle(call)
     }

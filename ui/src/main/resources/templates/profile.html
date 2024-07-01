@@ -88,7 +88,7 @@
                             <span th:unless="${discourse_username}">Not Linked</span>
                         </b>
                         <div class="unlink-account" id="unlinkAccountText">
-                            <span th:if="${discourse_username}"><a th:href="${discourse_username}">Unlink Account</a></span>
+                            <span th:if="${discourse_username}"><a href="/unlink-discourse">Unlink Account</a></span>
                             <span th:unless="${discourse_username}"><a href="/link-discourse">Link Account</a></span>
                         </div>
                     </div>
