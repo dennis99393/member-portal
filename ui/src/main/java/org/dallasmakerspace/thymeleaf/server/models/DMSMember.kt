@@ -2,6 +2,7 @@ package org.dallasmakerspace.thymeleaf.server.models
 
 import io.ktor.util.reflect.*
 import java.time.Instant
+import kotlin.reflect.full.memberProperties
 import org.dallasmakerspace.thymeleaf.server.memberservice.MemberServiceException
 
 @Suppress("LongParameterList")
@@ -17,6 +18,11 @@ class DMSMember(
     var memberSince: Instant? = null,
     var groups: List<DMSGroup> = emptyList(),
 ) {
+  override fun toString(): String {
+    // Use reflection to generate a string containing all the properties of the class
+    return this::class.memberProperties.joinToString(", ") { "${it.name}: ${it.getter.call(this)}" }
+  }
+
   companion object {
     fun fromMap(map: Map<String, Any?>): DMSMember {
       val data =

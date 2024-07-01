@@ -34,7 +34,7 @@ class DMSHttpClient @Inject constructor() {
       return resp.body<Map<String, Any>>()
     } else {
       Log.e("HTTP request failed: $resp", null)
-      throw HttpException("Failed to get $url: ${resp.status}")
+      throw HttpException("Failed to get $url; Status: ${resp.status} FullResponse: $resp")
     }
   }
 
@@ -48,7 +48,7 @@ class DMSHttpClient @Inject constructor() {
         }
     if (!resp.status.isSuccess()) {
       Log.e("HTTP request failed: $resp", null)
-      throw HttpException("Failed to patch $url: ${resp.status}")
+      throw HttpException("Failed to patch $url; Status: ${resp.status} FullResponse: $resp")
     }
   }
 }

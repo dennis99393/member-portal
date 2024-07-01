@@ -82,7 +82,7 @@ constructor(
         // Get the original nonce from cache
         val originalNonce =
             discourseNonceCache.getNonce(username)
-                ?: throw DiscourseException("Original nonce not found")
+                ?: throw DiscourseException("Original nonce is null")
 
         if (nonce != originalNonce) {
           throw DiscourseException("Nonce returned by Discourse does not match original")
