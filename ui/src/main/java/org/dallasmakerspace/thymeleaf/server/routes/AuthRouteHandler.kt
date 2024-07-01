@@ -26,21 +26,27 @@ abstract class AuthRouteHandler(private val userInfoProvider: UserInfoProvider) 
         userInfo = userInfoProvider.getUserInfo(accessToken).toMutableMap()
       } catch (e: HttpException) {
         call.sessions.clear<UserSession>()
-        Log.e("Failed to get user info", e)
-        throw e
+        Log.e("Failed to get user info: HttpException", e)
+        redirectToLogin(call)
       } catch (e: AuthException) {
         call.sessions.clear<UserSession>()
         Log.e("Failed to get user info", e)
         throw e
       }
     } else {
-      val currentUri = call.request.uri
-      val encodedUri =
-          withContext(Dispatchers.IO) {
-            URLEncoder.encode(currentUri, StandardCharsets.UTF_8.toString())
-          }
-      call.respondRedirect(
-          "${RouteFactory.Paths.LOGIN.path}?redirectUrl=$encodedUri", permanent = false)
+      redirectToLogin(call)
     }
+  }
+
+  private suspend fun redirectToLogin(call: ApplicationCall) {
+    val currentUri = call.request.uri
+    val encodedUri =
+        withContext(Dispatchers.IO) {
+          URLEncoder.encode(currentUri, StandardCharsets.UTF_8.toString())
+        }
+    call.respondRedirect(
+        "${RouteFactory.Paths.LOGIN.path}?redirectUrl=$encodedUri",
+        permanent = false,
+    )
   }
 }
