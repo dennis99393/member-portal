@@ -1,5 +1,6 @@
 package org.dallasmakerspace.models
 
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -12,5 +13,6 @@ data class DMSMember(
     var discourseUsername: String? = null,
     var discourseAvatarUrl: String? = null,
     var discordUserId: String? = null,
+    var memberSince: Instant? = null,
     var groups: List<DMSGroup>? = null
 )

@@ -21,6 +21,6 @@ class DiscourseModule {
       }
 
   private fun useMockServices(appConfig: AppConfig) =
-    appConfig.requireBooleanProperty("ktor.development") &&
-        appConfig.requireBooleanProperty("app.use-mock-services")
+      appConfig.requireBooleanProperty("ktor.development") &&
+          appConfig.requireBooleanProperty("app.use-mock-services")
 }

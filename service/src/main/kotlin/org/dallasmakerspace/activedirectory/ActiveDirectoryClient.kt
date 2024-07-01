@@ -50,7 +50,8 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
             "mail",
             "memberOf",
             "objectGUID",
-            "userAccountControl")
+            "userAccountControl",
+            "whenCreated")
     val user = searchResult.searchEntries.firstOrNull()
     return user?.attributes?.associate {
       it.name to if (it.name == "memberOf") it.values else it.values?.firstOrNull()

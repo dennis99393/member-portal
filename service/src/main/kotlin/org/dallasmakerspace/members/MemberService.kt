@@ -1,7 +1,9 @@
 package org.dallasmakerspace.members
 
 import javax.inject.Inject
+import kotlinx.datetime.Instant
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
+import org.dallasmakerspace.core.Log
 import org.dallasmakerspace.discourse.DiscourseService
 import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.models.DMSMember
@@ -9,6 +11,7 @@ import org.dallasmakerspace.models.DMSMember
 class MemberService
 @Inject
 constructor(
+    private val log: Log,
     private val discourseService: DiscourseService,
     private val memberRepository: MemberRepository,
     private val activeDirectoryService: ActiveDirectoryService
@@ -21,11 +24,38 @@ constructor(
     dbMember.firstName = adMember.givenName
     dbMember.lastName = adMember.sn
     dbMember.displayName = adMember.displayName
+    dbMember.memberSince = calculateMemberSince(adMember.whenCreated)
     dbMember.groups =
         adMember.groups.map { group ->
           DMSGroup(group.cn, group.distinguishedName, group.objectGuid, null)
         }
     return dbMember
+  }
+
+  /** Calculates the memberSince date from the whenCreated string. */
+  @Suppress("MagicNumber")
+  private fun calculateMemberSince(whenCreated: String?): Instant? {
+    if (whenCreated == null) {
+      return null
+    }
+    log.i("Calculating memberSince from whenCreated: $whenCreated")
+    // Parse the whenCreated string from a format like "20220910163620.0Z" to an Instant. Instant
+    // expects this format "2022-09-10T16:36:20Z"
+    val instant =
+        Instant.parse(
+            whenCreated.substring(0, 4) +
+                "-" +
+                whenCreated.substring(4, 6) +
+                "-" +
+                whenCreated.substring(6, 8) +
+                "T" +
+                whenCreated.substring(8, 10) +
+                ":" +
+                whenCreated.substring(10, 12) +
+                ":" +
+                whenCreated.substring(12, 14) +
+                "Z")
+    return instant
   }
 
   suspend fun updateMember(username: String, memberFromApi: DMSMember) {

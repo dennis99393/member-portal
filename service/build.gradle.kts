@@ -32,6 +32,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.dagger:dagger:$daggerVersion")
     ksp ("com.google.dagger:dagger-compiler:$daggerVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
     // Ktor client packages used for making HTTP requests
     implementation("io.ktor:ktor-client-core:2.0.0")
     implementation("io.ktor:ktor-client-cio:2.0.0")
