@@ -2,18 +2,17 @@ package org.dallasmakerspace.thymeleaf.server.discourse
 
 import io.ktor.server.application.*
 import io.ktor.server.response.*
+import javax.inject.Inject
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
 import org.dallasmakerspace.thymeleaf.server.memberservice.MemberService
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.routes.AuthRouteHandler
-import javax.inject.Inject
-import kotlin.random.Random
 
 class UnlinkDiscourseHandler
 @Inject
 constructor(
-  private val memberService: MemberService,
-  private val userInfoProvider: UserInfoProvider
+    private val memberService: MemberService,
+    private val userInfoProvider: UserInfoProvider
 ) : AuthRouteHandler(userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
     super.handle(call)

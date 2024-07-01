@@ -1,6 +1,7 @@
 package org.dallasmakerspace.thymeleaf.server.models
 
 import io.ktor.util.reflect.*
+import java.time.Instant
 import org.dallasmakerspace.thymeleaf.server.memberservice.MemberServiceException
 
 @Suppress("LongParameterList")
@@ -13,6 +14,7 @@ class DMSMember(
     var discourseUsername: String? = null,
     var discourseAvatarUrl: String? = null,
     var discordUserId: String? = null,
+    var memberSince: Instant? = null,
     var groups: List<DMSGroup> = emptyList(),
 ) {
   companion object {
@@ -33,6 +35,7 @@ class DMSMember(
           discourseUsername = data["discourseUsername"] as String?,
           discourseAvatarUrl = data["discourseAvatarUrl"] as String?,
           discordUserId = data["discordUserId"] as String?,
+          memberSince = Instant.parse(data["memberSince"] as String),
           groups = groups)
     }
 

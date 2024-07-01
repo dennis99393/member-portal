@@ -47,7 +47,7 @@
             <div class="username">
                 <b class="username-label" th:text="'@' + ${preferred_username}"></b>
             </div>
-            <div class="card-bio-inner" th:if="${join_date}">
+            <div class="card-bio-inner" th:if="${member_since}">
                 <div class="frame-parent">
                     <div class="lightbulb-circle-parent">
                         <img
@@ -58,7 +58,7 @@
                         />
 
                         <div class="link-account-label">
-                            <b class="member-since-apr">Member since <span th:text="${join_date}"></span></b>
+                            <b class="member-since-apr">Member since <span th:text="${member_since}"></span></b>
                         </div>
                     </div>
                     <div class="vector-parent">

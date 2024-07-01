@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
+import org.dallasmakerspace.thymeleaf.server.common.HttpException
 import org.dallasmakerspace.thymeleaf.server.common.Log
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
@@ -23,6 +24,10 @@ abstract class AuthRouteHandler(private val userInfoProvider: UserInfoProvider) 
 
       try {
         userInfo = userInfoProvider.getUserInfo(accessToken).toMutableMap()
+      } catch (e: HttpException) {
+        call.sessions.clear<UserSession>()
+        Log.e("Failed to get user info", e)
+        throw e
       } catch (e: AuthException) {
         call.sessions.clear<UserSession>()
         Log.e("Failed to get user info", e)

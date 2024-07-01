@@ -2,11 +2,11 @@ package org.dallasmakerspace.thymeleaf.server.discourse
 
 import io.ktor.server.application.*
 import io.ktor.server.response.*
+import javax.inject.Inject
+import kotlin.random.Random
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.routes.AuthRouteHandler
-import javax.inject.Inject
-import kotlin.random.Random
 
 private const val NONCE_RANGE_START = 1000000
 private const val NONCE_RANGE_END = 9999999
