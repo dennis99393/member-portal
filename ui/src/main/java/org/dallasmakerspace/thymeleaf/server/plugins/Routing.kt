@@ -16,14 +16,9 @@ import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
 import io.ktor.server.webjars.*
 import java.io.File
-import org.dallasmakerspace.thymeleaf.data.DataHolder
-import org.dallasmakerspace.thymeleaf.data.GradeValue
-import org.dallasmakerspace.thymeleaf.server.auth.OAuthSettings
-import org.dallasmakerspace.thymeleaf.server.auth.getOAuthSettings
-import org.dallasmakerspace.thymeleaf.server.di.DaggerAppComponent
-import org.dallasmakerspace.thymeleaf.server.routes.RouteFactory
 import java.net.URL
 import java.security.MessageDigest
+import org.dallasmakerspace.thymeleaf.server.routes.RouteFactory
 
 fun Application.configureRouting() {
 
@@ -65,9 +60,11 @@ private fun URL.toFile(): File {
 private fun calculateETag(file: File): String {
   val lastModified = file.lastModified()
   val size = file.length()
-  val hash = MessageDigest.getInstance("MD5")
-      .digest("$lastModified$size".toByteArray())
-      .fold("") { str, acc -> str + "%02x".format(acc) }
+  val hash =
+      MessageDigest.getInstance("MD5").digest("$lastModified$size".toByteArray()).fold("") {
+          str,
+          acc ->
+        str + "%02x".format(acc)
+      }
   return "\"$hash\""
 }
-

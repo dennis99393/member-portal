@@ -15,15 +15,10 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
 import io.ktor.server.webjars.*
-import java.io.File
-import org.dallasmakerspace.thymeleaf.data.DataHolder
-import org.dallasmakerspace.thymeleaf.data.GradeValue
 import org.dallasmakerspace.thymeleaf.server.auth.OAuthSettings
 import org.dallasmakerspace.thymeleaf.server.auth.getOAuthSettings
 import org.dallasmakerspace.thymeleaf.server.di.DaggerAppComponent
 import org.dallasmakerspace.thymeleaf.server.routes.RouteFactory
-import java.net.URL
-import java.security.MessageDigest
 
 fun Application.configureHttp() {
   val appConfig = DaggerAppComponent.create().getAppConfig()
@@ -82,7 +77,6 @@ private fun getOAuthServerSettings(
         call.request.queryParameters["redirectUrl"]?.let { RouteFactory.redirects[state] = it }
       })
 }
-
 
 data class UserSession(
     var accessToken: String? = null,
