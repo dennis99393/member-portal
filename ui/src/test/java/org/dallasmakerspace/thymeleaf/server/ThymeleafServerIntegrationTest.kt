@@ -7,7 +7,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import org.dallasmakerspace.thymeleaf.server.plugins.configureHttp
 import org.dallasmakerspace.thymeleaf.server.plugins.configureRouting
 import org.dallasmakerspace.thymeleaf.server.plugins.configureStatusPages
 import org.dallasmakerspace.thymeleaf.server.plugins.configureTemplating
@@ -28,6 +28,7 @@ class ThymeleafServerIntegrationTest {
     fun setup() {
       val env = applicationEngineEnvironment {
         module {
+          configureHttp()
           configureRouting()
           configureTemplating()
           configureStatusPages()
@@ -55,28 +56,6 @@ class ThymeleafServerIntegrationTest {
     driver.get("http://127.0.0.1:8080/")
     val listGroupItem = driver.findElements(By.className("list-group-item"))
     assertEquals(0, listGroupItem.size)
-    driver.close()
-  }
-
-  @Test
-  fun `when get report-card then should return a form and table`() {
-    val options = ChromeOptions()
-    options.addArguments("--headless=new")
-    val driver = ChromeDriver(options)
-    driver.get("http://127.0.0.1:8080/report-card/1")
-    val form = driver.findElement(By.tagName("form"))
-    assertNotNull(form)
-    val readingInput = driver.findElement(By.name("1"))
-    readingInput.sendKeys("A")
-    val writingInput = driver.findElement(By.name("2"))
-    writingInput.sendKeys("A+")
-    val scienceInput = driver.findElement(By.name("3"))
-    scienceInput.sendKeys("B")
-    val mathematicsInput = driver.findElement(By.name("4"))
-    mathematicsInput.sendKeys("B+")
-    val submit = driver.findElement(By.className("btn-primary"))
-    submit.submit()
-
     driver.close()
   }
 

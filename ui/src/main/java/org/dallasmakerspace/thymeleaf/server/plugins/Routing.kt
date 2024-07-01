@@ -42,6 +42,7 @@ fun Application.configureRouting() {
       cacheControl {
         listOf(CacheControl.MaxAge(maxAgeSeconds = 31536000)) // 1 year
       }
+      enableAutoHeadResponse()
       modify { url, call ->
         val file = url.toFile()
         if (file.exists()) {
