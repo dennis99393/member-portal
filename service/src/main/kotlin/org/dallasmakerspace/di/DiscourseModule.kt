@@ -13,10 +13,14 @@ class DiscourseModule {
 
   @Provides
   fun provideDiscourseApiClient(appConfig: AppConfig, log: Log): IDiscourseApiClient =
-      if (appConfig.requireBooleanProperty("ktor.development")) {
+      if (useMockServices(appConfig)) {
         DiscourseApiClientMock(appConfig, log)
         // DiscourseApiClient(appConfig, log)
       } else {
         DiscourseApiClient(appConfig, log)
       }
+
+  private fun useMockServices(appConfig: AppConfig) =
+    appConfig.requireBooleanProperty("ktor.development") &&
+        appConfig.requireBooleanProperty("app.use-mock-services")
 }
