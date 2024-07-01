@@ -7,45 +7,25 @@ import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.config.*
 import io.ktor.server.http.content.*
+import io.ktor.server.plugins.compression.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
 import io.ktor.server.webjars.*
+import java.io.File
 import org.dallasmakerspace.thymeleaf.data.DataHolder
 import org.dallasmakerspace.thymeleaf.data.GradeValue
 import org.dallasmakerspace.thymeleaf.server.auth.OAuthSettings
 import org.dallasmakerspace.thymeleaf.server.auth.getOAuthSettings
 import org.dallasmakerspace.thymeleaf.server.di.DaggerAppComponent
 import org.dallasmakerspace.thymeleaf.server.routes.RouteFactory
+import java.net.URL
+import java.security.MessageDigest
 
 fun Application.configureRouting() {
-  val appConfig = DaggerAppComponent.create().getAppConfig()
-  val settings = getOAuthSettings(appConfig)
-  val httpClient = getHttpClient()
-
-  install(Webjars) { path = "assets" }
-  install(Sessions) { cookie<UserSession>("user_session", SessionStorageMemory()) }
-  install(Authentication) {
-    oauth("DMS") {
-      urlProvider = { "${settings.baseUrl}/oidc-callback" }
-      providerLookup = { getOAuthServerSettings(settings) }
-      client = httpClient
-    }
-    session<UserSession>("auth_session") {
-      validate { session ->
-        if (session.accessToken != null) {
-          session
-        } else {
-          null
-        }
-      }
-      challenge { call.respondRedirect(RouteFactory.Paths.LOGIN.path, permanent = false) }
-    }
-  }
 
   routing {
     authenticate("DMS") {
@@ -62,60 +42,32 @@ fun Application.configureRouting() {
     get(RouteFactory.Paths.DISCOURSE_CALLBACK.path) {
       RouteFactory.getHandler(RouteFactory.Paths.DISCOURSE_CALLBACK.path)?.handle(call)
     }
-    get("/report-card/{id}") { handleReportCardGet(call) }
-    post("/report-card/{id}") { handleReportCardPost(call) }
-    staticResources(RouteFactory.Paths.STATIC.path, "static")
-  }
-}
 
-private fun getHttpClient(): HttpClient {
-  return HttpClient(CIO) {
-    install(ContentNegotiation) {
-      gson {
-        setPrettyPrinting()
-        setLenient()
+    staticResources(RouteFactory.Paths.STATIC.path, "static") {
+      cacheControl {
+        listOf(CacheControl.MaxAge(maxAgeSeconds = 31536000)) // 1 year
+      }
+      modify { url, call ->
+        val file = url.toFile()
+        if (file.exists()) {
+          val eTag = calculateETag(file)
+          call.response.headers.append(HttpHeaders.ETag, eTag)
+        }
       }
     }
   }
 }
 
-private fun getOAuthServerSettings(
-    settings: OAuthSettings
-): OAuthServerSettings.OAuth2ServerSettings {
-  return OAuthServerSettings.OAuth2ServerSettings(
-      name = "DMS",
-      authorizeUrl = settings.authorizeUrl,
-      accessTokenUrl = settings.accessTokenUrl,
-      requestMethod = HttpMethod.Post,
-      clientId = settings.clientId,
-      clientSecret = settings.clientSecret,
-      defaultScopes = listOf("openid", "profile", "email"),
-      onStateCreated = { call, state ->
-        // saves new state with redirect url value
-        call.request.queryParameters["redirectUrl"]?.let { RouteFactory.redirects[state] = it }
-      })
+private fun URL.toFile(): File {
+  return File(this.file)
 }
 
-private suspend fun handleReportCardGet(call: ApplicationCall) {
-  call.respond(
-      ThymeleafContent(
-          "report-card",
-          mapOf(
-              "student" to DataHolder.findStudentById(call.parameters["id"]),
-              "gradeOptionList" to GradeValue.entries,
-          ),
-      ),
-  )
+private fun calculateETag(file: File): String {
+  val lastModified = file.lastModified()
+  val size = file.length()
+  val hash = MessageDigest.getInstance("MD5")
+      .digest("$lastModified$size".toByteArray())
+      .fold("") { str, acc -> str + "%02x".format(acc) }
+  return "\"$hash\""
 }
 
-private suspend fun handleReportCardPost(call: ApplicationCall) {
-  val parameters = call.receiveParameters()
-  DataHolder.updateGrades(call.parameters["id"], parameters)
-  call.respondRedirect("/", false)
-}
-
-data class UserSession(
-    var accessToken: String? = null,
-    var idHint: String? = null,
-    var adPrincipalUser: Map<String, Any> = mapOf()
-) : Principal
