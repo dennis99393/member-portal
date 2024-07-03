@@ -12,7 +12,7 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
   /** {@inheritDoc} */
   override fun getMember(username: String): ADUser {
     val memberMap: Map<String, Any?> = activeDirectoryClient.getUser(username)
-    val memberOf = memberMap["memberOf"] ?: throw ADException("User not found: $username")
+    val memberOf = memberMap["memberOf"]
     val groups =
         if (memberOf is Array<*>) {
           val list = memberOf.toList()
