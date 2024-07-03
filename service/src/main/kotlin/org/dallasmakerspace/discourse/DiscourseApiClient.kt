@@ -6,11 +6,11 @@ import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import javax.inject.Inject
-import javax.inject.Singleton
 import okio.IOException
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.core.Log
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private const val DISCOURSE_BASE_URL = "https://talk.dallasmakerspace.org"
 

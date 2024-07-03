@@ -74,8 +74,11 @@ constructor(
       if (memberFromApi.discourseUsername == null) {
         // Remove the member from the discourse group.
         discourseService.removeUserFromDmsMembersV2Group(requireNotNull(dbMember.discourseUsername))
+        discourseService.addUserToDmsMembersV1Group(requireNotNull(dbMember.discourseUsername))
       } else {
         // Add the member to the discourse group.
+        discourseService.removeUserFromDmsMembersV1Group(
+            requireNotNull(memberFromApi.discourseUsername))
         discourseService.addUserToDmsMembersV2Group(requireNotNull(memberFromApi.discourseUsername))
       }
     }
