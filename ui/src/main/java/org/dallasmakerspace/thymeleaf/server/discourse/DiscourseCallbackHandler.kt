@@ -95,8 +95,9 @@ constructor(
             ssoMap["username"] ?: throw DiscourseException("Missing discourse username")
         val discourseAvatarUrlUrlEncoded = ssoMap["avatar_url"]
         // URL decode the avatar URL
-        val discourseAvatarUrl =
-            withContext(Dispatchers.IO) { URLDecoder.decode(discourseAvatarUrlUrlEncoded, "UTF-8") }
+        val discourseAvatarUrl = discourseAvatarUrlUrlEncoded?.let {
+          withContext(Dispatchers.IO) { URLDecoder.decode(discourseAvatarUrlUrlEncoded, "UTF-8") }
+        }
 
         memberService.linkDiscourseAccount(username, discourseUsername, discourseAvatarUrl)
 
