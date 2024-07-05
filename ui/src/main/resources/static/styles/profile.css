@@ -1,365 +1,372 @@
+#liveToast {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 1000;
+}
+
 .vector-icon {
-  width: 32px;
-  height: 22.8px;
-  position: relative;
+    width: 32px;
+    height: 22.8px;
+    position: relative;
 }
 .card-bio {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: var(--padding-10xs) 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: var(--padding-10xs) 0 0;
 }
 .back-to-dms1 {
-  position: relative;
-  white-space: nowrap;
+    position: relative;
+    white-space: nowrap;
 }
 .top-nav-separator,
 .top-nav-title1 {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: flex-start;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 .top-nav-title1 {
-  padding: 0 var(--padding-6xs) 0 0;
-  gap: var(--gap-6xl);
+    padding: 0 var(--padding-6xs) 0 0;
+    gap: var(--gap-6xl);
 }
 .top-nav-separator {
-  padding: 0 var(--padding-13xl);
+    padding: 0 var(--padding-13xl);
 }
 .top-nav-divider1,
 .top-nav1 {
-  align-self: stretch;
-  box-sizing: border-box;
+    align-self: stretch;
+    box-sizing: border-box;
 }
 .top-nav-divider1 {
-  height: 4px;
-  position: relative;
-  border-top: 4px solid var(--color-black);
-  flex-shrink: 0;
+    height: 4px;
+    position: relative;
+    border-top: 4px solid var(--color-black);
+    flex-shrink: 0;
 }
 .top-nav1 {
-  height: 62px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: 0 0 var(--padding-15xl);
-  gap: var(--gap-13xl);
-  text-align: left;
-  font-size: var(--font-size-3xl);
-  color: var(--color-mediumblue);
-  font-family: var(--link);
+    height: 62px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 0 0 var(--padding-15xl);
+    gap: var(--gap-13xl);
+    text-align: left;
+    font-size: var(--font-size-3xl);
+    color: var(--color-mediumblue);
+    font-family: var(--link);
 }
 .mask-group-icon {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 467px;
-  height: 172px;
-  object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 467px;
+    height: 172px;
+    object-fit: cover;
 }
 .bg-pic,
 .member-since-label {
-  height: 100%;
-  position: absolute;
-  top: 0;
-  bottom: 0;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
 }
 .member-since-label {
-  left: 43px;
-  max-height: 100%;
-  width: 120px;
-  object-fit: cover;
-  z-index: 1;
+    left: 43px;
+    max-height: 100%;
+    width: 120px;
+    object-fit: cover;
+    z-index: 1;
 }
 .bg-pic {
-  width: 100%;
-  margin: 0 !important;
-  right: 0;
-  left: 0;
+    width: 100%;
+    margin: 0 !important;
+    right: 0;
+    left: 0;
 }
 .user-fullname {
-  position: relative;
-  font-weight: 900;
-  margin-top: -30px;
+    position: relative;
+    font-weight: 900;
+    margin-top: -30px;
 }
 .linked-accounts-label {
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-end;
-  padding: 177px var(--padding-xl) 2px 219px;
-  position: relative;
-  font-size: var(--font-size-3xl);
-  color: var(--color-black);
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 177px var(--padding-xl) 2px 219px;
+    position: relative;
+    font-size: var(--font-size-3xl);
+    color: var(--color-black);
 }
 .username-label {
-  position: relative;
-  margin-left: -88px;
+    position: relative;
+    margin-left: -88px;
 }
 .username {
-  align-self: stretch;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 0 var(--padding-xl) 25px 134px;
+    align-self: stretch;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0 var(--padding-xl) 25px 134px;
 }
 .lightbulb-circle-icon {
-  height: 28px;
-  width: 28px;
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-  min-height: 28px;
+    height: 28px;
+    width: 28px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    min-height: 28px;
 }
 .unauth-circle-icon {
-  height: 28px;
-  width: 28px;
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-  min-height: 28px;
+    height: 28px;
+    width: 28px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    min-height: 28px;
 }
 .member-since-apr {
-  position: relative;
+    position: relative;
 }
 .lightbulb-circle-parent,
 .link-account-label {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  max-width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    max-width: 100%;
 }
 .unauth-circle-parent,
 .link-account-label {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  max-width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    max-width: 100%;
 }
 .link-account-label {
-  flex: 1;
-  flex-direction: column;
-  padding: var(--padding-10xs) 0 0;
-  box-sizing: border-box;
-  min-width: 218px;
+    flex: 1;
+    flex-direction: column;
+    padding: var(--padding-10xs) 0 0;
+    box-sizing: border-box;
+    min-width: 218px;
 }
 .lightbulb-circle-parent {
-  align-self: stretch;
-  flex-direction: row;
-  gap: 14px;
+    align-self: stretch;
+    flex-direction: row;
+    gap: 14px;
 }
 .unauth-circle-parent {
-  align-self: stretch;
-  flex-direction: row;
-  gap: 14px;
+    align-self: stretch;
+    flex-direction: row;
+    gap: 14px;
 }
 .vector-icon1 {
-  height: 24px;
-  width: 24px;
-  min-height: 24px;
+    height: 24px;
+    width: 24px;
+    min-height: 24px;
 }
 .total-time-at,
 .vector-icon1 {
-  position: relative;
+    position: relative;
 }
 .total-time-at-dms-21-years-wrapper {
-  flex-direction: column;
-  padding: var(--padding-10xs) 0 0;
+    flex-direction: column;
+    padding: var(--padding-10xs) 0 0;
 }
 .card-bio-inner,
 .card-bio1,
 .frame-parent,
 .total-time-at-dms-21-years-wrapper,
 .vector-parent {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 .vector-parent {
-  flex-direction: row;
-  gap: var(--gap-base);
+    flex-direction: row;
+    gap: var(--gap-base);
 }
 .card-bio-inner,
 .card-bio1,
 .frame-parent {
-  max-width: 100%;
+    max-width: 100%;
 }
 .frame-parent {
-  flex: 1;
-  flex-direction: column;
-  gap: var(--gap-base);
+    flex: 1;
+    flex-direction: column;
+    gap: var(--gap-base);
 }
 .card-bio-inner,
 .card-bio1 {
-  width: 416px;
-  flex-direction: row;
-  padding: 0 19px;
-  box-sizing: border-box;
+    width: 416px;
+    flex-direction: row;
+    padding: 0 19px;
+    box-sizing: border-box;
 }
 .card-bio1 {
-  width: 467px;
-  border-radius: var(--br-mid);
-  background-color: var(--bg-gray);
-  overflow: hidden;
-  flex-shrink: 0;
-  flex-direction: column;
-  padding: 0 0 27px;
-  gap: 3px;
+    width: 467px;
+    border-radius: var(--br-mid);
+    background-color: var(--bg-gray);
+    overflow: hidden;
+    flex-shrink: 0;
+    flex-direction: column;
+    padding: 0 0 27px;
+    gap: 3px;
 }
 .linked-accounts {
-  position: relative;
-  font-size: var(--font-size-3xl);
-  font-weight: 900;
-  color: var(--color-black);
+    position: relative;
+    font-size: var(--font-size-3xl);
+    font-weight: 900;
+    color: var(--color-black);
 }
 .discourse-icon-1 {
-  height: 67.3px;
-  width: 66px;
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
+    height: 67.3px;
+    width: 66px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
 }
 .talk-member,
 .unlink-account {
-  position: relative;
+    position: relative;
 }
 .unlink-account {
-  font-size: var(--link-size);
-  text-decoration: underline;
-  color: var(--color-mediumblue);
-  display: inline-block;
-  min-width: 118px;
-  cursor: pointer;
+    font-size: var(--link-size);
+    text-decoration: underline;
+    color: var(--color-mediumblue);
+    display: inline-block;
+    min-width: 118px;
+    cursor: pointer;
 }
 .talk-member-parent {
-  flex-direction: column;
-  gap: var(--gap-11xs);
+    flex-direction: column;
+    gap: var(--gap-11xs);
 }
 .discourse-icon-1-parent,
 .frame-wrapper,
 .talk-member-parent {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 .frame-wrapper {
-  flex-direction: column;
-  padding: 8px 0 0;
+    flex-direction: column;
+    padding: 8px 0 0;
 }
 .discourse-icon-1-parent {
-  flex-direction: row;
-  gap: 29px;
-  color: var(--body-text);
+    flex-direction: row;
+    gap: 29px;
+    color: var(--body-text);
 }
 .frame-child {
-  height: 66px;
-  width: 66px;
-  position: relative;
+    height: 66px;
+    width: 66px;
+    position: relative;
 }
 .span {
-  color: var(--body-text);
+    color: var(--body-text);
 }
 .discord-not-linked-container,
 .link-account {
-  position: relative;
+    position: relative;
 }
 .link-account {
-  font-size: var(--link-size);
-  text-decoration: underline;
-  color: var(--color-mediumblue);
-  display: inline-block;
-  min-width: 102px;
-  cursor: pointer;
+    font-size: var(--link-size);
+    text-decoration: underline;
+    color: var(--color-mediumblue);
+    display: inline-block;
+    min-width: 102px;
+    cursor: pointer;
 }
 .discord-not-linked-parent {
-  flex-direction: column;
-  gap: var(--gap-11xs);
+    flex-direction: column;
+    gap: var(--gap-11xs);
 }
 .discord-not-linked-parent,
 .frame-container,
 .frame-group {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 .frame-container {
-  flex-direction: column;
-  padding: var(--padding-6xs) 0 0;
+    flex-direction: column;
+    padding: var(--padding-6xs) 0 0;
 }
 .frame-group {
-  flex-direction: row;
-  gap: var(--gap-12xl);
+    flex-direction: row;
+    gap: var(--gap-12xl);
 }
 .vector-icon2 {
-  height: 62.6px;
-  width: 66px;
+    height: 62.6px;
+    width: 66px;
 }
 .github-coming-soon,
 .vector-icon2 {
-  position: relative;
+    position: relative;
 }
 .github-coming-soon-wrapper,
 .vector-group {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 .github-coming-soon-wrapper {
-  flex-direction: column;
-  padding: 5px 0 0;
+    flex-direction: column;
+    padding: 5px 0 0;
 }
 .vector-group {
-  flex-direction: row;
-  gap: var(--gap-12xl);
+    flex-direction: row;
+    gap: var(--gap-12xl);
 }
 .card-linked-accounts {
-  width: 467px;
-  border-radius: var(--br-mid);
-  background-color: var(--bg-gray);
-  flex-direction: column;
-  justify-content: flex-start;
-  padding: 26px 58px 45.4px;
-  gap: 33.2px;
-  max-width: 100%;
-  font-size: var(--font-size-2xl);
-  color: var(--disabled-text);
+    width: 467px;
+    border-radius: var(--br-mid);
+    background-color: var(--bg-gray);
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 26px 58px 45.4px;
+    gap: 33.2px;
+    max-width: 100%;
+    font-size: var(--font-size-2xl);
+    color: var(--disabled-text);
 }
 .card-linked-accounts,
 .content,
 .profile {
-  display: flex;
-  align-items: flex-start;
-  box-sizing: border-box;
+    display: flex;
+    align-items: flex-start;
+    box-sizing: border-box;
 }
 .content {
-  align-self: stretch;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  padding: 0 var(--padding-xl);
-  gap: 20px 18px;
-  max-width: 100%;
-  text-align: left;
-  font-size: var(--link-size);
-  color: var(--body-text);
-  font-family: var(--link);
+    align-self: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 var(--padding-xl);
+    gap: 20px 18px;
+    max-width: 100%;
+    text-align: left;
+    font-size: var(--link-size);
+    color: var(--body-text);
+    font-family: var(--link);
 }
 .profile {
-  width: 100%;
-  position: relative;
-  background-color: var(--color-white);
-  overflow: hidden;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding: var(--padding-10xl) 0 449px;
-  gap: 89px;
-  line-height: normal;
-  letter-spacing: normal;
+    width: 100%;
+    position: relative;
+    background-color: var(--color-white);
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: var(--padding-10xl) 0 0;
+    gap: 89px;
+    line-height: normal;
+    letter-spacing: normal;
 }
 
 .profile-pic {
@@ -379,56 +386,56 @@
     height: auto; /* Keep aspect ratio */
 }
 @media screen and (max-width: 725px) {
-  .top-nav1 {
-    gap: var(--gap-base);
-  }
-  .profile {
-    gap: 44px;
-  }
+    .top-nav1 {
+        gap: var(--gap-base);
+    }
+    .profile {
+        gap: 44px;
+    }
 }
 @media screen and (max-width: 450px) {
-  .user-fullname {
-    font-size: var(--link-size);
-  }
-  .linked-accounts-label,
-  .username {
-    padding-left: var(--padding-xl);
-    box-sizing: border-box;
-  }
-  .lightbulb-circle-parent {
-    flex-wrap: wrap;
-  }
-  .unauth-circle-parent {
-    flex-wrap: wrap;
-  }
-  .linked-accounts {
-    font-size: var(--link-size);
-  }
-  .talk-member {
-    font-size: var(--font-size-mid);
-  }
-  .discourse-icon-1-parent {
-    flex-wrap: wrap;
-  }
-  .discord-not-linked-container {
-    font-size: var(--font-size-mid);
-  }
-  .frame-group {
-    gap: var(--gap-mini);
-  }
-  .github-coming-soon {
-    font-size: var(--font-size-mid);
-  }
-  .vector-group {
-    flex-wrap: wrap;
-    gap: var(--gap-mini);
-  }
-  .card-linked-accounts {
-    gap: 17px;
-    padding: var(--padding-xl) var(--padding-xl) 30px;
-    box-sizing: border-box;
-  }
-  .profile {
-    gap: 22px;
-  }
+    .user-fullname {
+        font-size: var(--link-size);
+    }
+    .linked-accounts-label,
+    .username {
+        padding-left: var(--padding-xl);
+        box-sizing: border-box;
+    }
+    .lightbulb-circle-parent {
+        flex-wrap: wrap;
+    }
+    .unauth-circle-parent {
+        flex-wrap: wrap;
+    }
+    .linked-accounts {
+        font-size: var(--link-size);
+    }
+    .talk-member {
+        font-size: var(--font-size-mid);
+    }
+    .discourse-icon-1-parent {
+        flex-wrap: wrap;
+    }
+    .discord-not-linked-container {
+        font-size: var(--font-size-mid);
+    }
+    .frame-group {
+        gap: var(--gap-mini);
+    }
+    .github-coming-soon {
+        font-size: var(--font-size-mid);
+    }
+    .vector-group {
+        flex-wrap: wrap;
+        gap: var(--gap-mini);
+    }
+    .card-linked-accounts {
+        gap: 17px;
+        padding: var(--padding-xl) var(--padding-xl) 30px;
+        box-sizing: border-box;
+    }
+    .profile {
+        gap: 22px;
+    }
 }

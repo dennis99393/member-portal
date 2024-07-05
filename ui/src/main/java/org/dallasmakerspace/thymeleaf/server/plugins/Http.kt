@@ -81,5 +81,6 @@ private fun getOAuthServerSettings(
 data class UserSession(
     var accessToken: String? = null,
     var idHint: String? = null,
-    var adPrincipalUser: Map<String, Any> = mapOf()
+    var adPrincipalUser: Map<String, Any> = mapOf(),
+    var isDiscourseLinkSuccess: Boolean = false,
 ) : Principal

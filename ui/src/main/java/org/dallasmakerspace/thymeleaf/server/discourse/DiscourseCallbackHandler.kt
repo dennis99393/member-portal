@@ -104,6 +104,9 @@ constructor(
 
         memberService.linkDiscourseAccount(username, discourseUsername, discourseAvatarUrl)
 
+        // Set success flag in session
+        session.isDiscourseLinkSuccess = true
+        call.sessions.set(session)
         // Redirect back to profile page
         call.respondRedirect("/profile/@$username", permanent = false)
       }

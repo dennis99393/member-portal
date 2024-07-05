@@ -1,102 +1,102 @@
 /* Material icons */
 .material-symbols-outlined {
-  font-variation-settings:
-  'FILL' 0,
-  'wght' 400,
-  'GRAD' 0,
-  'opsz' 24
+    font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24
 }
 
 .edit-profile-link {
-  width: 32px;
-  height: 22.8px;
-  position: relative;
+    width: 32px;
+    height: 22.8px;
+    position: relative;
 }
 .welcome-message {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  padding: var(--padding-10xs) 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: var(--padding-10xs) 0 0;
 }
 .welcome-member-22 {
-  margin: 0;
-  position: relative;
-  font-size: inherit;
-  font-weight: 800;
-  font-family: inherit;
+    margin: 0;
+    position: relative;
+    font-size: inherit;
+    font-weight: 800;
+    font-family: inherit;
 }
 .edit-your-profile {
-  position: relative;
-  text-decoration: underline;
-  display: inline-block;
-  min-width: 127px;
-  cursor: pointer;
+    position: relative;
+    text-decoration: underline;
+    display: inline-block;
+    min-width: 127px;
+    cursor: pointer;
 }
 .edit-your-profile-wrapper {
-  align-self: stretch;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 0 var(--padding-xl);
-  font-size: var(--link-size);
-  color: var(--color-mediumblue);
+    align-self: stretch;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0 var(--padding-xl);
+    font-size: var(--link-size);
+    color: var(--color-mediumblue);
 }
 .welcome-member-22-parent {
-  width: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: var(--gap-base);
-  max-width: 100%;
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: var(--gap-base);
+    max-width: 100%;
 }
 .main,
 .main-inner {
-  display: flex;
-  align-items: flex-start;
-  box-sizing: border-box;
+    display: flex;
+    align-items: flex-start;
+    box-sizing: border-box;
 }
 .main-inner {
-  align-self: stretch;
-  flex-direction: row;
-  justify-content: center;
-  padding: 0 var(--padding-xl);
-  max-width: 100%;
-  text-align: left;
-  font-size: var(--font-size-17xl);
-  color: var(--color-black);
-  font-family: var(--link);
+    align-self: stretch;
+    flex-direction: row;
+    justify-content: center;
+    padding: 0 var(--padding-xl);
+    max-width: 100%;
+    text-align: left;
+    font-size: var(--font-size-17xl);
+    color: var(--color-black);
+    font-family: var(--link);
 }
 .main {
-  width: 100%;
-  position: relative;
-  background-color: var(--color-white);
-  overflow: hidden;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding: var(--padding-10xl) 0 var(--padding-10xl);
-  gap: var(--gap-210xl);
-  line-height: normal;
-  letter-spacing: normal;
+    width: 100%;
+    position: relative;
+    background-color: var(--color-white);
+    overflow: hidden;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: var(--padding-10xl) 0 var(--padding-10xl);
+    gap: var(--gap-210xl);
+    line-height: normal;
+    letter-spacing: normal;
 }
 @media screen and (max-width: 750px) {
-  .top-nav {
-    gap: var(--gap-base);
-  }
-  .welcome-member-22 {
-    font-size: var(--font-size-10xl);
-  }
-  .main {
-    gap: var(--gap-95xl);
-  }
+    .top-nav {
+        gap: var(--gap-base);
+    }
+    .welcome-member-22 {
+        font-size: var(--font-size-10xl);
+    }
+    .main {
+        gap: var(--gap-95xl);
+    }
 }
 @media screen and (max-width: 450px) {
-  .welcome-member-22 {
-    font-size: var(--font-size-3xl);
-  }
-  .main {
-    gap: var(--gap-38xl);
-  }
+    .welcome-member-22 {
+        font-size: var(--font-size-3xl);
+    }
+    .main {
+        gap: var(--gap-38xl);
+    }
 }

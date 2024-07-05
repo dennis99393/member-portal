@@ -2,6 +2,7 @@ package org.dallasmakerspace.thymeleaf.server.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.response.*
+import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
 import java.time.Instant
 import java.time.ZoneId
@@ -9,14 +10,13 @@ import javax.inject.Inject
 import kotlin.collections.set
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
 import org.dallasmakerspace.thymeleaf.server.memberservice.MemberService
+import org.dallasmakerspace.thymeleaf.server.models.DMSMember
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 
 class ProfileHandler
 @Inject
-constructor(
-    private val memberService: MemberService,
-    private val userInfoProvider: UserInfoProvider
-) : AuthRouteHandler(userInfoProvider) {
+constructor(private val memberService: MemberService, userInfoProvider: UserInfoProvider) :
+    AuthRouteHandler(userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
     super.handle(call)
     // Get username requested from path /profile/@{preferred_username}
@@ -41,7 +41,23 @@ constructor(
         ?.apply { jsonMap["is_voting_member"] = "true" }
     val currentUsername = userInfo["preferred_username"] as String?
     jsonMap["is_self"] = (requestedUsername == currentUsername).toString()
+    setToastMessage(call, jsonMap, requestedMember)
     call.respond(ThymeleafContent("profile", jsonMap))
+  }
+
+  private fun setToastMessage(
+      call: ApplicationCall,
+      jsonMap: MutableMap<String, Any>,
+      requestedMember: DMSMember
+  ) {
+    if (session?.isDiscourseLinkSuccess == true) {
+      session?.isDiscourseLinkSuccess = false
+      call.sessions.set(session)
+      jsonMap["toast_message"] =
+          "Successfully linked @${requestedMember.discourseUsername} to your profile."
+      jsonMap["toast_btn_url"] = "/unlink-discourse"
+      jsonMap["toast_btn_label"] = "Unlink"
+    }
   }
 
   /**

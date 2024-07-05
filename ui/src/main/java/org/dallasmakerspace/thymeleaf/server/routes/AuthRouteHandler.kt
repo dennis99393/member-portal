@@ -16,9 +16,10 @@ import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
 
 abstract class AuthRouteHandler(private val userInfoProvider: UserInfoProvider) : IRouteHandler {
   protected lateinit var userInfo: Map<String, Any>
+  protected var session: UserSession? = null
 
   override suspend fun handle(call: ApplicationCall) {
-    val session = call.sessions.get<UserSession>()
+    session = call.sessions.get<UserSession>()
     val accessToken = session?.accessToken
     if (accessToken != null) {
 
