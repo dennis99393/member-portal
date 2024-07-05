@@ -40,7 +40,7 @@ fun Application.configureRouting() {
 
     staticResources(RouteFactory.Paths.STATIC.path, "static") {
       cacheControl {
-        listOf(CacheControl.MaxAge(maxAgeSeconds = 31536000)) // 1 year
+        listOf(CacheControl.MaxAge(maxAgeSeconds = 600)) // 5 min
       }
       enableAutoHeadResponse()
       modify { url, call ->
