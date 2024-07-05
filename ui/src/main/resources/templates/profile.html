@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="../static/styles/profile.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" />
     <title th:text="'@' + ${preferred_username}"></title>
 </head>
 <body>
@@ -43,20 +44,13 @@
             <div class="card-bio-inner" th:if="${member_since}">
                 <div class="frame-parent">
                     <div class="lightbulb-circle-parent">
-                        <img
-                                class="lightbulb-circle-icon"
-                                loading="lazy"
-                                alt=""
-                                src="../static/images/lightbulb-circle.svg"
-                        />
-
+                        <span class="material-symbols-outlined">lightbulb</span>
                         <div class="link-account-label">
                             <b class="member-since-apr">Member since <span th:text="${member_since}"></span></b>
                         </div>
                     </div>
                     <div class="vector-parent">
-                        <img class="vector-icon1" alt="" src="../static/images/clock.svg" />
-
+                        <span class="material-symbols-outlined">update</span>
                         <div class="total-time-at-dms-21-years-wrapper">
                             <b class="total-time-at">Total time at DMS: <span th:text="${membership_duration}"></span></b>
                         </div>
