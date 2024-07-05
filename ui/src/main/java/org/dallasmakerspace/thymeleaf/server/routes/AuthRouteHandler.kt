@@ -24,6 +24,14 @@ abstract class AuthRouteHandler(private val userInfoProvider: UserInfoProvider) 
 
       try {
         userInfo = userInfoProvider.getUserInfo(accessToken).toMutableMap()
+
+        // Only allow Infra team members to access the site for now
+        val user = userInfo["preferred_username"] as String
+        val groups = userInfo["groups"] as List<*>
+        if (!groups.contains("/Infrastructure")) {
+          call.sessions.clear<UserSession>()
+          throw AuthException("User $user is not a member of the Infra team")
+        }
       } catch (e: HttpException) {
         call.sessions.clear<UserSession>()
         Log.e("Failed to get user info: HttpException", e)

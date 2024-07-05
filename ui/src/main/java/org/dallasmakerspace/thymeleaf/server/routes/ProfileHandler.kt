@@ -36,6 +36,9 @@ constructor(
     if (requestedMember.discourseUsername.isNullOrEmpty().not()) {
       jsonMap["discourse_username"] = requestedMember.discourseUsername as Any
     }
+    requestedMember.groups
+        .firstOrNull { group -> group.name == "Voting Members" }
+        ?.apply { jsonMap["is_voting_member"] = "true" }
     val currentUsername = userInfo["preferred_username"] as String?
     jsonMap["is_self"] = (requestedUsername == currentUsername).toString()
     call.respond(ThymeleafContent("profile", jsonMap))

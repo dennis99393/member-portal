@@ -13,18 +13,11 @@
 </head>
 <body>
 <div class="profile">
-    <header class="top-nav1">
-        <div class="top-nav-separator">
-            <div class="top-nav-title1">
-                <div class="card-bio">
-                    <img
-                            class="vector-icon"
-                            loading="lazy"
-                            alt=""
-                            src="../static/images/left-arrow.svg"
-                    />
-                </div>
-                <div class="back-to-dms1">Back to DMS Links</div>
+    <header class="top-nav">
+        <div class="top-nav-title-wrapper">
+            <div class="dms-title"><a href="/" class="link-reset">DMS Member Profiles</a></div>
+            <div class="top-nav-logout">
+                <a class="link-reset" href="https://login.dallasmakerspace.org/auth/realms/DMS/account/">Logout</a>
             </div>
         </div>
         <div class="top-nav-divider1"></div>
@@ -68,6 +61,13 @@
                             <b class="total-time-at">Total time at DMS: <span th:text="${membership_duration}"></span></b>
                         </div>
                     </div>
+                    <div th:if="${discourse_username}" class="vector-parent">
+                        <img class="vector-icon1" alt="" src="../static/images/discourse.svg" />
+
+                        <div class="total-time-at-dms-21-years-wrapper">
+                            <b class="total-time-at">Send message on <a target=_blank"" th:href="|https://talk.dallasmakerspace.org/new-message?username=${discourse_username}&title=Hey%20👋|">talk</a></b>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -84,7 +84,7 @@
                 <div class="frame-wrapper">
                     <div class="talk-member-parent">
                         <b class="talk-member">Talk:
-                            <span th:if="${discourse_username}"><a th:href="|https://talk.dallasmakerspace.org/u/${discourse_username}/summary|" target="_blank"><span th:text="|@${discourse_username}|"></span></a></span>
+                            <span th:if="${discourse_username}"><a th:href="|https://talk.dallasmakerspace.org/u/${discourse_username}/summary|" target="_blank"><span th:text="|${discourse_username}|"></span></a></span>
                             <span th:unless="${discourse_username}">Not Linked</span>
                         </b>
                         <div class="unlink-account" id="unlinkAccountText">
@@ -117,6 +117,30 @@
 
                 <div class="github-coming-soon-wrapper">
                     <b class="github-coming-soon">Github: Coming Soon</b>
+                </div>
+            </div>
+        </div>
+        <div th:if="${is_self}" class="card-linked-accounts">
+            <div class="linked-accounts">Voting Rights</div>
+            <div class="discourse-icon-1-parent">
+                <img
+                        class="discourse-icon-1"
+                        loading="lazy"
+                        alt=""
+                        src="../static/images/vote.svg"
+                />
+
+                <div class="frame-wrapper">
+                    <div class="talk-member-parent">
+                        <b>
+                            <span th:if="${is_voting_member}">Congratulations! You are enrolled to vote in DMS elections 🥳.</span>
+                            <span th:unless="${is_voting_member}">You are not currently registered to vote ❌.</span>
+                        </b>
+                        <br/>
+                        <div class="voting-self-service">
+                            <span th:unless="${is_voting_member}">Coming soon: self service voter enrollment.</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

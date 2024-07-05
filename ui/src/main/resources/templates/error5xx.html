@@ -1,23 +1,43 @@
-<!DOCTYPE html >
-<html xmlns:th="http://www.thymeleaf.org" lang="en-US">
+<!DOCTYPE html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Error</title>
-    <link crossorigin="anonymous"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
-          rel="stylesheet">
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="initial-scale=1, width=device-width"/>
+    <title>Server Error</title>
+
+    <link rel="stylesheet" href="/static/styles/global.css"/>
+    <link rel="stylesheet" href="/static/styles/index.css"/>
+    <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&display=swap"
+    />
+    <style>
+        .main {
+            gap: 0;
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-    <h2>Server Error</h2>
-    <p th:text="${message}"/>
-    <p>Details:</p>
-    <p th:text="${cause}"/>
-    <p><a th:href="${sso_profile_url}" target="_blank">SSO Profile</a></p>
+<div class="main">
+    <header class="top-nav">
+        <div class="top-nav-title-wrapper">
+            <div class="dms-title"><a href="/" class="link-reset">DMS Member Profiles</a></div>
+            <div class="top-nav-logout">
+                <a class="link-reset" href="https://login.dallasmakerspace.org/auth/realms/DMS/account/">Logout</a>
+            </div>
+        </div>
+        <div class="top-nav-divider"></div>
+    </header>
+    <section class="main-inner">
+        <div class="error-container">
+            <h2>Server Error</h2>
+            <p th:text="${message}"/>
+            <div class="error-details">
+                <p>Details:</p>
+                <p th:text="${cause}"/>
+            </div>
+        </div>
+    </section>
 </div>
-<script crossorigin="anonymous"
-        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"/>
 </body>
 </html>

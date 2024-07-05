@@ -3,6 +3,60 @@ body {
   line-height: normal;
 }
 
+/* Reset link attributes - remove underline and don't change visited color */
+a.link-reset { text-decoration: none; color: inherit; }
+
+/* Error details - light gray text */
+.error-container { font-size: var(--font-size-mid); }
+div.error-details > p { color: #c1c1c1; }
+
+/* Navigation bar */
+
+/* Align logout link to the right edge */
+.top-nav-logout {
+    padding-right: var(--padding-13xl);
+}
+
+.dms-title {
+  padding: 0 var(--padding-13xl);
+}
+
+.top-nav-title-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.top-nav-title-wrapper {
+  width: 100%;
+}
+.top-nav,
+.top-nav-divider {
+  align-self: stretch;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.top-nav-divider {
+  height: 4px;
+  position: relative;
+  border-top: 4px solid var(--color-black);
+}
+.top-nav {
+  height: 62px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 0 0 var(--padding-15xl);
+  gap: var(--gap-13xl);
+  text-align: left;
+  font-size: var(--font-size-3xl);
+  color: var(--color-mediumblue);
+  font-family: var(--link);
+}
+
+
 :root {
   /* fonts */
   --link: Outfit;
