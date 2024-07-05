@@ -62,8 +62,8 @@ jobs:
           file: prod.Dockerfile
           tags: ghcr.io/dallas-makerspace/${{ github.event.repository.name }}:latest
           labels: ${{ steps.meta.outputs.labels }}
-          #cache-from: type=gha
-          #cache-to: type=gha,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
 #      - uses: actions/delete-package-versions@v5
 #        with:
