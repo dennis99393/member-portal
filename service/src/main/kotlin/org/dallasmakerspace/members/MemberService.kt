@@ -1,5 +1,6 @@
 package org.dallasmakerspace.members
 
+import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.google.i18n.phonenumbers.Phonenumber
 import javax.inject.Inject
@@ -42,9 +43,15 @@ constructor(
     if (telephoneNumber == null) {
       return null
     }
-    val pnu: PhoneNumberUtil = PhoneNumberUtil.getInstance()
-    val pn: Phonenumber.PhoneNumber = pnu.parse(telephoneNumber, "US")
-    val pnE164: String = pnu.format(pn, PhoneNumberUtil.PhoneNumberFormat.NATIONAL)
+    val pnE164: String? =
+        try {
+          val pnu: PhoneNumberUtil = PhoneNumberUtil.getInstance()
+          val pn: Phonenumber.PhoneNumber = pnu.parse(telephoneNumber, "US")
+          pnu.format(pn, PhoneNumberUtil.PhoneNumberFormat.NATIONAL)
+        } catch (e: NumberParseException) {
+          log.w("Failed to parse phone number: $telephoneNumber", e)
+          null
+        }
     return pnE164
   }
 

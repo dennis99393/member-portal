@@ -11,4 +11,8 @@ class Log @Inject constructor() {
   fun e(message: String) {
     println("ERROR: $message")
   }
+
+  fun w(message: String, e: Throwable) {
+    println("WARN: $message; ${e.stackTraceToString()}")
+  }
 }
