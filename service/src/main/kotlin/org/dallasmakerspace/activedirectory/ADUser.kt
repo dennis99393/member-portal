@@ -5,6 +5,8 @@ data class ADUser(
     val mail: String,
     val givenName: String?,
     val sn: String?,
+    val telephoneNumber: String?,
+    val employeeID: String?,
     val displayName: String?,
     val objectGuid: String,
     val whenCreated: String?,

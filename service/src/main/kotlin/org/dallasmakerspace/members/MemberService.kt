@@ -1,5 +1,7 @@
 package org.dallasmakerspace.members
 
+import com.google.i18n.phonenumbers.PhoneNumberUtil
+import com.google.i18n.phonenumbers.Phonenumber
 import javax.inject.Inject
 import kotlinx.datetime.Instant
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
@@ -24,12 +26,25 @@ constructor(
     dbMember.firstName = adMember.givenName
     dbMember.lastName = adMember.sn
     dbMember.displayName = adMember.displayName
+    dbMember.personalEmail = adMember.mail
+    dbMember.phoneNumber = getNormalizedPhoneNumber(adMember.telephoneNumber)
+    dbMember.badgeNumber = adMember.employeeID
     dbMember.memberSince = calculateMemberSince(adMember.whenCreated)
     dbMember.groups =
         adMember.groups.map { group ->
           DMSGroup(group.cn, group.distinguishedName, group.objectGuid, null)
         }
     return dbMember
+  }
+
+  private fun getNormalizedPhoneNumber(telephoneNumber: String?): String? {
+    if (telephoneNumber == null) {
+      return null
+    }
+    val pnu: PhoneNumberUtil = PhoneNumberUtil.getInstance()
+    val pn: Phonenumber.PhoneNumber = pnu.parse(telephoneNumber, "US")
+    val pnE164: String = pnu.format(pn, PhoneNumberUtil.PhoneNumberFormat.NATIONAL)
+    return pnE164
   }
 
   /** Calculates the memberSince date from the whenCreated string. */

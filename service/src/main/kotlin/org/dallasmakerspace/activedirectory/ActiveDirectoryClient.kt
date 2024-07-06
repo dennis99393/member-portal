@@ -49,6 +49,8 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
             "displayName",
             "mail",
             "memberOf",
+            "employeeID",
+            "telephoneNumber",
             "objectGUID",
             "userAccountControl",
             "whenCreated")

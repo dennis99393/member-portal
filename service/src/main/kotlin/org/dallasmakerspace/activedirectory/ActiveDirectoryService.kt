@@ -26,6 +26,8 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
         sn = memberMap["sn"].toString(),
         displayName = memberMap["displayName"].toString(),
         mail = memberMap["mail"].toString(),
+        telephoneNumber = memberMap["telephoneNumber"].toString(),
+        employeeID = memberMap["employeeID"].toString(),
         objectGuid = memberMap["objectGUID"].toString(),
         whenCreated = memberMap["whenCreated"].toString(),
         groups = groups)
