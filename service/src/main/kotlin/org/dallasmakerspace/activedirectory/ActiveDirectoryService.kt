@@ -30,6 +30,7 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
         employeeID = memberMap["employeeID"].toString(),
         objectGuid = memberMap["objectGUID"].toString(),
         whenCreated = memberMap["whenCreated"].toString(),
+        enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
         groups = groups)
   }
 

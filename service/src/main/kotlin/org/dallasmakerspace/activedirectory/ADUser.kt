@@ -10,5 +10,6 @@ data class ADUser(
     val displayName: String?,
     val objectGuid: String,
     val whenCreated: String?,
+    val enabled: Boolean,
     val groups: List<ADGroup>
 )

@@ -29,6 +29,7 @@ constructor(
     dbMember.personalEmail = adMember.mail
     dbMember.phoneNumber = getNormalizedPhoneNumber(adMember.telephoneNumber)
     dbMember.badgeNumber = adMember.employeeID
+    dbMember.enabled = adMember.enabled
     dbMember.memberSince = calculateMemberSince(adMember.whenCreated)
     dbMember.groups =
         adMember.groups.map { group ->

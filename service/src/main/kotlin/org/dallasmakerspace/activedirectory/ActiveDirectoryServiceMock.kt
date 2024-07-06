@@ -24,6 +24,7 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
                     whenCreated = "2021-01-01T00:00:00Z",
                     telephoneNumber = "1234567890",
                     employeeID = "123456",
+                    enabled = true,
                     groups =
                         listOf(
                             ADGroup(
@@ -42,6 +43,7 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
                     employeeID = "123456",
                     objectGuid = "12345678-1234-1234-1234-123456789013",
                     whenCreated = "2021-01-02T00:00:00Z",
+                    enabled = false,
                     groups =
                         listOf(
                             ADGroup(

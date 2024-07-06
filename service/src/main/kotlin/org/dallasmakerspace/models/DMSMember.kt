@@ -17,5 +17,6 @@ data class DMSMember(
     var discourseAvatarUrl: String? = null,
     var discordUserId: String? = null,
     var memberSince: Instant? = null,
-    var groups: List<DMSGroup>? = null
+    var enabled: Boolean = false,
+    var groups: List<DMSGroup> = emptyList()
 )
