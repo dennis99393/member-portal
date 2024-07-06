@@ -8,15 +8,19 @@ import org.dallasmakerspace.thymeleaf.server.memberservice.MemberServiceExceptio
 @Suppress("LongParameterList")
 class DMSMember(
     val username: String,
-    val firstName: String? = null,
-    val lastName: String? = null,
-    val displayName: String? = null,
+    var firstName: String? = null,
+    var lastName: String? = null,
+    var displayName: String? = null,
     val avatarUrl: String? = null,
+    var personalEmail: String? = null,
+    var phoneNumber: String? = null,
+    var badgeNumber: String? = null,
     var discourseUsername: String? = null,
     var discourseAvatarUrl: String? = null,
     var discordUserId: String? = null,
     var memberSince: Instant? = null,
-    var groups: List<DMSGroup> = emptyList(),
+    var enabled: Boolean = false,
+    var groups: List<DMSGroup> = emptyList()
 ) {
   override fun toString(): String {
     // Use reflection to generate a string containing all the properties of the class
@@ -38,6 +42,10 @@ class DMSMember(
           lastName = data["lastName"] as String?,
           displayName = data["displayName"] as String?,
           avatarUrl = data["avatarUrl"] as String?,
+          personalEmail = data["personalEmail"] as String?,
+          phoneNumber = data["phoneNumber"] as String?,
+          badgeNumber = data["badgeNumber"] as String?,
+          enabled = data["enabled"] as Boolean,
           discourseUsername = data["discourseUsername"] as String?,
           discourseAvatarUrl = data["discourseAvatarUrl"] as String?,
           discordUserId = data["discordUserId"] as String?,

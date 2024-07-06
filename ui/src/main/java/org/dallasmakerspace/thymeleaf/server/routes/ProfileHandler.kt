@@ -32,6 +32,7 @@ constructor(private val memberService: MemberService, userInfoProvider: UserInfo
             "preferred_username" to requestedMember.username,
             "member_since" to memberSinceString,
             "membership_duration" to memberDurationString,
+            "enabled" to requestedMember.enabled.toString(),
         )
     if (requestedMember.discourseUsername.isNullOrEmpty().not()) {
       jsonMap["discourse_username"] = requestedMember.discourseUsername as Any
@@ -41,6 +42,11 @@ constructor(private val memberService: MemberService, userInfoProvider: UserInfo
         ?.apply { jsonMap["is_voting_member"] = "true" }
     val currentUsername = userInfo["preferred_username"] as String?
     jsonMap["is_self"] = (requestedUsername == currentUsername).toString()
+    if (jsonMap["is_self"] == true) {
+      requestedMember.personalEmail?.apply { jsonMap["personal_email"] = this as Any }
+      requestedMember.badgeNumber?.apply { jsonMap["badge_number"] = this as Any }
+      requestedMember.phoneNumber?.apply { jsonMap["phone_number"] = this as Any }
+    }
     setToastMessage(call, jsonMap, requestedMember)
     call.respond(ThymeleafContent("profile", jsonMap))
   }

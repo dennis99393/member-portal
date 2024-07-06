@@ -66,9 +66,51 @@
 
                         <div class="total-time-at-dms-21-years-wrapper">
                             <b class="total-time-at">Send message on <a target=_blank""
-                                                                        th:href="|https://talk.dallasmakerspace.org/new-message?username=${discourse_username}&title=Hey%20👋|">talk</a></b>
+                                                                        th:href="|https://talk.dallasmakerspace.org/new-message?username=${discourse_username}&title=Hey%20👋|">Talk</a></b>
                         </div>
                     </div>
+                    <div class="vector-parent">
+                        <span class="material-symbols-outlined">mail</span>
+                        <div class="total-time-at-dms-21-years-wrapper">
+                            <b class="total-time-at">Send email: <a
+                                    th:href="|mailto:${preferred_username}@dallasmakerspace.org|"> <span th:text="|${preferred_username}@dallasmakerspace.org|"></span></a></b>
+                        </div>
+                    </div>
+                    <div th:unless="${enabled}" class="vector-parent">
+                        <span class="material-symbols-outlined">encrypted_off</span>
+                        <div class="total-time-at-dms-21-years-wrapper">
+                            <b class="total-time-at text-danger">Disabled Profile</b>
+                        </div>
+                    </div>
+                    <th:block th:if="${is_self}">
+                        <div class="divider py-1 bg-dark"></div>
+                        <div class="vector-parent">
+                            <div class="total-time-at-dms-21-years-wrapper">
+                                <b class="total-time-at">Visible Only to you</b>
+                            </div>
+                        </div>
+                        <div th:if="${personal_email}" class="vector-parent">
+                            <span class="material-symbols-outlined">unsubscribe</span>
+                            <div class="total-time-at-dms-21-years-wrapper">
+                                <b class="total-time-at">Personal email: <span
+                                        th:text="${personal_email}"></span></b>
+                            </div>
+                        </div>
+                        <div th:if="${phone_number}" class="vector-parent">
+                            <span class="material-symbols-outlined">dialpad</span>
+                            <div class="total-time-at-dms-21-years-wrapper">
+                                <b class="total-time-at">Phone number: <span
+                                        th:text="${phone_number}"></span></b>
+                            </div>
+                        </div>
+                        <div th:if="${badge_number}" class="vector-parent">
+                            <span class="material-symbols-outlined">security_key</span>
+                            <div class="total-time-at-dms-21-years-wrapper">
+                                <b class="total-time-at">DMS Badge: <span
+                                        th:text="${badge_number}"></span></b>
+                            </div>
+                        </div>
+                    </th:block>
                 </div>
             </div>
         </div>
