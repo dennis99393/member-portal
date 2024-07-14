@@ -15,5 +15,7 @@ class Members(val sort: String? = "new") {
       val discordUserId: String? = null,
   ) {
     @Resource("update") class Update(val parent: DMSMember)
+
+    @Resource("activity") class ActivityLog(val parent: DMSMember)
   }
 }

@@ -4,6 +4,7 @@ import dagger.Component
 import io.ktor.server.application.*
 import javax.inject.Singleton
 import org.dallasmakerspace.core.AppConfig
+import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.MemberService
 
 @Singleton
@@ -14,4 +15,6 @@ interface AppComponent {
   fun getAppConfig(): AppConfig
 
   fun getMemberService(): MemberService
+
+  fun getActivityLogService(): ActivityLogService
 }

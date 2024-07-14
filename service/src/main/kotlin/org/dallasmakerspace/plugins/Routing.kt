@@ -15,6 +15,7 @@ import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.apiKey
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.di.DaggerAppComponent
+import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.MemberService
 import org.dallasmakerspace.routing.Members
 
@@ -37,14 +38,15 @@ fun Application.configureRouting() {
   }
   routing {
     val memberService: MemberService = DaggerAppComponent.create().getMemberService()
+    val activityLogService: ActivityLogService = DaggerAppComponent.create().getActivityLogService()
 
     get("/") { call.respondRedirect("/openapi", permanent = false) }
     swaggerUI(path = "openapi")
 
     authenticate(ApiKeyAuthProvider.X_API_KEY) {
-      get<Members.DMSMember> { memberRequest ->
-        val member = memberService.getMember(memberRequest.username)
-        call.respond(ApiResponse(Status.SUCCESS, "Member ${memberRequest.username}", member))
+      get<Members.DMSMember> { memberRequested ->
+        val member = memberService.getMember(memberRequested.username)
+        call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
       }
 
       patch<Members.DMSMember.Update> { update ->
@@ -54,12 +56,24 @@ fun Application.configureRouting() {
         call.respond(
             ApiResponse(Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember))
       }
+
+      get<Members.DMSMember.ActivityLog> { activityLogRequested ->
+        // Get activity log ...
+        val activityLog =
+            activityLogService.getMemberActivityLog(activityLogRequested.parent.username)
+        call.respond(
+            ApiResponse(
+                Status.SUCCESS,
+                "Activity log for ${activityLogRequested.parent.username}",
+                activityLog))
+      }
     }
   }
 }
 
 fun routeObjectToModel(it: Members.DMSMember): org.dallasmakerspace.models.DMSMember {
   return org.dallasmakerspace.models.DMSMember(
+      -1,
       it.username,
       avatarUrl = it.avatarUrl,
       discourseUsername = it.discourseUsername,

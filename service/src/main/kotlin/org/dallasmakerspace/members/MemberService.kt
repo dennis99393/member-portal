@@ -95,14 +95,9 @@ constructor(
     if (dbMember.discourseUsername != memberFromApi.discourseUsername) {
       propertiesUpdated = true
       if (memberFromApi.discourseUsername == null) {
-        // Remove the member from the discourse group.
-        discourseService.removeUserFromDmsMembersV2Group(requireNotNull(dbMember.discourseUsername))
-        discourseService.addUserToDmsMembersV1Group(requireNotNull(dbMember.discourseUsername))
+        unlinkDiscourse(dbMember)
       } else {
-        // Add the member to the discourse group.
-        discourseService.removeUserFromDmsMembersV1Group(
-            requireNotNull(memberFromApi.discourseUsername))
-        discourseService.addUserToDmsMembersV2Group(requireNotNull(memberFromApi.discourseUsername))
+        linkDiscourse(memberFromApi)
       }
     }
     if (dbMember.discordUserId != memberFromApi.discordUserId) {
@@ -112,5 +107,18 @@ constructor(
       // Update the member in the database.
       memberRepository.updateMember(username, memberFromApi)
     }
+  }
+
+  private suspend fun linkDiscourse(memberFromApi: DMSMember) {
+    // Add the member to the discourse group.
+    discourseService.removeUserFromDmsMembersV1Group(
+        requireNotNull(memberFromApi.discourseUsername))
+    discourseService.addUserToDmsMembersV2Group(requireNotNull(memberFromApi.discourseUsername))
+  }
+
+  private suspend fun unlinkDiscourse(dbMember: DMSMember) {
+    // Remove the member from the discourse group.
+    discourseService.removeUserFromDmsMembersV2Group(requireNotNull(dbMember.discourseUsername))
+    discourseService.addUserToDmsMembersV1Group(requireNotNull(dbMember.discourseUsername))
   }
 }

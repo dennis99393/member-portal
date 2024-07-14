@@ -5,11 +5,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class DMSMember(
+    val id: Int,
     val username: String,
     var firstName: String? = null,
     var lastName: String? = null,
     var displayName: String? = null,
-    val avatarUrl: String? = null,
+    var avatarUrl: String? = null,
     var personalEmail: String? = null,
     var phoneNumber: String? = null,
     var badgeNumber: String? = null,

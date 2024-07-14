@@ -2,25 +2,18 @@ package org.dallasmakerspace.members
 
 import javax.inject.Inject
 import org.dallasmakerspace.core.AppConfig
+import org.dallasmakerspace.core.BaseRepository
 import org.dallasmakerspace.members.db.ProfileDAO
 import org.dallasmakerspace.members.db.ProfileTable
-import org.dallasmakerspace.members.db.daoToModel
+import org.dallasmakerspace.members.db.daoToProfileModel
 import org.dallasmakerspace.members.db.suspendTransaction
 import org.dallasmakerspace.models.DMSMember
-import org.jetbrains.exposed.sql.Database
 
 /**
  * Manages member data. Fetches and updates member data. Contains validation and orchestration logic
  * for updating member data.
  */
-class MemberRepository @Inject constructor(val appConfig: AppConfig) {
-
-  init {
-    val dbUrl = appConfig.requireStringProperty("app.db.url")
-    val dbUser = appConfig.requireStringProperty("app.db.user")
-    val dbPassword = appConfig.requireStringProperty("app.db.password")
-    Database.connect(dbUrl, user = dbUser, password = dbPassword)
-  }
+class MemberRepository @Inject constructor(val appConfig: AppConfig) : BaseRepository(appConfig) {
 
   /**
    * Fetches member data from the database. If the member does not exist in the database, inserts a
@@ -31,11 +24,13 @@ class MemberRepository @Inject constructor(val appConfig: AppConfig) {
    */
   suspend fun getMemberOrInsert(username: String): DMSMember {
     val existingMember = suspendTransaction {
-      ProfileDAO.find { ProfileTable.username eq username }.firstOrNull()?.let { daoToModel(it) }
+      ProfileDAO.find { ProfileTable.username eq username }
+          .firstOrNull()
+          ?.let { daoToProfileModel(it) }
     }
     if (existingMember == null) {
       // Insert the member into the database.
-      return suspendTransaction { ProfileDAO.new(username) {} }.let { daoToModel(it) }
+      return daoToProfileModel(suspendTransaction { ProfileDAO.new {} })
     } else {
       return existingMember
     }
@@ -50,7 +45,9 @@ class MemberRepository @Inject constructor(val appConfig: AppConfig) {
   suspend fun updateMember(username: String, member: DMSMember) {
     suspendTransaction {
       val existingMember =
-          ProfileDAO.findById(username)
+          ProfileDAO.find { ProfileTable.username eq username }
+              .firstOrNull()
+              ?.let { daoToProfileModel(it) }
               ?: throw IllegalArgumentException("Member does not exist in DB: $username")
       existingMember.avatarUrl = member.avatarUrl
       existingMember.discourseUsername = member.discourseUsername
