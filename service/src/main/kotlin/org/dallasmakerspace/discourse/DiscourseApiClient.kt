@@ -3,6 +3,7 @@ package org.dallasmakerspace.discourse
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.logging.*
+import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -10,14 +11,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import okio.IOException
 import org.dallasmakerspace.core.AppConfig
-import org.dallasmakerspace.core.Log
+import org.dallasmakerspace.core.LoggerFactory
 
 private const val DISCOURSE_BASE_URL = "https://talk.dallasmakerspace.org"
 
 @Singleton
 class DiscourseApiClient
 @Inject
-constructor(private val appConfig: AppConfig, private val log: Log) : IDiscourseApiClient {
+constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : IDiscourseApiClient {
+  private val log = loggerFactory.create(javaClass)
   private val client =
       HttpClient(CIO) {
         install(Logging) {
@@ -31,7 +33,7 @@ constructor(private val appConfig: AppConfig, private val log: Log) : IDiscourse
       when (response.status) {
         HttpStatusCode.OK -> return@performGroupOperation
         HttpStatusCode.UnprocessableEntity -> {
-          log.i("Member $memberUsername already exists in the group ${groupId.name}")
+          log.info("Member $memberUsername already exists in the group ${groupId.name}")
           return@performGroupOperation
         }
         else ->

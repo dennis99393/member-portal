@@ -2,19 +2,34 @@ package org.dallasmakerspace.plugins
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.callloging.*
 import io.ktor.server.request.*
+import io.ktor.util.date.*
+import org.dallasmakerspace.di.DaggerAppComponent
 import org.slf4j.event.Level
 
 fun Application.configureMonitoring() {
+  val loggerFactory = DaggerAppComponent.create().getLoggerFactory()
   install(CallLogging) {
     level = Level.INFO
-    filter { call -> call.request.path().startsWith("/") }
-    callIdMdc("call-id")
+    logger = loggerFactory.create(Application::class.java)
+    callIdMdc()
+
+    format { call ->
+      val status = call.response.status()
+      val httpMethod = call.request.httpMethod.value
+      val ipAddress = call.request.origin.remoteAddress
+      val path = call.request.path()
+      val timeTaken = call.processingTimeMillis { getTimeMillis() }
+      val userAgent = call.request.headers["User-Agent"]
+      "IP: $ipAddress, Status: $status, HTTP: $httpMethod, URL: $path, Time: $timeTaken ms, User agent: $userAgent"
+    }
   }
   install(CallId) {
     header(HttpHeaders.XRequestId)
-    verify { callId: String -> callId.isNotEmpty() }
+    verify { callId: String -> callId.isNotBlank() }
+    generate { "no-call-id" }
   }
 }

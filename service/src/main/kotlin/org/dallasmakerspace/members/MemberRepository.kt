@@ -1,8 +1,6 @@
 package org.dallasmakerspace.members
 
 import javax.inject.Inject
-import org.dallasmakerspace.core.AppConfig
-import org.dallasmakerspace.core.BaseRepository
 import org.dallasmakerspace.members.db.ProfileDAO
 import org.dallasmakerspace.members.db.ProfileTable
 import org.dallasmakerspace.members.db.daoToProfileModel
@@ -13,7 +11,7 @@ import org.dallasmakerspace.models.DMSMember
  * Manages member data. Fetches and updates member data. Contains validation and orchestration logic
  * for updating member data.
  */
-class MemberRepository @Inject constructor(val appConfig: AppConfig) : BaseRepository(appConfig) {
+class MemberRepository @Inject constructor() {
 
   /**
    * Fetches member data from the database. If the member does not exist in the database, inserts a

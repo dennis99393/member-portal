@@ -1,12 +1,23 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <conversionRule conversionWord="aphighlight"
+                    converterClass="org.dallasmakerspace.core.LogbackHighlightConverter"/>
+
+    <appender name="NOCOLOR" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %X{call-id} %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="COLOR" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%aphighlight(%d{YYYY-MM-dd HH:mm:ss.SSS} %-5level [%X{CallId}] %(%logger){25} - %msg%n)</pattern>
         </encoder>
     </appender>
     <root level="trace">
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="COLOR"/>
     </root>
-    <logger name="org.eclipse.jetty" level="INFO"/>
     <logger name="io.netty" level="INFO"/>
+    <logger name="io.ktor" level="INFO"/>
+    <logger name="io.ktor.client.HttpClient" level="WARN"/>
+    <logger name="org.mariadb" level="WARN"/>
+    <logger name="Exposed" level="INFO"/>
 </configuration>

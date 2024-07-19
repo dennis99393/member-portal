@@ -3,7 +3,7 @@ package org.dallasmakerspace.di
 import dagger.Module
 import dagger.Provides
 import org.dallasmakerspace.core.AppConfig
-import org.dallasmakerspace.core.Log
+import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.discourse.DiscourseApiClient
 import org.dallasmakerspace.discourse.DiscourseApiClientMock
 import org.dallasmakerspace.discourse.IDiscourseApiClient
@@ -12,12 +12,15 @@ import org.dallasmakerspace.discourse.IDiscourseApiClient
 class DiscourseModule {
 
   @Provides
-  fun provideDiscourseApiClient(appConfig: AppConfig, log: Log): IDiscourseApiClient =
+  fun provideDiscourseApiClient(
+      appConfig: AppConfig,
+      loggerFactory: LoggerFactory
+  ): IDiscourseApiClient =
       if (useMockServices(appConfig)) {
-        DiscourseApiClientMock(appConfig, log)
+        DiscourseApiClientMock(appConfig, loggerFactory)
         // DiscourseApiClient(appConfig, log)
       } else {
-        DiscourseApiClient(appConfig, log)
+        DiscourseApiClient(appConfig, loggerFactory)
       }
 
   private fun useMockServices(appConfig: AppConfig) =

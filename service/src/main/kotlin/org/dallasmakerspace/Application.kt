@@ -1,6 +1,7 @@
 package org.dallasmakerspace
 
 import io.ktor.server.application.*
+import org.dallasmakerspace.plugins.configureDatabase
 import org.dallasmakerspace.plugins.configureHTTP
 import org.dallasmakerspace.plugins.configureMonitoring
 import org.dallasmakerspace.plugins.configureRouting
@@ -15,4 +16,5 @@ fun Application.module() {
   configureMonitoring()
   configureHTTP()
   configureRouting()
+  configureDatabase()
 }
