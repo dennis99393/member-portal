@@ -363,7 +363,7 @@
     overflow: hidden;
     flex-direction: column;
     justify-content: flex-start;
-    padding: var(--padding-10xl) 0 0;
+    padding: var(--padding-10xl) 0 var(--padding-10xl);
     gap: 89px;
     line-height: normal;
     letter-spacing: normal;

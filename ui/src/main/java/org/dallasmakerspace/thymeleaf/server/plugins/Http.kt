@@ -30,7 +30,6 @@ fun Application.configureHttp() {
     deflate()
   }
   install(Webjars) { path = "assets" }
-  install(Sessions) { cookie<UserSession>("user_session", SessionStorageMemory()) }
   install(Authentication) {
     oauth("DMS") {
       urlProvider = { "${settings.baseUrl}/oidc-callback" }
@@ -77,10 +76,3 @@ private fun getOAuthServerSettings(
         call.request.queryParameters["redirectUrl"]?.let { RouteFactory.redirects[state] = it }
       })
 }
-
-data class UserSession(
-    var accessToken: String? = null,
-    var idHint: String? = null,
-    var adPrincipalUser: Map<String, Any> = mapOf(),
-    var isDiscourseLinkSuccess: Boolean = false,
-) : Principal

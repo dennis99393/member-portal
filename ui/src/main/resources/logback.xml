@@ -9,12 +9,14 @@
     </appender>
     <appender name="COLOR" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%aphighlight(%d{YYYY-MM-dd HH:mm:ss.SSS} %-5level %(%replace(%logger){'radio.k2mow.','...'}){25} - %msg%n)</pattern>
+            <pattern>%aphighlight(%d{YYYY-MM-dd HH:mm:ss.SSS} %-5level [%X{CallId}] %(%logger){25} - %msg%n)</pattern>
         </encoder>
     </appender>
     <root level="trace">
         <appender-ref ref="COLOR"/>
     </root>
-    <logger name="io.netty" level="DEBUG"/>
-    <logger name="io.ktor" level="DEBUG"/>
+    <logger name="io.netty" level="INFO"/>
+    <logger name="io.ktor" level="INFO"/>
+    <logger name="io.ktor.client.HttpClient" level="WARN"/>
+    <logger name="org.thymeleaf" level="INFO"/>
 </configuration>
