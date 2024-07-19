@@ -1,6 +1,7 @@
 <configuration>
     <conversionRule conversionWord="aphighlight"
                     converterClass="org.dallasmakerspace.thymeleaf.server.common.LogbackHighlightConverter"/>
+    <!--<conversionRule conversionWord="sessionid" converterClass="org.dallasmakerspace.thymeleaf.server.common.SessionIdConverter"/>-->
 
     <appender name="NOCOLOR" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -9,7 +10,7 @@
     </appender>
     <appender name="COLOR" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%aphighlight(%d{YYYY-MM-dd HH:mm:ss.SSS} %-5level [%X{CallId}] %(%logger){25} - %msg%n)</pattern>
+            <pattern>%aphighlight(%d{YYYY-MM-dd HH:mm:ss.SSS} %-5level [%X{sessionid:-NO_SESSION}] %(%logger){25} - %msg%n)</pattern>
         </encoder>
     </appender>
     <root level="trace">

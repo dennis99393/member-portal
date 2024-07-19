@@ -4,17 +4,24 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
+import io.ktor.util.*
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
 import org.dallasmakerspace.thymeleaf.server.common.HttpException
-import org.dallasmakerspace.thymeleaf.server.common.Log
+import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
+import org.slf4j.MDC
 
-abstract class AuthRouteHandler(private val userInfoProvider: UserInfoProvider) : IRouteHandler {
+abstract class AuthRouteHandler(
+    loggerFactory: LoggerFactory,
+    private val userInfoProvider: UserInfoProvider
+) : IRouteHandler {
+  private val log = loggerFactory.create(javaClass)
+
   protected lateinit var userInfo: Map<String, Any>
   protected var session: UserSession? = null
 
@@ -35,11 +42,11 @@ abstract class AuthRouteHandler(private val userInfoProvider: UserInfoProvider) 
         }
       } catch (e: HttpException) {
         call.sessions.clear<UserSession>()
-        Log.e("Failed to get user info: HttpException", e)
+        log.error("Failed to get user info: HttpException", e)
         redirectToLogin(call)
       } catch (e: AuthException) {
         call.sessions.clear<UserSession>()
-        Log.e("Failed to get user info", e)
+        log.error("Failed to get user info", e)
         throw e
       }
     } else {

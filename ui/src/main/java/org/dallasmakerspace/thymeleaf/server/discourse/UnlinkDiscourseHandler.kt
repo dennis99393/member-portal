@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import javax.inject.Inject
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
+import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.memberservice.MemberService
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.routes.AuthRouteHandler
@@ -11,9 +12,10 @@ import org.dallasmakerspace.thymeleaf.server.routes.AuthRouteHandler
 class UnlinkDiscourseHandler
 @Inject
 constructor(
+    loggerFactory: LoggerFactory,
     private val memberService: MemberService,
     private val userInfoProvider: UserInfoProvider
-) : AuthRouteHandler(userInfoProvider) {
+) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
     super.handle(call)
     val username =

@@ -9,14 +9,18 @@ import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.collections.set
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
+import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.memberservice.MemberService
 import org.dallasmakerspace.thymeleaf.server.models.DMSMember
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 
 class ProfileHandler
 @Inject
-constructor(private val memberService: MemberService, userInfoProvider: UserInfoProvider) :
-    AuthRouteHandler(userInfoProvider) {
+constructor(
+    loggerFactory: LoggerFactory,
+    private val memberService: MemberService,
+    userInfoProvider: UserInfoProvider
+) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
     super.handle(call)
     // Get username requested from path /profile/@{preferred_username}

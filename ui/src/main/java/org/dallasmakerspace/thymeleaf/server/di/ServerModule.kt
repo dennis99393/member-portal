@@ -3,9 +3,10 @@ package org.dallasmakerspace.thymeleaf.server.di
 import dagger.Module
 import dagger.Provides
 import org.dallasmakerspace.thymeleaf.server.common.DMSHttpClient
+import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
 
 @Module
 class ServerModule {
 
-  @Provides fun provideHttpClient() = DMSHttpClient()
+  @Provides fun provideHttpClient(loggerFactory: LoggerFactory) = DMSHttpClient(loggerFactory)
 }

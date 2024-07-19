@@ -9,7 +9,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
-import org.dallasmakerspace.thymeleaf.server.common.Log
+import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.memberservice.MemberService
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
@@ -33,11 +33,14 @@ import org.dallasmakerspace.thymeleaf.server.routes.IRouteHandler
 class DiscourseCallbackHandler
 @Inject
 constructor(
+    loggerFactory: LoggerFactory,
     private val discourseUtil: DiscourseUtil,
     private val memberService: MemberService,
     private val userInfoProvider: UserInfoProvider,
     private val discourseNonceCache: DiscourseNonceCache
 ) : IRouteHandler {
+
+  private val log = loggerFactory.create(javaClass)
 
   override suspend fun handle(call: ApplicationCall) {
     // Get sso and sig from query parameters
@@ -73,7 +76,7 @@ constructor(
               checkNotNull(jsonMap["preferred_username"] as String?) { "No username in userinfo" }
             } catch (e: AuthException) {
               call.sessions.clear<UserSession>()
-              Log.e("Failed to get user info", e)
+              log.error("Failed to get user info", e)
               throw DiscourseException("Failed to get user info")
             }
 

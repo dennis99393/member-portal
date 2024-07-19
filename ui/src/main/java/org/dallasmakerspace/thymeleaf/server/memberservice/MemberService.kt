@@ -2,10 +2,14 @@ package org.dallasmakerspace.thymeleaf.server.memberservice
 
 import javax.inject.Inject
 import org.dallasmakerspace.thymeleaf.server.common.HttpException
-import org.dallasmakerspace.thymeleaf.server.common.Log
+import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.models.DMSMember
 
-class MemberService @Inject constructor(private val memberServiceClient: MemberServiceClient) {
+class MemberService
+@Inject
+constructor(loggerFactory: LoggerFactory, private val memberServiceClient: MemberServiceClient) {
+  private val log = loggerFactory.create(javaClass)
+
   suspend fun linkDiscourseAccount(
       username: String,
       discourseUsername: String,
@@ -19,7 +23,7 @@ class MemberService @Inject constructor(private val memberServiceClient: MemberS
     try { // Patch object
       memberServiceClient.patchMember(username, member)
     } catch (e: HttpException) {
-      Log.e("Failed to patch member: $username; member object: $member", e)
+      log.error("Failed to patch member: $username; member object: $member", e)
       throw MemberServiceException("Failed to patch member: $username; member object: $member", e)
     }
   }
@@ -37,7 +41,7 @@ class MemberService @Inject constructor(private val memberServiceClient: MemberS
     try { // Patch object
       memberServiceClient.patchMember(username, member)
     } catch (e: HttpException) {
-      Log.e("Failed to patch member: $username; member object: $member", e)
+      log.error("Failed to patch member: $username; member object: $member", e)
       throw MemberServiceException("Failed to patch member: $username; member object: $member", e)
     }
   }
