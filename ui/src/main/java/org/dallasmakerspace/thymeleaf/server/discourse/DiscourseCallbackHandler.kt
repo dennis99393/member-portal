@@ -105,7 +105,8 @@ constructor(
               }
             }
 
-        memberService.linkDiscourseAccount(username, discourseUsername, discourseAvatarUrl,session.sessionId)
+        memberService.linkDiscourseAccount(
+            username, discourseUsername, discourseAvatarUrl, session.sessionId)
 
         // Set success flag in session
         session.isDiscourseLinkSuccess = true

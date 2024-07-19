@@ -15,7 +15,7 @@ private const val NONCE_RANGE_END = 9999999
 class LinkDiscourseHandler
 @Inject
 constructor(
-  loggerFactory: LoggerFactory,
+    loggerFactory: LoggerFactory,
     private val userInfoProvider: UserInfoProvider,
     private val discourseNonceCache: DiscourseNonceCache,
     private val discourseLinkProvider: DiscourseSSOProvider

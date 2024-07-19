@@ -1,19 +1,19 @@
 package org.dallasmakerspace.thymeleaf.server.memberservice
 
 import io.ktor.util.*
+import javax.inject.Inject
+import javax.inject.Singleton
 import org.dallasmakerspace.thymeleaf.server.common.AppConfig
 import org.dallasmakerspace.thymeleaf.server.common.DMSHttpClient
 import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.models.DMSMember
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class MemberServiceClient
 @Inject
 constructor(
     loggerFactory: LoggerFactory,
-    private val appConfig: AppConfig,
+    appConfig: AppConfig,
     private val dmsHttpClient: DMSHttpClient
 ) {
   private val log = loggerFactory.create(javaClass)
@@ -28,9 +28,9 @@ constructor(
         try {
           val apiHeaders = getApiHeaders(sessionId)
           dmsHttpClient.get("$baseUrl/members/$username", apiHeaders)
-        } catch (e: Exception) {
-          log.error("Failed to get member: $username", e)
-          throw MemberServiceException("Failed to get member: $username", e)
+        } catch (ignored: Exception) {
+          log.error("Failed to get member: $username", ignored)
+          throw MemberServiceException("Failed to get member: $username", ignored)
         }
     return DMSMember.fromMap(userMap)
   }

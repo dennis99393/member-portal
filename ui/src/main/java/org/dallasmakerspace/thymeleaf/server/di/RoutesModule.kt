@@ -30,7 +30,7 @@ class RoutesModule {
   @Provides
   @StringKey("/profile/@{preferred_username}")
   fun providesProfileHandler(
-    loggerFactory: LoggerFactory,
+      loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
       memberService: MemberService
   ): IRouteHandler = ProfileHandler(loggerFactory, memberService, userInfoProvider)

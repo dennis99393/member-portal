@@ -14,7 +14,7 @@ class UnlinkDiscourseHandler
 constructor(
     loggerFactory: LoggerFactory,
     private val memberService: MemberService,
-    private val userInfoProvider: UserInfoProvider
+    userInfoProvider: UserInfoProvider
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
     super.handle(call)
