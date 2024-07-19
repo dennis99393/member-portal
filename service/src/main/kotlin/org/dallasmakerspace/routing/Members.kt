@@ -16,6 +16,9 @@ class Members(val sort: String? = "new") {
   ) {
     @Resource("update") class Update(val parent: DMSMember)
 
-    @Resource("activity") class ActivityLog(val parent: DMSMember)
+    @Resource("activity")
+    class ActivityLog(val parent: DMSMember) {
+      @Resource("add") class Add(val parent: ActivityLog)
+    }
   }
 }

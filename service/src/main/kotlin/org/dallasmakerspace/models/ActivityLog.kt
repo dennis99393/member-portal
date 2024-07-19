@@ -5,13 +5,13 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ActivityLog(
-    val id: Int,
-    val source: String,
+    val id: Int? = null,
+    val source: ActivityLogSource,
     val actorProfileUsername: String?,
     val subjectProfileUsername: String,
-    val event: String,
+    val event: ActivityLogEvent,
     val attributes: String?,
-    val created: LocalDateTime
+    val created: LocalDateTime? = null
 )
 
 @Suppress("MagicNumber")

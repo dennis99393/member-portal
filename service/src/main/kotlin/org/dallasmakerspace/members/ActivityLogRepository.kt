@@ -1,7 +1,6 @@
 package org.dallasmakerspace.members
 
 import javax.inject.Inject
-import kotlinx.datetime.toJavaLocalDateTime
 import org.dallasmakerspace.members.db.ActivityLogDAO
 import org.dallasmakerspace.members.db.ActivityLogTable
 import org.dallasmakerspace.members.db.ProfileColumnAliases.actorProfileAlias
@@ -10,8 +9,6 @@ import org.dallasmakerspace.members.db.ProfileTable
 import org.dallasmakerspace.members.db.daoToActivityLogModel
 import org.dallasmakerspace.members.db.suspendTransaction
 import org.dallasmakerspace.models.ActivityLog
-import org.dallasmakerspace.models.ActivityLogEvent
-import org.dallasmakerspace.models.ActivityLogSource
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.select
 
@@ -42,8 +39,8 @@ class ActivityLogRepository @Inject constructor() {
 
   /** Inserts a new activity log entry. */
   suspend fun insertActivityLogEntry(activityLog: ActivityLog) = suspendTransaction {
-    ActivityLogDAO.new {
-      source = ActivityLogSource.valueOf(activityLog.source).ordinal
+    ActivityLogDAO.new(null) {
+      source = activityLog.source.value
       actorProfileRowId =
           ProfileTable.select { ProfileTable.username eq activityLog.actorProfileUsername }
               .first()[ProfileTable.idColumn]
@@ -52,9 +49,8 @@ class ActivityLogRepository @Inject constructor() {
           ProfileTable.select { ProfileTable.username eq activityLog.subjectProfileUsername }
               .first()[ProfileTable.idColumn]
               .value
-      event = ActivityLogEvent.valueOf(activityLog.event).ordinal
+      event = activityLog.event.value
       attributes = activityLog.attributes
-      created = activityLog.created.toJavaLocalDateTime()
     }
   }
 }

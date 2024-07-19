@@ -44,6 +44,8 @@ fun Application.configureRouting() {
     swaggerUI(path = "openapi")
 
     authenticate(ApiKeyAuthProvider.X_API_KEY) {
+
+      /** Member profile operations * */
       get<Members.DMSMember> { memberRequested ->
         val member = memberService.getMember(memberRequested.username)
         call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
@@ -57,6 +59,7 @@ fun Application.configureRouting() {
             ApiResponse(Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember))
       }
 
+      /** Activity Log operations * */
       get<Members.DMSMember.ActivityLog> { activityLogRequested ->
         // Get activity log ...
         val activityLog =

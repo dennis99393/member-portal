@@ -127,11 +127,15 @@ constructor(
     discourseService.removeUserFromDmsMembersV1Group(
         requireNotNull(memberFromApi.discourseUsername))
     discourseService.addUserToDmsMembersV2Group(requireNotNull(memberFromApi.discourseUsername))
+    activityLogService.insertActivityLogEntry(
+        subjectUsername = memberFromApi.username, event = ActivityLogEvent.LINK_DISCOURSE)
   }
 
   private suspend fun unlinkDiscourse(dbMember: DMSMember) {
     // Remove the member from the discourse group.
     discourseService.removeUserFromDmsMembersV2Group(requireNotNull(dbMember.discourseUsername))
     discourseService.addUserToDmsMembersV1Group(requireNotNull(dbMember.discourseUsername))
+    activityLogService.insertActivityLogEntry(
+        subjectUsername = dbMember.username, event = ActivityLogEvent.UNLINK_DISCOURSE)
   }
 }

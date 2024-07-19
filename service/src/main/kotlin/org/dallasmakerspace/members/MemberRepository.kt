@@ -1,5 +1,6 @@
 package org.dallasmakerspace.members
 
+import org.dallasmakerspace.core.LoggerFactory
 import javax.inject.Inject
 import org.dallasmakerspace.members.db.ProfileDAO
 import org.dallasmakerspace.members.db.ProfileTable
@@ -11,8 +12,8 @@ import org.dallasmakerspace.models.DMSMember
  * Manages member data. Fetches and updates member data. Contains validation and orchestration logic
  * for updating member data.
  */
-class MemberRepository @Inject constructor() {
-
+class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
+  private val log = loggerFactory.create(javaClass)
   /**
    * Fetches member data from the database. If the member does not exist in the database, inserts a
    * new member.
@@ -26,12 +27,14 @@ class MemberRepository @Inject constructor() {
           .firstOrNull()
           ?.let { daoToProfileModel(it) }
     }
-    if (existingMember == null) {
-      // Insert the member into the database.
-      return daoToProfileModel(suspendTransaction { ProfileDAO.new {} })
+    return if (existingMember == null) {
+      log.info("Member not found in DB: $username; inserting new record.")
+      daoToProfileModel(suspendTransaction { ProfileDAO.new(username) {} })
     } else {
-      return existingMember
+      log.debug("Member found in DB: $username")
+      existingMember
     }
+
   }
 
   /**
@@ -43,14 +46,14 @@ class MemberRepository @Inject constructor() {
   suspend fun updateMember(username: String, member: DMSMember) {
     suspendTransaction {
       val existingMember =
-          ProfileDAO.find { ProfileTable.username eq username }
-              .firstOrNull()
-              ?.let { daoToProfileModel(it) }
+          ProfileDAO.find { ProfileTable.username eq username }.firstOrNull()
               ?: throw IllegalArgumentException("Member does not exist in DB: $username")
-      existingMember.avatarUrl = member.avatarUrl
-      existingMember.discourseUsername = member.discourseUsername
-      existingMember.discourseAvatarUrl = member.discourseAvatarUrl
-      existingMember.discordUserId = member.discordUserId
+      existingMember.apply {
+        avatarUrl = member.avatarUrl
+        discourseUsername = member.discourseUsername
+        discourseAvatarUrl = member.discourseAvatarUrl
+        discordUserId = member.discordUserId
+      }
     }
   }
 }

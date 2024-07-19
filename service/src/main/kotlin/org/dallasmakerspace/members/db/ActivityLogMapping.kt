@@ -21,7 +21,7 @@ object ActivityLogTable : IdTable<Int>("activity_log") {
   val subjectProfileRowId = integer("subject_profile_row_id").references(ProfileTable.idColumn)
   val event = integer("event")
   val attributes = text("attributes").nullable()
-  val created = datetime("created")
+  val created = datetime("created").nullable()
 
   override val id: Column<EntityID<Int>>
     get() = idColumn
@@ -41,9 +41,9 @@ class ActivityLogDAO(id: EntityID<Int>) : Entity<Int>(id) {
 fun daoToActivityLogModel(resultRow: ResultRow) =
     ActivityLog(
         resultRow[ActivityLogTable.idColumn].value,
-        resultRow[ActivityLogTable.sourceColumn].let { ActivityLogSource.entries[it] }.toString(),
+        resultRow[ActivityLogTable.sourceColumn].let { ActivityLogSource.entries[it] },
         resultRow[ProfileColumnAliases.actorProfileAlias[ProfileTable.username]].toString(),
         resultRow[ProfileColumnAliases.subjectProfileAlias[ProfileTable.username]].toString(),
-        resultRow[ActivityLogTable.event].let { ActivityLogEvent.entries[it] }.toString(),
+        resultRow[ActivityLogTable.event].let { ActivityLogEvent.entries[it] },
         resultRow[ActivityLogTable.attributes],
-        resultRow[ActivityLogTable.created].toKotlinLocalDateTime())
+        resultRow[ActivityLogTable.created]?.toKotlinLocalDateTime())

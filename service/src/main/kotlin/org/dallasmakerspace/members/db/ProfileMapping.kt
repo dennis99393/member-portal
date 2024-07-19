@@ -1,6 +1,7 @@
 package org.dallasmakerspace.members.db
 
 import kotlinx.coroutines.Dispatchers
+import org.dallasmakerspace.members.db.ProfileTable.username
 import org.dallasmakerspace.models.DMSMember
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
@@ -13,7 +14,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 
 /** Exposed table for the mariaDB table - profile. */
 @Suppress("MagicNumber")
-object ProfileTable : IdTable<Int>("profile") {
+object ProfileTable : IdTable<String>("profile") {
   val idColumn: Column<EntityID<Int>> = integer("id").autoIncrement().entityId()
   val username: Column<EntityID<String>> = varchar("username", 100).entityId()
   val avatarUrl: Column<String?> = varchar("avatar_url", 2083).nullable()
@@ -21,8 +22,8 @@ object ProfileTable : IdTable<Int>("profile") {
   val discourseAvatarUrl: Column<String?> = varchar("discourse_avatar_url", 2083).nullable()
   val discordUserId: Column<String?> = varchar("discord_userid", 100).nullable()
   val attributes: Column<String?> = text("attributes").nullable()
-  override val id: Column<EntityID<Int>>
-    get() = idColumn
+  override val id: Column<EntityID<String>>
+    get() = username
 }
 
 /** Column aliases used in other tables to reference the profile table. */
@@ -31,10 +32,10 @@ object ProfileColumnAliases {
   val subjectProfileAlias = ProfileTable.alias("subjectProfile")
 }
 
-class ProfileDAO(rowId: EntityID<Int>) : Entity<Int>(rowId) {
-  companion object : EntityClass<Int, ProfileDAO>(ProfileTable)
+class ProfileDAO(username: EntityID<String>) : Entity<String>(username) {
+  companion object : EntityClass<String, ProfileDAO>(ProfileTable)
 
-  var username by ProfileTable.username
+  var idColumn by ProfileTable.idColumn
   var avatarUrl by ProfileTable.avatarUrl
   var discourseUsername by ProfileTable.discourseUsername
   var discourseAvatarUrl by ProfileTable.discourseAvatarUrl
@@ -47,8 +48,8 @@ suspend fun <T> suspendTransaction(block: Transaction.() -> T): T =
 
 fun daoToProfileModel(dao: ProfileDAO) =
     DMSMember(
-        dao.id.value,
-        username = dao.username.value,
+        id = dao.idColumn.value,
+        username = dao.id.value,
         avatarUrl = dao.avatarUrl,
         discourseUsername = dao.discourseUsername,
         discourseAvatarUrl = dao.discourseAvatarUrl,
