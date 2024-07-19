@@ -13,33 +13,34 @@ constructor(loggerFactory: LoggerFactory, private val memberServiceClient: Membe
   suspend fun linkDiscourseAccount(
       username: String,
       discourseUsername: String,
-      discourseAvatarUrl: String?
+      discourseAvatarUrl: String?,
+      sessionId: String?
   ) {
     // Get member object
-    val member = memberServiceClient.getMember(username)
+    val member = memberServiceClient.getMember(username, sessionId)
     // Update discourseUserName
     member.discourseUsername = discourseUsername
     member.discourseAvatarUrl = discourseAvatarUrl
     try { // Patch object
-      memberServiceClient.patchMember(username, member)
+      memberServiceClient.patchMember(username, member, sessionId)
     } catch (e: HttpException) {
       log.error("Failed to patch member: $username; member object: $member", e)
       throw MemberServiceException("Failed to patch member: $username; member object: $member", e)
     }
   }
 
-  suspend fun getMember(username: String): DMSMember {
-    return memberServiceClient.getMember(username)
+  suspend fun getMember(username: String, sessionId: String?): DMSMember {
+    return memberServiceClient.getMember(username, sessionId)
   }
 
-  suspend fun unlinkDiscourseAccount(username: String) {
+  suspend fun unlinkDiscourseAccount(username: String, sessionId: String?) {
     // Get member object
-    val member = memberServiceClient.getMember(username)
+    val member = memberServiceClient.getMember(username, sessionId)
     // Update discourseUserName
     member.discourseUsername = null
     member.discourseAvatarUrl = null
     try { // Patch object
-      memberServiceClient.patchMember(username, member)
+      memberServiceClient.patchMember(username, member, sessionId)
     } catch (e: HttpException) {
       log.error("Failed to patch member: $username; member object: $member", e)
       throw MemberServiceException("Failed to patch member: $username; member object: $member", e)

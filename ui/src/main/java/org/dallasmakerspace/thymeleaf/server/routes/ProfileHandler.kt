@@ -21,13 +21,15 @@ constructor(
     private val memberService: MemberService,
     userInfoProvider: UserInfoProvider
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
+  private val log = loggerFactory.create(javaClass)
+
   override suspend fun handle(call: ApplicationCall) {
     super.handle(call)
     // Get username requested from path /profile/@{preferred_username}
     val requestedUsername =
         call.parameters["preferred_username"]
             ?: throw AuthException("No username found in url path")
-    val requestedMember = memberService.getMember(requestedUsername)
+    val requestedMember = memberService.getMember(requestedUsername, session?.sessionId)
     val memberSinceString = getMemberSinceString(requestedMember.memberSince)
     val memberDurationString = getMemberDurationString(requestedMember.memberSince)
     val jsonMap =
@@ -60,6 +62,7 @@ constructor(
       jsonMap: MutableMap<String, Any>,
       requestedMember: DMSMember
   ) {
+    log.info("Setting toast message for ${requestedMember.username} successful discourse link")
     if (session?.isDiscourseLinkSuccess == true) {
       session?.isDiscourseLinkSuccess = false
       call.sessions.set(session)
@@ -102,7 +105,7 @@ constructor(
   }
 
   /**
-   * Format the [DMSMember.memberSince] date into a human readable string.
+   * Format the [DMSMember.memberSince] date into a human-readable string.
    *
    * @param memberSince The date the member joined the space. e.g. - 2022-09-10T16:36:20Z
    * @return A human-readable string like - "Sept 2022".

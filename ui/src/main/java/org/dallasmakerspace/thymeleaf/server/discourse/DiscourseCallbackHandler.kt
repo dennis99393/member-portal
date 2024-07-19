@@ -1,6 +1,5 @@
 package org.dallasmakerspace.thymeleaf.server.discourse
 
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
@@ -106,7 +105,7 @@ constructor(
               }
             }
 
-        memberService.linkDiscourseAccount(username, discourseUsername, discourseAvatarUrl)
+        memberService.linkDiscourseAccount(username, discourseUsername, discourseAvatarUrl,session.sessionId)
 
         // Set success flag in session
         session.isDiscourseLinkSuccess = true

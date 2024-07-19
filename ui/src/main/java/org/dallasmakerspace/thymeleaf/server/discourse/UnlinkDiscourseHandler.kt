@@ -21,7 +21,7 @@ constructor(
     val username =
         userInfo["preferred_username"] as? String
             ?: throw AuthException("No username found in user info")
-    memberService.unlinkDiscourseAccount(username)
+    memberService.unlinkDiscourseAccount(username, session?.sessionId)
     call.respondRedirect("/profile/@$username", permanent = false)
   }
 }

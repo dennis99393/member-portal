@@ -8,9 +8,11 @@ import io.ktor.server.plugins.*
 import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.callloging.*
 import io.ktor.server.request.*
+import io.ktor.server.sessions.*
 import io.ktor.util.*
 import io.ktor.util.date.*
 import org.dallasmakerspace.thymeleaf.server.di.DaggerAppComponent
+import org.slf4j.MDC
 import org.slf4j.event.Level
 
 fun Application.configureMonitoring() {
@@ -25,6 +27,8 @@ fun Application.configureMonitoring() {
       val httpMethod = call.request.httpMethod.value
       val ipAddress = call.request.origin.remoteAddress
       val path = call.request.path()
+      val sessionId = call.sessions.get<UserSession>()?.sessionId
+      MDC.putCloseable("sessionid", sessionId)
       val timeTaken = call.processingTimeMillis { getTimeMillis() }
       val userAgent = call.request.headers["User-Agent"]
       "IP: $ipAddress, Status: $status, HTTP: $httpMethod, URL: $path, Time: $timeTaken ms, User agent: $userAgent"

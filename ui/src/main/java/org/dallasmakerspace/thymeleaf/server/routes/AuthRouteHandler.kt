@@ -4,9 +4,6 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
-import io.ktor.util.*
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
@@ -14,7 +11,8 @@ import org.dallasmakerspace.thymeleaf.server.common.HttpException
 import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
-import org.slf4j.MDC
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 abstract class AuthRouteHandler(
     loggerFactory: LoggerFactory,
