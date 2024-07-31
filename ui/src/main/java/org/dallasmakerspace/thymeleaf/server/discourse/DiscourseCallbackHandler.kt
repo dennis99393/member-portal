@@ -8,7 +8,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
-import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
+import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.memberservice.MemberService
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
@@ -32,11 +32,11 @@ import org.dallasmakerspace.thymeleaf.server.routes.IRouteHandler
 class DiscourseCallbackHandler
 @Inject
 constructor(
-    loggerFactory: LoggerFactory,
-    private val discourseUtil: DiscourseUtil,
-    private val memberService: MemberService,
-    private val userInfoProvider: UserInfoProvider,
-    private val discourseNonceCache: DiscourseNonceCache
+  loggerFactory: LoggerFactory,
+  private val discourseUtil: DiscourseUtil,
+  private val memberService: MemberService,
+  private val userInfoProvider: UserInfoProvider,
+  private val discourseNonceCache: DiscourseNonceCache
 ) : IRouteHandler {
 
   private val log = loggerFactory.create(javaClass)

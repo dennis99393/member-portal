@@ -2,7 +2,7 @@ package org.dallasmakerspace.thymeleaf.server.memberservice
 
 import javax.inject.Inject
 import org.dallasmakerspace.thymeleaf.server.common.HttpException
-import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
+import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.models.DMSMember
 
 class MemberService

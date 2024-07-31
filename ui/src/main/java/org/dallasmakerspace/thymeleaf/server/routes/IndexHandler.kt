@@ -2,11 +2,10 @@ package org.dallasmakerspace.thymeleaf.server.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
 import javax.inject.Inject
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
-import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
+import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 
 class IndexHandler
 @Inject

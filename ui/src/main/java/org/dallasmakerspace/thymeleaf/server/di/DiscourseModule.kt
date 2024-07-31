@@ -5,7 +5,7 @@ import dagger.Provides
 import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
-import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
+import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.discourse.DiscourseCallbackHandler
 import org.dallasmakerspace.thymeleaf.server.discourse.DiscourseNonceCache
 import org.dallasmakerspace.thymeleaf.server.discourse.DiscourseSSOProvider
@@ -28,10 +28,10 @@ class DiscourseModule {
   @Provides
   @StringKey("/link-discourse")
   fun providesLinkDiscourseHandler(
-      loggerFactory: LoggerFactory,
-      userInfoProvider: UserInfoProvider,
-      discourseNonceCache: DiscourseNonceCache,
-      discourseSSOProvider: DiscourseSSOProvider
+    loggerFactory: LoggerFactory,
+    userInfoProvider: UserInfoProvider,
+    discourseNonceCache: DiscourseNonceCache,
+    discourseSSOProvider: DiscourseSSOProvider
   ): IRouteHandler =
       LinkDiscourseHandler(
           loggerFactory,
@@ -44,20 +44,20 @@ class DiscourseModule {
   @Provides
   @StringKey("/unlink-discourse")
   fun providesUnlinkDiscourseHandler(
-      loggerFactory: LoggerFactory,
-      memberService: MemberService,
-      userInfoProvider: UserInfoProvider
+    loggerFactory: LoggerFactory,
+    memberService: MemberService,
+    userInfoProvider: UserInfoProvider
   ): IRouteHandler = UnlinkDiscourseHandler(loggerFactory, memberService, userInfoProvider)
 
   @IntoMap
   @Provides
   @StringKey("/discourse-callback")
   fun providesDiscourseHandler(
-      loggerFactory: LoggerFactory,
-      discourseUtil: DiscourseUtil,
-      memberService: MemberService,
-      userInfoProvider: UserInfoProvider,
-      discourseNonceCache: DiscourseNonceCache
+    loggerFactory: LoggerFactory,
+    discourseUtil: DiscourseUtil,
+    memberService: MemberService,
+    userInfoProvider: UserInfoProvider,
+    discourseNonceCache: DiscourseNonceCache
   ): IRouteHandler =
       DiscourseCallbackHandler(
           loggerFactory, discourseUtil, memberService, userInfoProvider, discourseNonceCache)

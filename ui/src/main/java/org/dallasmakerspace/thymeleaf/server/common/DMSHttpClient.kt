@@ -9,6 +9,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.gson.*
 import io.ktor.util.*
+import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Singleton
 

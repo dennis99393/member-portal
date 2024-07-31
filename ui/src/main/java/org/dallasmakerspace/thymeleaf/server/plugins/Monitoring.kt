@@ -27,11 +27,14 @@ fun Application.configureMonitoring() {
       val httpMethod = call.request.httpMethod.value
       val ipAddress = call.request.origin.remoteAddress
       val path = call.request.path()
-      val sessionId = call.sessions.get<UserSession>()?.sessionId
+      val session = call.sessions.get<UserSession>()
+      val sessionId = session?.sessionId
+      val userId = session?.userId
+      MDC.putCloseable("userid", userId)
       MDC.putCloseable("sessionid", sessionId)
       val timeTaken = call.processingTimeMillis { getTimeMillis() }
       val userAgent = call.request.headers["User-Agent"]
-      "IP: $ipAddress, Status: $status, HTTP: $httpMethod, URL: $path, Time: $timeTaken ms, User agent: $userAgent"
+      "IP: $ipAddress, Status: $status, HTTP: $httpMethod, URL: $path, Time: ${timeTaken}ms, User agent: $userAgent"
     }
   }
 }

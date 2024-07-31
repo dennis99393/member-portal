@@ -5,16 +5,16 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import org.dallasmakerspace.thymeleaf.server.common.AppConfig
 import org.dallasmakerspace.thymeleaf.server.common.DMSHttpClient
-import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
+import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.models.DMSMember
 
 @Singleton
 class MemberServiceClient
 @Inject
 constructor(
-    loggerFactory: LoggerFactory,
-    appConfig: AppConfig,
-    private val dmsHttpClient: DMSHttpClient
+  loggerFactory: LoggerFactory,
+  appConfig: AppConfig,
+  private val dmsHttpClient: DMSHttpClient
 ) {
   private val log = loggerFactory.create(javaClass)
   private val baseUrl = appConfig.requireStringProperty("app.member-service.url")

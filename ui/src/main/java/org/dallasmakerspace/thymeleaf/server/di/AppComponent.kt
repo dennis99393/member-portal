@@ -4,7 +4,7 @@ import dagger.Component
 import io.ktor.server.application.*
 import javax.inject.Singleton
 import org.dallasmakerspace.thymeleaf.server.common.AppConfig
-import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
+import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 
 @Singleton
 @Component(modules = [DiscourseModule::class, RoutesModule::class, ServerModule::class])

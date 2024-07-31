@@ -5,7 +5,7 @@ import io.ktor.server.response.*
 import javax.inject.Inject
 import kotlin.random.Random
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
-import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
+import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.routes.AuthRouteHandler
 
@@ -15,10 +15,10 @@ private const val NONCE_RANGE_END = 9999999
 class LinkDiscourseHandler
 @Inject
 constructor(
-    loggerFactory: LoggerFactory,
-    private val userInfoProvider: UserInfoProvider,
-    private val discourseNonceCache: DiscourseNonceCache,
-    private val discourseLinkProvider: DiscourseSSOProvider
+  loggerFactory: LoggerFactory,
+  userInfoProvider: UserInfoProvider,
+  private val discourseNonceCache: DiscourseNonceCache,
+  private val discourseLinkProvider: DiscourseSSOProvider
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
     super.handle(call)

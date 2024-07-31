@@ -10,13 +10,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
 import org.dallasmakerspace.thymeleaf.server.common.HttpException
-import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
+import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
 
 abstract class AuthRouteHandler(
-    loggerFactory: LoggerFactory,
-    private val userInfoProvider: UserInfoProvider
+  loggerFactory: LoggerFactory,
+  private val userInfoProvider: UserInfoProvider
 ) : IRouteHandler {
   private val log = loggerFactory.create(javaClass)
 
@@ -38,6 +38,7 @@ abstract class AuthRouteHandler(
           call.sessions.clear<UserSession>()
           throw AuthException("User $user is not a member of the Infra team")
         }
+        call.sessions.set(session?.copy(userId = user))
       } catch (e: HttpException) {
         call.sessions.clear<UserSession>()
         log.error("Failed to get user info: HttpException", e)

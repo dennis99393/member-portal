@@ -9,7 +9,7 @@ import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.collections.set
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
-import org.dallasmakerspace.thymeleaf.server.common.LoggerFactory
+import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.memberservice.MemberService
 import org.dallasmakerspace.thymeleaf.server.models.DMSMember
 import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
@@ -17,9 +17,9 @@ import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 class ProfileHandler
 @Inject
 constructor(
-    loggerFactory: LoggerFactory,
-    private val memberService: MemberService,
-    userInfoProvider: UserInfoProvider
+  loggerFactory: LoggerFactory,
+  private val memberService: MemberService,
+  userInfoProvider: UserInfoProvider
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 

@@ -15,4 +15,5 @@ data class UserSession(
     var adPrincipalUser: Map<String, Any> = mapOf(),
     var isDiscourseLinkSuccess: Boolean = false,
     var sessionId: String? = null,
+    var userId: String? = null,
 ) : Principal

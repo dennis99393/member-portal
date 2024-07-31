@@ -38,6 +38,10 @@ dependencies {
   implementation("io.ktor", "ktor-server-thymeleaf-jvm", ktorVersion)
   implementation("io.ktor:ktor-server-webjars:$ktorVersion")
   implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", kotlinxVersion)
+  // Elasticsearch logging
+  implementation("co.elastic.clients:elasticsearch-java:8.14.3")
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+  implementation("com.agido:logback-elasticsearch-appender:3.0.11")
 
 
 

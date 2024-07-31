@@ -1,4 +1,4 @@
-package org.dallasmakerspace.thymeleaf.server.common
+package org.dallasmakerspace.thymeleaf.server.common.logging
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
