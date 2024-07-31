@@ -32,11 +32,11 @@ import org.dallasmakerspace.thymeleaf.server.routes.IRouteHandler
 class DiscourseCallbackHandler
 @Inject
 constructor(
-  loggerFactory: LoggerFactory,
-  private val discourseUtil: DiscourseUtil,
-  private val memberService: MemberService,
-  private val userInfoProvider: UserInfoProvider,
-  private val discourseNonceCache: DiscourseNonceCache
+    loggerFactory: LoggerFactory,
+    private val discourseUtil: DiscourseUtil,
+    private val memberService: MemberService,
+    private val userInfoProvider: UserInfoProvider,
+    private val discourseNonceCache: DiscourseNonceCache
 ) : IRouteHandler {
 
   private val log = loggerFactory.create(javaClass)

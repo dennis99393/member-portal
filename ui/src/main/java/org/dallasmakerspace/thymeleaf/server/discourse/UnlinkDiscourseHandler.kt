@@ -12,9 +12,9 @@ import org.dallasmakerspace.thymeleaf.server.routes.AuthRouteHandler
 class UnlinkDiscourseHandler
 @Inject
 constructor(
-  loggerFactory: LoggerFactory,
-  private val memberService: MemberService,
-  userInfoProvider: UserInfoProvider
+    loggerFactory: LoggerFactory,
+    private val memberService: MemberService,
+    userInfoProvider: UserInfoProvider
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
     super.handle(call)

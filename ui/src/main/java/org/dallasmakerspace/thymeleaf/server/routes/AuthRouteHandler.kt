@@ -15,8 +15,8 @@ import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 import org.dallasmakerspace.thymeleaf.server.plugins.UserSession
 
 abstract class AuthRouteHandler(
-  loggerFactory: LoggerFactory,
-  private val userInfoProvider: UserInfoProvider
+    loggerFactory: LoggerFactory,
+    private val userInfoProvider: UserInfoProvider
 ) : IRouteHandler {
   private val log = loggerFactory.create(javaClass)
 

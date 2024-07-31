@@ -15,10 +15,10 @@ private const val NONCE_RANGE_END = 9999999
 class LinkDiscourseHandler
 @Inject
 constructor(
-  loggerFactory: LoggerFactory,
-  userInfoProvider: UserInfoProvider,
-  private val discourseNonceCache: DiscourseNonceCache,
-  private val discourseLinkProvider: DiscourseSSOProvider
+    loggerFactory: LoggerFactory,
+    userInfoProvider: UserInfoProvider,
+    private val discourseNonceCache: DiscourseNonceCache,
+    private val discourseLinkProvider: DiscourseSSOProvider
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
     super.handle(call)

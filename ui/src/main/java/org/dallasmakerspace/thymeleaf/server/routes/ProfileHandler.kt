@@ -17,9 +17,9 @@ import org.dallasmakerspace.thymeleaf.server.plugins.AuthException
 class ProfileHandler
 @Inject
 constructor(
-  loggerFactory: LoggerFactory,
-  private val memberService: MemberService,
-  userInfoProvider: UserInfoProvider
+    loggerFactory: LoggerFactory,
+    private val memberService: MemberService,
+    userInfoProvider: UserInfoProvider
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 

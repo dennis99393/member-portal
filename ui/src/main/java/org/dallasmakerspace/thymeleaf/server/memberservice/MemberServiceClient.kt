@@ -12,9 +12,9 @@ import org.dallasmakerspace.thymeleaf.server.models.DMSMember
 class MemberServiceClient
 @Inject
 constructor(
-  loggerFactory: LoggerFactory,
-  appConfig: AppConfig,
-  private val dmsHttpClient: DMSHttpClient
+    loggerFactory: LoggerFactory,
+    appConfig: AppConfig,
+    private val dmsHttpClient: DMSHttpClient
 ) {
   private val log = loggerFactory.create(javaClass)
   private val baseUrl = appConfig.requireStringProperty("app.member-service.url")
