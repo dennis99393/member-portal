@@ -18,7 +18,7 @@ plugins {
 version = "0.0.1"
 
 application {
-    mainClass.set("io.ktor.server.netty.EngineMain")
+    mainClass.set("org.dallasmakerspace.ApplicationKt")
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
@@ -68,6 +68,10 @@ dependencies {
     implementation("com.ucasoft.ktor:ktor-simple-memory-cache:0.+")                 // In memory cache
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.4.0")
+    // Elasticsearch logging
+    implementation("co.elastic.clients:elasticsearch-java:8.14.3")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+    implementation("com.agido:logback-elasticsearch-appender:3.0.11")
 
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")

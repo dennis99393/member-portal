@@ -1,7 +1,7 @@
 package org.dallasmakerspace.members
 
-import org.dallasmakerspace.core.LoggerFactory
 import javax.inject.Inject
+import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.members.db.ProfileDAO
 import org.dallasmakerspace.members.db.ProfileTable
 import org.dallasmakerspace.members.db.daoToProfileModel
@@ -34,7 +34,6 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
       log.debug("Member found in DB: $username")
       existingMember
     }
-
   }
 
   /**

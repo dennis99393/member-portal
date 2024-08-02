@@ -9,15 +9,86 @@
     </appender>
     <appender name="COLOR" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%aphighlight(%d{YYYY-MM-dd HH:mm:ss.SSS} %-5level [%X{CallId}] %(%logger){25} - %msg%n)</pattern>
+            <pattern>%aphighlight(%d{YYYY-MM-dd HH:mm:ss.SSS} %-5level [%X{CallId}:%X{userid:-NO_USER}] %(%logger){25} - %msg%n)</pattern>
         </encoder>
     </appender>
-    <root level="trace">
+
+
+    <appender name="ELASTIC" class="com.agido.logback.elasticsearch.ElasticsearchAppender">
+        <url>https://${ENV_ELASTIC_HOST}:9200/_bulk</url>
+        <index>logs</index>
+        <!-- <type>tester</type> -->
+        <loggerName>es-logger</loggerName> <!-- optional -->
+        <errorLoggerName>es-error-logger</errorLoggerName> <!-- optional -->
+        <connectTimeout>30000</connectTimeout> <!-- optional (in ms, default 30000) -->
+        <errorsToStderr>false</errorsToStderr> <!-- optional (default false) -->
+        <includeCallerData>false</includeCallerData> <!-- optional (default false) -->
+        <logsToStderr>false</logsToStderr> <!-- optional (default false) -->
+        <maxQueueSize>104857600</maxQueueSize> <!-- optional (default 104857600) -->
+        <maxRetries>3</maxRetries> <!-- optional (default 3) -->
+        <readTimeout>30000</readTimeout> <!-- optional (in ms, default 30000) -->
+        <sleepTime>250</sleepTime> <!-- optional (in ms, default 250) -->
+        <rawJsonMessage>false</rawJsonMessage> <!-- optional (default false) -->
+        <includeMdc>false</includeMdc> <!-- optional (default false) -->
+        <maxMessageSize>100</maxMessageSize> <!-- optional (default -1 -->
+        <authentication class="org.dallasmakerspace.core.logging.ElasticsearchAuth" /> <!-- optional -->
+        <objectSerialization>true</objectSerialization> <!-- optional (default false) -->
+        <keyPrefix>data.</keyPrefix> <!-- optional (default None) -->
+        <operation>index</operation> <!-- optional (supported: index, create, update, delete - default create) -->
+
+        <properties>
+            <!-- please note that <property> tags are also supported, esProperty was added for logback-1.3 compatibility -->
+            <esProperty>
+                <name>app</name>
+                <value>member-profile-service</value>
+                <allowEmpty>false</allowEmpty>
+            </esProperty>
+            <esProperty>
+                <name>host</name>
+                <value>${HOSTNAME}</value>
+                <allowEmpty>false</allowEmpty>
+            </esProperty>
+            <esProperty>
+                <name>severity</name>
+                <value>%level</value>
+            </esProperty>
+            <esProperty>
+                <name>thread</name>
+                <value>%thread</value>
+            </esProperty>
+            <esProperty>
+                <name>stacktrace</name>
+                <value>%ex</value>
+            </esProperty>
+            <esProperty>
+                <name>logger</name>
+                <value>%logger</value>
+            </esProperty>
+            <esProperty>
+                <name>sessionid</name>
+                <value>%X{CallId}</value>
+            </esProperty>
+            <esProperty>
+                <name>userid</name>
+                <value>%X{userid:-NO_USER}</value>
+            </esProperty>
+        </properties>
+        <headers>
+            <header>
+                <name>Content-Type</name>
+                <value>application/json</value>
+            </header>
+        </headers>
+    </appender>
+
+    <root level="${ENV_LOG_LEVEL:-debug}">
         <appender-ref ref="COLOR"/>
+        <appender-ref ref="ELASTIC" />
     </root>
     <logger name="io.netty" level="INFO"/>
     <logger name="io.ktor" level="INFO"/>
     <logger name="io.ktor.client.HttpClient" level="WARN"/>
     <logger name="org.mariadb" level="WARN"/>
     <logger name="Exposed" level="INFO"/>
+    <logger name="es-logger" level="WARN"/>
 </configuration>
