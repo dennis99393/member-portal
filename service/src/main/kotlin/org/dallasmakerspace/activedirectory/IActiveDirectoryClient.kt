@@ -1,5 +1,5 @@
 package org.dallasmakerspace.activedirectory
 
 interface IActiveDirectoryClient {
-  fun getUser(username: String): Map<String, Any?>
+  fun getUsers(usernames: List<String>): Map<String, Map<String, Any?>>
 }

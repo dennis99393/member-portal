@@ -11,7 +11,7 @@ class DiscourseService @Inject constructor(private val discourseApiClient: IDisc
    * @param groupId the id of the group to add the user to, must be a value from the GroupId enum
    */
   private suspend fun addUserToGroup(username: String, groupId: GroupId) {
-    discourseApiClient.addUserToGroup(username, groupId)
+    discourseApiClient.addUsersToGroup(listOf(username), groupId)
   }
 
   /**
@@ -38,7 +38,7 @@ class DiscourseService @Inject constructor(private val discourseApiClient: IDisc
    *   enum
    */
   private suspend fun removeUserFromGroup(username: String, groupId: GroupId) {
-    discourseApiClient.removeMemberFromGroup(username, groupId)
+    discourseApiClient.removeMembersFromGroup(listOf(username), groupId)
   }
 
   /**

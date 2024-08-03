@@ -17,7 +17,7 @@ class DiscourseModule {
       loggerFactory: LoggerFactory
   ): IDiscourseApiClient =
       if (useMockServices(appConfig)) {
-        DiscourseApiClientMock(appConfig, loggerFactory)
+        DiscourseApiClientMock(loggerFactory)
         // DiscourseApiClient(appConfig, log)
       } else {
         DiscourseApiClient(appConfig, loggerFactory)

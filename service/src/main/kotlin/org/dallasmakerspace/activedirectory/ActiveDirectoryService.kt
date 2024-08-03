@@ -11,7 +11,9 @@ class ActiveDirectoryService
 constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActiveDirectoryService {
   /** {@inheritDoc} */
   override fun getMember(username: String): ADUser {
-    val memberMap: Map<String, Any?> = activeDirectoryClient.getUser(username)
+    val adSearchResult: Map<String, Map<String, Any?>> =
+        activeDirectoryClient.getUsers(listOf(username))
+    val memberMap = adSearchResult[username] ?: throw ADException("User $username not found in AD")
     val memberOf = memberMap["memberOf"]
     val groups =
         if (memberOf is Array<*>) {

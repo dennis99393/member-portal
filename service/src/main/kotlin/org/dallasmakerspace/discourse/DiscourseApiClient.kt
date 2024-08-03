@@ -28,29 +28,32 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
         }
       }
 
-  override suspend fun addUserToGroup(memberUsername: String, groupId: DiscourseService.GroupId) {
-    performGroupOperation(memberUsername, groupId, HttpMethod.Put) { response ->
+  override suspend fun addUsersToGroup(
+      memberUsernamesList: List<String>,
+      groupId: DiscourseService.GroupId
+  ) {
+    performGroupOperation(memberUsernamesList, groupId, HttpMethod.Put) { response ->
       when (response.status) {
         HttpStatusCode.OK -> return@performGroupOperation
         HttpStatusCode.UnprocessableEntity -> {
-          log.info("Member $memberUsername already exists in the group ${groupId.name}")
+          log.info("Member(s) $memberUsernamesList already exists in the group ${groupId.name}")
           return@performGroupOperation
         }
         else ->
             throw DiscourseApiException(
-                "Failed to add member $memberUsername to $groupId: ${response.status} - ${response.bodyAsText()}")
+                "Failed to add members $memberUsernamesList to $groupId: ${response.status} - ${response.bodyAsText()}")
       }
     }
   }
 
-  override suspend fun removeMemberFromGroup(
-      memberUsername: String,
+  override suspend fun removeMembersFromGroup(
+      memberUsernamesList: List<String>,
       groupId: DiscourseService.GroupId
   ) {
-    performGroupOperation(memberUsername, groupId, HttpMethod.Delete) { response ->
+    performGroupOperation(memberUsernamesList, groupId, HttpMethod.Delete) { response ->
       if (response.status != HttpStatusCode.OK) {
         throw DiscourseApiException(
-            "Failed to remove $memberUsername from $groupId: ${response.status} - ${response.bodyAsText()}")
+            "Failed to remove $memberUsernamesList from $groupId: ${response.status} - ${response.bodyAsText()}")
       }
     }
   }
@@ -78,7 +81,7 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
   }
 
   private suspend fun performGroupOperation(
-      memberUsername: String,
+      memberUsernames: List<String>,
       groupId: DiscourseService.GroupId,
       method: HttpMethod,
       onResponse: suspend (HttpResponse) -> Unit
@@ -86,7 +89,9 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
     val baseUrl = DISCOURSE_BASE_URL
     val apiKey = appConfig.requireStringProperty("app.discourse.apiKey")
     val url = "$baseUrl/groups/${groupId.id}/members.json"
-    val json = """{"usernames": "$memberUsername"}"""
+    // Generate a string from the list of usernames by joining with a comma
+    val memberList = memberUsernames.joinToString(separator = ",")
+    val json = """{"usernames": "$memberList"}"""
 
     performDiscourseApiOperation(url, method, json, apiKey, onResponse)
   }

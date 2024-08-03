@@ -28,7 +28,7 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
           INITIAL_LDAP_CONNECTIONS,
           MAX_LDAP_CONNECTIONS)
 
-  override fun getUser(username: String): Map<String, Any?> {
+  override fun getUsers(usernames: List<String>): Map<String, Map<String, Any?>> {
     val filter =
         Filter.createANDFilter(
             listOf(
@@ -37,7 +37,8 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
                     listOf(
                         Filter.createEqualityFilter("objectClass", "member"),
                         Filter.createEqualityFilter("objectClass", "user"))),
-                Filter.createEqualityFilter("sAMAccountName", username)))
+                Filter.createORFilter(
+                    usernames.map { Filter.createEqualityFilter("sAMAccountName", it) })))
     val searchResult =
         ldapPool.search(
             "DC=dms, DC=local",
@@ -54,9 +55,13 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
             "objectGUID",
             "userAccountControl",
             "whenCreated")
-    val user = searchResult.searchEntries.firstOrNull()
-    return user?.attributes?.associate {
-      it.name to if (it.name == "memberOf") it.values else it.values?.firstOrNull()
-    } ?: throw ADException("User $username not found in AD")
+    return searchResult.searchEntries.associate { entry ->
+      val username = entry.getAttributeValue("sAMAccountName")
+
+      username to
+          entry.attributes.associate {
+            it.name to if (it.name == "memberOf") it.values else it.values?.firstOrNull()
+          }
+    }
   }
 }
