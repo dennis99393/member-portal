@@ -31,31 +31,31 @@ class DiscourseService @Inject constructor(private val discourseApiClient: IDisc
       addUserToGroup(username, GroupId.GROUP_DMS_MEMBERS_V2)
 
   /**
-   * Removes a discourse user from a group
+   * Removes a list of discourse user from a group
    *
-   * @param username the username of the user to remove from the group
-   * @param groupId the id of the group to remove the user from, must be a value from the GroupId
+   * @param usernames the list of usernames of the users to remove from the group
+   * @param groupId the id of the group to remove the users from, must be a value from the GroupId
    *   enum
    */
-  private suspend fun removeUserFromGroup(username: String, groupId: GroupId) {
-    discourseApiClient.removeMembersFromGroup(listOf(username), groupId)
+  private suspend fun removeUsersFromGroup(usernames: List<String>, groupId: GroupId) {
+    discourseApiClient.removeMembersFromGroup(usernames, groupId)
   }
 
   /**
-   * Adds a user to the DMS Members V1 group
+   * Removes a user from the DMS Members V1 group
    *
    * @param username the username of the user to add to the group
    */
   suspend fun removeUserFromDmsMembersV1Group(username: String) =
-      removeUserFromGroup(username, GroupId.GROUP_DMS_MEMBERS_V1)
+      removeUsersFromGroup(listOf(username), GroupId.GROUP_DMS_MEMBERS_V1)
 
   /**
-   * Adds a user to the DMS Members V2 group
+   * Remove users from the DMS Members V2 group
    *
-   * @param username the username of the user to add to the group
+   * @param usernames the list of usernames of the user to remove from the group
    */
-  suspend fun removeUserFromDmsMembersV2Group(username: String) =
-      removeUserFromGroup(username, GroupId.GROUP_DMS_MEMBERS_V2)
+  suspend fun removeUserFromDmsMembersV2Group(usernames: List<String>) =
+      removeUsersFromGroup(usernames, GroupId.GROUP_DMS_MEMBERS_V2)
 
   // Enum to store group ids
   enum class GroupId(val id: Int) {

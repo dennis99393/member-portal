@@ -6,11 +6,18 @@ import javax.inject.Singleton
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.core.DBConnection
 import org.dallasmakerspace.core.LoggerFactory
+import org.dallasmakerspace.cron.MemberRefreshCronJob
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.MemberService
 
 @Singleton
-@Component(modules = [AppModule::class, ActiveDirectoryModule::class, DiscourseModule::class])
+@Component(
+    modules =
+        [
+            AppModule::class,
+            ActiveDirectoryModule::class,
+            DiscourseModule::class,
+            MembersModule::class])
 interface AppComponent {
   fun inject(application: Application)
 
@@ -23,4 +30,6 @@ interface AppComponent {
   fun getDBConnection(): DBConnection
 
   fun getLoggerFactory(): LoggerFactory
+
+  fun getMemberRefreshCronJob(): MemberRefreshCronJob
 }

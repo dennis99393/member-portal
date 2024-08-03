@@ -5,10 +5,13 @@ import javax.inject.Inject
 
 @Reusable
 class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService {
+
   /** {@inheritDoc} */
-  override fun getMember(username: String): ADUser {
-    return sampleMembersMap[username] ?: throw ADException("User not found")
-  }
+  override fun getMember(username: String): ADUser =
+      sampleMembersMap[username] ?: throw ADException("User not found")
+
+  /** {@inheritDoc} */
+  override fun getMembers(usernameList: List<String>): Map<String, ADUser> = sampleMembersMap
 
   companion object {
     private val sampleMembersMap =

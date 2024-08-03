@@ -33,4 +33,16 @@ constructor(
             event = event,
             attributes = null))
   }
+
+  suspend fun insertBulkActivityLogEntry(subjectUsernames: List<String>, event: ActivityLogEvent) {
+    activityLogRepository.insertBulkActivityLogEntry(
+        subjectUsernames.map {
+          ActivityLog(
+              source = ActivityLogSource.PROFILE,
+              actorProfileUsername = it,
+              subjectProfileUsername = it,
+              event = event,
+              attributes = null)
+        })
+  }
 }

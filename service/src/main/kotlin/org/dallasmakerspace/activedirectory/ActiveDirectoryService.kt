@@ -9,31 +9,42 @@ private const val GROUP_NAME_PREFIX_LENGTH = 3
 class ActiveDirectoryService
 @Inject
 constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActiveDirectoryService {
+
   /** {@inheritDoc} */
   override fun getMember(username: String): ADUser {
+    return getMembers(listOf(username))[username]
+        ?: throw ADException("User $username not found in AD")
+  }
+
+  /** {@inheritDoc} */
+  override fun getMembers(usernameList: List<String>): Map<String, ADUser?> {
     val adSearchResult: Map<String, Map<String, Any?>> =
-        activeDirectoryClient.getUsers(listOf(username))
-    val memberMap = adSearchResult[username] ?: throw ADException("User $username not found in AD")
-    val memberOf = memberMap["memberOf"]
-    val groups =
-        if (memberOf is Array<*>) {
-          val list = memberOf.toList()
-          parseGroups(list.filterIsInstance<String>())
-        } else {
-          emptyList()
-        }
-    return ADUser(
-        sAMAccountName = memberMap["sAMAccountName"].toString(),
-        givenName = memberMap["givenName"].toString(),
-        sn = memberMap["sn"].toString(),
-        displayName = memberMap["displayName"].toString(),
-        mail = memberMap["mail"].toString(),
-        telephoneNumber = memberMap["telephoneNumber"].toString(),
-        employeeID = memberMap["employeeID"].toString(),
-        objectGuid = memberMap["objectGUID"].toString(),
-        whenCreated = memberMap["whenCreated"].toString(),
-        enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
-        groups = groups)
+        activeDirectoryClient.getUsers(usernameList)
+
+    // For each username in the list, get the ADUser object.
+    return usernameList.associateWith { username ->
+      val memberMap = adSearchResult[username] ?: return@associateWith null
+      val memberOf = memberMap["memberOf"]
+      val groups =
+          if (memberOf is Array<*>) {
+            val list = memberOf.toList()
+            parseGroups(list.filterIsInstance<String>())
+          } else {
+            emptyList()
+          }
+      ADUser(
+          sAMAccountName = memberMap["sAMAccountName"].toString(),
+          givenName = memberMap["givenName"].toString(),
+          sn = memberMap["sn"].toString(),
+          displayName = memberMap["displayName"].toString(),
+          mail = memberMap["mail"].toString(),
+          telephoneNumber = memberMap["telephoneNumber"].toString(),
+          employeeID = memberMap["employeeID"].toString(),
+          objectGuid = memberMap["objectGUID"].toString(),
+          whenCreated = memberMap["whenCreated"].toString(),
+          enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
+          groups = groups)
+    }
   }
 
   /**

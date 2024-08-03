@@ -14,6 +14,7 @@ import kotlinx.serialization.Serializable
 import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.apiKey
 import org.dallasmakerspace.core.AppConfig
+import org.dallasmakerspace.cron.MemberRefreshCronJob
 import org.dallasmakerspace.di.DaggerAppComponent
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.MemberService
@@ -37,8 +38,13 @@ fun Application.configureRouting() {
     apiKey(appConfig, ApiKeyAuthProvider.X_API_KEY, apiKeyAuthProvider)
   }
   routing {
-    val memberService: MemberService = DaggerAppComponent.create().getMemberService()
-    val activityLogService: ActivityLogService = DaggerAppComponent.create().getActivityLogService()
+    val memberService: MemberService by lazy { DaggerAppComponent.create().getMemberService() }
+    val activityLogService: ActivityLogService by lazy {
+      DaggerAppComponent.create().getActivityLogService()
+    }
+    val memberRefreshCronJob: MemberRefreshCronJob by lazy {
+      DaggerAppComponent.create().getMemberRefreshCronJob()
+    }
 
     get("/") { call.respondRedirect("/openapi", permanent = false) }
     swaggerUI(path = "openapi")
@@ -69,6 +75,11 @@ fun Application.configureRouting() {
                 Status.SUCCESS,
                 "Activity log for ${activityLogRequested.parent.username}",
                 activityLog))
+      }
+
+      get("/cron/member-refresh") {
+        val result = memberRefreshCronJob.run()
+        call.respond(ApiResponse(Status.SUCCESS, result, null))
       }
     }
   }

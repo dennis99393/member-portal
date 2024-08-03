@@ -18,7 +18,7 @@ class ActivityLogRepository @Inject constructor() {
   /**
    * Fetches the activity log for a member.
    *
-   * @param username The username of the member.
+   * @param subjectProfileRowId The member.
    * @return The activity log for the member.
    */
   suspend fun getMemberActivityLog(subjectProfileRowId: Int): List<ActivityLog> =
@@ -52,5 +52,10 @@ class ActivityLogRepository @Inject constructor() {
       event = activityLog.event.value
       attributes = activityLog.attributes
     }
+  }
+
+  suspend fun insertBulkActivityLogEntry(list: List<ActivityLog>) {
+    // TODO: Implement batch insert
+    list.forEach { insertActivityLogEntry(it) }
   }
 }

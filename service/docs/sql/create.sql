@@ -1,7 +1,7 @@
 -- member_profile.profile definition
 
 CREATE TABLE `profile` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id is autoincrement id assigned to a profile, this column is used as Foreign Key in other tables. First 100 are reserved for system profiles. primary key',
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '_id is autoincrement id assigned to a profile, this column is used as Foreign Key in other tables. First 100 are reserved for system profiles. primary key',
   `username` varchar(100) NOT NULL COMMENT 'DMS member username, unique',
   `avatar_url` varchar(2083) DEFAULT NULL COMMENT 'DMS profile avatar url',
   `discourse_username` varchar(100) DEFAULT NULL COMMENT 'The discourse username associated with the member, unique',
@@ -10,13 +10,16 @@ CREATE TABLE `profile` (
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Misc attributes' CHECK (json_valid(`attributes`)),
   `created` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp(),
+  `is_enabled` tinyint(1) DEFAULT NULL COMMENT 'Represents if the member account was enabled when it was last fetched from AD',
   PRIMARY KEY (`id`),
   UNIQUE KEY `profile_username_unique` (`username`),
   UNIQUE KEY `profile_discourse_username_unique` (`discourse_username`),
-  UNIQUE KEY `profile_discord_userid_unique` (`discord_userid`)
-) ENGINE=InnoDB AUTO_INCREMENT=104 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store basic profile level data for DMS members';
+  UNIQUE KEY `profile_discord_userid_unique` (`discord_userid`),
+  KEY `profile_isEnabled_IDX` (`is_enabled`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store basic profile level data for DMS members';
 
 -- member_profile.activity_log definition
+
 DROP TABLE IF EXISTS `activity_log`;
 CREATE TABLE `activity_log` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id is auto increment primary key.',

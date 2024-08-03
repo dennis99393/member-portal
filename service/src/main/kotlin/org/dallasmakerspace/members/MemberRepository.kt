@@ -55,4 +55,13 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
       }
     }
   }
+
+  /**
+   * Fetches all member data from the database.
+   *
+   * @return A list of all member data.
+   */
+  suspend fun getAllMembers(): List<DMSMember> {
+    return suspendTransaction { ProfileDAO.all().map { daoToProfileModel(it) } }
+  }
 }

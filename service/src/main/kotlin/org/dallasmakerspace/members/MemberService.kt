@@ -28,6 +28,7 @@ constructor(
     val adMember = activeDirectoryService.getMember(username)
 
     val dbMember = memberRepository.getMemberOrInsert(username)
+    // TODO: compare DB and AD members and notify observers of any changes.
     dbMember.firstName = adMember.givenName
     dbMember.lastName = adMember.sn
     dbMember.displayName = adMember.displayName
@@ -133,9 +134,14 @@ constructor(
 
   private suspend fun unlinkDiscourse(dbMember: DMSMember) {
     // Remove the member from the discourse group.
-    discourseService.removeUserFromDmsMembersV2Group(requireNotNull(dbMember.discourseUsername))
+    discourseService.removeUserFromDmsMembersV2Group(
+        listOf(requireNotNull(dbMember.discourseUsername)))
     discourseService.addUserToDmsMembersV1Group(requireNotNull(dbMember.discourseUsername))
     activityLogService.insertActivityLogEntry(
         subjectUsername = dbMember.username, event = ActivityLogEvent.UNLINK_DISCOURSE)
+  }
+
+  suspend fun getAllMembers(): List<DMSMember> {
+    return memberRepository.getAllMembers()
   }
 }

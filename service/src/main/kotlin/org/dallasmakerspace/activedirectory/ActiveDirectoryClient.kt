@@ -38,7 +38,12 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
                         Filter.createEqualityFilter("objectClass", "member"),
                         Filter.createEqualityFilter("objectClass", "user"))),
                 Filter.createORFilter(
-                    usernames.map { Filter.createEqualityFilter("sAMAccountName", it) })))
+                    usernames.map {
+                      Filter.createEqualityFilter(
+                          "sAMAccountName",
+                          it,
+                      )
+                    })))
     val searchResult =
         ldapPool.search(
             "DC=dms, DC=local",
