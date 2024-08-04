@@ -4,7 +4,6 @@ import javax.inject.Inject
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.discourse.DiscourseService
 import org.dallasmakerspace.members.ActivityLogService
-import org.dallasmakerspace.members.MemberService
 import org.dallasmakerspace.models.ActivityLogEvent
 import org.dallasmakerspace.models.DMSMember
 
