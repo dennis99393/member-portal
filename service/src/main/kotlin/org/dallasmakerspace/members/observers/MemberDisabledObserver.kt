@@ -4,6 +4,7 @@ import javax.inject.Inject
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.discourse.DiscourseService
 import org.dallasmakerspace.members.ActivityLogService
+import org.dallasmakerspace.members.MemberService
 import org.dallasmakerspace.models.ActivityLogEvent
 import org.dallasmakerspace.models.DMSMember
 
@@ -21,15 +22,22 @@ constructor(
       oldValue: Any?,
       newValue: Any?,
       affectedMembers: List<DMSMember>
-  ) {
+  ): Boolean {
     log.info(
         "MemberDisabledObserver.onMemberPropChange: propName=$propName, oldValue=$oldValue, " +
             "newValue=$newValue, affectedMembers=$affectedMembers")
     if (propName == "enabled" && oldValue == true && newValue == false) {
       val usernames = affectedMembers.mapNotNull { it.discourseUsername }
-      discourseService.removeUserFromDmsMembersV2Group(usernames)
-      activityLogService.insertBulkActivityLogEntry(
-          subjectUsernames = usernames, event = ActivityLogEvent.UNLINK_DISCOURSE)
+      if (usernames.isEmpty()) {
+        log.warn("No Discourse usernames found for affected members: $affectedMembers")
+      } else {
+        log.info("Removing users from Discourse members group: $usernames")
+        discourseService.removeUserFromDmsMembersV2Group(usernames)
+        activityLogService.insertBulkActivityLogEntry(
+            subjectUsernames = usernames,
+            event = ActivityLogEvent.REMOVE_FROM_DISCOURSE_MEMBERS_GROUP)
+      }
     }
+    return true
   }
 }

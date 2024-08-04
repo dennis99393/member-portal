@@ -10,13 +10,13 @@ CREATE TABLE `profile` (
   `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Misc attributes' CHECK (json_valid(`attributes`)),
   `created` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp(),
-  `is_enabled` tinyint(1) DEFAULT NULL COMMENT 'Represents if the member account was enabled when it was last fetched from AD',
+  `is_enabled` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Represents if the member account was enabled when it was last fetched from AD',
   PRIMARY KEY (`id`),
   UNIQUE KEY `profile_username_unique` (`username`),
   UNIQUE KEY `profile_discourse_username_unique` (`discourse_username`),
   UNIQUE KEY `profile_discord_userid_unique` (`discord_userid`),
   KEY `profile_isEnabled_IDX` (`is_enabled`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store basic profile level data for DMS members';
+) ENGINE=InnoDB AUTO_INCREMENT=110 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store basic profile level data for DMS members';
 
 -- member_profile.activity_log definition
 

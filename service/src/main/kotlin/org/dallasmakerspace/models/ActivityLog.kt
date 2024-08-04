@@ -24,6 +24,7 @@ enum class ActivityLogEvent(val value: Int) {
   UNLINK_DISCOURSE(2),
   LINK_DISCORD(3),
   UNLINK_DISCORD(4),
+  REMOVE_FROM_DISCOURSE_MEMBERS_GROUP(5),
 }
 
 @Suppress("MagicNumber")

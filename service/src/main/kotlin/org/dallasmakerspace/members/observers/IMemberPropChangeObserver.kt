@@ -8,5 +8,5 @@ interface IMemberPropChangeObserver {
       oldValue: Any?,
       newValue: Any?,
       affectedMembers: List<DMSMember>
-  )
+  ): Boolean
 }

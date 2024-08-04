@@ -51,7 +51,7 @@ fun daoToProfileModel(dao: ProfileDAO) =
     DMSMember(
         id = dao.idColumn.value,
         username = dao.id.value,
-        // isEnabled = dao.isEnabled,
+        enabled = dao.isEnabled,
         avatarUrl = dao.avatarUrl,
         discourseUsername = dao.discourseUsername,
         discourseAvatarUrl = dao.discourseAvatarUrl,

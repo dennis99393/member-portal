@@ -64,4 +64,21 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
   suspend fun getAllMembers(): List<DMSMember> {
     return suspendTransaction { ProfileDAO.all().map { daoToProfileModel(it) } }
   }
+
+  suspend fun updateMembers(memberList: List<DMSMember>) {
+    suspendTransaction {
+      memberList.forEach { member ->
+        val existingMember =
+            ProfileDAO.find { ProfileTable.username eq member.username }.firstOrNull()
+                ?: throw IllegalArgumentException("Member does not exist in DB: ${member.username}")
+        existingMember.apply {
+          avatarUrl = member.avatarUrl
+          isEnabled = member.enabled
+          discourseUsername = member.discourseUsername
+          discourseAvatarUrl = member.discourseAvatarUrl
+          discordUserId = member.discordUserId
+        }
+      }
+    }
+  }
 }
