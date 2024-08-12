@@ -37,6 +37,8 @@ fun Application.configureRouting() {
     get(RouteFactory.Paths.DISCOURSE_CALLBACK.path) {
       RouteFactory.getHandler(RouteFactory.Paths.DISCOURSE_CALLBACK.path)?.handle(call)
     }
+    get(RouteFactory.Paths.GROUPS.path) { RouteFactory.getHandler(call)?.handle(call) }
+    // get(RouteFactory.Paths.GROUPS.path) { call.respond("here1") }
 
     staticResources(RouteFactory.Paths.STATIC.path, "static") {
       cacheControl {

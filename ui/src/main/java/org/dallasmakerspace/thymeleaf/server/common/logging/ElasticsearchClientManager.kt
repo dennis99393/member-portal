@@ -83,7 +83,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.logToElasticsearch(client: El
           "method" to request.httpMethod.value,
           "app" to "member-profile-ui",
           "host" to request.host(),
-          "ip" to request.origin.remoteHost,
+          "ip" to request.origin.remoteAddress,
           "sessionid" to MDC.get("sessionid")?.toString(),
           "userid" to MDC.get("userid")?.toString(),
           "uri" to request.uri,

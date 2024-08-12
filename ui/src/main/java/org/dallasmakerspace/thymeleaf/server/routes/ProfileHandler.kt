@@ -40,6 +40,7 @@ constructor(
             "membership_duration" to memberDurationString,
             "enabled" to requestedMember.enabled.toString(),
         )
+    if (requestedMember.groups.isNotEmpty()) jsonMap["groups"] = requestedMember.groups
     if (requestedMember.discourseUsername.isNullOrEmpty().not()) {
       jsonMap["discourse_username"] = requestedMember.discourseUsername as Any
     }
@@ -62,8 +63,8 @@ constructor(
       jsonMap: MutableMap<String, Any>,
       requestedMember: DMSMember
   ) {
-    log.info("Setting toast message for ${requestedMember.username} successful discourse link")
     if (session?.isDiscourseLinkSuccess == true) {
+      log.info("Setting toast message for ${requestedMember.username} successful discourse link")
       session?.isDiscourseLinkSuccess = false
       call.sessions.set(session)
       jsonMap["toast_message"] =

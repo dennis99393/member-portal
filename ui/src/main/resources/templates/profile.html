@@ -166,6 +166,7 @@
                 </div>
             </div>
         </div>
+        <!-- Voting Rights card -->
         <div th:if="${is_self}" class="card-linked-accounts">
             <div class="linked-accounts">Voting Rights</div>
             <div class="discourse-icon-1-parent">
@@ -186,6 +187,24 @@
                             <span th:unless="${is_voting_member}">Coming soon: self service voter enrollment.</span>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        <!-- Assigned groups card -->
+        <div class="card-linked-accounts">
+            <div class="linked-accounts">Assigned Groups</div>
+            <div class="discourse-icon-1-parent">
+                <div th:if="${groups}">
+                    <span th:each="group : ${groups}">
+                            <a style="margin:4px" type="button" class="btn btn-outline-primary btn-sm"
+                                   th:href="|/groups/${group.slug}|" th:text="${group.name}"></a>
+                    </span>
+                </div>
+                <div th:unless="${groups}">
+                    <span th:if="${is_self}">You are not assigned to any groups 🙁. Groups are used to grant access to
+                        DMS equipment for various committees. Sign-up for a class on the
+                        <a href="https://calendar.dallasmakerspace.org">calendar</a> to get qualified.</span>
+                    <span th:unless="${is_self}">No groups assigned yet!</span>
                 </div>
             </div>
         </div>

@@ -1,9 +1,7 @@
 package org.dallasmakerspace.thymeleaf.server.models
 
-import io.ktor.util.reflect.*
 import java.time.Instant
 import kotlin.reflect.full.memberProperties
-import org.dallasmakerspace.thymeleaf.server.memberservice.MemberServiceException
 
 @Suppress("LongParameterList")
 class DMSMember(
@@ -28,13 +26,15 @@ class DMSMember(
   }
 
   companion object {
-    fun fromMap(map: Map<String, Any?>): DMSMember {
-      val data =
-          map["data"] as Map<*, *>?
-              ?: throw MemberServiceException("data attribute missing required")
+    fun fromMap(data: Map<String, Any?>): DMSMember {
       val groups =
           (data["groups"] as List<*>?)?.filterIsInstance<Map<String, Any?>>()?.map {
-            DMSGroup.fromMap(it)
+            if (it["data"] is Map<*, *>) {
+              val dataGroup = it["data"] as Map<String, Any?>
+              DMSGroup.fromMap(dataGroup)
+            } else {
+              DMSGroup.fromMap(it as Map<String, Any?>)
+            }
           } ?: emptyList()
       return DMSMember(
           username = data["username"] as String,

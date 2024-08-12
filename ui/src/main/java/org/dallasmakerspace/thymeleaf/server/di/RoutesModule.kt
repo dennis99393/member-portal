@@ -7,6 +7,7 @@ import dagger.multibindings.StringKey
 import org.dallasmakerspace.thymeleaf.server.auth.UserInfoProvider
 import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 import org.dallasmakerspace.thymeleaf.server.memberservice.MemberService
+import org.dallasmakerspace.thymeleaf.server.routes.GroupsHandler
 import org.dallasmakerspace.thymeleaf.server.routes.IRouteHandler
 import org.dallasmakerspace.thymeleaf.server.routes.IndexHandler
 import org.dallasmakerspace.thymeleaf.server.routes.LoginHandler
@@ -39,4 +40,13 @@ class RoutesModule {
   @Provides
   @StringKey("/oidc-callback")
   fun providesOidcCallbackHandler(): IRouteHandler = OidcCallbackHandler()
+
+  @IntoMap
+  @Provides
+  @StringKey("/groups/{group_slug}")
+  fun providesGroupHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService
+  ): IRouteHandler = GroupsHandler(loggerFactory, memberService, userInfoProvider)
 }

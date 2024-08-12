@@ -17,7 +17,9 @@ object RouteFactory {
 
   private fun sanitizePathInternal(path: String): String {
     // Replace "@.*" with "@{preferred_username}"
-    return path.replace("@.*".toRegex(), "@{preferred_username}")
+    return path
+        .replace("@.*".toRegex(), "@{preferred_username}")
+        .replace("/groups/.*".toRegex(), "/groups/{group_slug}")
   }
 
   fun getHandler(path: String): IRouteHandler? {
@@ -34,6 +36,7 @@ object RouteFactory {
     DISCOURSE_UNLINK("/unlink-discourse"),
     DISCOURSE_CALLBACK("/discourse-callback"),
     STATIC("/static"),
+    GROUPS("/groups/{group_slug}"),
   }
 }
 

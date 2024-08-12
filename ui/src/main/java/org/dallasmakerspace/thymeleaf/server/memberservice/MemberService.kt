@@ -3,6 +3,7 @@ package org.dallasmakerspace.thymeleaf.server.memberservice
 import javax.inject.Inject
 import org.dallasmakerspace.thymeleaf.server.common.HttpException
 import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
+import org.dallasmakerspace.thymeleaf.server.models.DMSGroup
 import org.dallasmakerspace.thymeleaf.server.models.DMSMember
 
 class MemberService
@@ -45,5 +46,9 @@ constructor(loggerFactory: LoggerFactory, private val memberServiceClient: Membe
       log.error("Failed to patch member: $username; member object: $member", e)
       throw MemberServiceException("Failed to patch member: $username; member object: $member", e)
     }
+  }
+
+  suspend fun getGroup(groupName: String, sessionId: String?): DMSGroup {
+    return memberServiceClient.getGroup(groupName, sessionId)
   }
 }
