@@ -85,10 +85,12 @@
         <appender-ref ref="COLOR"/>
         <appender-ref ref="ELASTIC" />
     </root>
+    <logger name="org.apache" level="INFO"/>
     <logger name="io.netty" level="INFO"/>
     <logger name="io.ktor" level="INFO"/>
     <logger name="io.ktor.client.HttpClient" level="WARN"/>
     <logger name="org.mariadb" level="WARN"/>
+    <logger name="org.elasticsearch" level="WARN"/>
     <logger name="Exposed" level="INFO"/>
     <logger name="es-logger" level="WARN"/>
 </configuration>

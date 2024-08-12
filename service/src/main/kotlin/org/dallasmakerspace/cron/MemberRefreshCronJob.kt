@@ -32,7 +32,7 @@ constructor(
     val startTime = System.currentTimeMillis()
 
     val dbMembers = memberService.getAllMembers()
-    val adMembers = activeDirectoryService.getMembers(dbMembers.map { it.username })
+    val adMembers = activeDirectoryService.getMembersByUsernameList(dbMembers.map { it.username })
 
     log.info("DB Members: ${dbMembers.size}; AD Members: ${adMembers.size}")
 

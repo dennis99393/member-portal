@@ -4,9 +4,9 @@ import javax.inject.Inject
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.members.db.ProfileDAO
 import org.dallasmakerspace.members.db.ProfileTable
-import org.dallasmakerspace.members.db.daoToProfileModel
 import org.dallasmakerspace.members.db.suspendTransaction
 import org.dallasmakerspace.models.DMSMember
+import org.dallasmakerspace.models.daoToProfileModel
 
 /**
  * Manages member data. Fetches and updates member data. Contains validation and orchestration logic

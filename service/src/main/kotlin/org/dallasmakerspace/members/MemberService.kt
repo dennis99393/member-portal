@@ -11,6 +11,7 @@ import org.dallasmakerspace.discourse.DiscourseService
 import org.dallasmakerspace.models.ActivityLogEvent
 import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.models.DMSMember
+import org.dallasmakerspace.routing.Groups
 
 class MemberService
 @Inject
@@ -25,7 +26,7 @@ constructor(
 
   suspend fun getMember(username: String): DMSMember {
     // Fetch member from active directory.
-    val adMember = activeDirectoryService.getMember(username)
+    val adMember = activeDirectoryService.getMemberByUsernameList(username)
 
     val dbMember = memberRepository.getMemberOrInsert(username)
     // TODO: compare DB and AD members and notify observers of any changes.
@@ -39,7 +40,13 @@ constructor(
     dbMember.memberSince = calculateMemberSince(adMember.whenCreated)
     dbMember.groups =
         adMember.groups.map { group ->
-          DMSGroup(group.cn, group.distinguishedName, group.objectGuid, null)
+          DMSGroup(
+              name = group.cn,
+              description = null,
+              distinguishedName = group.distinguishedName,
+              objectGuid = group.objectGuid,
+              membersListIncomplete = false,
+              members = null)
         }
     return dbMember
   }
@@ -88,7 +95,7 @@ constructor(
 
   suspend fun updateMember(username: String, memberFromApi: DMSMember) {
     // Fetch member from active directory.
-    val adMember = activeDirectoryService.getMember(username)
+    val adMember = activeDirectoryService.getMemberByUsernameList(username)
     // If member is not active in AD then throw an exception.
     check(adMember.enabled) { "Member is not active in AD: $username" }
     val dbMember = memberRepository.getMemberOrInsert(username)
@@ -143,5 +150,40 @@ constructor(
 
   suspend fun getAllMembers(): List<DMSMember> {
     return memberRepository.getAllMembers()
+  }
+
+  fun getGroup(groupslug: String): DMSGroup {
+    val groupname = Groups.getNameFromSlug(groupslug)
+    val adGroup = activeDirectoryService.getGroup(groupname)
+    return DMSGroup(
+        name = adGroup.cn,
+        description = adGroup.description,
+        distinguishedName = adGroup.distinguishedName,
+        objectGuid = adGroup.objectGuid,
+        members =
+            adGroup.members.map {
+              DMSMember(
+                  -1,
+                  it.sAMAccountName,
+                  firstName = it.givenName,
+                  lastName = it.sn,
+                  displayName = it.displayName,
+                  personalEmail = it.mail,
+                  phoneNumber = getNormalizedPhoneNumber(it.telephoneNumber),
+                  badgeNumber = it.employeeID,
+                  enabled = it.enabled,
+                  memberSince = calculateMemberSince(it.whenCreated),
+                  groups =
+                      it.groups.map { group ->
+                        DMSGroup(
+                            name = group.cn,
+                            description = null,
+                            distinguishedName = group.distinguishedName,
+                            objectGuid = group.objectGuid,
+                            membersListIncomplete = false,
+                            members = null)
+                      })
+            },
+        membersListIncomplete = adGroup.membersListIncomplete)
   }
 }

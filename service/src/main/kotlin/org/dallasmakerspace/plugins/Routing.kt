@@ -18,6 +18,7 @@ import org.dallasmakerspace.cron.MemberRefreshCronJob
 import org.dallasmakerspace.di.DaggerAppComponent
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.MemberService
+import org.dallasmakerspace.routing.Groups
 import org.dallasmakerspace.routing.Members
 
 fun Application.configureRouting() {
@@ -63,6 +64,11 @@ fun Application.configureRouting() {
         memberService.updateMember(update.parent.username, routeObjectToModel(updatedMember))
         call.respond(
             ApiResponse(Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember))
+      }
+
+      get<Groups.DMSGroup> { groupRequested ->
+        val group = memberService.getGroup(groupRequested.groupslug)
+        call.respond(ApiResponse(Status.SUCCESS, "Group ${group.name}", group))
       }
 
       /** Activity Log operations * */

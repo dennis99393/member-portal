@@ -5,7 +5,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class DMSGroup(
     val name: String,
+    val description: String? = null,
     val distinguishedName: String,
     val objectGuid: String?,
-    val members: List<DMSMember>?
+    val membersListIncomplete: Boolean = false,
+    val members: List<DMSMember>?,
 )

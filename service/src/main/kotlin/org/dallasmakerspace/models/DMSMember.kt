@@ -2,6 +2,7 @@ package org.dallasmakerspace.models
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+import org.dallasmakerspace.members.db.ProfileDAO
 
 @Serializable
 data class DMSMember(
@@ -21,3 +22,13 @@ data class DMSMember(
     var enabled: Boolean = false,
     var groups: List<DMSGroup> = emptyList()
 )
+
+fun daoToProfileModel(dao: ProfileDAO) =
+    DMSMember(
+        id = dao.idColumn.value,
+        username = dao.id.value,
+        enabled = dao.isEnabled,
+        avatarUrl = dao.avatarUrl,
+        discourseUsername = dao.discourseUsername,
+        discourseAvatarUrl = dao.discourseAvatarUrl,
+        discordUserId = dao.discordUserId)

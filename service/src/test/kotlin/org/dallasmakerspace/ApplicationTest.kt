@@ -9,7 +9,7 @@ class ApplicationTest {
 
   // @Test
   fun testRoot() = testApplication {
-    application { main(emptyArray()) }
+    // application { main() }
     client.get("/").apply { assertEquals(HttpStatusCode.OK, status) }
   }
 }

@@ -12,7 +12,7 @@ import org.dallasmakerspace.plugins.configureMonitoring
 import org.dallasmakerspace.plugins.configureRouting
 import org.dallasmakerspace.plugins.configureSerialization
 
-fun main(args: Array<String>) {
+fun main() {
 
   val appConfig = DaggerAppComponent.create().getAppConfig()
   val portStr = appConfig.requireStringProperty("ktor.deployment.port")

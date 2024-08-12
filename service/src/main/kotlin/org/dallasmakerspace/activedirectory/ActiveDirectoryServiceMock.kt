@@ -7,11 +7,25 @@ import javax.inject.Inject
 class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService {
 
   /** {@inheritDoc} */
-  override fun getMember(username: String): ADUser =
+  override fun getMemberByUsernameList(username: String): ADUser =
       sampleMembersMap[username] ?: throw ADException("User not found")
 
   /** {@inheritDoc} */
-  override fun getMembers(usernameList: List<String>): Map<String, ADUser> = sampleMembersMap
+  override fun getMembersByUsernameList(usernameList: List<String>): Map<String, ADUser> =
+      sampleMembersMap
+
+  override fun getGroup(groupname: String): ADGroup {
+    return ADGroup(
+        cn = "3D Printer Basics",
+        description = "Qualified to use 3D printers",
+        distinguishedName = "cn=Members,ou=Security,ou=Groups,dc=dms,dc=local",
+        objectGuid = null,
+        listOf(),
+        false)
+  }
+
+  /** {@inheritDoc} */
+  override fun getMemberByDnList(dnList: List<String>) = listOf<ADUser>()
 
   companion object {
     private val sampleMembersMap =
@@ -32,9 +46,12 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
                         listOf(
                             ADGroup(
                                 cn = "Members",
+                                description = "Qualified to use 3D printers",
                                 distinguishedName =
                                     "cn=Members,ou=Security,ou=Groups,dc=dms,dc=local",
-                                objectGuid = null))),
+                                objectGuid = null,
+                                members = listOf(),
+                                membersListIncomplete = false))),
             "user2" to
                 ADUser(
                     sAMAccountName = "user2",
@@ -51,9 +68,12 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
                         listOf(
                             ADGroup(
                                 cn = "Members",
+                                description = "Qualified to use 3D printers",
                                 distinguishedName =
                                     "cn=Members,ou=Security,ou=Groups,dc=dms,dc=local",
-                                objectGuid = null))),
+                                objectGuid = null,
+                                members = listOf(),
+                                membersListIncomplete = false))),
         )
   }
 }

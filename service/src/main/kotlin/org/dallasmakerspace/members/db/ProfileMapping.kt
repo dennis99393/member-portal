@@ -1,7 +1,6 @@
 package org.dallasmakerspace.members.db
 
 import kotlinx.coroutines.Dispatchers
-import org.dallasmakerspace.models.DMSMember
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -46,13 +45,3 @@ class ProfileDAO(username: EntityID<String>) : Entity<String>(username) {
 
 suspend fun <T> suspendTransaction(block: Transaction.() -> T): T =
     newSuspendedTransaction(Dispatchers.IO, statement = block)
-
-fun daoToProfileModel(dao: ProfileDAO) =
-    DMSMember(
-        id = dao.idColumn.value,
-        username = dao.id.value,
-        enabled = dao.isEnabled,
-        avatarUrl = dao.avatarUrl,
-        discourseUsername = dao.discourseUsername,
-        discourseAvatarUrl = dao.discourseAvatarUrl,
-        discordUserId = dao.discordUserId)
