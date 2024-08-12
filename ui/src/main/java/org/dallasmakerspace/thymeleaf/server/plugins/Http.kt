@@ -9,6 +9,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
 import io.ktor.server.plugins.compression.*
+import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -29,6 +30,8 @@ fun Application.configureHttp() {
     gzip()
     deflate()
   }
+  install(ForwardedHeaders)
+  install(XForwardedHeaders)
   install(Webjars) { path = "assets" }
   install(Authentication) {
     oauth("DMS") {

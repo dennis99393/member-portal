@@ -33,6 +33,7 @@ dependencies {
   implementation("io.ktor:ktor-server-call-id:$ktorVersion")
   implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
   implementation("io.ktor:ktor-server-call-logging-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-forwarded-header-jvm:$ktorVersion")
   implementation("io.ktor", "ktor-server-netty", ktorVersion)
   implementation("io.ktor", "ktor-server-status-pages", ktorVersion)
   implementation("io.ktor", "ktor-server-thymeleaf-jvm", ktorVersion)
