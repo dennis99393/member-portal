@@ -16,10 +16,10 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
       requireNotNull(authConfig.apiClientHeaderName) { "authConfig.apiClientHeaderName" }
   private val apiKeyHeaderName: String =
       requireNotNull(authConfig.apiKeyHeaderName) { "authConfig.apiKeyHeaderName" }
-  private val apiKey = appConfig.requireStringProperty("app.api.key")
-  private val apiClient = appConfig.requireStringProperty("app.api.client")
+  private val apiKeys = appConfig.requireStringProperty("app.api.keys").split(",")
+  private val apiClients = appConfig.requireStringProperty("app.api.clients").split(",")
 
-  private val mapClientsToApiKeys = mapOf(apiClient to apiKey)
+  private val mapClientsToApiKeys = apiClients.zip(apiKeys).toMap()
 
   private val challengeFunction = authConfig.challengeFunction
 
