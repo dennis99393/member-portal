@@ -33,11 +33,6 @@ abstract class AuthRouteHandler(
 
         // Only allow Infra team members to access the site for now
         val user = userInfo["preferred_username"] as String
-        val groups = userInfo["groups"] as List<*>
-        if (!groups.contains("/Infrastructure")) {
-          call.sessions.clear<UserSession>()
-          throw AuthException("User $user is not a member of the Infra team")
-        }
         call.sessions.set(session?.copy(userId = user))
       } catch (e: HttpException) {
         call.sessions.clear<UserSession>()
