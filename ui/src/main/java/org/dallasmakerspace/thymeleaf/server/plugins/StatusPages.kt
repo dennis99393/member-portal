@@ -22,6 +22,8 @@ fun Application.configureStatusPages() {
     }
     exception<Throwable> { call, cause ->
       val session = call.sessions.get<UserSession>()
+      val sessionId: String = session?.sessionId ?: "NO_SESSION"
+      val userId: String = session?.userId ?: "NO_USER"
       call.respond(
           status = HttpStatusCode.InternalServerError,
           ThymeleafContent(
@@ -29,8 +31,8 @@ fun Application.configureStatusPages() {
               mapOf(
                   "message" to "There was an error processing your request. ${cause.message}.",
                   "cause" to "$cause:\n ${cause.stackTraceToString()}",
-                  "sessionid" to session?.sessionId as String,
-                  "userid" to session.userId as String,
+                  "sessionid" to sessionId,
+                  "userid" to userId,
                   "sso_profile_url" to ssoProfileUrl)))
     }
   }
