@@ -26,14 +26,15 @@ constructor(
         "MemberDisabledObserver.onMemberPropChange: propName=$propName, oldValue=$oldValue, " +
             "newValue=$newValue, affectedMembers=$affectedMembers")
     if (propName == "enabled" && oldValue == true && newValue == false) {
-      val usernames = affectedMembers.mapNotNull { it.discourseUsername }
-      if (usernames.isEmpty()) {
+      val discourseUsernames = affectedMembers.mapNotNull { it.discourseUsername }
+      val dmsUsernames = affectedMembers.filter { it.discourseUsername == null }.map { it.username }
+      if (discourseUsernames.isEmpty()) {
         log.warn("No Discourse usernames found for affected members: $affectedMembers")
       } else {
-        log.info("Removing users from Discourse members group: $usernames")
-        discourseService.removeUserFromDmsMembersV2Group(usernames)
+        log.info("Removing users from Discourse members group: $discourseUsernames")
+        discourseService.removeUserFromDmsMembersV2Group(discourseUsernames)
         activityLogService.insertBulkActivityLogEntry(
-            subjectUsernames = usernames,
+            subjectUsernames = dmsUsernames,
             event = ActivityLogEvent.REMOVE_FROM_DISCOURSE_MEMBERS_GROUP)
       }
     }
