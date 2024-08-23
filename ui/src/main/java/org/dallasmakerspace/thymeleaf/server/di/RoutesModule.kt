@@ -12,10 +12,19 @@ import org.dallasmakerspace.thymeleaf.server.routes.IRouteHandler
 import org.dallasmakerspace.thymeleaf.server.routes.IndexHandler
 import org.dallasmakerspace.thymeleaf.server.routes.LoginHandler
 import org.dallasmakerspace.thymeleaf.server.routes.OidcCallbackHandler
+import org.dallasmakerspace.thymeleaf.server.routes.PingHandler
 import org.dallasmakerspace.thymeleaf.server.routes.ProfileHandler
 
 @Module
 class RoutesModule {
+
+  @IntoMap
+  @Provides
+  @StringKey("/ping")
+  fun providesPingHandler(
+      loggerFactory: LoggerFactory,
+      memberService: MemberService
+  ): IRouteHandler = PingHandler(loggerFactory, memberService)
 
   @IntoMap
   @Provides

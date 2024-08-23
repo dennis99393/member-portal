@@ -1,20 +1,10 @@
 package org.dallasmakerspace.thymeleaf.server.plugins
 
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
-import io.ktor.serialization.gson.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
-import io.ktor.server.plugins.compression.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
-import io.ktor.server.thymeleaf.*
-import io.ktor.server.webjars.*
 import java.io.File
 import java.net.URL
 import java.security.MessageDigest
@@ -38,7 +28,8 @@ fun Application.configureRouting() {
       RouteFactory.getHandler(RouteFactory.Paths.DISCOURSE_CALLBACK.path)?.handle(call)
     }
     get(RouteFactory.Paths.GROUPS.path) { RouteFactory.getHandler(call)?.handle(call) }
-    // get(RouteFactory.Paths.GROUPS.path) { call.respond("here1") }
+
+    get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handle(call) }
 
     staticResources(RouteFactory.Paths.STATIC.path, "static") {
       cacheControl {

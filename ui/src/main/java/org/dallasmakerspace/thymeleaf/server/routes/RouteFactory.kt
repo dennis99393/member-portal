@@ -30,6 +30,7 @@ object RouteFactory {
   enum class Paths(val path: String) {
     INDEX("/"),
     LOGIN("/login"),
+    PING("/ping"),
     OIDC_CALLBACK("/oidc-callback"),
     PROFILE("/profile/@{preferred_username}"),
     DISCOURSE_LINK("/link-discourse"),
