@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="initial-scale=1, width=device-width" />
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="initial-scale=1, width=device-width"/>
     <title>DMS Member Profiles</title>
 
-    <link rel="stylesheet" href="./static/styles/global.css" />
-    <link rel="stylesheet" href="./static/styles/index.css" />
+    <link rel="stylesheet" href="./static/styles/global.css"/>
+    <link rel="stylesheet" href="./static/styles/index.css"/>
     <link
             rel="stylesheet"
             href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&display=swap"
@@ -25,7 +25,7 @@
     </header>
     <section class="main-inner">
         <div class="welcome-member-22-parent">
-            <h1 class="welcome-member-22">Welcome, <span th:text="${name}"/>!</h1>
+            <h1 class="welcome-member-22">Welcome, <span th:text="${name}"></span>!</h1>
             <div class="edit-your-profile-wrapper">
                 <div class="edit-your-profile" id="editYourProfile">
                     <a th:href="${profile_url}">Edit your profile</a>

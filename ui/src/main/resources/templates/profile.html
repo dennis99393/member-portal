@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="en-US" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="initial-scale=1, width=device-width"/>
@@ -73,7 +73,8 @@
                         <span class="material-symbols-outlined">mail</span>
                         <div class="total-time-at-dms-21-years-wrapper">
                             <b class="total-time-at">Send email: <a
-                                    th:href="|mailto:${preferred_username}@dallasmakerspace.org|"> <span th:text="|${preferred_username}@dallasmakerspace.org|"></span></a></b>
+                                    th:href="|mailto:${preferred_username}@dallasmakerspace.org|"> <span
+                                    th:text="|${preferred_username}@dallasmakerspace.org|"></span></a></b>
                         </div>
                     </div>
                     <div th:unless="${enabled}" class="vector-parent">
@@ -129,7 +130,7 @@
                         <b class="talk-member">Talk:
                             <span th:if="${discourse_username}">
                                 <a th:href="|https://talk.dallasmakerspace.org/u/${discourse_username}/summary|"
-                                    target="_blank"><span th:text="|${discourse_username}|">
+                                   target="_blank"><span th:text="|${discourse_username}|">
 
                                 </span></a></span>
                             <span th:unless="${discourse_username}">Not Linked</span>
@@ -197,7 +198,7 @@
                 <div th:if="${groups}">
                     <span th:each="group : ${groups}">
                             <a style="margin:4px" type="button" class="btn btn-outline-primary btn-sm"
-                                   th:href="|/groups/${group.slug}|" th:text="${group.name}"></a>
+                               th:href="|/groups/${group.slug}|" th:text="${group.name}"></a>
                     </span>
                 </div>
                 <div th:unless="${groups}">
