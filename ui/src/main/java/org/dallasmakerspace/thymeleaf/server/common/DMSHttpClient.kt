@@ -16,6 +16,7 @@ import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 @Singleton
 class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
   private val log = loggerFactory.create(javaClass)
+  @Suppress("MagicNumber")
   val client =
       HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -27,6 +28,16 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
         install(Logging) {
           logger = Logger.DEFAULT
           level = LogLevel.INFO
+        }
+        engine {
+          maxConnectionsCount = 1000
+          endpoint {
+            connectTimeout = 100
+            requestTimeout = 2000
+            keepAliveTime = 5000
+            pipelineMaxSize = 20
+            maxConnectionsPerRoute = 100
+          }
         }
       }
 
