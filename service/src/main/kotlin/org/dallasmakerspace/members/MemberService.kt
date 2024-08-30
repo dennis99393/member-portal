@@ -24,6 +24,23 @@ constructor(
 ) {
   private val log = loggerFactory.create(javaClass)
 
+  suspend fun getMembersUpdatedInDays(days: Int): List<DMSMember> {
+    val adMembers = activeDirectoryService.getMembersByUpdatedDays(days)
+    val dbmembers = memberRepository.getAllMembers()
+    log.debug("Found ${adMembers.size} members updated in the last $days days")
+    return adMembers.map { adMember ->
+      DMSMember(
+          id = -1,
+          username = adMember.sAMAccountName,
+          displayName = adMember.displayName,
+          enabled = adMember.enabled,
+          discourseUsername =
+              dbmembers.find { it.username == adMember.sAMAccountName }?.discourseUsername,
+          groups = emptyList(),
+      )
+    }
+  }
+
   suspend fun getMember(username: String): DMSMember {
     // Fetch member from active directory.
     val adMember = activeDirectoryService.getMemberByUsernameList(username)
@@ -34,7 +51,8 @@ constructor(
     dbMember.lastName = adMember.sn
     dbMember.displayName = adMember.displayName
     dbMember.personalEmail = adMember.mail
-    dbMember.phoneNumber = getNormalizedPhoneNumber(adMember.telephoneNumber)
+    dbMember.phoneNumber =
+        getNormalizedPhoneNumber(adMember.telephoneNumber, adMember.sAMAccountName)
     dbMember.badgeNumber = adMember.employeeID
     dbMember.enabled = adMember.enabled
     dbMember.memberSince = calculateMemberSince(adMember.whenCreated)
@@ -51,8 +69,11 @@ constructor(
     return dbMember
   }
 
-  private fun getNormalizedPhoneNumber(telephoneNumber: String?): String? {
-    if (telephoneNumber == null) {
+  private fun getNormalizedPhoneNumber(
+      telephoneNumber: String?,
+      usernameForLogging: String
+  ): String? {
+    if (telephoneNumber.isNullOrBlank() || telephoneNumber == "null") {
       return null
     }
     val pnE164: String? =
@@ -61,7 +82,7 @@ constructor(
           val pn: Phonenumber.PhoneNumber = pnu.parse(telephoneNumber, "US")
           pnu.format(pn, PhoneNumberUtil.PhoneNumberFormat.NATIONAL)
         } catch (e: NumberParseException) {
-          log.warn("Failed to parse phone number: $telephoneNumber", e)
+          log.warn("Failed to parse phone number: $telephoneNumber for user: $usernameForLogging")
           null
         }
     return pnE164
@@ -73,7 +94,6 @@ constructor(
     if (whenCreated == null) {
       return null
     }
-    log.debug("Calculating memberSince from whenCreated: $whenCreated")
     // Parse the whenCreated string from a format like "20220910163620.0Z" to an Instant. Instant
     // expects this format "2022-09-10T16:36:20Z"
     val instant =
@@ -166,7 +186,7 @@ constructor(
                   lastName = it.sn,
                   displayName = it.displayName,
                   personalEmail = it.mail,
-                  phoneNumber = getNormalizedPhoneNumber(it.telephoneNumber),
+                  phoneNumber = getNormalizedPhoneNumber(it.telephoneNumber, it.sAMAccountName),
                   badgeNumber = it.employeeID,
                   enabled = it.enabled,
                   memberSince = calculateMemberSince(it.whenCreated),

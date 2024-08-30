@@ -21,5 +21,14 @@ interface IActiveDirectoryService {
   /** Gets the ADGroup object for the given groupname. */
   fun getGroup(groupname: String): ADGroup
 
+  /**
+   * Gets the ADUser objects for the given list of distinguished names.
+   *
+   * @param dnList The list of distinguished names to get the ADUser objects for. The format of the
+   *   distinguished name is "CN=John Doe,OU=Users,DC=example,DC=com".
+   */
   fun getMemberByDnList(dnList: List<String>): List<ADUser>
+
+  /** Gets the users that have been updated in the last `days` days. */
+  fun getMembersByUpdatedDays(days: Int): List<ADUser>
 }

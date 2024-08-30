@@ -21,6 +21,7 @@ import org.dallasmakerspace.members.MemberService
 import org.dallasmakerspace.routing.Groups
 import org.dallasmakerspace.routing.Members
 
+@Suppress("LongMethod")
 fun Application.configureRouting() {
   install(Resources)
   install(StatusPages) {
@@ -53,6 +54,16 @@ fun Application.configureRouting() {
     authenticate(ApiKeyAuthProvider.X_API_KEY) {
 
       /** Member profile operations * */
+      get<Members> { members ->
+        val updatedInDays = members.updatedInDays
+        val memberList = memberService.getMembersUpdatedInDays(updatedInDays)
+        call.respond(
+            ApiResponse(
+                Status.SUCCESS,
+                "Members updated in last $updatedInDays days: ${memberList.size}",
+                memberList))
+      }
+
       get<Members.DMSMember> { memberRequested ->
         val member = memberService.getMember(memberRequested.username)
         call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))

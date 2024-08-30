@@ -3,7 +3,7 @@ package org.dallasmakerspace.routing
 import io.ktor.resources.*
 
 @Resource("/members")
-class Members(val sort: String? = "new") {
+class Members(val updatedInDays: Int = 90) {
 
   @Resource("{username}")
   class DMSMember(

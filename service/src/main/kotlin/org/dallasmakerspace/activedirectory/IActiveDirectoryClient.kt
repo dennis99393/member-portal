@@ -12,4 +12,12 @@ interface IActiveDirectoryClient {
    *   distinguished name is "CN=John Doe,OU=Users,DC=example,DC=com".
    */
   fun getUsersByDnList(dnList: List<String>): Map<String, Map<String, Any?>>
+
+  /**
+   * Gets the users that have been updated in the last `days` days.
+   *
+   * @return The map of users that have been updated in the last `days` days. The key is the
+   *   username and the value is the map of attributes for the user.
+   */
+  fun getUsersByLogonDays(days: Int): Map<String, Map<String, Any?>>
 }

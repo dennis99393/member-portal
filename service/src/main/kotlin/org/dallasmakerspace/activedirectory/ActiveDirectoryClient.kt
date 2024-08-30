@@ -5,6 +5,7 @@ import com.unboundid.ldap.sdk.Filter
 import com.unboundid.ldap.sdk.LDAPConnectionPool
 import com.unboundid.ldap.sdk.SearchScope
 import com.unboundid.ldap.sdk.SimpleBindRequest
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import org.dallasmakerspace.core.AppConfig
@@ -133,6 +134,53 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
       val dn = entry.dn.toString()
 
       dn to
+          entry.attributes.associate {
+            it.name to if (it.name == "memberOf") it.values else it.values?.firstOrNull()
+          }
+    }
+  }
+
+  /** {@inheritDoc} */
+  @Suppress("MagicNumber")
+  override fun getUsersByLogonDays(days: Int): Map<String, Map<String, Any?>> {
+    // Calculate the date N days ago
+    val calendar = Calendar.getInstance()
+    calendar.add(Calendar.DAY_OF_MONTH, -days)
+    val dateNDaysAgo = calendar.time
+
+    // Convert the date to the number format used in LDAP the number for 100-nanosecond intervals
+    // since 1601-01-01
+    // For e.g. 133688140853991409 will represent 8/22/2024 10:28:05 AM CDT
+    val dateNDaysAgoInLdapFormat = (dateNDaysAgo.time + 11644473600000) * 10000
+
+    // Construct the LDAP filter to search for users who logged in or account was updated the last N
+    // days
+    val filter =
+        Filter.createANDFilter(
+            listOf(
+                Filter.createEqualityFilter("objectCategory", "person"),
+                Filter.createEqualityFilter("objectClass", "person"),
+                Filter.createGreaterOrEqualFilter(
+                    "lastLogonTimestamp", dateNDaysAgoInLdapFormat.toString())))
+
+    // Perform the search
+    val searchResult =
+        ldapPool.search(
+            "ou=Members,dc=dms,dc=local",
+            SearchScope.SUB,
+            filter,
+            "sAMAccountName",
+            "givenName",
+            "sn",
+            "displayName",
+            "userAccountControl",
+            "whenCreated")
+
+    // Process the search results
+    return searchResult.searchEntries.associate { entry ->
+      val preferredUsername = entry.getAttributeValue("sAMAccountName")
+
+      preferredUsername to
           entry.attributes.associate {
             it.name to if (it.name == "memberOf") it.values else it.values?.firstOrNull()
           }
