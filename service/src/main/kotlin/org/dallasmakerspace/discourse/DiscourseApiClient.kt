@@ -20,7 +20,8 @@ class DiscourseApiClient
 @Inject
 constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : IDiscourseApiClient {
   private val log = loggerFactory.create(javaClass)
-  private val client =
+
+  private fun getClient() =
       HttpClient(CIO) {
         install(Logging) {
           logger = Logger.DEFAULT
@@ -67,12 +68,14 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
   ) {
     try {
       val response =
-          client.request(url) {
-            this.method = method
-            header("Api-Key", apiKey)
-            header("Api-Username", "system")
-            contentType(ContentType.Application.Json)
-            setBody(jsonBody)
+          getClient().use {
+            it.request(url) {
+              this.method = method
+              header("Api-Key", apiKey)
+              header("Api-Username", "system")
+              contentType(ContentType.Application.Json)
+              setBody(jsonBody)
+            }
           }
       onResponse(response)
     } catch (e: IOException) {
