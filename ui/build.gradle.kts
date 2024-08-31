@@ -16,7 +16,6 @@ dependencies {
   implementation("com.squareup.okhttp3:okhttp:4.12.0")
   implementation("io.ktor", "ktor-client-auth", ktorVersion)
   implementation("io.ktor", "ktor-client-cio", ktorVersion)
-  implementation("io.ktor", "ktor-client-apache5", ktorVersion)
   implementation("io.ktor", "ktor-client-content-negotiation", ktorVersion)
   implementation("io.ktor", "ktor-client-core", ktorVersion)
   implementation("io.ktor", "ktor-client-logging", ktorVersion)

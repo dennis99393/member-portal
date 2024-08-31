@@ -2,7 +2,7 @@ package org.dallasmakerspace.thymeleaf.server.common
 
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.apache5.*
+import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
@@ -16,8 +16,9 @@ import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 @Singleton
 class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
   private val log = loggerFactory.create(javaClass)
-  val client =
-      HttpClient(Apache5) {
+
+  private fun getClient() =
+      HttpClient(CIO) {
         install(ContentNegotiation) { jackson {} }
         install(Logging) {
           logger = Logger.DEFAULT
@@ -26,7 +27,7 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
       }
 
   suspend fun get(url: String, customHeaders: StringValues): Map<String, Any> {
-    val resp = client.get(url) { headers { appendAll(customHeaders) } }
+    val resp = getClient().use { it.get(url) { headers { appendAll(customHeaders) } } }
     if (resp.status.isSuccess()) {
       return resp.body<Map<String, Any>>()
     } else {
@@ -45,11 +46,13 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
 
   suspend fun patch(url: String, authHeaders: StringValues, payload: Map<String, Any?>) {
     val resp =
-        client.patch {
-          url(url)
-          headers { appendAll(authHeaders) }
-          contentType(ContentType.Application.Json)
-          setBody(payload)
+        getClient().use {
+          it.patch {
+            url(url)
+            headers { appendAll(authHeaders) }
+            contentType(ContentType.Application.Json)
+            setBody(payload)
+          }
         }
     if (!resp.status.isSuccess()) {
       log.error("patch: HTTP request failed: $resp")
