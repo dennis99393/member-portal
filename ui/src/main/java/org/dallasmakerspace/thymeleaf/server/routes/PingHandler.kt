@@ -23,7 +23,7 @@ constructor(loggerFactory: LoggerFactory, private val memberService: MemberServi
       val timeTaken = System.currentTimeMillis() - startTime
       call.respond(
           HttpStatusCode.InternalServerError,
-          "Member service error: ${e.message}\nMember service time taken: $timeTaken")
+          "Member service error: ${e.message}; ${e.cause?.message}\nMember service time taken: $timeTaken")
     }
     val timeTaken = System.currentTimeMillis() - startTime
     call.respond("pong\nMember service time taken: $timeTaken")

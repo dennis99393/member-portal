@@ -1,6 +1,5 @@
 description = "Web UI for Member Profiles"
 
-
 val ktorVersion = "2.3.5"
 val daggerVersion = "2.48"
 val kotlinxVersion = "1.6.0"
@@ -8,19 +7,16 @@ val logbackVersion = "1.4.14"
 val kotlinTestUnit = "1.9.23"
 val seleniumVersion = "4.19.1"
 
-
-repositories {
-  mavenCentral()
-}
+repositories { mavenCentral() }
 
 dependencies {
-
   implementation("ch.qos.logback", "logback-classic", logbackVersion)
-  implementation ("com.google.dagger", "dagger", daggerVersion)
-  ksp ("com.google.dagger","dagger-compiler",daggerVersion)
+  implementation("com.google.dagger", "dagger", daggerVersion)
+  ksp("com.google.dagger", "dagger-compiler", daggerVersion)
   implementation("com.squareup.okhttp3:okhttp:4.12.0")
   implementation("io.ktor", "ktor-client-auth", ktorVersion)
   implementation("io.ktor", "ktor-client-cio", ktorVersion)
+  implementation("io.ktor", "ktor-client-apache5", ktorVersion)
   implementation("io.ktor", "ktor-client-content-negotiation", ktorVersion)
   implementation("io.ktor", "ktor-client-core", ktorVersion)
   implementation("io.ktor", "ktor-client-logging", ktorVersion)
@@ -44,20 +40,17 @@ dependencies {
   implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
   implementation("com.agido:logback-elasticsearch-appender:3.0.11")
 
-
-
   testImplementation("io.ktor", "ktor-client-mock", ktorVersion)
   testImplementation("io.ktor", "ktor-serialization-kotlinx-json", ktorVersion)
   testImplementation("io.ktor", "ktor-server-tests", ktorVersion)
   testImplementation("org.jetbrains.kotlin", "kotlin-test-junit", kotlinTestUnit)
   testImplementation("org.seleniumhq.selenium", "selenium-java", seleniumVersion)
-
 }
 
 plugins {
   kotlin("jvm") version "1.9.23"
   kotlin("plugin.serialization") version "1.9.23"
-  id ("com.google.devtools.ksp") version "1.9.23-1.0.20"
+  id("com.google.devtools.ksp") version "1.9.23-1.0.20"
   id("io.ktor.plugin") version "2.3.5"
   id("org.jetbrains.kotlinx.kover") version "0.7.6"
   id("com.ncorti.ktfmt.gradle") version "0.18.0"
@@ -72,6 +65,4 @@ application {
   applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-kotlin {
-  jvmToolchain(20)
-}
+kotlin { jvmToolchain(20) }

@@ -2,12 +2,12 @@ package org.dallasmakerspace.thymeleaf.server.common
 
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.apache5.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.serialization.gson.*
+import io.ktor.serialization.jackson.*
 import io.ktor.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -16,28 +16,12 @@ import org.dallasmakerspace.thymeleaf.server.common.logging.LoggerFactory
 @Singleton
 class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
   private val log = loggerFactory.create(javaClass)
-  @Suppress("MagicNumber")
   val client =
-      HttpClient(CIO) {
-        install(ContentNegotiation) {
-          gson {
-            setPrettyPrinting()
-            setLenient()
-          }
-        }
+      HttpClient(Apache5) {
+        install(ContentNegotiation) { jackson {} }
         install(Logging) {
           logger = Logger.DEFAULT
           level = LogLevel.INFO
-        }
-        engine {
-          maxConnectionsCount = 1000
-          endpoint {
-            connectTimeout = 100
-            requestTimeout = 2000
-            keepAliveTime = 5000
-            pipelineMaxSize = 20
-            maxConnectionsPerRoute = 100
-          }
         }
       }
 
@@ -46,8 +30,16 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
     if (resp.status.isSuccess()) {
       return resp.body<Map<String, Any>>()
     } else {
-      log.error("get: HTTP request failed: $resp")
-      throw HttpException("Failed to get $url; Status: ${resp.status} FullResponse: $resp")
+      // If member-profile-service encounters an error, it will return json with a message attribute
+      val body = resp.body<String>()
+      log.error("get: HTTP request failed: $body")
+      val message =
+          if (body.contains("message") && body.contains("ERROR")) {
+            // Serialize the json to a map and extract the message attribute
+            val json = resp.body<Map<String, Any>>()
+            json["message"] as String
+          } else ""
+      throw HttpException(message)
     }
   }
 
