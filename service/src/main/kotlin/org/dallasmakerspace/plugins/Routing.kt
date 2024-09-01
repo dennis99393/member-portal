@@ -55,12 +55,12 @@ fun Application.configureRouting() {
 
       /** Member profile operations * */
       get<Members> { members ->
-        val updatedInDays = members.updatedInDays
-        val memberList = memberService.getMembersUpdatedInDays(updatedInDays)
+        val loggedInDays = members.loggedInDays
+        val memberList = memberService.getMembersLoggedInDays(loggedInDays)
         call.respond(
             ApiResponse(
                 Status.SUCCESS,
-                "Members updated in last $updatedInDays days: ${memberList.size}",
+                "Members logged in last $loggedInDays days: ${memberList.size}",
                 memberList))
       }
 

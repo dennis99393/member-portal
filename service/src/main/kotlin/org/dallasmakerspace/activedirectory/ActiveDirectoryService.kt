@@ -91,7 +91,7 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
   }
 
   /** {@inheritDoc} */
-  override fun getMembersByUpdatedDays(days: Int): List<ADUser> {
+  override fun getMembersByLoggedInDays(days: Int): List<ADUser> {
     val adSearchResult: Map<String, Map<String, Any?>> =
         activeDirectoryClient.getUsersByLogonDays(days)
 

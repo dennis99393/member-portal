@@ -28,7 +28,7 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
   override fun getMemberByDnList(dnList: List<String>) = listOf<ADUser>()
 
   /** {@inheritDoc} */
-  override fun getMembersByUpdatedDays(days: Int): List<ADUser> = listOf()
+  override fun getMembersByLoggedInDays(days: Int): List<ADUser> = listOf()
 
   companion object {
     private val sampleMembersMap =

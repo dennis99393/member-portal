@@ -24,10 +24,10 @@ constructor(
 ) {
   private val log = loggerFactory.create(javaClass)
 
-  suspend fun getMembersUpdatedInDays(days: Int): List<DMSMember> {
-    val adMembers = activeDirectoryService.getMembersByUpdatedDays(days)
-    val dbmembers = memberRepository.getAllMembers()
-    log.debug("Found ${adMembers.size} members updated in the last $days days")
+  suspend fun getMembersLoggedInDays(days: Int): List<DMSMember> {
+    val adMembers = activeDirectoryService.getMembersByLoggedInDays(days)
+    val dbMembers = memberRepository.getAllMembers()
+    log.debug("Found ${adMembers.size} members logged in the last $days days")
     return adMembers.map { adMember ->
       DMSMember(
           id = -1,
@@ -35,7 +35,7 @@ constructor(
           displayName = adMember.displayName,
           enabled = adMember.enabled,
           discourseUsername =
-              dbmembers.find { it.username == adMember.sAMAccountName }?.discourseUsername,
+              dbMembers.find { it.username == adMember.sAMAccountName }?.discourseUsername,
           groups = emptyList(),
       )
     }

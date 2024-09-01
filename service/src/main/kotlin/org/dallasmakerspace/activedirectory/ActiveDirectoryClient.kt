@@ -153,8 +153,7 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
     // For e.g. 133688140853991409 will represent 8/22/2024 10:28:05 AM CDT
     val dateNDaysAgoInLdapFormat = (dateNDaysAgo.time + 11644473600000) * 10000
 
-    // Construct the LDAP filter to search for users who logged in or account was updated the last N
-    // days
+    // Construct the LDAP filter to search for users who logged in the last N days
     val filter =
         Filter.createANDFilter(
             listOf(

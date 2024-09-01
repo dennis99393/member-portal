@@ -29,6 +29,6 @@ interface IActiveDirectoryService {
    */
   fun getMemberByDnList(dnList: List<String>): List<ADUser>
 
-  /** Gets the users that have been updated in the last `days` days. */
-  fun getMembersByUpdatedDays(days: Int): List<ADUser>
+  /** Gets the users that have been logged in the last `days` days. */
+  fun getMembersByLoggedInDays(days: Int): List<ADUser>
 }
