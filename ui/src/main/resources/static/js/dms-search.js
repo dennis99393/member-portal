@@ -193,6 +193,13 @@ class DMSSearch extends HTMLElement {
         clearButton.style.display = input.value ? 'block' : 'none';
     }
 
+    handleOutsideClick(event) {
+        const searchContainer = this.shadowRoot.querySelector('.dms-search-container');
+        if (!searchContainer.contains(event.target)) {
+            this.displayResults([]);
+        }
+    }
+
     debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
