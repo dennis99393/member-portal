@@ -36,6 +36,7 @@ constructor(
           enabled = adMember.enabled,
           discourseUsername =
               dbMembers.find { it.username == adMember.sAMAccountName }?.discourseUsername,
+          memberSince = calculateMemberSince(adMember.whenCreated),
           groups = emptyList(),
       )
     }
