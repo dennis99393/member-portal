@@ -28,6 +28,7 @@ fun Application.configureRouting() {
       RouteFactory.getHandler(RouteFactory.Paths.DISCOURSE_CALLBACK.path)?.handle(call)
     }
     get(RouteFactory.Paths.GROUPS.path) { RouteFactory.getHandler(call)?.handle(call) }
+    get(RouteFactory.Paths.SEARCH_PRELOAD.path) { RouteFactory.getHandler(call)?.handle(call) }
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handle(call) }
 

@@ -51,4 +51,8 @@ constructor(loggerFactory: LoggerFactory, private val memberServiceClient: Membe
   suspend fun getGroup(groupName: String, sessionId: String?): DMSGroup {
     return memberServiceClient.getGroup(groupName, sessionId)
   }
+
+  suspend fun getSearchPreload(sessionId: String?): List<DMSMember> {
+    return memberServiceClient.getSearchPreloads(sessionId)
+  }
 }

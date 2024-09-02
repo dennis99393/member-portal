@@ -38,6 +38,7 @@ object RouteFactory {
     DISCOURSE_CALLBACK("/discourse-callback"),
     STATIC("/static"),
     GROUPS("/groups/{group_slug}"),
+    SEARCH_PRELOAD("/search-preload"),
   }
 }
 

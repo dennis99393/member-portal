@@ -24,6 +24,7 @@ dependencies {
   implementation("io.ktor", "ktor-server-auth", ktorVersion)
   implementation("io.ktor:ktor-server-caching-headers:$ktorVersion")
   implementation("io.ktor:ktor-server-compression:$ktorVersion")
+  implementation("io.ktor:ktor-server-content-negotiation-jvm")
   implementation("io.ktor", "ktor-server-core", ktorVersion)
   implementation("io.ktor:ktor-server-call-id:$ktorVersion")
   implementation("io.ktor:ktor-server-call-logging:$ktorVersion")

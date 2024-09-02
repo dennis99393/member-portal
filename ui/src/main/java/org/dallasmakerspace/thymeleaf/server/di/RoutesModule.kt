@@ -14,6 +14,7 @@ import org.dallasmakerspace.thymeleaf.server.routes.LoginHandler
 import org.dallasmakerspace.thymeleaf.server.routes.OidcCallbackHandler
 import org.dallasmakerspace.thymeleaf.server.routes.PingHandler
 import org.dallasmakerspace.thymeleaf.server.routes.ProfileHandler
+import org.dallasmakerspace.thymeleaf.server.routes.SearchPreloadHandler
 
 @Module
 class RoutesModule {
@@ -25,6 +26,15 @@ class RoutesModule {
       loggerFactory: LoggerFactory,
       memberService: MemberService
   ): IRouteHandler = PingHandler(loggerFactory, memberService)
+
+  @IntoMap
+  @Provides
+  @StringKey("/search-preload")
+  fun providesSearchPreloadHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService,
+  ): IRouteHandler = SearchPreloadHandler(loggerFactory, userInfoProvider, memberService)
 
   @IntoMap
   @Provides

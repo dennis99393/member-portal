@@ -65,4 +65,19 @@ constructor(
         else throw MemberServiceException("data attribute missing required")
     return DMSGroup.fromMap(data)
   }
+
+  suspend fun getSearchPreloads(sessionId: String?): List<DMSMember> {
+    val userMap =
+        try {
+          val apiHeaders = getApiHeaders(sessionId)
+          dmsHttpClient.get("$baseUrl/members?loggedInDays=30", apiHeaders)
+        } catch (ignored: Exception) {
+          log.error("Failed to get search preloads", ignored)
+          throw MemberServiceException("Failed to get search preloads", ignored)
+        }
+    val data =
+        userMap["data"] as List<*>?
+            ?: throw MemberServiceException("data attribute missing required")
+    return data.map { DMSMember.fromMap(it as Map<String, Any?>) }
+  }
 }
