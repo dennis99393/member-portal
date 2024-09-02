@@ -1,5 +1,6 @@
 package org.dallasmakerspace.thymeleaf.server.routes
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import java.util.concurrent.*
@@ -46,11 +47,12 @@ constructor(
                 "discourseUsername" to it.discourseUsername)
           }
       cache[cacheKey] = Pair(currentTime, jsonMap)
+      call.respond(jsonMap)
     } catch (e: Exception) {
       jsonMap["status"] = "ERROR"
-      jsonMap["error"] = e.message ?: "Unknown error"
+      jsonMap["error"] = "${e.message}: ${e.stackTraceToString()}"
+      call.respond(HttpStatusCode.InternalServerError, jsonMap)
     }
-    call.respond(jsonMap)
   }
 
   companion object {
