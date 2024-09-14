@@ -15,6 +15,7 @@ import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.apiKey
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.cron.MemberRefreshCronJob
+import org.dallasmakerspace.cron.MemberRefreshCronJobParams
 import org.dallasmakerspace.di.DaggerAppComponent
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.MemberService
@@ -95,8 +96,12 @@ fun Application.configureRouting() {
       }
 
       get("/cron/member-refresh") {
-        val result = memberRefreshCronJob.run()
-        call.respond(ApiResponse(Status.SUCCESS, result, null))
+        // Get query string param for isRunningInShadowMode
+        val isRunningInShadowMode =
+            call.request.queryParameters["isRunningInShadowMode"]?.toBoolean() ?: true
+        val params = MemberRefreshCronJobParams(isRunningInShadowMode)
+        val result = memberRefreshCronJob.run(params)
+        call.respond(result)
       }
     }
   }

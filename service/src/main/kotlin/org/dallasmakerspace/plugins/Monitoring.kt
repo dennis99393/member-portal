@@ -7,6 +7,7 @@ import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.callloging.*
 import io.ktor.server.request.*
 import io.ktor.util.date.*
+import org.dallasmakerspace.core.logging.SessionIdGenerator
 import org.dallasmakerspace.di.DaggerAppComponent
 import org.slf4j.event.Level
 
@@ -30,6 +31,12 @@ fun Application.configureMonitoring() {
   install(CallId) {
     header(HttpHeaders.XRequestId)
     verify { callId: String -> callId.isNotBlank() }
-    generate { "no-call-id" }
+    generate {
+      if (it.request.headers["X-Api-Client"] == "jenkins-member-refresh") {
+        SessionIdGenerator().generate()
+      } else {
+        "no-call-id"
+      }
+    }
   }
 }

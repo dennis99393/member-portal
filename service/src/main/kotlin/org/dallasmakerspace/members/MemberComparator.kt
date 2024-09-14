@@ -1,48 +1,83 @@
 package org.dallasmakerspace.members
 
+import io.ktor.util.logging.*
 import javax.inject.Inject
 import org.dallasmakerspace.activedirectory.ADUser
-import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.members.observers.IMemberPropChangeObserver
 import org.dallasmakerspace.models.DMSMember
 
 class MemberComparator
 @Inject
 constructor(
-    loggerFactory: LoggerFactory,
     private val memberRepository: MemberRepository,
     private val memberPropChangeObservers: Set<@JvmSuppressWildcards IMemberPropChangeObserver>
 ) {
-  private val log = loggerFactory.create(javaClass)
 
-  suspend fun process(memberList: List<Pair<DMSMember, ADUser?>>) {
-    log.info(
-        "MemberComparator.process: memberList=${memberList.joinToString(separator = ",") { it.first.username }}")
-    // List of members with enabled prop changed
-    memberList.forEach { (dbMember, adUser) ->
-      log.debug(
-          "Member ${dbMember.username} enabled changed: ${dbMember.enabled} -> ${adUser?.enabled}")
-    }
-    val enabledChangedMembers =
-        memberList.filter { (dbMember, adUser) -> dbMember.enabled && adUser?.enabled == false }
+  suspend fun process(
+      memberList: List<Pair<DMSMember, ADUser?>>,
+      log: Logger,
+      isRunningInShadowMode: Boolean
+  ): Pair<Int, Int> {
 
     log.debug(
-        "Enabled changed members: ${enabledChangedMembers.size}: " +
-            enabledChangedMembers.joinToString(separator = ",") { it.first.username })
+        "MemberComparator.process: memberList=${memberList.joinToString(separator = ",") { it.first.username }}")
 
+    val disabledMembers =
+        memberList.filter { (dbMember, adUser) -> dbMember.enabled && adUser?.enabled == false }
+
+    if (disabledMembers.isNotEmpty()) {
+      log.info(
+          "Found newly disabled members (${disabledMembers.size}): " +
+              disabledMembers.joinToString(separator = ",") { it.first.username })
+    }
+
+    val enabledMembers =
+        memberList.filter { (dbMember, adUser) -> adUser?.enabled == true && !dbMember.enabled }
+
+    if (enabledMembers.isNotEmpty()) {
+      log.info(
+          "Found newly enabled members (${enabledMembers.size}): " +
+              enabledMembers.joinToString(separator = ",") { it.first.username })
+    }
+
+    if (isRunningInShadowMode) {
+      log.debug("Running in shadow mode, skipping observer.onMemberPropChange")
+      return Pair(disabledMembers.size, enabledMembers.size)
+    }
     // Notify observers of any changes
     memberPropChangeObservers.forEach { observer ->
-      val result =
-          observer.onMemberPropChange(
-              "enabled", true, false, enabledChangedMembers.map { it.first })
-      if (result) {
-        val updatedMembers = enabledChangedMembers.map { it.first }
+      // Notify for disabled members
+      val resultDisabled = true
+      observer.onMemberPropChange(
+          "enabled",
+          oldValue = true,
+          newValue = false,
+          affectedMembers = disabledMembers.map { it.first })
+      if (resultDisabled) {
+        val updatedMembers = disabledMembers.map { it.first }
         // Set .enabled to false for all members in the list
         updatedMembers.forEach { it.enabled = false }
         log.debug(
-            "Updating members: ${updatedMembers.joinToString(separator = ",") { it.username }}")
+            "Updating disabled members: ${updatedMembers.joinToString(separator = ",") { it.username }}")
+        memberRepository.updateMembers(updatedMembers)
+      }
+
+      // Notify for enabled members
+      val resultEnabled = true
+      observer.onMemberPropChange(
+          "enabled",
+          oldValue = false,
+          newValue = true,
+          affectedMembers = enabledMembers.map { it.first })
+      if (resultEnabled) {
+        val updatedMembers = enabledMembers.map { it.first }
+        // Set .enabled to false for all members in the list
+        updatedMembers.forEach { it.enabled = true }
+        log.debug(
+            "Updating enabled members: ${updatedMembers.joinToString(separator = ",") { it.username }}")
         memberRepository.updateMembers(updatedMembers)
       }
     }
+    return Pair(disabledMembers.size, enabledMembers.size)
   }
 }

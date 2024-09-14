@@ -44,9 +44,9 @@ constructor(
 
   suspend fun getMember(username: String): DMSMember {
     // Fetch member from active directory.
-    val adMember = activeDirectoryService.getMemberByUsernameList(username)
+    val adMember = activeDirectoryService.getMemberByUsername(username)
 
-    val dbMember = memberRepository.getMemberOrInsert(username)
+    val dbMember = memberRepository.getMemberOrInsert(username, adMember.enabled)
     // TODO: compare DB and AD members and notify observers of any changes.
     dbMember.firstName = adMember.givenName
     dbMember.lastName = adMember.sn
@@ -116,10 +116,12 @@ constructor(
 
   suspend fun updateMember(username: String, memberFromApi: DMSMember) {
     // Fetch member from active directory.
-    val adMember = activeDirectoryService.getMemberByUsernameList(username)
+    val adMember = activeDirectoryService.getMemberByUsername(username)
     // If member is not active in AD then throw an exception.
-    check(adMember.enabled) { "Member is not active in AD: $username" }
-    val dbMember = memberRepository.getMemberOrInsert(username)
+    check(adMember.enabled) {
+      "Member is not active in AD: $username, we should not update this record!"
+    }
+    val dbMember = memberRepository.getMemberOrInsert(username, adMember.enabled)
     var propertiesUpdated = false
     // Figure out which properties have been updated by comparing dbMember and memberFromApi.
     if (dbMember.avatarUrl != memberFromApi.avatarUrl) {
@@ -153,7 +155,8 @@ constructor(
 
   private suspend fun linkDiscourse(memberFromApi: DMSMember) {
     // Add the member to the discourse group.
-    discourseService.addUserToDmsMembersV2Group(requireNotNull(memberFromApi.discourseUsername))
+    discourseService.addUserToDmsMembersV2Group(
+        listOf(requireNotNull(memberFromApi.discourseUsername)))
     activityLogService.insertActivityLogEntry(
         subjectUsername = memberFromApi.username, event = ActivityLogEvent.LINK_DISCOURSE)
   }

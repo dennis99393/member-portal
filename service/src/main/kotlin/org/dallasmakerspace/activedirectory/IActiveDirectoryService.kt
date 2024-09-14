@@ -8,7 +8,7 @@ interface IActiveDirectoryService {
    * @param username The username of the user to get.
    * @return The ADUser object for the given username.
    */
-  fun getMemberByUsernameList(username: String): ADUser
+  fun getMemberByUsername(username: String): ADUser
 
   /**
    * Gets the ADUser object for the given list of usernames.
@@ -27,7 +27,7 @@ interface IActiveDirectoryService {
    * @param dnList The list of distinguished names to get the ADUser objects for. The format of the
    *   distinguished name is "CN=John Doe,OU=Users,DC=example,DC=com".
    */
-  fun getMemberByDnList(dnList: List<String>): List<ADUser>
+  fun getMembersByDnList(dnList: List<String>): List<ADUser>
 
   /** Gets the users that have been logged in the last `days` days. */
   fun getMembersByLoggedInDays(days: Int): List<ADUser>

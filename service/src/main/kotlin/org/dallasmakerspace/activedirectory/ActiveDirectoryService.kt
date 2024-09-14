@@ -12,13 +12,13 @@ class ActiveDirectoryService
 constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActiveDirectoryService {
 
   /** {@inheritDoc} */
-  override fun getMemberByUsernameList(username: String): ADUser {
+  override fun getMemberByUsername(username: String): ADUser {
     return getMembersByUsernameList(listOf(username))[username]
         ?: throw ADException("User $username not found in AD")
   }
 
   /** {@inheritDoc} */
-  override fun getMemberByDnList(dnList: List<String>): List<ADUser> {
+  override fun getMembersByDnList(dnList: List<String>): List<ADUser> {
     val adSearchResult: Map<String, Map<String, Any?>> =
         activeDirectoryClient.getUsersByDnList(dnList)
 
@@ -130,7 +130,7 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
     // Take first [MAX_GROUP_MEMBERS] members from the list.
     val members = (allMembers as Array<*>).take(MAX_GROUP_MEMBERS)
     // Fetch the ADUser object for each member.
-    return getMemberByDnList(members.map { it.toString() })
+    return getMembersByDnList(members.map { it.toString() })
   }
 
   /**

@@ -7,7 +7,7 @@ import javax.inject.Inject
 class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService {
 
   /** {@inheritDoc} */
-  override fun getMemberByUsernameList(username: String): ADUser =
+  override fun getMemberByUsername(username: String): ADUser =
       sampleMembersMap[username] ?: throw ADException("User not found")
 
   /** {@inheritDoc} */
@@ -25,7 +25,7 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
   }
 
   /** {@inheritDoc} */
-  override fun getMemberByDnList(dnList: List<String>) = listOf<ADUser>()
+  override fun getMembersByDnList(dnList: List<String>) = listOf<ADUser>()
 
   /** {@inheritDoc} */
   override fun getMembersByLoggedInDays(days: Int): List<ADUser> = listOf()

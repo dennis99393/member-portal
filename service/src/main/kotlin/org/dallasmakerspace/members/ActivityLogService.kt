@@ -18,7 +18,7 @@ constructor(
    * @return The activity log for the member.
    */
   suspend fun getMemberActivityLog(username: String): List<ActivityLog> {
-    val member = memberRepository.getMemberOrInsert(username)
+    val member = memberRepository.getMemberOrInsert(username, null)
     return activityLogRepository.getMemberActivityLog(member.id)
   }
 

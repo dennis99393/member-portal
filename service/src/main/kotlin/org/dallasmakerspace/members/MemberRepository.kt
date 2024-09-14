@@ -14,6 +14,7 @@ import org.dallasmakerspace.models.daoToProfileModel
  */
 class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
   private val log = loggerFactory.create(javaClass)
+
   /**
    * Fetches member data from the database. If the member does not exist in the database, inserts a
    * new member.
@@ -21,7 +22,7 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
    * @param username The username of the member to fetch.
    * @return The member data.
    */
-  suspend fun getMemberOrInsert(username: String): DMSMember {
+  suspend fun getMemberOrInsert(username: String, enabled: Boolean?): DMSMember {
     val existingMember = suspendTransaction {
       ProfileDAO.find { ProfileTable.username eq username }
           .firstOrNull()
@@ -29,7 +30,14 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
     }
     return if (existingMember == null) {
       log.info("Member not found in DB: $username; inserting new record.")
-      daoToProfileModel(suspendTransaction { ProfileDAO.new(username) {} })
+      daoToProfileModel(
+          suspendTransaction {
+            ProfileDAO.new(username) {
+              if (enabled != null) {
+                isEnabled = enabled
+              }
+            }
+          })
     } else {
       log.debug("Member found in DB: $username")
       existingMember
@@ -66,8 +74,8 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
   }
 
   suspend fun updateMembers(memberList: List<DMSMember>) {
-    suspendTransaction {
-      memberList.forEach { member ->
+    memberList.forEach { member ->
+      suspendTransaction {
         val existingMember =
             ProfileDAO.find { ProfileTable.username eq member.username }.firstOrNull()
                 ?: throw IllegalArgumentException("Member does not exist in DB: ${member.username}")

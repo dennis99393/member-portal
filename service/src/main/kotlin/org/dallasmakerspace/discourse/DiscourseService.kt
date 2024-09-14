@@ -7,20 +7,20 @@ class DiscourseService @Inject constructor(private val discourseApiClient: IDisc
   /**
    * Adds a discourse user to a group
    *
-   * @param username the username of the user to add to the group
+   * @param usernames the list of usernames of the user to add to the group
    * @param groupId the id of the group to add the user to, must be a value from the GroupId enum
    */
-  private suspend fun addUserToGroup(username: String, groupId: GroupId) {
-    discourseApiClient.addUsersToGroup(listOf(username), groupId)
+  private suspend fun addUserToGroup(usernames: List<String>, groupId: GroupId) {
+    discourseApiClient.addUsersToGroup(usernames, groupId)
   }
 
   /**
    * Adds a user to the DMS Members V2 group
    *
-   * @param username the username of the user to add to the group
+   * @param usernames the list of username of the user to add to the group
    */
-  suspend fun addUserToDmsMembersV2Group(username: String) =
-      addUserToGroup(username, GroupId.GROUP_DMS_MEMBERS_V2)
+  suspend fun addUserToDmsMembersV2Group(usernames: List<String>) =
+      addUserToGroup(usernames, GroupId.GROUP_DMS_MEMBERS_V2)
 
   /**
    * Removes a list of discourse user from a group
