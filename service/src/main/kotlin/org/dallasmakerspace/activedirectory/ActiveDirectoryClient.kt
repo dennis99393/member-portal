@@ -26,50 +26,44 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
   private val bindPort = appConfig.requireIntProperty("app.ldap.port")
   private val serverSet = FailoverServerSet(arrayOf(bindHost), intArrayOf(bindPort))
   private val ldapPool =
-    LDAPConnectionPool(
-      serverSet,
-      SimpleBindRequest(ldapUser, ldapPass),
-      INITIAL_LDAP_CONNECTIONS,
-      MAX_LDAP_CONNECTIONS
-    )
+      LDAPConnectionPool(
+          serverSet,
+          SimpleBindRequest(ldapUser, ldapPass),
+          INITIAL_LDAP_CONNECTIONS,
+          MAX_LDAP_CONNECTIONS)
 
   override fun getUsersByUsernameList(usernames: List<String>): Map<String, Map<String, Any?>> {
     val filter =
-      Filter.createANDFilter(
-        listOf(
-          Filter.createEqualityFilter("objectCategory", "person"),
-          Filter.createORFilter(
+        Filter.createANDFilter(
             listOf(
-              Filter.createEqualityFilter("objectClass", "member"),
-              Filter.createEqualityFilter("objectClass", "user")
-            )
-          ),
-          Filter.createORFilter(
-            usernames.map {
-              Filter.createEqualityFilter(
-                "sAMAccountName",
-                it,
-              )
-            })
-        )
-      )
+                Filter.createEqualityFilter("objectCategory", "person"),
+                Filter.createORFilter(
+                    listOf(
+                        Filter.createEqualityFilter("objectClass", "member"),
+                        Filter.createEqualityFilter("objectClass", "user"))),
+                Filter.createORFilter(
+                    usernames.map {
+                      Filter.createEqualityFilter(
+                          "sAMAccountName",
+                          it,
+                      )
+                    })))
     val searchResult =
-      ldapPool.search(
-        "DC=dms, DC=local",
-        SearchScope.SUB,
-        filter,
-        "sAMAccountName",
-        "givenName",
-        "sn",
-        "displayName",
-        "mail",
-        "memberOf",
-        "employeeID",
-        "telephoneNumber",
-        "objectGUID",
-        "userAccountControl",
-        "whenCreated"
-      )
+        ldapPool.search(
+            "DC=dms, DC=local",
+            SearchScope.SUB,
+            filter,
+            "sAMAccountName",
+            "givenName",
+            "sn",
+            "displayName",
+            "mail",
+            "memberOf",
+            "employeeID",
+            "telephoneNumber",
+            "objectGUID",
+            "userAccountControl",
+            "whenCreated")
     return searchResult.searchEntries.associate { entry ->
       val username = entry.getAttributeValue("sAMAccountName")
 
@@ -82,33 +76,30 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
 
   override fun getGroup(groupname: String): Map<String, Any?> {
     val groupFilter =
-      Filter.createANDFilter(
-        listOf(
-          Filter.createEqualityFilter("name", groupname),
-          Filter.createEqualityFilter("objectCategory", "group")
-        )
-      )
+        Filter.createANDFilter(
+            listOf(
+                Filter.createEqualityFilter("name", groupname),
+                Filter.createEqualityFilter("objectCategory", "group")))
 
     val searchResult =
-      ldapPool.search(
-        "DC=dms,DC=local",
-        SearchScope.SUB,
-        groupFilter,
-        "cn",
-        "distinguishedName",
-        "description",
-        "member",
-        "objectGUID"
-      )
+        ldapPool.search(
+            "DC=dms,DC=local",
+            SearchScope.SUB,
+            groupFilter,
+            "cn",
+            "distinguishedName",
+            "description",
+            "member",
+            "objectGUID")
 
     val groupEntry =
-      searchResult.searchEntries.firstOrNull()
-        ?: throw ADException("Group $groupname not found in AD")
+        searchResult.searchEntries.firstOrNull()
+            ?: throw ADException("Group $groupname not found in AD")
 
     val group =
-      groupEntry.attributes.associate {
-        it.name to if (it.name == "member") it.values else it.values.firstOrNull()
-      }
+        groupEntry.attributes.associate {
+          it.name to if (it.name == "member") it.values else it.values.firstOrNull()
+        }
 
     val groupDN = group["distinguishedName"] as String? ?: throw ADException("Group DN not found")
 
@@ -118,18 +109,17 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
 
     // Search for enabled users who are members of the group
     val userFilter =
-      Filter.create(
-        "(&(objectCategory=person)(objectClass=user)(memberOf=$groupDN)" +
-            "(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
-      )
+        Filter.create(
+            "(&(objectCategory=person)(objectClass=user)(memberOf=$groupDN)" +
+                "(!(userAccountControl:1.2.840.113556.1.4.803:=2)))")
 
     val searchRequest =
-      SearchRequest(
-        "DC=dms,DC=local",
-        SearchScope.SUB,
-        userFilter,
-        "distinguishedName",
-      )
+        SearchRequest(
+            "DC=dms,DC=local",
+            SearchScope.SUB,
+            userFilter,
+            "distinguishedName",
+        )
 
     // Add the sort control to the search request
     searchRequest.addControl(sortRequestControl)
@@ -152,41 +142,36 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
   /** {@inheritDoc} */
   override fun getUsersByDnList(dnList: List<String>): Map<String, Map<String, Any?>> {
     val filter =
-      Filter.createANDFilter(
-        listOf(
-          Filter.createEqualityFilter("objectCategory", "person"),
-          Filter.createORFilter(
+        Filter.createANDFilter(
             listOf(
-              Filter.createEqualityFilter("objectClass", "member"),
-              Filter.createEqualityFilter("objectClass", "user")
-            )
-          ),
-          Filter.createORFilter(
-            dnList.map {
-              Filter.createEqualityFilter(
-                "distinguishedName",
-                it,
-              )
-            })
-        )
-      )
+                Filter.createEqualityFilter("objectCategory", "person"),
+                Filter.createORFilter(
+                    listOf(
+                        Filter.createEqualityFilter("objectClass", "member"),
+                        Filter.createEqualityFilter("objectClass", "user"))),
+                Filter.createORFilter(
+                    dnList.map {
+                      Filter.createEqualityFilter(
+                          "distinguishedName",
+                          it,
+                      )
+                    })))
     val searchResult =
-      ldapPool.search(
-        "DC=dms, DC=local",
-        SearchScope.SUB,
-        filter,
-        "sAMAccountName",
-        "givenName",
-        "sn",
-        "displayName",
-        "mail",
-        "memberOf",
-        "employeeID",
-        "telephoneNumber",
-        "objectGUID",
-        "userAccountControl",
-        "whenCreated"
-      )
+        ldapPool.search(
+            "DC=dms, DC=local",
+            SearchScope.SUB,
+            filter,
+            "sAMAccountName",
+            "givenName",
+            "sn",
+            "displayName",
+            "mail",
+            "memberOf",
+            "employeeID",
+            "telephoneNumber",
+            "objectGUID",
+            "userAccountControl",
+            "whenCreated")
     return searchResult.searchEntries.associate { entry ->
       val dn = entry.dn.toString()
 
@@ -212,29 +197,25 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
 
     // Construct the LDAP filter to search for users who logged in the last N days
     val filter =
-      Filter.createANDFilter(
-        listOf(
-          Filter.createEqualityFilter("objectCategory", "person"),
-          Filter.createEqualityFilter("objectClass", "person"),
-          Filter.createGreaterOrEqualFilter(
-            "lastLogonTimestamp", dateNDaysAgoInLdapFormat.toString()
-          )
-        )
-      )
+        Filter.createANDFilter(
+            listOf(
+                Filter.createEqualityFilter("objectCategory", "person"),
+                Filter.createEqualityFilter("objectClass", "person"),
+                Filter.createGreaterOrEqualFilter(
+                    "lastLogonTimestamp", dateNDaysAgoInLdapFormat.toString())))
 
     // Perform the search
     val searchResult =
-      ldapPool.search(
-        "ou=Members,dc=dms,dc=local",
-        SearchScope.SUB,
-        filter,
-        "sAMAccountName",
-        "givenName",
-        "sn",
-        "displayName",
-        "userAccountControl",
-        "whenCreated"
-      )
+        ldapPool.search(
+            "ou=Members,dc=dms,dc=local",
+            SearchScope.SUB,
+            filter,
+            "sAMAccountName",
+            "givenName",
+            "sn",
+            "displayName",
+            "userAccountControl",
+            "whenCreated")
 
     // Process the search results
     return searchResult.searchEntries.associate { entry ->
