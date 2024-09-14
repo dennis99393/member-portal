@@ -14,52 +14,20 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
   /** {@inheritDoc} */
   override fun getMemberByUsernameList(username: String): ADUser {
     return getMembersByUsernameList(listOf(username))[username]
-        ?: throw ADException("User $username not found in AD")
+      ?: throw ADException("User $username not found in AD")
   }
 
   /** {@inheritDoc} */
   override fun getMemberByDnList(dnList: List<String>): List<ADUser> {
     val adSearchResult: Map<String, Map<String, Any?>> =
-        activeDirectoryClient.getUsersByDnList(dnList)
+      activeDirectoryClient.getUsersByDnList(dnList)
 
     // For each DN in the list, get the ADUser object.
     return dnList
-        .map { dn ->
-          val memberMap = adSearchResult[dn] ?: return@map null
-          val groups = emptyList<ADGroup>()
-          ADUser(
-              sAMAccountName = memberMap["sAMAccountName"].toString(),
-              givenName = memberMap["givenName"].toString(),
-              sn = memberMap["sn"].toString(),
-              displayName = memberMap["displayName"].toString(),
-              mail = memberMap["mail"].toString(),
-              telephoneNumber = memberMap["telephoneNumber"].toString(),
-              employeeID = memberMap["employeeID"].toString(),
-              objectGuid = memberMap["objectGUID"].toString(),
-              whenCreated = memberMap["whenCreated"].toString(),
-              enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
-              groups = groups)
-        }
-        .filterNotNull()
-  }
-
-  /** {@inheritDoc} */
-  override fun getMembersByUsernameList(usernameList: List<String>): Map<String, ADUser?> {
-    val adSearchResult: Map<String, Map<String, Any?>> =
-        activeDirectoryClient.getUsersByUsernameList(usernameList)
-
-    // For each username in the list, get the ADUser object.
-    return usernameList.associateWith { username ->
-      val memberMap = adSearchResult[username] ?: return@associateWith null
-      val memberOf = memberMap["memberOf"]
-      val groups =
-          if (memberOf is Array<*>) {
-            val list = memberOf.toList()
-            parseGroups(list.filterIsInstance<String>())
-          } else {
-            emptyList()
-          }
-      ADUser(
+      .map { dn ->
+        val memberMap = adSearchResult[dn] ?: return@map null
+        val groups = emptyList<ADGroup>()
+        ADUser(
           sAMAccountName = memberMap["sAMAccountName"].toString(),
           givenName = memberMap["givenName"].toString(),
           sn = memberMap["sn"].toString(),
@@ -70,7 +38,41 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
           objectGuid = memberMap["objectGUID"].toString(),
           whenCreated = memberMap["whenCreated"].toString(),
           enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
-          groups = groups)
+          groups = groups
+        )
+      }
+      .filterNotNull()
+  }
+
+  /** {@inheritDoc} */
+  override fun getMembersByUsernameList(usernameList: List<String>): Map<String, ADUser?> {
+    val adSearchResult: Map<String, Map<String, Any?>> =
+      activeDirectoryClient.getUsersByUsernameList(usernameList)
+
+    // For each username in the list, get the ADUser object.
+    return usernameList.associateWith { username ->
+      val memberMap = adSearchResult[username] ?: return@associateWith null
+      val memberOf = memberMap["memberOf"]
+      val groups =
+        if (memberOf is Array<*>) {
+          val list = memberOf.toList()
+          parseGroups(list.filterIsInstance<String>())
+        } else {
+          emptyList()
+        }
+      ADUser(
+        sAMAccountName = memberMap["sAMAccountName"].toString(),
+        givenName = memberMap["givenName"].toString(),
+        sn = memberMap["sn"].toString(),
+        displayName = memberMap["displayName"].toString(),
+        mail = memberMap["mail"].toString(),
+        telephoneNumber = memberMap["telephoneNumber"].toString(),
+        employeeID = memberMap["employeeID"].toString(),
+        objectGuid = memberMap["objectGUID"].toString(),
+        whenCreated = memberMap["whenCreated"].toString(),
+        enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
+        groups = groups
+      )
     }
   }
 
@@ -78,45 +80,44 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
   override fun getGroup(groupname: String): ADGroup {
     val adResult = activeDirectoryClient.getGroup(groupname)
     return ADGroup(
-        cn = adResult["cn"].toString(),
-        description = adResult["description"]?.toString(),
-        distinguishedName = adResult["distinguishedName"].toString(),
-        objectGuid = adResult["objectGUID"]?.toString(), // Convert bytes to GUID String
-        members = parseMembers(adResult),
-        membersListIncomplete =
-            (adResult["member;range=0-1499"] != null &&
-                (adResult["member;range=0-1499"] as Array<*>).isNotEmpty()) ||
-                (adResult["member"] != null &&
-                    (adResult["member"] as Array<*>).size > MAX_GROUP_MEMBERS))
+      cn = adResult["cn"].toString(),
+      description = adResult["description"]?.toString(),
+      distinguishedName = adResult["distinguishedName"].toString(),
+      objectGuid = adResult["objectGUID"]?.toString(), // Convert bytes to GUID String
+      members = parseMembers(adResult),
+      membersListIncomplete =
+      (adResult["member"] as Array<*>).size > MAX_GROUP_MEMBERS
+    )
   }
 
   /** {@inheritDoc} */
   override fun getMembersByLoggedInDays(days: Int): List<ADUser> {
     val adSearchResult: Map<String, Map<String, Any?>> =
-        activeDirectoryClient.getUsersByLogonDays(days)
+      activeDirectoryClient.getUsersByLogonDays(days)
 
     // For each username in the list, get the ADUser object.
     return adSearchResult.values.map { memberMap ->
       val memberOf = memberMap["memberOf"]
       val groups =
-          if (memberOf is Array<*>) {
-            val list = memberOf.toList()
-            parseGroups(list.filterIsInstance<String>())
-          } else {
-            emptyList()
-          }
+        if (memberOf is Array<*>) {
+          val list = memberOf.toList()
+          parseGroups(list.filterIsInstance<String>())
+        } else {
+          emptyList()
+        }
       ADUser(
-          sAMAccountName = memberMap["sAMAccountName"].toString(),
-          givenName = memberMap["givenName"].toString(),
-          sn = memberMap["sn"].toString(),
-          displayName = memberMap["displayName"].toString(),
-          mail = memberMap["mail"].toString(),
-          telephoneNumber = memberMap["telephoneNumber"].toString(),
-          employeeID = memberMap["employeeID"].toString(),
-          objectGuid = memberMap["objectGUID"].toString(),
-          whenCreated = memberMap["whenCreated"].toString(),
-          enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
-          groups = groups)
+        sAMAccountName = memberMap["sAMAccountName"].toString(),
+        givenName = memberMap["givenName"].toString(),
+        sn = memberMap["sn"].toString(),
+        displayName = memberMap["displayName"].toString(),
+        mail = memberMap["mail"].toString(),
+        telephoneNumber = memberMap["telephoneNumber"].toString(),
+        employeeID = memberMap["employeeID"].toString(),
+        objectGuid = memberMap["objectGUID"].toString(),
+        whenCreated = memberMap["whenCreated"].toString(),
+        enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
+        groups = groups
+      )
     }
   }
 
@@ -131,12 +132,7 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
   private fun parseMembers(attributeMap: Map<String, Any?>): List<ADUser> {
     // Get the list of members from the attribute map "member" or "member;range=0-1499" attribute.
     val allMembers =
-        if (attributeMap["member;range=0-1499"] != null &&
-            (attributeMap["member;range=0-1499"] as Array<*>).isNotEmpty()) {
-          attributeMap["member;range=0-1499"]
-        } else {
-          attributeMap["member"]
-        }
+      (attributeMap["member"] as? Array<*>) ?: emptyList<String>()
     // Take first [MAX_GROUP_MEMBERS] members from the list.
     val members = (allMembers as Array<*>).take(MAX_GROUP_MEMBERS)
     // Fetch the ADUser object for each member.
@@ -157,12 +153,12 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
       val cn = parts.first().substring(startIndex)
       val dn = it
       ADGroup(
-          cn,
-          distinguishedName = dn,
-          description = null,
-          objectGuid = null,
-          members = listOf(),
-          membersListIncomplete = false,
+        cn,
+        distinguishedName = dn,
+        description = null,
+        objectGuid = null,
+        members = listOf(),
+        membersListIncomplete = false,
       )
     } ?: emptyList()
   }
