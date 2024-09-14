@@ -6,8 +6,8 @@ import com.unboundid.ldap.sdk.LDAPConnectionPool
 import com.unboundid.ldap.sdk.SearchRequest
 import com.unboundid.ldap.sdk.SearchScope
 import com.unboundid.ldap.sdk.SimpleBindRequest
-import com.unboundid.ldap.sdk.controls.SortKey
 import com.unboundid.ldap.sdk.controls.ServerSideSortRequestControl
+import com.unboundid.ldap.sdk.controls.SortKey
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -81,49 +81,55 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
   }
 
   override fun getGroup(groupname: String): Map<String, Any?> {
-    val groupFilter = Filter.createANDFilter(
-      listOf(
-        Filter.createEqualityFilter("name", groupname),
-        Filter.createEqualityFilter("objectCategory", "group")
+    val groupFilter =
+      Filter.createANDFilter(
+        listOf(
+          Filter.createEqualityFilter("name", groupname),
+          Filter.createEqualityFilter("objectCategory", "group")
+        )
       )
-    )
 
-    val searchResult = ldapPool.search(
-      "DC=dms,DC=local",
-      SearchScope.SUB,
-      groupFilter,
-      "cn",
-      "distinguishedName",
-      "description",
-      "member",
-      "objectGUID"
-    )
+    val searchResult =
+      ldapPool.search(
+        "DC=dms,DC=local",
+        SearchScope.SUB,
+        groupFilter,
+        "cn",
+        "distinguishedName",
+        "description",
+        "member",
+        "objectGUID"
+      )
 
-    val groupEntry = searchResult.searchEntries.firstOrNull()
-      ?: throw ADException("Group $groupname not found in AD")
+    val groupEntry =
+      searchResult.searchEntries.firstOrNull()
+        ?: throw ADException("Group $groupname not found in AD")
 
-    val group = groupEntry.attributes.associate {
-      it.name to if (it.name == "member") it.values else it.values.firstOrNull()
-    }
+    val group =
+      groupEntry.attributes.associate {
+        it.name to if (it.name == "member") it.values else it.values.firstOrNull()
+      }
 
-    val groupDN = group["distinguishedName"] as String?
-      ?: throw ADException("Group DN not found")
+    val groupDN = group["distinguishedName"] as String? ?: throw ADException("Group DN not found")
 
     // Sort the members by 'whenCreated' attribute so we get the most recent members first
     val sortKey = SortKey("whenCreated", true)
     val sortRequestControl = ServerSideSortRequestControl(sortKey)
 
     // Search for enabled users who are members of the group
-    val userFilter = Filter.create(
-      "(&(objectCategory=person)(objectClass=user)(memberOf=$groupDN)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
-    )
+    val userFilter =
+      Filter.create(
+        "(&(objectCategory=person)(objectClass=user)(memberOf=$groupDN)" +
+            "(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
+      )
 
-    val searchRequest = SearchRequest(
-      "DC=dms,DC=local",
-      SearchScope.SUB,
-      userFilter,
-      "distinguishedName",
-    )
+    val searchRequest =
+      SearchRequest(
+        "DC=dms,DC=local",
+        SearchScope.SUB,
+        userFilter,
+        "distinguishedName",
+      )
 
     // Add the sort control to the search request
     searchRequest.addControl(sortRequestControl)
@@ -142,7 +148,6 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
 
     return updatedGroup
   }
-
 
   /** {@inheritDoc} */
   override fun getUsersByDnList(dnList: List<String>): Map<String, Map<String, Any?>> {
