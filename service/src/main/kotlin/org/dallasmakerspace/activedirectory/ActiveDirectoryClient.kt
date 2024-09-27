@@ -101,7 +101,10 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
           it.name to if (it.name == "member") it.values else it.values.firstOrNull()
         }
 
-    val groupDN = group["distinguishedName"] as String? ?: throw ADException("Group DN not found")
+    // Escape special characters like '(' and ')' in the group DN
+    val groupDN =
+        (group["distinguishedName"] as String?)?.replace("(", "\\28")?.replace(")", "\\29")
+            ?: throw ADException("Group DN not found")
 
     // Sort the members by 'whenCreated' attribute so we get the most recent members first
     val sortKey = SortKey("whenCreated", true)
