@@ -25,32 +25,28 @@ constructor(
     log.info(
         "MemberDisabledObserver.onMemberPropChange: propName=$propName, oldValue=$oldValue, " +
             "newValue=$newValue, affectedMembers=$affectedMembers")
+    // Validate that we have affected members with discourse accounts linked
+    val discourseUsernames = affectedMembers.mapNotNull { it.discourseUsername }
+    if (discourseUsernames.isEmpty()) {
+      log.warn("No Discourse usernames found for affected members: $affectedMembers")
+      // No need to proceed, we can return early
+      return false
+    }
     /** Handle member disabled */
     if (propName == "enabled" && oldValue == true && newValue == false) {
-      val discourseUsernames = affectedMembers.mapNotNull { it.discourseUsername }
-      val dmsUsernames = affectedMembers.filter { it.discourseUsername == null }.map { it.username }
-      if (discourseUsernames.isEmpty()) {
-        log.warn("No Discourse usernames found for affected members: $affectedMembers")
-      } else {
-        log.info("Removing users from Discourse members group: $discourseUsernames")
-        discourseService.removeUserFromDmsMembersV2Group(discourseUsernames)
-        activityLogService.insertBulkActivityLogEntry(
-            subjectUsernames = dmsUsernames,
-            event = ActivityLogEvent.REMOVE_FROM_DISCOURSE_MEMBERS_GROUP)
-      }
+      val dmsUsernames = affectedMembers.filter { it.discourseUsername != null }.map { it.username }
+      log.info("Removing users from Discourse members group: $discourseUsernames")
+      discourseService.removeUserFromDmsMembersV2Group(discourseUsernames)
+      activityLogService.insertBulkActivityLogEntry(
+          subjectUsernames = dmsUsernames,
+          event = ActivityLogEvent.REMOVE_FROM_DISCOURSE_MEMBERS_GROUP)
     } else if (propName == "enabled" && oldValue == false && newValue == true) {
       /** Handle member enabled */
-      val discourseUsernames = affectedMembers.mapNotNull { it.discourseUsername }
-      val dmsUsernames = affectedMembers.filter { it.discourseUsername == null }.map { it.username }
-      if (discourseUsernames.isEmpty()) {
-        log.warn("No Discourse usernames found for affected members: $affectedMembers")
-      } else {
-        log.info("Adding users to Discourse members group: $discourseUsernames")
-        discourseService.addUserToDmsMembersV2Group(discourseUsernames)
-        activityLogService.insertBulkActivityLogEntry(
-            subjectUsernames = dmsUsernames,
-            event = ActivityLogEvent.ADD_TO_DISCOURSE_MEMBERS_GROUP)
-      }
+      val dmsUsernames = affectedMembers.filter { it.discourseUsername != null }.map { it.username }
+      log.info("Adding users to Discourse members group: $discourseUsernames")
+      discourseService.addUserToDmsMembersV2Group(discourseUsernames)
+      activityLogService.insertBulkActivityLogEntry(
+          subjectUsernames = dmsUsernames, event = ActivityLogEvent.ADD_TO_DISCOURSE_MEMBERS_GROUP)
     }
     return true
   }

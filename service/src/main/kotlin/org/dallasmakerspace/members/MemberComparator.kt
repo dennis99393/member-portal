@@ -47,12 +47,12 @@ constructor(
     // Notify observers of any changes
     memberPropChangeObservers.forEach { observer ->
       // Notify for disabled members
-      val resultDisabled = true
-      observer.onMemberPropChange(
-          "enabled",
-          oldValue = true,
-          newValue = false,
-          affectedMembers = disabledMembers.map { it.first })
+      val resultDisabled =
+          observer.onMemberPropChange(
+              "enabled",
+              oldValue = true,
+              newValue = false,
+              affectedMembers = disabledMembers.map { it.first })
       if (resultDisabled) {
         val updatedMembers = disabledMembers.map { it.first }
         // Set .enabled to false for all members in the list
@@ -63,12 +63,12 @@ constructor(
       }
 
       // Notify for enabled members
-      val resultEnabled = true
-      observer.onMemberPropChange(
-          "enabled",
-          oldValue = false,
-          newValue = true,
-          affectedMembers = enabledMembers.map { it.first })
+      val resultEnabled =
+          observer.onMemberPropChange(
+              "enabled",
+              oldValue = false,
+              newValue = true,
+              affectedMembers = enabledMembers.map { it.first })
       if (resultEnabled) {
         val updatedMembers = enabledMembers.map { it.first }
         // Set .enabled to false for all members in the list
