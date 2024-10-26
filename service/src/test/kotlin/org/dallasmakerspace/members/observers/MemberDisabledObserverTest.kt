@@ -11,6 +11,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 
 @RunWith(JUnit4::class)
 class MemberDisabledObserverTest {
@@ -49,6 +50,24 @@ class MemberDisabledObserverTest {
     verify(activityLogService)
         .insertBulkActivityLogEntry(
             listOf("user101", "user102"), ActivityLogEvent.ADD_TO_DISCOURSE_MEMBERS_GROUP)
+  }
+
+  @Test
+  fun `should return true if no discourse username linked`() = runBlocking {
+    // Arrange - list of members to be used in tests
+    val members = TestUtils.generateTestDMSMembers(2)
+    members[0].discourseUsername = null
+    members[1].discourseUsername = null
+
+    // Act
+    val result =
+        tested.onMemberPropChange(
+            "enabled", oldValue = false, newValue = true, affectedMembers = members)
+
+    // Assert
+    assert(result)
+    verifyNoInteractions(discourseService)
+    verifyNoInteractions(activityLogService)
   }
 
   private companion object {
