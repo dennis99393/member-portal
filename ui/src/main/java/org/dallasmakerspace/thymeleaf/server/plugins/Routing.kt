@@ -1,9 +1,11 @@
 package org.dallasmakerspace.thymeleaf.server.plugins
 
 import io.ktor.http.*
+import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.io.File
 import java.net.URL
@@ -32,6 +34,21 @@ fun Application.configureRouting() {
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handle(call) }
 
+    // Block all bots from crawling the site
+    get("robots.txt") {
+      call.respond(
+          TextContent(
+              """
+              User-agent: *
+              Disallow: /
+              """
+                  .trimIndent(),
+              ContentType.Text.Plain,
+              HttpStatusCode.OK,
+          ),
+      )
+    }
+
     staticResources(RouteFactory.Paths.STATIC.path, "static") {
       cacheControl {
         listOf(CacheControl.MaxAge(maxAgeSeconds = 300)) // 5 min
@@ -56,9 +73,8 @@ private fun calculateETag(file: File): String {
   val lastModified = file.lastModified()
   val size = file.length()
   val hash =
-      MessageDigest.getInstance("MD5").digest("$lastModified$size".toByteArray()).fold("") {
-          str,
-          acc ->
+      MessageDigest.getInstance("MD5").digest("$lastModified$size".toByteArray()).fold("") { str,
+                                                                                             acc ->
         str + "%02x".format(acc)
       }
   return "\"$hash\""
