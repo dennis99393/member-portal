@@ -73,8 +73,9 @@ private fun calculateETag(file: File): String {
   val lastModified = file.lastModified()
   val size = file.length()
   val hash =
-      MessageDigest.getInstance("MD5").digest("$lastModified$size".toByteArray()).fold("") { str,
-                                                                                             acc ->
+      MessageDigest.getInstance("MD5").digest("$lastModified$size".toByteArray()).fold("") {
+          str,
+          acc ->
         str + "%02x".format(acc)
       }
   return "\"$hash\""
