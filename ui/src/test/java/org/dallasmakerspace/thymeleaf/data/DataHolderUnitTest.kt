@@ -1,4 +1,4 @@
-package org.dallasmakerspace.thymeleaf.data
+package org.dallasmakerspace.data
 
 import io.ktor.http.ParametersBuilder
 import kotlin.test.Test

@@ -1,4 +1,4 @@
-package org.dallasmakerspace.thymeleaf.server
+package org.dallasmakerspace.server
 
 import io.ktor.server.engine.applicationEngineEnvironment
 import io.ktor.server.engine.connector
@@ -7,10 +7,10 @@ import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.dallasmakerspace.thymeleaf.server.plugins.configureHttp
-import org.dallasmakerspace.thymeleaf.server.plugins.configureRouting
-import org.dallasmakerspace.thymeleaf.server.plugins.configureStatusPages
-import org.dallasmakerspace.thymeleaf.server.plugins.configureTemplating
+import org.dallasmakerspace.server.plugins.configureHttp
+import org.dallasmakerspace.server.plugins.configureRouting
+import org.dallasmakerspace.server.plugins.configureStatusPages
+import org.dallasmakerspace.server.plugins.configureTemplating
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.openqa.selenium.By

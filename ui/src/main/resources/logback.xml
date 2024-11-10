@@ -1,7 +1,7 @@
 <configuration>
     <conversionRule conversionWord="aphighlight"
-                    converterClass="org.dallasmakerspace.thymeleaf.server.common.logging.LogbackHighlightConverter"/>
-    <!--<conversionRule conversionWord="sessionid" converterClass="org.dallasmakerspace.thymeleaf.server.common.SessionIdConverter"/>-->
+                    converterClass="org.dallasmakerspace.server.common.logging.LogbackHighlightConverter"/>
+    <!--<conversionRule conversionWord="sessionid" converterClass="org.dallasmakerspace.server.common.SessionIdConverter"/>-->
 
     <appender name="NOCOLOR" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -34,7 +34,7 @@
         <includeMdc>false</includeMdc> <!-- optional (default false) -->
         <maxMessageSize>100</maxMessageSize> <!-- optional (default -1 -->
         <authentication
-                class="org.dallasmakerspace.thymeleaf.server.common.logging.ElasticsearchAuth"/> <!-- optional -->
+                class="org.dallasmakerspace.server.common.logging.ElasticsearchAuth"/> <!-- optional -->
         <objectSerialization>true</objectSerialization> <!-- optional (default false) -->
         <keyPrefix>data.</keyPrefix> <!-- optional (default None) -->
         <operation>index</operation> <!-- optional (supported: index, create, update, delete - default create) -->

@@ -60,7 +60,7 @@ plugins {
 version = "0.0.1"
 
 application {
-  mainClass.set("org.dallasmakerspace.thymeleaf.server.MemberProfileUiApplicationKt")
+  mainClass.set("org.dallasmakerspace.server.MemberProfileUiApplicationKt")
   val isDevelopment: Boolean = project.ext.has("development")
   applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }

@@ -1,4 +1,4 @@
-package org.dallasmakerspace.thymeleaf.data
+package org.dallasmakerspace.data
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
