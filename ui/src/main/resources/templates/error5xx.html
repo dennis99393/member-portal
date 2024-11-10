@@ -31,7 +31,7 @@
 <div class="main">
     <header class="top-nav">
         <div class="top-nav-title-wrapper">
-            <div class="dms-title"><a href="/" class="link-reset">DMS Member Profiles</a></div>
+            <div class="dms-title"><a href="/" class="link-reset">DMS Member Portal</a></div>
             <div class="top-nav-logout">
                 <a class="link-reset" href="https://login.dallasmakerspace.org/auth/realms/DMS/account/">Logout</a>
             </div>
@@ -44,7 +44,8 @@
             <p th:text="${message}"/>
             <div><span>Session: </span><span th:text="${sessionid}"></span></div>
             <div><span>UserId: </span><span th:text="${userid}"></span></div>
-            <a class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#error-details" role="button" aria-expanded="false" aria-controls="error-details">Technical Details</a>
+            <a class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#error-details" role="button"
+               aria-expanded="false" aria-controls="error-details">Technical Details</a>
             <div class="row">
                 <div class="col">
                     <div class="collapse" id="error-details">
@@ -58,7 +59,9 @@
 </div>
 
 <!-- Bootstrap JS should be at the bottom of the body -->
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
