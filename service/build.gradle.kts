@@ -6,10 +6,10 @@ val exposedVersion: String by project
 val daggerVersion: String by project
 
 plugins {
-    kotlin("jvm") version "1.9.23"
-    kotlin("plugin.serialization") version "1.9.23"
-    id("io.ktor.plugin") version "2.3.10"
-    id("com.google.devtools.ksp") version "1.9.23-1.0.20"
+    kotlin("jvm") version "2.0.21"
+    kotlin("plugin.serialization") version "2.0.21"
+    id("io.ktor.plugin") version "3.0.1"
+    id("com.google.devtools.ksp") version "2.0.21-1.0.28"
     id("org.jetbrains.kotlinx.kover") version "0.7.6"
     id("com.ncorti.ktfmt.gradle") version "0.18.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.6"
@@ -50,7 +50,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    implementation("com.h2database:h2:2.1.214")
+    implementation("com.h2database:h2:2.2.220")
     implementation("io.ktor:ktor-server-call-id-jvm:$ktorVersion")
     implementation("io.ktor:ktor-serialization-gson-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
@@ -73,7 +73,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
     implementation("com.agido:logback-elasticsearch-appender:3.0.11")
 
-    testImplementation("io.ktor:ktor-server-tests-jvm")
+    testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:4.11.0")
