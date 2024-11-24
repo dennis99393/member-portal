@@ -18,6 +18,43 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
   }
 
   /** {@inheritDoc} */
+  override fun getMemberByBadgeNumber(badgeNumber: String): ADUser {
+    return getMembersByBadgeNumberList(listOf(badgeNumber))[badgeNumber]
+        ?: throw ADException("User with badge $badgeNumber not found in AD")
+  }
+
+  /** {@inheritDoc} */
+  override fun getMembersByBadgeNumberList(badgeNumberList: List<String>): Map<String, ADUser?> {
+    val adSearchResult: Map<String, Map<String, Any?>> =
+        activeDirectoryClient.getUsersByBadgeNumberList(badgeNumberList)
+
+    // For each badgeNumber in the list, get the ADUser object.
+    return badgeNumberList.associateWith { badgeNumber ->
+      val memberMap = adSearchResult[badgeNumber] ?: return@associateWith null
+      val memberOf = memberMap["memberOf"]
+      val groups =
+          if (memberOf is Array<*>) {
+            val list = memberOf.toList()
+            parseGroups(list.filterIsInstance<String>())
+          } else {
+            emptyList()
+          }
+      ADUser(
+          sAMAccountName = memberMap["sAMAccountName"].toString(),
+          givenName = memberMap["givenName"].toString(),
+          sn = memberMap["sn"].toString(),
+          displayName = memberMap["displayName"].toString(),
+          mail = memberMap["mail"].toString(),
+          telephoneNumber = memberMap["telephoneNumber"].toString(),
+          employeeID = memberMap["employeeID"].toString(),
+          objectGuid = memberMap["objectGUID"].toString(),
+          whenCreated = memberMap["whenCreated"].toString(),
+          enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
+          groups = groups)
+    }
+  }
+
+  /** {@inheritDoc} */
   override fun getMembersByDnList(dnList: List<String>): List<ADUser> {
     val adSearchResult: Map<String, Map<String, Any?>> =
         activeDirectoryClient.getUsersByDnList(dnList)

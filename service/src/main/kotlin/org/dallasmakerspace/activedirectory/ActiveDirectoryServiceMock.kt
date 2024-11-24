@@ -14,6 +14,13 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
   override fun getMembersByUsernameList(usernameList: List<String>): Map<String, ADUser> =
       sampleMembersMap
 
+  /** {@inheritDoc} */
+  override fun getMemberByBadgeNumber(badgeNumber: String): ADUser = sampleMembersMap[badgeNumber]!!
+
+  /** {@inheritDoc} */
+  override fun getMembersByBadgeNumberList(badgeNumberList: List<String>) = sampleMembersMap
+
+  /** {@inheritDoc} */
   override fun getGroup(groupname: String): ADGroup {
     return ADGroup(
         cn = "3D Printer Basics",

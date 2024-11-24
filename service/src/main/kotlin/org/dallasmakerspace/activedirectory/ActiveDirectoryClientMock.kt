@@ -8,5 +8,9 @@ class ActiveDirectoryClientMock : IActiveDirectoryClient {
 
   override fun getUsersByDnList(dnList: List<String>): Map<String, Map<String, Any?>> = emptyMap()
 
+  override fun getUsersByBadgeNumberList(
+      badgeNumberList: List<String>
+  ): Map<String, Map<String, Any?>> = emptyMap()
+
   override fun getUsersByLogonDays(days: Int): Map<String, Map<String, Any?>> = emptyMap()
 }

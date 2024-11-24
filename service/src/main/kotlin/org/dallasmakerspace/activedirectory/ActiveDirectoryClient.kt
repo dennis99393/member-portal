@@ -185,6 +185,50 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
     }
   }
 
+  override fun getUsersByBadgeNumberList(
+      badgeNumberList: List<String>
+  ): Map<String, Map<String, Any?>> {
+    val filter =
+        Filter.createANDFilter(
+            listOf(
+                Filter.createEqualityFilter("objectCategory", "person"),
+                Filter.createORFilter(
+                    listOf(
+                        Filter.createEqualityFilter("objectClass", "member"),
+                        Filter.createEqualityFilter("objectClass", "user"))),
+                Filter.createORFilter(
+                    badgeNumberList.map {
+                      Filter.createEqualityFilter(
+                          "employeeID",
+                          it,
+                      )
+                    })))
+    val searchResult =
+        ldapPool.search(
+            "DC=dms, DC=local",
+            SearchScope.SUB,
+            filter,
+            "sAMAccountName",
+            "givenName",
+            "sn",
+            "displayName",
+            "mail",
+            "memberOf",
+            "employeeID",
+            "telephoneNumber",
+            "objectGUID",
+            "userAccountControl",
+            "whenCreated")
+    return searchResult.searchEntries.associate { entry ->
+      val badgeNumber = entry.getAttributeValue("employeeID")
+
+      badgeNumber to
+          entry.attributes.associate {
+            it.name to if (it.name == "memberOf") it.values else it.values?.firstOrNull()
+          }
+    }
+  }
+
   /** {@inheritDoc} */
   @Suppress("MagicNumber")
   override fun getUsersByLogonDays(days: Int): Map<String, Map<String, Any?>> {

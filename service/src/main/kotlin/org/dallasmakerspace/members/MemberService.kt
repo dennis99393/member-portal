@@ -42,11 +42,39 @@ constructor(
     }
   }
 
-  suspend fun getMember(username: String): DMSMember {
+  suspend fun getMemberByUsername(username: String): DMSMember {
     // Fetch member from active directory.
     val adMember = activeDirectoryService.getMemberByUsername(username)
 
     val dbMember = memberRepository.getMemberOrInsert(username, adMember.enabled)
+    // TODO: compare DB and AD members and notify observers of any changes.
+    dbMember.firstName = adMember.givenName
+    dbMember.lastName = adMember.sn
+    dbMember.displayName = adMember.displayName
+    dbMember.personalEmail = adMember.mail
+    dbMember.phoneNumber =
+        getNormalizedPhoneNumber(adMember.telephoneNumber, adMember.sAMAccountName)
+    dbMember.badgeNumber = adMember.employeeID
+    dbMember.enabled = adMember.enabled
+    dbMember.memberSince = calculateMemberSince(adMember.whenCreated)
+    dbMember.groups =
+        adMember.groups.map { group ->
+          DMSGroup(
+              name = group.cn,
+              description = null,
+              distinguishedName = group.distinguishedName,
+              objectGuid = group.objectGuid,
+              membersListIncomplete = false,
+              members = null)
+        }
+    return dbMember
+  }
+
+  suspend fun getMemberByBadgeNumber(badgeNumber: String): DMSMember {
+    // Fetch member from active directory.
+    val adMember = activeDirectoryService.getMemberByBadgeNumber(badgeNumber)
+
+    val dbMember = memberRepository.getMemberOrInsert(adMember.sAMAccountName, adMember.enabled)
     // TODO: compare DB and AD members and notify observers of any changes.
     dbMember.firstName = adMember.givenName
     dbMember.lastName = adMember.sn

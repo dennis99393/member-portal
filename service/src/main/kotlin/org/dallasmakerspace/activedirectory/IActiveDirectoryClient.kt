@@ -14,6 +14,14 @@ interface IActiveDirectoryClient {
   fun getUsersByDnList(dnList: List<String>): Map<String, Map<String, Any?>>
 
   /**
+   * Gets the user object for the given badgeNumber.
+   *
+   * @param badgeNumberList The list of badgeNumbers of the users to get.
+   * @return The user object for the given badgeNumber.
+   */
+  fun getUsersByBadgeNumberList(badgeNumberList: List<String>): Map<String, Map<String, Any?>>
+
+  /**
    * Gets the users that have been logged in the last `days` days.
    *
    * @return The map of users that have been logged in the last `days` days. The key is the username

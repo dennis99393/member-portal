@@ -19,6 +19,7 @@ import org.dallasmakerspace.cron.MemberRefreshCronJobParams
 import org.dallasmakerspace.di.DaggerAppComponent
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.MemberService
+import org.dallasmakerspace.routing.BadgeLookup
 import org.dallasmakerspace.routing.Groups
 import org.dallasmakerspace.routing.Members
 
@@ -49,8 +50,17 @@ fun Application.configureRouting() {
       DaggerAppComponent.create().getMemberRefreshCronJob()
     }
 
-    get("/") { call.respondRedirect("/openapi", permanent = false) }
+    get("/") {
+      call.respondText(
+          "<html><body style='font-family:Arial,sans-serif'><h2>API Documentation:</h2>" +
+              "<ul><li>member-profile-service - <a href='openapi'>/openapi</a></li>" +
+              "<li>badge-lookup-service - <a href='badge-lookup/openapi'>/badge-lookup/openai</a></li>" +
+              "</ul></body></html>",
+          ContentType.Text.Html)
+    }
     swaggerUI(path = "openapi")
+    swaggerUI(
+        path = "badge-lookup/openapi", swaggerFile = "openapi/documentation-badge-lookup.yaml")
 
     authenticate(ApiKeyAuthProvider.X_API_KEY) {
 
@@ -66,7 +76,7 @@ fun Application.configureRouting() {
       }
 
       get<Members.DMSMember> { memberRequested ->
-        val member = memberService.getMember(memberRequested.username)
+        val member = memberService.getMemberByUsername(memberRequested.username)
         call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
       }
 
@@ -102,6 +112,11 @@ fun Application.configureRouting() {
         val params = MemberRefreshCronJobParams(isRunningInShadowMode)
         val result = memberRefreshCronJob.run(params)
         call.respond(result)
+      }
+
+      get<BadgeLookup> {
+        val member = memberService.getMemberByBadgeNumber(it.badgeNumber)
+        call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
       }
     }
   }

@@ -1,0 +1,117 @@
+openapi: 3.0.1
+info:
+  title: RFID Badge Lookup API
+  version: 1.0.0
+  description: API for looking up member details by the badge number.
+
+paths:
+  /badge-lookup/{badge_number}:
+    get:
+      summary: Lookup member by RFID badge number
+      description: Retrieves user details based on the provided RFID badge number.
+      parameters:
+        - in: path
+          name: badge_number
+          schema:
+            type: string
+          required: true
+          description: The RFID badge number to look up.
+          example: "0001234567"
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - $ref: '#/components/schemas/DMSMember'
+        404:
+          description: No member found for the provided RFID code.
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            content-encoding:
+              schema:
+                type: string
+                example: gzip
+            content-length:
+              schema:
+                type: integer
+                example: 240
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: false
+                      message:
+                        type: string
+                        example: No member found
+components:
+  schemas:
+    DMSMember:
+      type: object
+      properties:
+        username:
+          type: string
+        avatarUrl:
+          type: string
+        discourseUsername:
+          type: string
+        discourseAvatarUrl:
+          type: string
+        discordUserId:
+          type: string
+        groups:
+          type: array
+          items:
+            type: String
+    APIResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: "X-Api-Key"
+      required: true
+      schema:
+        type: string
+        default: "dummy-key-for-dev"
+      description: "API key for authentication"
+    ApiClientHeader:
+      type: apiKey
+      in: header
+      name: "X-Api-Client"
+      required: true
+      schema:
+        type: string
+        default: "member-profile-ui"
+      description: "API client identifier"
+  responses:
+    UnauthorizedError:
+      description: "API key/client id is missing or invalid"
+      headers:
+        X-Client-Id:
+          schema:
+            type: string
+          description: "Client identifier (can be public)."
+        X-Api-Key:
+          schema:
+            type: string
+          description: "API Key (keep secure)."
+security:
+  - ApiKeyHeader: []
+    ApiClientHeader: []

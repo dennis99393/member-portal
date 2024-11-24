@@ -18,6 +18,22 @@ interface IActiveDirectoryService {
    */
   fun getMembersByUsernameList(usernameList: List<String>): Map<String, ADUser?>
 
+  /**
+   * Gets the ADUser object for the given badgeNumber.
+   *
+   * @param badgeNumber The badgeNumber of the user to get.
+   * @return The ADUser object for the given badgeNumber.
+   */
+  fun getMemberByBadgeNumber(badgeNumber: String): ADUser
+
+  /**
+   * Gets the ADUser objects for the given list of badgeNumbers.
+   *
+   * @param badgeNumberList The list of badgeNumbers to get the ADUser objects for.
+   * @return The map of ADUser objects for the given badgeNumbers.
+   */
+  fun getMembersByBadgeNumberList(badgeNumberList: List<String>): Any
+
   /** Gets the ADGroup object for the given groupname. */
   fun getGroup(groupname: String): ADGroup
 
