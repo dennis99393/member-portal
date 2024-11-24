@@ -93,12 +93,41 @@ paths:
                 type: "string"
 components:
   schemas:
+    DMSGroup:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        distinguishedName:
+          type: string
+          example: "CN=Woodshop Basics,OU=Security,OU=Groups,DC=dms,DC=local"
+        memberListIncomplete:
+          type: boolean
+          description: "Indicates if the member list is incomplete. If true, the member list is not exhaustive."
+        members:
+          type: array
+          items:
+            type: string
     DMSMember:
       type: object
       properties:
         username:
           type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        displayName:
+          type: string
         avatarUrl:
+          type: string
+        personalEmail:
+          type: string
+        phoneNumber:
+          type: string
+        badgeNumber:
           type: string
         discourseUsername:
           type: string
@@ -109,7 +138,7 @@ components:
         groups:
           type: array
           items:
-            type: String
+            $ref: '#/components/schemas/DMSGroup'
     APIResponse:
       type: object
       properties:
@@ -117,6 +146,8 @@ components:
           type: string
         message:
           type: string
+        data:
+          $ref: '#/components/schemas/DMSMember'
   securitySchemes:
     ApiKeyHeader:
       type: apiKey
