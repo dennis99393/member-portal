@@ -260,6 +260,9 @@ class ActiveDirectoryClient @Inject constructor(appConfig: AppConfig) : IActiveD
             "sAMAccountName",
             "givenName",
             "sn",
+            "mail",
+            "employeeID",
+            "telephoneNumber",
             "displayName",
             "userAccountControl",
             "whenCreated")

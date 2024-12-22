@@ -34,6 +34,9 @@ constructor(
           username = adMember.sAMAccountName,
           displayName = adMember.displayName,
           enabled = adMember.enabled,
+          personalEmail = adMember.mail,
+          phoneNumber = adMember.telephoneNumber,
+          badgeNumber = adMember.employeeID,
           discourseUsername =
               dbMembers.find { it.username == adMember.sAMAccountName }?.discourseUsername,
           memberSince = calculateMemberSince(adMember.whenCreated),
