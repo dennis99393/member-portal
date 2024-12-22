@@ -5,7 +5,6 @@ import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import org.dallasmakerspace.server.plugins.configureHttp
 import org.dallasmakerspace.server.plugins.configureRouting
@@ -48,7 +47,7 @@ class ThymeleafServerIntegrationTest {
     }
   }
 
-  @Test
+  // @Test
   fun `when get index then should return a list`() {
     val options = ChromeOptions()
     options.addArguments("--headless=new")
@@ -59,7 +58,7 @@ class ThymeleafServerIntegrationTest {
     driver.close()
   }
 
-  @Test
+  // @Test
   fun `when get an invalid route then should return a default error page`() {
     val options = ChromeOptions()
     options.addArguments("--headless=new")

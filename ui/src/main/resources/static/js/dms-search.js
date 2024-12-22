@@ -148,7 +148,10 @@ class DMSSearch extends HTMLElement {
         const results = this.members.filter(member =>
         (member.displayName?.toLowerCase().includes(query) || '') ||
         (member.username?.toLowerCase().includes(query) || '') ||
-        (member.discourseUsername?.toLowerCase().includes(query) || '')
+        (member.discourseUsername?.toLowerCase().includes(query) || '') ||
+        (member.badgeNumber === query || '') ||
+        (member.personalEmail === query || '') ||
+        (member.phoneNumber === query || '')
         );
         this.displayResults(results);
     }

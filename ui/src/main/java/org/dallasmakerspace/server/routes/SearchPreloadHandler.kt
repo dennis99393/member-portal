@@ -20,6 +20,7 @@ constructor(
 
   @Suppress("TooGenericExceptionCaught")
   override suspend fun handle(call: ApplicationCall) {
+    super.handle(call)
     log.debug("SearchPreloadHandler start")
 
     val cacheKey = "searchPreload"
@@ -41,10 +42,18 @@ constructor(
       jsonMap["status"] = "SUCCESS"
       jsonMap["data"] =
           preloadList.map {
-            mapOf(
-                "displayName" to it.displayName,
-                "username" to it.username,
-                "discourseUsername" to it.discourseUsername)
+            val record =
+                mutableMapOf(
+                    "displayName" to it.displayName,
+                    "username" to it.username,
+                    "discourseUsername" to it.discourseUsername,
+                )
+            if (isInfra) {
+              record["badgeNumber"] = it.badgeNumber
+              record["personalEmail"] = it.personalEmail
+              record["phoneNumber"] = it.phoneNumber
+            }
+            record
           }
       cache[cacheKey] = Pair(currentTime, jsonMap)
       call.respond(jsonMap)

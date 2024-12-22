@@ -22,6 +22,7 @@ abstract class AuthRouteHandler(
 
   protected lateinit var userInfo: Map<String, Any>
   protected var session: UserSession? = null
+  protected var isInfra = false
 
   override suspend fun handle(call: ApplicationCall) {
     session = call.sessions.get<UserSession>()
@@ -33,6 +34,7 @@ abstract class AuthRouteHandler(
 
         // Only allow Infra team members to access the site for now
         val user = userInfo["preferred_username"] as String
+        isInfra = (userInfo["groups"] as List<*>?)?.contains("/Infrastructure") ?: false
         call.sessions.set(session?.copy(userId = user))
       } catch (e: HttpException) {
         call.sessions.clear<UserSession>()
