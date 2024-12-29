@@ -193,4 +193,14 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
       )
     } ?: emptyList()
   }
+
+  /** {@inheritDoc} */
+  override fun removeUsersFromGroup(dmsUsernames: List<String>, group: String) {
+    activeDirectoryClient.removeUsersFromGroup(dmsUsernames, group)
+  }
+
+  /** {@inheritDoc} */
+  override fun addUsersToGroup(dmsUsernames: List<String>, group: String) {
+    activeDirectoryClient.addUsersToGroup(dmsUsernames, group)
+  }
 }

@@ -9,17 +9,21 @@ import org.dallasmakerspace.activedirectory.ActiveDirectoryServiceMock
 import org.dallasmakerspace.activedirectory.IActiveDirectoryClient
 import org.dallasmakerspace.activedirectory.IActiveDirectoryService
 import org.dallasmakerspace.core.AppConfig
+import org.dallasmakerspace.core.LoggerFactory
 
 @Module
 class ActiveDirectoryModule {
 
   @Provides
-  fun providesActiveDirectoryClient(appConfig: AppConfig): IActiveDirectoryClient =
+  fun providesActiveDirectoryClient(
+      appConfig: AppConfig,
+      loggerFactory: LoggerFactory
+  ): IActiveDirectoryClient =
       if (useMockServices(appConfig)) {
         ActiveDirectoryClientMock()
         // ActiveDirectoryClient(appConfig)
       } else {
-        ActiveDirectoryClient(appConfig)
+        ActiveDirectoryClient(appConfig, loggerFactory)
       }
 
   private fun useMockServices(appConfig: AppConfig) =

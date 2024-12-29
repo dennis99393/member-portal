@@ -28,4 +28,10 @@ interface IActiveDirectoryClient {
    *   and the value is the map of attributes for the user.
    */
   fun getUsersByLogonDays(days: Int): Map<String, Map<String, Any?>>
+
+  /** Remove given list of users from group * */
+  fun removeUsersFromGroup(dmsUsernames: List<String>, group: String)
+
+  /** Add given list of users to group * */
+  fun addUsersToGroup(dmsUsernames: List<String>, group: String)
 }

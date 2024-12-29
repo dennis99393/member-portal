@@ -47,4 +47,10 @@ interface IActiveDirectoryService {
 
   /** Gets the users that have been logged in the last `days` days. */
   fun getMembersByLoggedInDays(days: Int): List<ADUser>
+
+  /** Remove given list of users from group * */
+  fun removeUsersFromGroup(dmsUsernames: List<String>, group: String): Unit
+
+  /** Add given list of users to group * */
+  fun addUsersToGroup(dmsUsernames: List<String>, group: String): Unit
 }

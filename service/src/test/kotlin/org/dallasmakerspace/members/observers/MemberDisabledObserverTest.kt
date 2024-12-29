@@ -18,7 +18,8 @@ class MemberDisabledObserverTest {
   private val loggerFactory = LoggerFactory()
   private val discourseService: DiscourseService = mock()
   private val activityLogService: ActivityLogService = mock()
-  private val tested = MemberDisabledObserver(loggerFactory, discourseService, activityLogService)
+  private val tested =
+      DiscourseMemberStatusObserver(loggerFactory, discourseService, activityLogService)
 
   @Test
   fun `should remove users from discourse group when member is disabled`() = runBlocking {

@@ -7,7 +7,7 @@ import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.models.ActivityLogEvent
 import org.dallasmakerspace.models.DMSMember
 
-class MemberDisabledObserver
+class DiscourseMemberStatusObserver
 @Inject
 constructor(
     loggerFactory: LoggerFactory,
@@ -24,7 +24,7 @@ constructor(
       affectedMembers: List<DMSMember>
   ): Boolean {
     log.info(
-        "MemberDisabledObserver.onMemberPropChange: propName=$propName, oldValue=$oldValue, " +
+        "DiscourseMemberStatusObserver.onMemberPropChange: propName=$propName, oldValue=$oldValue, " +
             "newValue=$newValue, affectedMembers=$affectedMembers")
     try { // Validate that we have affected members with discourse accounts linked
       val discourseUsernames = affectedMembers.mapNotNull { it.discourseUsername }

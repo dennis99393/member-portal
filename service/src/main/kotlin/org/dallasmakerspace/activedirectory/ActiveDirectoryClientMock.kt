@@ -13,4 +13,8 @@ class ActiveDirectoryClientMock : IActiveDirectoryClient {
   ): Map<String, Map<String, Any?>> = emptyMap()
 
   override fun getUsersByLogonDays(days: Int): Map<String, Map<String, Any?>> = emptyMap()
+
+  override fun removeUsersFromGroup(dmsUsernames: List<String>, group: String) = Unit
+
+  override fun addUsersToGroup(dmsUsernames: List<String>, group: String) = Unit
 }

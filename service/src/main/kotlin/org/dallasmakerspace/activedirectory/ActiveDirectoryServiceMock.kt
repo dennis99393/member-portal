@@ -86,4 +86,14 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
                                 membersListIncomplete = false))),
         )
   }
+
+  /** {@inheritDoc} */
+  override fun removeUsersFromGroup(dmsUsernames: List<String>, group: String) {
+    // Do nothing
+  }
+
+  /** {@inheritDoc} */
+  override fun addUsersToGroup(dmsUsernames: List<String>, group: String) {
+    // Do nothing
+  }
 }
