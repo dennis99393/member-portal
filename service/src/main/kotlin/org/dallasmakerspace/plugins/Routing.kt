@@ -25,9 +25,11 @@ import org.dallasmakerspace.routing.Members
 
 @Suppress("LongMethod")
 fun Application.configureRouting() {
+  val log = org.slf4j.LoggerFactory.getLogger("Routing")
   install(Resources)
   install(StatusPages) {
     exception { call: ApplicationCall, cause: Exception ->
+      log.error("Failed to process request", cause)
       call.respond(
           HttpStatusCode.InternalServerError,
           ApiResponse(Status.ERROR, cause.localizedMessage, null))

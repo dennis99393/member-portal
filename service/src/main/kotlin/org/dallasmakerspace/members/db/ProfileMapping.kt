@@ -1,6 +1,7 @@
 package org.dallasmakerspace.members.db
 
 import kotlinx.coroutines.Dispatchers
+import org.dallasmakerspace.core.DBMemberPortalConnection
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -44,4 +45,4 @@ class ProfileDAO(username: EntityID<String>) : Entity<String>(username) {
 }
 
 suspend fun <T> suspendTransaction(block: Transaction.() -> T): T =
-    newSuspendedTransaction(Dispatchers.IO, statement = block)
+    newSuspendedTransaction(Dispatchers.IO, statement = block, db = DBMemberPortalConnection.db)

@@ -5,22 +5,28 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.google.i18n.phonenumbers.Phonenumber
 import javax.inject.Inject
 import kotlinx.datetime.Instant
+import kotlinx.datetime.toKotlinLocalDate
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.core.LoggerFactory
+import org.dallasmakerspace.db.master.MakerManagerDataService
+import org.dallasmakerspace.db.master.WhmcsDataService
 import org.dallasmakerspace.discourse.DiscourseService
 import org.dallasmakerspace.models.ActivityLogEvent
 import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.routing.Groups
 
+@Suppress("LongParameterList")
 class MemberService
 @Inject
 constructor(
     loggerFactory: LoggerFactory,
     private val discourseService: DiscourseService,
     private val memberRepository: MemberRepository,
+    private val whmcsDataService: WhmcsDataService,
     private val activityLogService: ActivityLogService,
-    private val activeDirectoryService: ActiveDirectoryService
+    private val makerManagerDataService: MakerManagerDataService,
+    private val activeDirectoryService: ActiveDirectoryService,
 ) {
   private val log = loggerFactory.create(javaClass)
 
@@ -49,6 +55,22 @@ constructor(
     // Fetch member from active directory.
     val adMember = activeDirectoryService.getMemberByUsername(username)
 
+    // Get related accounts from MakerManager
+    val relatedAccounts = makerManagerDataService.getAccountInfoMap(listOf(username))
+
+    val accountInfo = relatedAccounts[username]
+    if (accountInfo != null && accountInfo.isPrimaryAccount) {
+      accountInfo.primaryAccount?.let { account ->
+        val whmcsId = account.whmcsId
+        // Get the account status from WHMCS
+        val accountStatus = whmcsDataService.getAccountInfoMap(listOf(whmcsId))[whmcsId]
+        if (accountStatus != null) {
+          accountInfo.wasActivePast90Days = accountStatus.wasActiveInRange
+          accountInfo.lastInactiveDate = accountStatus.lastInactiveDate?.toKotlinLocalDate()
+        }
+      }
+    }
+
     val dbMember = memberRepository.getMemberOrInsert(username, adMember.enabled)
     // TODO: compare DB and AD members and notify observers of any changes.
     dbMember.firstName = adMember.givenName
@@ -70,6 +92,7 @@ constructor(
               membersListIncomplete = false,
               members = null)
         }
+    dbMember.accountInfo = relatedAccounts[username]
     return dbMember
   }
 
