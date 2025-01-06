@@ -32,9 +32,9 @@ constructor(
 
   /**
    * Check if the user has at least one active product from the startDate to now. Product is
-   * considered active between regdate and termination_date if termination_date, if it is currently
-   * active then domainStatus is DomainStatus.Active and termination_date is null. We cater the edge
-   * case where the user switched from one active product to another on the same day.
+   * considered active between regdate and termination_date, if it is currently active then
+   * domainStatus is DomainStatus.Active and termination_date is null. We cater the edge case where
+   * the user switched from one active product to another on the same day.
    *
    * @param whmcsId WHMCS user ID
    * @param products List of products for the user
