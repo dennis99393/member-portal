@@ -9,7 +9,12 @@ import javax.inject.Singleton
  * during this period, they will still be considered to be in good standing and thus eligible to
  * vote.
  */
-data class UserGracePeriod(val whmcsUserId: Int, val startDate: LocalDate, val endDate: LocalDate)
+data class UserGracePeriod(
+    val whmcsUserId: Int,
+    val username: String,
+    val startDate: LocalDate,
+    val endDate: LocalDate
+)
 
 @Singleton
 class VoterRegistrationManager @Inject constructor() {
@@ -20,18 +25,27 @@ class VoterRegistrationManager @Inject constructor() {
         // Grace period for user @abc from 2024-01-01 to 2024-01-02
         UserGracePeriod(
           /* whmcsUserId */ 1234,
+          /* username */ "abc",
           LocalDate.of(/* year */ 2024, /* month */ 1, /* dayOfMonth */ 1),
           LocalDate.of(/* year */ 2024, /* month */ 1, /* dayOfMonth */ 2)
         ),
         // Grace period for user @xyz from 2024-01-28 to 2024-02-01
         UserGracePeriod(
           /* whmcsUserId */5678,
+          /* username */ "xyz",
           LocalDate.of(/* year */ 2024, /* month */ 1, /* dayOfMonth */ 28),
           LocalDate.of(/* year */ 2024, /* month */ 2, /* dayOfMonth */ 1)
         ),
       )
     */
     return emptyList()
+  }
+
+  fun getUsernamesWithActiveGracePeriods(): Set<String> {
+    return getUserGracePeriods()
+        .filter { it.endDate.isAfter(LocalDate.now()) }
+        .map { it.username }
+        .toSet()
   }
 
   fun getVotingMembersGroupName() =

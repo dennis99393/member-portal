@@ -154,20 +154,24 @@ class WhmcsDataServiceTest {
       listOf(
           UserGracePeriod(
               whmcsUserId = whmcsId,
+              username = "abc",
               startDate = START_DATE.minusDays(1),
               endDate = START_DATE.plusDays(2)),
           UserGracePeriod(
               whmcsUserId = whmcsId,
+              username = "abc",
               startDate = START_DATE.plusDays(5),
               endDate = START_DATE.plusDays(8)),
           UserGracePeriod(
               whmcsUserId = whmcsId,
+              username = "abc",
               startDate = START_DATE.plusDays(89),
               endDate = START_DATE.plusDays(93)))
 
   private fun getExpiredGracePeriod(whmcsId: Int) =
       UserGracePeriod(
           whmcsUserId = whmcsId,
+          username = "abc",
           startDate = START_DATE.minusDays(10),
           endDate = START_DATE.minusDays(5))
 

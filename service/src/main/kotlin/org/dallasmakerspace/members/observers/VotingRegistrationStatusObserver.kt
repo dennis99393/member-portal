@@ -33,9 +33,16 @@ constructor(
         "VotingRegistrationStatusObserver.onMemberPropChange: process change: propName=$propName, " +
             "oldValue=$oldValue, newValue=$newValue, affectedMembers=$affectedMembers")
     try { // Validate that we have affected members who are member of Voting Members group
+      val membersInGracePeriod = voterRegistrationManager.getUsernamesWithActiveGracePeriods()
       val votingMembers =
           affectedMembers
+              // Take members who are in Voting Members group
               .filter { it.groups.any { group -> group.name == "Voting Members" } }
+              // Take only primary accounts
+              .filter { it.accountInfo?.isPrimaryAccount ?: false }
+              // Take only members who are not in grace period
+              .filter { membersInGracePeriod.contains(it.username).not() }
+              // Get usernames
               .map { it.username }
 
       if (votingMembers.isEmpty()) {
