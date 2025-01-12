@@ -15,6 +15,7 @@ import org.dallasmakerspace.models.ActivityLogEvent
 import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.routing.Groups
+import org.dallasmakerspace.voterregistration.VoterRegistrationManager
 
 @Suppress("LongParameterList")
 class MemberService
@@ -27,6 +28,7 @@ constructor(
     private val activityLogService: ActivityLogService,
     private val makerManagerDataService: MakerManagerDataService,
     private val activeDirectoryService: ActiveDirectoryService,
+    private val voterRegistrationManager: VoterRegistrationManager,
 ) {
   private val log = loggerFactory.create(javaClass)
 
@@ -265,18 +267,22 @@ constructor(
   suspend fun addMembersToGroup(memberUsernames: List<String>, groupslug: String) {
     val groupname = Groups.getNameFromSlug(groupslug)
     activeDirectoryService.addUsersToGroup(memberUsernames, groupname)
-    memberUsernames.forEach { username ->
-      activityLogService.insertActivityLogEntry(
-          subjectUsername = username, event = ActivityLogEvent.ADD_TO_VOTING_MEMBERS_GROUP)
+    if (groupname == voterRegistrationManager.getVotingMembersGroupName()) {
+      memberUsernames.forEach { username ->
+        activityLogService.insertActivityLogEntry(
+            subjectUsername = username, event = ActivityLogEvent.ADD_TO_VOTING_MEMBERS_GROUP)
+      }
     }
   }
 
   suspend fun removeMembersToGroup(memberUsernames: List<String>, groupslug: String) {
     val groupname = Groups.getNameFromSlug(groupslug)
     activeDirectoryService.removeUsersFromGroup(memberUsernames, groupname)
-    memberUsernames.forEach { username ->
-      activityLogService.insertActivityLogEntry(
-          subjectUsername = username, event = ActivityLogEvent.REMOVE_FROM_VOTING_MEMBERS_GROUP)
+    if (groupname == voterRegistrationManager.getVotingMembersGroupName()) {
+      memberUsernames.forEach { username ->
+        activityLogService.insertActivityLogEntry(
+            subjectUsername = username, event = ActivityLogEvent.REMOVE_FROM_VOTING_MEMBERS_GROUP)
+      }
     }
   }
 }
