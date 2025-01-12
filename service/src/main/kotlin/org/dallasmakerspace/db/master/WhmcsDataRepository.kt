@@ -25,18 +25,25 @@ class WhmcsDataRepository @Inject constructor() {
       val query =
           """
         SELECT
-          userid,
-          regdate,
-          termination_date,
-          domainstatus
+          h.userid,
+          h.regdate,
+          h.termination_date,
+          h.domainstatus
         FROM
-          `dms-whmcs`.tblhosting
+        `dms-whmcs`.tblhosting h
+        JOIN `dms-whmcs`.tblproducts p 
+        ON
+            h.packageid = p.id
+        JOIN `dms-whmcs`.tblcustomfields c 
+        ON
+            c.relid = p.id
         WHERE
-          userid IN ($whmcsIdListString)
-          AND packageid IN (1, 4, 5, 8, 10, 12, 13, 20, 22, 23, 24)
-          AND (termination_date >= '$startDate'
-            OR termination_date IS NULL
-            OR regdate >= '$startDate')
+          h.userid IN ($whmcsIdListString)
+          AND c.fieldname = 'voting_rights'
+          AND h.packageid = p.id
+          AND (h.termination_date >= '$startDate'
+            OR h.termination_date IS NULL
+            OR h.regdate >= '$startDate')
       """
               .trimIndent()
 

@@ -13,7 +13,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.whenever
 
 @RunWith(JUnit4::class)
 class WhmcsDataServiceTest {
@@ -25,7 +25,7 @@ class WhmcsDataServiceTest {
 
   @Before
   fun setup() {
-    `when`(time.getToday()).thenReturn(TODAY)
+    whenever(time.getToday()).thenReturn(TODAY)
     whmcsDataService = WhmcsDataService(time, whmcsDataRepository, voterRegistrationManager)
   }
 
@@ -34,9 +34,9 @@ class WhmcsDataServiceTest {
     val whmcsId = 1
     val products = listOf(ACTIVE_PRODUCT)
 
-    `when`(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
+    whenever(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
         .thenReturn(mapOf(whmcsId to products))
-    `when`(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
+    whenever(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
 
     val result = whmcsDataService.getAccountInfoMap(listOf(whmcsId))
     assertTrue(result[whmcsId]!!.wasActiveInRange)
@@ -48,9 +48,9 @@ class WhmcsDataServiceTest {
         val whmcsId = 1
         val products = listOf(TERMINATED_PRODUCT)
 
-        `when`(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
+        whenever(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
             .thenReturn(mapOf(whmcsId to products))
-        `when`(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
+        whenever(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
 
         val result = whmcsDataService.getAccountInfoMap(listOf(whmcsId))
         assertFalse(result[whmcsId]!!.wasActiveInRange)
@@ -62,9 +62,10 @@ class WhmcsDataServiceTest {
     val whmcsId = 1
     val products = listOf(PRODUCT_PARTIAL_1, TERMINATED_PRODUCT, PRODUCT_PARTIAL_3)
 
-    `when`(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
+    whenever(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
         .thenReturn(mapOf(whmcsId to products))
-    `when`(voterRegistrationManager.getUserGracePeriods()).thenReturn(getValidGracePeriods(whmcsId))
+    whenever(voterRegistrationManager.getUserGracePeriods())
+        .thenReturn(getValidGracePeriods(whmcsId))
 
     val result = whmcsDataService.getAccountInfoMap(listOf(whmcsId))
     assertTrue(result[whmcsId]!!.wasActiveInRange)
@@ -76,9 +77,9 @@ class WhmcsDataServiceTest {
         val whmcsId = 1
         val products = listOf(PRODUCT_PARTIAL_1, TERMINATED_PRODUCT, PRODUCT_PARTIAL_3)
 
-        `when`(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
+        whenever(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
             .thenReturn(mapOf(whmcsId to products))
-        `when`(voterRegistrationManager.getUserGracePeriods())
+        whenever(voterRegistrationManager.getUserGracePeriods())
             .thenReturn(listOf(getExpiredGracePeriod(whmcsId)))
 
         val result = whmcsDataService.getAccountInfoMap(listOf(whmcsId))
@@ -90,9 +91,9 @@ class WhmcsDataServiceTest {
     val whmcsId = 1
     val products = listOf(FUTURE_PRODUCT)
 
-    `when`(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
+    whenever(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
         .thenReturn(mapOf(whmcsId to products))
-    `when`(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
+    whenever(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
 
     val result = whmcsDataService.getAccountInfoMap(listOf(whmcsId))
     assertFalse(result[whmcsId]!!.wasActiveInRange)
@@ -103,9 +104,9 @@ class WhmcsDataServiceTest {
   fun `getAccountInfoMap returns false for non-existent user`() = runBlocking {
     val whmcsId = 1
 
-    `when`(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
+    whenever(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
         .thenReturn(emptyMap())
-    `when`(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
+    whenever(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
 
     val result = whmcsDataService.getAccountInfoMap(listOf(whmcsId))
     assertFalse(result[whmcsId]!!.wasActiveInRange)
@@ -118,12 +119,12 @@ class WhmcsDataServiceTest {
     val inactiveUserId = 2
     val userIds = listOf(activeUserId, inactiveUserId)
 
-    `when`(whmcsDataRepository.getAccountProductInfoMap(userIds, START_DATE))
+    whenever(whmcsDataRepository.getAccountProductInfoMap(userIds, START_DATE))
         .thenReturn(
             mapOf(
                 activeUserId to listOf(ACTIVE_PRODUCT),
                 inactiveUserId to listOf(TERMINATED_PRODUCT)))
-    `when`(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
+    whenever(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
 
     val result = whmcsDataService.getAccountInfoMap(userIds)
     assertTrue(result[activeUserId]!!.wasActiveInRange)
@@ -140,9 +141,9 @@ class WhmcsDataServiceTest {
             PRODUCT_PARTIAL_3,
         )
 
-    `when`(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
+    whenever(whmcsDataRepository.getAccountProductInfoMap(listOf(whmcsId), START_DATE))
         .thenReturn(mapOf(whmcsId to products))
-    `when`(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
+    whenever(voterRegistrationManager.getUserGracePeriods()).thenReturn(emptyList())
 
     val result = whmcsDataService.getAccountInfoMap(listOf(whmcsId))
     assertTrue(result[whmcsId]!!.wasActiveInRange)

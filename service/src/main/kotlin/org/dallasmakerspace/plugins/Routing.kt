@@ -95,6 +95,26 @@ fun Application.configureRouting() {
         call.respond(ApiResponse(Status.SUCCESS, "Group ${group.name}", group))
       }
 
+      patch<Groups.DMSGroup.Add> { groupRequested ->
+        // Update group ...
+        val memberUsername = call.receive<String>()
+        val groupslug = groupRequested.parent.groupslug
+        memberService.addMembersToGroup(listOf(memberUsername), groupslug)
+        call.respond(
+            ApiResponse(
+                Status.SUCCESS, "Added member to ${groupslug} updated: ${memberUsername}", null))
+      }
+
+      delete<Groups.DMSGroup.Add> { groupRequested ->
+        // Update group ...
+        val memberUsername = call.receive<String>()
+        val groupslug = groupRequested.parent.groupslug
+        memberService.removeMembersToGroup(listOf(memberUsername), groupslug)
+        call.respond(
+            ApiResponse(
+                Status.SUCCESS, "Removed member to ${groupslug} updated: ${memberUsername}", null))
+      }
+
       /** Activity Log operations * */
       get<Members.DMSMember.ActivityLog> { activityLogRequested ->
         // Get activity log ...

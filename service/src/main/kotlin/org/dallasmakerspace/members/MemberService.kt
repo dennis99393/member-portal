@@ -261,4 +261,22 @@ constructor(
             },
         membersListIncomplete = adGroup.membersListIncomplete)
   }
+
+  suspend fun addMembersToGroup(memberUsernames: List<String>, groupslug: String) {
+    val groupname = Groups.getNameFromSlug(groupslug)
+    activeDirectoryService.addUsersToGroup(memberUsernames, groupname)
+    memberUsernames.forEach { username ->
+      activityLogService.insertActivityLogEntry(
+          subjectUsername = username, event = ActivityLogEvent.ADD_TO_VOTING_MEMBERS_GROUP)
+    }
+  }
+
+  suspend fun removeMembersToGroup(memberUsernames: List<String>, groupslug: String) {
+    val groupname = Groups.getNameFromSlug(groupslug)
+    activeDirectoryService.removeUsersFromGroup(memberUsernames, groupname)
+    memberUsernames.forEach { username ->
+      activityLogService.insertActivityLogEntry(
+          subjectUsername = username, event = ActivityLogEvent.REMOVE_FROM_VOTING_MEMBERS_GROUP)
+    }
+  }
 }

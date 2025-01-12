@@ -10,8 +10,11 @@ class Groups {
   class DMSGroup(
       val parent: Groups = Groups(),
       val groupslug: String,
-      val members: List<String>? = null,
-  )
+  ) {
+    @Resource("add") class Add(val parent: DMSGroup)
+
+    @Resource("remove") class Remove(val parent: DMSGroup)
+  }
 
   companion object {
     /**
