@@ -90,7 +90,8 @@ data class AccountInfo(
                 (map["addonAccounts"] as List<*>?)?.filterIsInstance<Map<String, Any?>>()?.map {
                   Account.fromMap(it)
                 } ?: emptyList(),
-            primaryAccount = Account.fromMap(map["primaryAccount"] as Map<String, Any?>))
+            primaryAccount =
+                (map["primaryAccount"] as? Map<String, Any?>)?.let { Account.fromMap(it) })
       }
     }
   }
