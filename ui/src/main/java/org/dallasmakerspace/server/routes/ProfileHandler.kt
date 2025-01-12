@@ -72,7 +72,10 @@ constructor(
             voterRegistrationManager.getDaysSinceLastInactiveDateString(it)
       }
       jsonMap["addon_accounts"] = this.addonAccounts
-      this.primaryAccount?.apply { jsonMap["primary_account"] = this }
+      this.primaryAccount?.apply {
+        jsonMap["primary_account"] = this
+        jsonMap["whmcs_id"] = this.whmcsId
+      }
     }
     setToastMessage(call, jsonMap, requestedMember)
     call.respond(ThymeleafContent("profile", jsonMap))

@@ -100,11 +100,15 @@ data class AccountInfo(
 /** Data class to represent an account - may be primary or addon. */
 data class Account(
     val username: String,
+    val whmcsId: Int,
     val isActive: Boolean,
 ) {
   companion object {
     fun fromMap(map: Map<String, Any?>): Account {
-      return Account(username = map["username"] as String, isActive = map["isActive"] as Boolean)
+      return Account(
+          username = map["username"] as String,
+          whmcsId = map["whmcsId"] as Int,
+          isActive = map["isActive"] as Boolean)
     }
   }
 }

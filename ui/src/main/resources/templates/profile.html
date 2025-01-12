@@ -237,14 +237,8 @@
             <div class="linked-accounts">Debug Info <span style="color:red;font-size:0.7em;font-weight:normal;">[Infra only]</span>
             </div>
             <div style="font-weight:normal;font-size:0.7em;">
-                <div>
-                    Personal email: <span th:text="${personal_email}"></span>
-                </div>
-                <div>
-                    Phone number: <span th:text="${phone_number}"></span>
-                </div>
-                <div>
-                    DMS Badge: <span th:text="${badge_number}"></span>
+                <div th:if="${whmcs_id}">
+                    WhmcsId: <span th:text="${whmcs_id}"></span>
                 </div>
                 <div>
                     isPrimaryAccount: <span th:text="${is_primary_account}"></span>
@@ -254,6 +248,15 @@
                 </div>
                 <div th:unless="${was_active_past_90_days}">
                     lastInactiveDate: <span th:text="|${last_inactive_date} (${days_since_last_inactive})|"></span>
+                </div>
+                <div>
+                    Personal email: <span th:text="${personal_email}"></span>
+                </div>
+                <div>
+                    Phone number: <span th:text="${phone_number}"></span>
+                </div>
+                <div>
+                    DMS Badge: <span th:text="${badge_number}"></span>
                 </div>
             </div>
         </div>
