@@ -32,7 +32,7 @@ data class DMSGroup(
      * translated to %20 which results in an ugly URL. So we replace space with "+" to use in the
      * URL. [getNameFromSlug] performs the reverse process.
      */
-    private fun getSlugFromName(groupName: String) = groupName.replace(" ", "+").encodeURLPath()
+    fun getSlugFromName(groupName: String) = groupName.replace(" ", "+").encodeURLPath()
 
     /**
      * Generate a group name from a slug (URL Fragment). The slug can have "+" that get translated

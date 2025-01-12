@@ -6,6 +6,7 @@ import io.ktor.server.request.*
 import javax.inject.Singleton
 import org.dallasmakerspace.server.di.DiscourseModule
 import org.dallasmakerspace.server.di.RoutesModule
+import org.dallasmakerspace.server.di.VoterRegistrationModule
 
 object RouteFactory {
   val redirects = mutableMapOf<String, String>()
@@ -18,7 +19,7 @@ object RouteFactory {
   private fun sanitizePathInternal(path: String): String {
     // Replace "@.*" with "@{preferred_username}"
     return path
-        .replace("@.*".toRegex(), "@{preferred_username}")
+        .replace("@[a-zA-Z0-9_-]*".toRegex(), "@{preferred_username}")
         .replace("/groups/.*".toRegex(), "/groups/{group_slug}")
   }
 
@@ -39,11 +40,13 @@ object RouteFactory {
     STATIC("/static"),
     GROUPS("/groups/{group_slug}"),
     SEARCH_PRELOAD("/search-preload"),
+    REGISTER_VOTING("/profile/@{preferred_username}/register-voting"),
+    UNREGISTER_VOTING("/profile/@{preferred_username}/unregister-voting"),
   }
 }
 
 @Singleton
-@Component(modules = [RoutesModule::class, DiscourseModule::class])
+@Component(modules = [RoutesModule::class, DiscourseModule::class, VoterRegistrationModule::class])
 interface RoutesComponent {
   fun getRoutesMap(): Map<String, IRouteHandler>
 }

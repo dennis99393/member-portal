@@ -10,6 +10,7 @@ val seleniumVersion = "4.19.1"
 repositories { mavenCentral() }
 
 dependencies {
+  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
   implementation("ch.qos.logback", "logback-classic", logbackVersion)
   implementation("com.google.dagger", "dagger", daggerVersion)
   ksp("com.google.dagger", "dagger-compiler", daggerVersion)
@@ -40,6 +41,9 @@ dependencies {
   implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
   implementation("com.agido:logback-elasticsearch-appender:3.0.11")
 
+  testImplementation("org.mockito:mockito-core:4.11.0")
+  testImplementation("org.mockito:mockito-inline:4.11.0")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
   testImplementation("io.ktor", "ktor-client-mock", ktorVersion)
   testImplementation("io.ktor", "ktor-serialization-kotlinx-json", ktorVersion)
   testImplementation("io.ktor", "ktor-server-tests", ktorVersion)

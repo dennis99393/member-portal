@@ -60,3 +60,4 @@ kotlin-ide/
 .kotlin/
 .teamcity/
 /.idea/uiDesigner.xml
+/.idea/runConfigurations/member_profile_ui__run_.xml

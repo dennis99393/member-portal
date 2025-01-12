@@ -7,7 +7,13 @@ import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 
 @Singleton
-@Component(modules = [DiscourseModule::class, RoutesModule::class, ServerModule::class])
+@Component(
+    modules =
+        [
+            DiscourseModule::class,
+            RoutesModule::class,
+            ServerModule::class,
+            VoterRegistrationModule::class])
 interface AppComponent {
   fun inject(application: Application)
 

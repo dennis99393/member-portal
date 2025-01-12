@@ -8,18 +8,23 @@ import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.collections.set
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.format
+import kotlinx.datetime.format.byUnicodePattern
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.models.DMSMember
 import org.dallasmakerspace.server.plugins.AuthException
+import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 
 class ProfileHandler
 @Inject
 constructor(
     loggerFactory: LoggerFactory,
     private val memberService: MemberService,
-    userInfoProvider: UserInfoProvider
+    userInfoProvider: UserInfoProvider,
+    private val voterRegistrationManager: VoterRegistrationManager
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
@@ -45,14 +50,29 @@ constructor(
       jsonMap["discourse_username"] = requestedMember.discourseUsername as Any
     }
     requestedMember.groups
-        .firstOrNull { group -> group.name == "Voting Members" }
+        .firstOrNull { group -> group.name == voterRegistrationManager.getVotingMembersGroupName() }
         ?.apply { jsonMap["is_voting_member"] = "true" }
     val currentUsername = userInfo["preferred_username"] as String?
     jsonMap["is_self"] = (requestedUsername == currentUsername).toString()
-    if (jsonMap["is_self"] == "true") {
+    if (jsonMap["is_self"] == "true" || isInfra) {
       requestedMember.personalEmail?.apply { jsonMap["personal_email"] = this as Any }
       requestedMember.badgeNumber?.apply { jsonMap["badge_number"] = this as Any }
       requestedMember.phoneNumber?.apply { jsonMap["phone_number"] = this as Any }
+    }
+    jsonMap["is_infra"] = isInfra
+    jsonMap["is_voter_registration_test_mode_enabled"] =
+        VoterRegistrationManager.IS_VOTER_REGISTRATION_TEST_MODE_ENABLED
+    requestedMember.accountInfo?.apply {
+      jsonMap["is_primary_account"] = this.isPrimaryAccount
+      jsonMap["was_active_past_90_days"] = this.wasActivePast90Days ?: true
+      this.lastInactiveDate?.let {
+        jsonMap["last_inactive_date"] =
+            it.format(LocalDate.Format { byUnicodePattern("M/d") }) as Any
+        jsonMap["days_since_last_inactive"] =
+            voterRegistrationManager.getDaysSinceLastInactiveDateString(it)
+      }
+      jsonMap["addon_accounts"] = this.addonAccounts
+      this.primaryAccount?.apply { jsonMap["primary_account"] = this }
     }
     setToastMessage(call, jsonMap, requestedMember)
     call.respond(ThymeleafContent("profile", jsonMap))
@@ -71,6 +91,14 @@ constructor(
           "Successfully linked @${requestedMember.discourseUsername} to your profile."
       jsonMap["toast_btn_url"] = "/unlink-discourse"
       jsonMap["toast_btn_label"] = "Unlink"
+    } else if (session?.isVoterRegistrationSuccess == true) {
+      log.info(
+          "Setting toast message for ${requestedMember.username} successful voter registration")
+      session?.isVoterRegistrationSuccess = false
+      call.sessions.set(session)
+      jsonMap["toast_message"] = "Successfully registered to vote."
+      jsonMap["toast_btn_url"] = "/unregister-voting"
+      jsonMap["toast_btn_label"] = "Unregister"
     }
   }
 

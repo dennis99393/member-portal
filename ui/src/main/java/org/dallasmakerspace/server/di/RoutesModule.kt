@@ -15,6 +15,7 @@ import org.dallasmakerspace.server.routes.OidcCallbackHandler
 import org.dallasmakerspace.server.routes.PingHandler
 import org.dallasmakerspace.server.routes.ProfileHandler
 import org.dallasmakerspace.server.routes.SearchPreloadHandler
+import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 
 @Module
 class RoutesModule {
@@ -52,8 +53,10 @@ class RoutesModule {
   fun providesProfileHandler(
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
-      memberService: MemberService
-  ): IRouteHandler = ProfileHandler(loggerFactory, memberService, userInfoProvider)
+      memberService: MemberService,
+      voterRegistrationManager: VoterRegistrationManager
+  ): IRouteHandler =
+      ProfileHandler(loggerFactory, memberService, userInfoProvider, voterRegistrationManager)
 
   @IntoMap
   @Provides

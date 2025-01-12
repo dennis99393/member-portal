@@ -31,6 +31,8 @@ fun Application.configureRouting() {
     }
     get(RouteFactory.Paths.GROUPS.path) { RouteFactory.getHandler(call)?.handle(call) }
     get(RouteFactory.Paths.SEARCH_PRELOAD.path) { RouteFactory.getHandler(call)?.handle(call) }
+    get(RouteFactory.Paths.REGISTER_VOTING.path) { RouteFactory.getHandler(call)?.handle(call) }
+    get(RouteFactory.Paths.UNREGISTER_VOTING.path) { RouteFactory.getHandler(call)?.handle(call) }
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handle(call) }
 

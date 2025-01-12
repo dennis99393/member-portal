@@ -5,10 +5,15 @@ import org.dallasmakerspace.server.common.HttpException
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.models.DMSGroup
 import org.dallasmakerspace.server.models.DMSMember
+import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 
 class MemberService
 @Inject
-constructor(loggerFactory: LoggerFactory, private val memberServiceClient: MemberServiceClient) {
+constructor(
+    loggerFactory: LoggerFactory,
+    private val memberServiceClient: MemberServiceClient,
+    private val votingRegistrationManager: VoterRegistrationManager
+) {
   private val log = loggerFactory.create(javaClass)
 
   suspend fun linkDiscourseAccount(
@@ -54,5 +59,19 @@ constructor(loggerFactory: LoggerFactory, private val memberServiceClient: Membe
 
   suspend fun getSearchPreload(sessionId: String?): List<DMSMember> {
     return memberServiceClient.getSearchPreloads(sessionId)
+  }
+
+  suspend fun registerVoting(sessionId: String?, username: String) {
+    memberServiceClient.addToGroup(
+        sessionId,
+        username,
+        DMSGroup.getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
+  }
+
+  suspend fun unregisterVoting(sessionId: String?, username: String) {
+    memberServiceClient.removeFromGroup(
+        sessionId,
+        username,
+        DMSGroup.getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
   }
 }

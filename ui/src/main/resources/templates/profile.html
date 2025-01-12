@@ -161,8 +161,11 @@
             </div>
         </div>
         <!-- Voting Rights card -->
-        <div th:if="${is_self}" class="card-linked-accounts">
-            <div class="linked-accounts">Voting Rights</div>
+        <div th:if="${(is_self and !is_voter_registration_test_mode_enabled) or (is_infra and is_voter_registration_test_mode_enabled)}"
+             class="card-linked-accounts">
+            <div class="linked-accounts">Voting Rights <span th:if="${!is_self}"
+                                                             style="color:red;font-size:0.7em;font-weight:normal;"><br/>[Member View for testing - Infra only]</span>
+            </div>
             <div class="discourse-icon-1-parent">
                 <img
                         class="discourse-icon-1"
@@ -173,15 +176,42 @@
                 <div class="frame-wrapper">
                     <div class="talk-member-parent">
                         <b>
-                            <span th:if="${is_voting_member}">Congratulations! You are enrolled to vote in DMS elections 🥳.</span>
-                            <span th:unless="${is_voting_member}">You are not currently registered to vote ❌.</span>
+                            <span th:if="${is_voting_member}">Congratulations! You are currently registered to vote in DMS elections 🥳.</span>
+                            <span th:if="${!is_voting_member and is_primary_account and was_active_past_90_days}">You are eligible to register.</span>
+                            <span th:if="${!is_voting_member and (!is_primary_account or !was_active_past_90_days)}">You are not eligible to register ❌.</span>
+                            <span th:if="${!is_voting_member and !is_primary_account}"><br/><br/>Only primary DMS accounts can vote in DMS elections.</span>
+                            <th:block th:if="${!is_voting_member and !was_active_past_90_days}">
+                                <span><br/><br/>Your account was inactive on <span
+                                        th:text="${last_inactive_date}"></span> (<span
+                                        th:text="${days_since_last_inactive}"></span>).</span>
+                            </th:block>
                         </b>
                         <br/>
-                        <div class="voting-self-service">
-                            <span th:unless="${is_voting_member}">Coming soon: self service voter enrollment.</span>
-                        </div>
                     </div>
                 </div>
+            </div>
+            <div>
+                <a th:if="${!is_voting_member and is_primary_account and was_active_past_90_days}"
+                   class="btn btn-primary" th:href="'@' + ${preferred_username} + '/register-voting'">Register to
+                    vote</a>
+                <a th:if="${is_voting_member}" class="link-secondary"
+                   th:href="'@' + ${preferred_username} + '/unregister-voting'">Cancel
+                    registration</a>
+            </div>
+            <div style="font-size:0.7em;">
+                <a href="https://source.dallasmakerspace.org/display/Board/2018+Board+of+Directors+Annual+Election+Procedures"
+                   target="_blank" style="text-decoration:none">
+                    <small class="text-muted">
+                        <!-- Info icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
+                             style="padding-bottom:3px;"
+                             class="bi bi-info-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                        </svg>
+                        DMS elections procedures
+                    </small>
+                </a>
             </div>
         </div>
         <!-- Assigned groups card -->
@@ -199,6 +229,31 @@
                         DMS equipment for various committees. Sign-up for a class on the
                         <a href="https://calendar.dallasmakerspace.org">calendar</a> to get qualified.</span>
                     <span th:unless="${is_self}">No groups assigned yet!</span>
+                </div>
+            </div>
+        </div>
+        <!-- Debug info card -->
+        <div class="card-linked-accounts" th:if="${is_infra}">
+            <div class="linked-accounts">Debug Info <span style="color:red;font-size:0.7em;font-weight:normal;">[Infra only]</span>
+            </div>
+            <div style="font-weight:normal;font-size:0.7em;">
+                <div>
+                    Personal email: <span th:text="${personal_email}"></span>
+                </div>
+                <div>
+                    Phone number: <span th:text="${phone_number}"></span>
+                </div>
+                <div>
+                    DMS Badge: <span th:text="${badge_number}"></span>
+                </div>
+                <div>
+                    isPrimaryAccount: <span th:text="${is_primary_account}"></span>
+                </div>
+                <div>
+                    wasActivePast90Days: <span th:text="${was_active_past_90_days}"></span>
+                </div>
+                <div th:unless="${was_active_past_90_days}">
+                    lastInactiveDate: <span th:text="|${last_inactive_date} (${days_since_last_inactive})|"></span>
                 </div>
             </div>
         </div>

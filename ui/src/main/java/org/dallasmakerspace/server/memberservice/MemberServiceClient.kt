@@ -80,4 +80,24 @@ constructor(
             ?: throw MemberServiceException("data attribute missing required")
     return data.map { DMSMember.fromMap(it as Map<String, Any?>) }
   }
+
+  suspend fun addToGroup(sessionId: String?, username: String, groupName: String) {
+    try {
+      val apiHeaders = getApiHeaders(sessionId)
+      dmsHttpClient.patch("$baseUrl/groups/$groupName/add", apiHeaders, username)
+    } catch (ex: Exception) {
+      log.error("Failed to add $username to group: $groupName", ex)
+      throw MemberServiceException("Failed to add $username to group: $groupName", ex)
+    }
+  }
+
+  suspend fun removeFromGroup(sessionId: String?, username: String, groupName: String) {
+    try {
+      val apiHeaders = getApiHeaders(sessionId)
+      dmsHttpClient.delete("$baseUrl/groups/$groupName/add", apiHeaders, username)
+    } catch (ex: Exception) {
+      log.error("Failed to remove $username from group: $groupName", ex)
+      throw MemberServiceException("Failed to remove $username from group: $groupName", ex)
+    }
+  }
 }

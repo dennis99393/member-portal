@@ -2,6 +2,7 @@ package org.dallasmakerspace.server.models
 
 import java.time.Instant
 import kotlin.reflect.full.memberProperties
+import kotlinx.datetime.LocalDate
 
 @Suppress("LongParameterList")
 class DMSMember(
@@ -18,7 +19,8 @@ class DMSMember(
     var discordUserId: String? = null,
     var memberSince: Instant? = null,
     var enabled: Boolean = false,
-    var groups: List<DMSGroup> = emptyList()
+    var groups: List<DMSGroup> = emptyList(),
+    var accountInfo: AccountInfo? = null,
 ) {
   override fun toString(): String {
     // Use reflection to generate a string containing all the properties of the class
@@ -36,6 +38,7 @@ class DMSMember(
               DMSGroup.fromMap(it as Map<String, Any?>)
             }
           } ?: emptyList()
+      val accountInfo = data["accountInfo"]?.let { AccountInfo.fromMap(it as Map<String, Any?>) }
       return DMSMember(
           username = data["username"] as String,
           firstName = data["firstName"] as String?,
@@ -50,7 +53,8 @@ class DMSMember(
           discourseAvatarUrl = data["discourseAvatarUrl"] as String?,
           discordUserId = data["discordUserId"] as String?,
           memberSince = Instant.parse(data["memberSince"] as String),
-          groups = groups)
+          groups = groups,
+          accountInfo = accountInfo)
     }
 
     fun toMap(member: DMSMember): Map<String, Any?> {
@@ -61,6 +65,45 @@ class DMSMember(
           "discourseAvatarUrl" to member.discourseAvatarUrl,
           "discordUserId" to member.discordUserId,
       )
+    }
+  }
+}
+
+/** Data class to hold various account related properties. */
+data class AccountInfo(
+    var wasActivePast90Days: Boolean? = null,
+    var lastInactiveDate: LocalDate? = null,
+    var isPrimaryAccount: Boolean = false,
+    var addonAccounts: List<Account> = emptyList(),
+    var primaryAccount: Account? = null,
+) {
+  companion object {
+    fun fromMap(map: Map<String, Any?>): AccountInfo? {
+      return if (map.isEmpty()) {
+        null
+      } else {
+        AccountInfo(
+            wasActivePast90Days = map["wasActivePast90Days"] as? Boolean,
+            lastInactiveDate = (map["lastInactiveDate"] as? String)?.let { LocalDate.parse(it) },
+            isPrimaryAccount = map["isPrimaryAccount"] as Boolean,
+            addonAccounts =
+                (map["addonAccounts"] as List<*>?)?.filterIsInstance<Map<String, Any?>>()?.map {
+                  Account.fromMap(it)
+                } ?: emptyList(),
+            primaryAccount = Account.fromMap(map["primaryAccount"] as Map<String, Any?>))
+      }
+    }
+  }
+}
+
+/** Data class to represent an account - may be primary or addon. */
+data class Account(
+    val username: String,
+    val isActive: Boolean,
+) {
+  companion object {
+    fun fromMap(map: Map<String, Any?>): Account {
+      return Account(username = map["username"] as String, isActive = map["isActive"] as Boolean)
     }
   }
 }

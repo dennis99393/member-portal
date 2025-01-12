@@ -44,7 +44,7 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
     }
   }
 
-  suspend fun patch(url: String, authHeaders: StringValues, payload: Map<String, Any?>) {
+  suspend fun patch(url: String, authHeaders: StringValues, payload: Any) {
     val resp =
         getClient().use {
           it.patch {
@@ -57,6 +57,22 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
     if (!resp.status.isSuccess()) {
       log.error("patch: HTTP request failed: $resp")
       throw HttpException("Failed to patch $url; Status: ${resp.status} FullResponse: $resp")
+    }
+  }
+
+  suspend fun delete(url: String, authHeaders: StringValues, payload: Any) {
+    val resp =
+        getClient().use {
+          it.delete {
+            url(url)
+            headers { appendAll(authHeaders) }
+            contentType(ContentType.Application.Json)
+            setBody(payload)
+          }
+        }
+    if (!resp.status.isSuccess()) {
+      log.error("delete: HTTP request failed: $resp")
+      throw HttpException("Failed to delete $url; Status: ${resp.status} FullResponse: $resp")
     }
   }
 }

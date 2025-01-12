@@ -23,6 +23,8 @@ abstract class AuthRouteHandler(
   protected lateinit var userInfo: Map<String, Any>
   protected var session: UserSession? = null
   protected var isInfra = false
+  protected var isBoard = false
+  protected var isOfficer = false
 
   override suspend fun handle(call: ApplicationCall) {
     session = call.sessions.get<UserSession>()
