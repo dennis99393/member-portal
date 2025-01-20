@@ -20,7 +20,7 @@ fun Application.configureMonitoring() {
   install(CallLogging) {
     level = Level.INFO
     logger = loggerFactory.create(Application::class.java)
-    filter { call -> call.request.path().startsWith("/static").not() } // Don't log static
+    // filter { call -> call.request.path().startsWith("/static").not() } // Don't log static
 
     format { call ->
       val status = call.response.status()
