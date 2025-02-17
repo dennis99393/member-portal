@@ -53,7 +53,7 @@ class VoterRegistrationManager @Inject constructor() {
       else VOTING_MEMBERS_GROUP
 
   companion object {
-    const val IS_VOTER_REGISTRATION_TEST_MODE_ENABLED = true
+    const val IS_VOTER_REGISTRATION_TEST_MODE_ENABLED = false
     const val MEMBER_IN_GOOD_STANDING_DAYS = 90L
     const val VOTING_MEMBERS_GROUP_TEST = "Voting Members - Test"
     const val VOTING_MEMBERS_GROUP = "Voting Members"
