@@ -14,244 +14,263 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <title th:text="'@' + ${preferred_username}"></title>
+    <style>
+        .profile-header {
+            height: 120px;
+            background-image: url('../static/images/bg.webp');
+            background-size: cover;
+            background-position: center;
+            border-top-left-radius: inherit;
+            border-top-right-radius: inherit;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            margin-top: -50px;
+            border: 3px solid white; /* White border */
+            background-color: white; /* White background */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Drop shadow */
+            overflow: hidden; /* Ensures image doesn't overflow */
+        }
+
+        .info-icon {
+            width: 2em;
+            opacity: 0.7;
+            margin-right: 1em;
+        }
+
+        .card-item-icon {
+            width: 24px;
+            opacity: 0.7;
+            margin-right: 10px;
+        }
+
+        .dms-card-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+        }
+    </style>
 </head>
 <body>
 <header class="top-nav" th:replace="fragments/header :: header"></header>
-<div class="profile">
-    <section class="content">
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Member bio card -->
+            <div class="card shadow-sm overflow-hidden mt-4" style="margin: auto;">
+                <div class="profile-header"></div>
 
-        <div class="card-bio1">
-            <div class="linked-accounts-label">
-                <div class="profile-pic">
-                    <img src="../static/images/profile-pic-not-set.svg" alt="Profile Picture">
+                <div class="card-body pt-0">
+                    <div class="text-center">
+                        <img src="../static/images/profile-pic-not-set.svg" class="profile-avatar rounded-circle" alt="Profile Avatar">
+                        <h4 class="mt-3 mb-0 dms-card-title"  th:text="${name}"></h4>
+                        <p class="text-muted"  th:text="'@' + ${preferred_username}"></p>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="material-symbols-outlined card-item-icon">lightbulb</span>
+                            <span>Member since <span th:text="${member_since}"></span></span>
+                        </div>
+
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="material-symbols-outlined card-item-icon">update</span>
+                            <span>Total time at DMS: <span th:text="${membership_duration}"></span></span>
+                        </div>
+
+                        <div th:if="${discourse_username}" class="d-flex align-items-center mb-3">
+                            <img class="card-item-icon" alt="" src="../static/images/discourse.svg"/>
+                            <span>Send message on <a target=_blank""
+                                                     th:href="|https://talk.dallasmakerspace.org/new-message?username=${discourse_username}&title=Hey%20👋|">Talk</a></span>
+                        </div>
+
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="material-symbols-outlined card-item-icon">mail</span>
+                            <span>Send email:
+                                <a th:href="|mailto:${preferred_username}@dallasmakerspace.org|">
+                                    <span th:text="|${preferred_username}@dallasmakerspace.org|"></span>
+                                </a>
+                            </span>
+                        </div>
+
+                        <div th:unless="${enabled}" class="d-flex align-items-center mb-3">
+                            <span class="material-symbols-outlined text-dander">encrypted_off</span>
+                            <span class="text-danger">Disabled Profile</span>
+                        </div>
+
+                        <th:block th:if="${is_self}">
+                            <hr>
+                            <h6 class="text-muted mb-3">Information on file:</h6>
+
+                            <div th:if="${personal_email}" class="d-flex align-items-center mb-3">
+                                <span class="material-symbols-outlined card-item-icon">unsubscribe</span>
+                                <span>Personal email: <span class="overflow-hidden" th:text="${personal_email}"></span></span>
+                            </div>
+
+                            <div th:if="${phone_number}" class="d-flex align-items-center mb-3">
+                                <span class="material-symbols-outlined card-item-icon">dialpad</span>
+                                <span>Phone number: <span th:text="${phone_number}"></span></span>
+                            </div>
+
+                            <div th:if="${badge_number}" class="d-flex align-items-center">
+                                <span class="material-symbols-outlined card-item-icon">security_key</span>
+                                <span>DMS Badge: <span th:text="${badge_number}"></span></span>
+                            </div>
+                        </th:block>
+                    </div>
                 </div>
-                <div class="bg-pic">
+            </div>
+            <!-- Debug info card -->
+            <div class="card shadow-sm overflow-hidden mt-4" style="margin: auto;" th:if="${is_infra}">
+                <div class="card-body pt-0">
+                    <h4 class="card-title mt-4 dms-card-title">Debug Info</h4> <span class="text-sm text-danger">[Infra only]</span>
+
+                    <div class="mt-4">
+                        <div class="d-flex align-items-center" th:if="${whmcs_id}">
+                            <span>WhmcsId: <span th:text="${whmcs_id}"></span></span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span>isPrimaryAccount: <span th:text="${is_primary_account}"></span></span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span>wasActivePast90Days: <span th:text="${was_active_past_90_days}"></span></span>
+                        </div>
+                        <div class="d-flex align-items-center" th:unless="${was_active_past_90_days}">
+                            <span>lastInactiveDate: <span th:text="|${last_inactive_date} (${days_since_last_inactive})|"></span></span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span>Personal email: <span th:text="${personal_email}"></span></span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span>Phone number: <span th:text="${phone_number}"></span></span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span>DMS Badge: <span th:text="${badge_number}"></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div th:if="${is_self}" class="card-linked-accounts">
+                <div class="linked-accounts">Linked Accounts</div>
+                <div class="discourse-icon-1-parent">
                     <img
-                            class="mask-group-icon"
+                            class="discourse-icon-1"
+                            loading="lazy"
                             alt=""
-                            src="../static/images/bg.webp"
+                            src="../static/images/discourse.svg"
                     />
-                </div>
-                <div class="user-fullname" th:text="${name}"></div>
-            </div>
-            <div class="username">
-                <b class="username-label" th:text="'@' + ${preferred_username}"></b>
-            </div>
-            <div class="card-bio-inner" th:if="${member_since}">
-                <div class="frame-parent">
-                    <div class="lightbulb-circle-parent">
-                        <span class="material-symbols-outlined">lightbulb</span>
-                        <div class="link-account-label">
-                            <b class="member-since-apr">Member since <span th:text="${member_since}"></span></b>
-                        </div>
-                    </div>
-                    <div class="vector-parent">
-                        <span class="material-symbols-outlined">update</span>
-                        <div class="total-time-at-dms-21-years-wrapper">
-                            <b class="total-time-at">Total time at DMS: <span
-                                    th:text="${membership_duration}"></span></b>
-                        </div>
-                    </div>
-                    <div th:if="${discourse_username}" class="vector-parent">
-                        <img class="vector-icon1" alt="" src="../static/images/discourse.svg"/>
 
-                        <div class="total-time-at-dms-21-years-wrapper">
-                            <b class="total-time-at">Send message on <a target=_blank""
-                                                                        th:href="|https://talk.dallasmakerspace.org/new-message?username=${discourse_username}&title=Hey%20👋|">Talk</a></b>
-                        </div>
-                    </div>
-                    <div class="vector-parent">
-                        <span class="material-symbols-outlined">mail</span>
-                        <div class="total-time-at-dms-21-years-wrapper">
-                            <b class="total-time-at">Send email: <a
-                                    th:href="|mailto:${preferred_username}@dallasmakerspace.org|"> <span
-                                    th:text="|${preferred_username}@dallasmakerspace.org|"></span></a></b>
-                        </div>
-                    </div>
-                    <div th:unless="${enabled}" class="vector-parent">
-                        <span class="material-symbols-outlined">encrypted_off</span>
-                        <div class="total-time-at-dms-21-years-wrapper">
-                            <b class="total-time-at text-danger">Disabled Profile</b>
-                        </div>
-                    </div>
-                    <th:block th:if="${is_self}">
-                        <div class="divider py-1 bg-dark"></div>
-                        <div class="vector-parent">
-                            <div class="total-time-at-dms-21-years-wrapper">
-                                <b class="total-time-at">Information on file:</b>
+                    <div class="frame-wrapper">
+                        <div class="talk-member-parent">
+                            <b class="talk-member">Talk:
+                                <span th:if="${discourse_username}">
+                                    <a th:href="|https://talk.dallasmakerspace.org/u/${discourse_username}/summary|"
+                                       target="_blank"><span th:text="|${discourse_username}|">
+
+                                    </span></a></span>
+                                <span th:unless="${discourse_username}">Not Linked</span>
+                            </b>
+                            <div class="unlink-account" id="unlinkAccountText">
+                                <span th:if="${discourse_username}"><a href="/unlink-discourse">Unlink Account</a></span>
+                                <span th:unless="${discourse_username}"><a href="/link-discourse">Link Account</a></span>
                             </div>
                         </div>
-                        <div th:if="${personal_email}" class="vector-parent">
-                            <span class="material-symbols-outlined">unsubscribe</span>
-                            <div class="total-time-at-dms-21-years-wrapper">
-                                <b class="total-time-at">Personal email: <span
-                                        th:text="${personal_email}"></span></b>
-                            </div>
-                        </div>
-                        <div th:if="${phone_number}" class="vector-parent">
-                            <span class="material-symbols-outlined">dialpad</span>
-                            <div class="total-time-at-dms-21-years-wrapper">
-                                <b class="total-time-at">Phone number: <span
-                                        th:text="${phone_number}"></span></b>
-                            </div>
-                        </div>
-                        <div th:if="${badge_number}" class="vector-parent">
-                            <span class="material-symbols-outlined">security_key</span>
-                            <div class="total-time-at-dms-21-years-wrapper">
-                                <b class="total-time-at">DMS Badge: <span
-                                        th:text="${badge_number}"></span></b>
-                            </div>
-                        </div>
-                    </th:block>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div th:if="${is_self}" class="card-linked-accounts">
-            <div class="linked-accounts">Linked Accounts</div>
-            <div class="discourse-icon-1-parent">
-                <img
-                        class="discourse-icon-1"
-                        loading="lazy"
-                        alt=""
-                        src="../static/images/discourse.svg"
-                />
+                <div class="frame-group">
+                    <img
+                            class="frame-child"
+                            loading="lazy"
+                            alt=""
+                            src="../static/images/discord.svg"/>
 
-                <div class="frame-wrapper">
-                    <div class="talk-member-parent">
-                        <b class="talk-member">Talk:
-                            <span th:if="${discourse_username}">
-                                <a th:href="|https://talk.dallasmakerspace.org/u/${discourse_username}/summary|"
-                                   target="_blank"><span th:text="|${discourse_username}|">
-
-                                </span></a></span>
-                            <span th:unless="${discourse_username}">Not Linked</span>
-                        </b>
-                        <div class="unlink-account" id="unlinkAccountText">
-                            <span th:if="${discourse_username}"><a href="/unlink-discourse">Unlink Account</a></span>
-                            <span th:unless="${discourse_username}"><a href="/link-discourse">Link Account</a></span>
+                    <div class="frame-container">
+                        <div class="discord-not-linked-parent">
+                            <b class="discord-not-linked-container">
+                                <span>Discord:</span>
+                                <span class="span"> </span>
+                                <span>Coming Soon</span>
+                            </b>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="frame-group">
-                <img
-                        class="frame-child"
-                        loading="lazy"
-                        alt=""
-                        src="../static/images/discord.svg"/>
+            <!-- Voting Rights card -->
+            <div th:if="${(is_self and !is_voter_registration_test_mode_enabled) or (is_infra and is_voter_registration_test_mode_enabled)}"
+                 class="card-linked-accounts">
+                <div class="linked-accounts">Voting Rights <span th:if="${!is_self}"
+                                                                 style="color:red;font-size:0.7em;font-weight:normal;"><br/>[Member View for testing - Infra only]</span>
+                </div>
+                <div class="discourse-icon-1-parent">
+                    <img
+                            class="discourse-icon-1"
+                            loading="lazy"
+                            alt=""
+                            src="../static/images/vote.svg"/>
 
-                <div class="frame-container">
-                    <div class="discord-not-linked-parent">
-                        <b class="discord-not-linked-container">
-                            <span>Discord:</span>
-                            <span class="span"> </span>
-                            <span>Coming Soon</span>
-                        </b>
+                    <div class="frame-wrapper">
+                        <div class="talk-member-parent">
+                            <b>
+                                <span th:if="${is_voting_member}">Congratulations! You are currently registered to vote in DMS elections 🥳.</span>
+                                <span th:if="${!is_voting_member and is_primary_account and was_active_past_90_days}">You are eligible to register.</span>
+                                <span th:if="${!is_voting_member and (!is_primary_account or !was_active_past_90_days)}">You are not eligible to register ❌.</span>
+                                <span th:if="${!is_voting_member and !is_primary_account}"><br/><br/>Only primary DMS accounts can vote in DMS elections.</span>
+                                <th:block th:if="${!is_voting_member and !was_active_past_90_days}">
+                                    <span><br/><br/>Your account was inactive on <span
+                                            th:text="${last_inactive_date}"></span> (<span
+                                            th:text="${days_since_last_inactive}"></span>).</span>
+                                </th:block>
+                            </b>
+                            <br/>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <a th:if="${!is_voting_member and is_primary_account and was_active_past_90_days}"
+                       class="btn btn-primary" th:href="'@' + ${preferred_username} + '/register-voting'">Register to
+                        vote</a>
+                    <a th:if="${is_voting_member}" class="link-secondary"
+                       th:href="'@' + ${preferred_username} + '/unregister-voting'">Cancel
+                        registration</a>
+                </div>
+                <div style="font-size:0.7em;">
+                    <a href="https://source.dallasmakerspace.org/display/Board/2018+Board+of+Directors+Annual+Election+Procedures"
+                       target="_blank" style="text-decoration:none">
+                        <small class="text-muted">
+                            <!-- Info icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
+                                 style="padding-bottom:3px;"
+                                 class="bi bi-info-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                            </svg>
+                            DMS elections procedures
+                        </small>
+                    </a>
+                </div>
+            </div>
+            <!-- Assigned groups card -->
+            <div class="card-linked-accounts">
+                <div class="linked-accounts">Assigned Groups</div>
+                <div class="discourse-icon-1-parent">
+                    <div th:if="${groups}">
+                        <span th:each="group : ${groups}">
+                                <a style="margin:4px" type="button" class="btn btn-outline-primary btn-sm"
+                                   th:href="|/groups/${group.slug}|" th:text="${group.name}"></a>
+                        </span>
+                    </div>
+                    <div th:unless="${groups}">
+                        <span th:if="${is_self}">You are not assigned to any groups 🙁. Groups are used to grant access to
+                            DMS equipment for various committees. Sign-up for a class on the
+                            <a href="https://calendar.dallasmakerspace.org">calendar</a> to get qualified.</span>
+                        <span th:unless="${is_self}">No groups assigned yet!</span>
                     </div>
                 </div>
             </div>
         </div>
-        <!-- Voting Rights card -->
-        <div th:if="${(is_self and !is_voter_registration_test_mode_enabled) or (is_infra and is_voter_registration_test_mode_enabled)}"
-             class="card-linked-accounts">
-            <div class="linked-accounts">Voting Rights <span th:if="${!is_self}"
-                                                             style="color:red;font-size:0.7em;font-weight:normal;"><br/>[Member View for testing - Infra only]</span>
-            </div>
-            <div class="discourse-icon-1-parent">
-                <img
-                        class="discourse-icon-1"
-                        loading="lazy"
-                        alt=""
-                        src="../static/images/vote.svg"/>
-
-                <div class="frame-wrapper">
-                    <div class="talk-member-parent">
-                        <b>
-                            <span th:if="${is_voting_member}">Congratulations! You are currently registered to vote in DMS elections 🥳.</span>
-                            <span th:if="${!is_voting_member and is_primary_account and was_active_past_90_days}">You are eligible to register.</span>
-                            <span th:if="${!is_voting_member and (!is_primary_account or !was_active_past_90_days)}">You are not eligible to register ❌.</span>
-                            <span th:if="${!is_voting_member and !is_primary_account}"><br/><br/>Only primary DMS accounts can vote in DMS elections.</span>
-                            <th:block th:if="${!is_voting_member and !was_active_past_90_days}">
-                                <span><br/><br/>Your account was inactive on <span
-                                        th:text="${last_inactive_date}"></span> (<span
-                                        th:text="${days_since_last_inactive}"></span>).</span>
-                            </th:block>
-                        </b>
-                        <br/>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <a th:if="${!is_voting_member and is_primary_account and was_active_past_90_days}"
-                   class="btn btn-primary" th:href="'@' + ${preferred_username} + '/register-voting'">Register to
-                    vote</a>
-                <a th:if="${is_voting_member}" class="link-secondary"
-                   th:href="'@' + ${preferred_username} + '/unregister-voting'">Cancel
-                    registration</a>
-            </div>
-            <div style="font-size:0.7em;">
-                <a href="https://source.dallasmakerspace.org/display/Board/2018+Board+of+Directors+Annual+Election+Procedures"
-                   target="_blank" style="text-decoration:none">
-                    <small class="text-muted">
-                        <!-- Info icon -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
-                             style="padding-bottom:3px;"
-                             class="bi bi-info-circle" viewBox="0 0 16 16">
-                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                            <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
-                        </svg>
-                        DMS elections procedures
-                    </small>
-                </a>
-            </div>
-        </div>
-        <!-- Assigned groups card -->
-        <div class="card-linked-accounts">
-            <div class="linked-accounts">Assigned Groups</div>
-            <div class="discourse-icon-1-parent">
-                <div th:if="${groups}">
-                    <span th:each="group : ${groups}">
-                            <a style="margin:4px" type="button" class="btn btn-outline-primary btn-sm"
-                               th:href="|/groups/${group.slug}|" th:text="${group.name}"></a>
-                    </span>
-                </div>
-                <div th:unless="${groups}">
-                    <span th:if="${is_self}">You are not assigned to any groups 🙁. Groups are used to grant access to
-                        DMS equipment for various committees. Sign-up for a class on the
-                        <a href="https://calendar.dallasmakerspace.org">calendar</a> to get qualified.</span>
-                    <span th:unless="${is_self}">No groups assigned yet!</span>
-                </div>
-            </div>
-        </div>
-        <!-- Debug info card -->
-        <div class="card-linked-accounts" th:if="${is_infra}">
-            <div class="linked-accounts">Debug Info <span style="color:red;font-size:0.7em;font-weight:normal;">[Infra only]</span>
-            </div>
-            <div style="font-weight:normal;font-size:0.7em;">
-                <div th:if="${whmcs_id}">
-                    WhmcsId: <span th:text="${whmcs_id}"></span>
-                </div>
-                <div>
-                    isPrimaryAccount: <span th:text="${is_primary_account}"></span>
-                </div>
-                <div>
-                    wasActivePast90Days: <span th:text="${was_active_past_90_days}"></span>
-                </div>
-                <div th:unless="${was_active_past_90_days}">
-                    lastInactiveDate: <span th:text="|${last_inactive_date} (${days_since_last_inactive})|"></span>
-                </div>
-                <div>
-                    Personal email: <span th:text="${personal_email}"></span>
-                </div>
-                <div>
-                    Phone number: <span th:text="${phone_number}"></span>
-                </div>
-                <div>
-                    DMS Badge: <span th:text="${badge_number}"></span>
-                </div>
-            </div>
-        </div>
-    </section>
 </div>
 
 
