@@ -69,4 +69,4 @@ application {
   applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-kotlin { jvmToolchain(20) }
+kotlin { jvmToolchain(21) }

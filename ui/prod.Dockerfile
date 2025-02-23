@@ -1,5 +1,5 @@
-# Use eclipse temurin JDK 20 as the base image
-FROM maven:3-eclipse-temurin-20-alpine
+# Use eclipse temurin JDK 21 as the base image
+FROM maven:3-eclipse-temurin-21-alpine
 
 # Set the working directory in the container
 WORKDIR /app
