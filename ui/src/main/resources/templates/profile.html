@@ -16,8 +16,8 @@
     <title th:text="'@' + ${preferred_username}"></title>
 </head>
 <body>
+<header class="top-nav" th:replace="fragments/header :: header"></header>
 <div class="profile">
-    <header class="top-nav" th:replace="fragments/header :: header"></header>
     <section class="content">
 
         <div class="card-bio1">

@@ -21,6 +21,20 @@ div.error-details > p { color: #c1c1c1; }
     padding: 0 var(--padding-13xl);
 }
 
+.custom-navbar {
+    background-color: #0b9cc9;
+    border-bottom: 1px solid #000;
+}
+.navbar-brand {
+    color: white !important;
+}
+.nav-link {
+    color: white !important;
+}
+.dropdown-toggle::after {
+    border-top-color: white;
+}
+
 .top-nav-title-wrapper {
     display: flex;
     flex-direction: row;

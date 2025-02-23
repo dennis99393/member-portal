@@ -16,8 +16,8 @@
     <title th:text="'Group: ' + ${name}"></title>
 </head>
 <body>
+<header class="top-nav" th:replace="fragments/header :: header"></header>
 <div class="profile">
-    <header class="top-nav" th:replace="fragments/header :: header"></header>
     <section class="content">
         <!- Group title card -->
         <div class="card-linked-accounts">

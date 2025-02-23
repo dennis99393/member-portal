@@ -1,14 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <body>
-<header class="top-nav" th:fragment="header">
-    <div class="top-nav-title-wrapper">
-        <div class="dms-title"><a href="/" class="link-reset">DMS Member Portal</a></div>
-        <div class="top-nav-logout">
-            <a class="link-reset" href="https://login.dallasmakerspace.org/auth/realms/DMS/account/">Logout</a>
+<nav class="navbar navbar-expand-lg custom-navbar" th:fragment="header">
+    <div class="container">
+        <a class="navbar-brand" href="/">DMS Member Portal</a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <ul class="navbar-nav me-auto">
+            </ul>
+
+            <ul class="navbar-nav">
+                <li class="nav-item dropdown">
+                    <a class="nav-link" href="/profile-me" role="button">
+                        My Profile
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
-    <div class="top-nav-divider"></div>
-</header>
+</nav>
 </body>
 </html>
