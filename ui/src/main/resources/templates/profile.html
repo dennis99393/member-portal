@@ -17,16 +17,7 @@
 </head>
 <body>
 <div class="profile">
-    <header class="top-nav">
-        <div class="top-nav-title-wrapper">
-            <div class="dms-title"><a href="/" class="link-reset">DMS Member Portal</a></div>
-            <div class="top-nav-logout">
-                <a class="link-reset" href="https://login.dallasmakerspace.org/auth/realms/DMS/account/">Logout</a>
-            </div>
-        </div>
-        <div class="top-nav-divider1"></div>
-
-    </header>
+    <header class="top-nav" th:replace="fragments/header :: header"></header>
     <section class="content">
 
         <div class="card-bio1">

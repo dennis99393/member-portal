@@ -29,15 +29,7 @@
 </head>
 <body>
 <div class="main">
-    <header class="top-nav">
-        <div class="top-nav-title-wrapper">
-            <div class="dms-title"><a href="/" class="link-reset">DMS Member Portal</a></div>
-            <div class="top-nav-logout">
-                <a class="link-reset" href="https://login.dallasmakerspace.org/auth/realms/DMS/account/">Logout</a>
-            </div>
-        </div>
-        <div class="top-nav-divider"></div>
-    </header>
+    <header class="top-nav" th:replace="fragments/header :: header"></header>
     <section class="main-inner">
         <div class="error-container">
             <h2>Server Error</h2>
