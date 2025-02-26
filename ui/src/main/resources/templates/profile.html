@@ -137,10 +137,10 @@
                         <div class="d-flex align-items-center mb-3">
                             <span class="material-symbols-outlined card-item-icon">mail</span>
                             <span>Send email:
-                                <a th:href="|mailto:${preferred_username}@dallasmakerspace.org|">
-                                    <span th:text="|${preferred_username}@dallasmakerspace.org|"></span>
-                                </a>
-                            </span>
+                                    <a th:href="|mailto:${preferred_username}@dallasmakerspace.org|">
+                                        <span th:text="|${preferred_username}@dallasmakerspace.org|"></span>
+                                    </a>
+                                </span>
                         </div>
 
                         <div th:unless="${enabled}" class="d-flex align-items-center mb-3">
@@ -186,8 +186,8 @@
                             <span>wasActivePast90Days: <span th:text="${was_active_past_90_days}"></span></span>
                         </div>
                         <div class="d-flex align-items-center" th:unless="${was_active_past_90_days}">
-                            <span>lastInactiveDate: <span
-                                    th:text="|${last_inactive_date} (${days_since_last_inactive})|"></span></span>
+                                <span>lastInactiveDate: <span
+                                        th:text="|${last_inactive_date} (${days_since_last_inactive})|"></span></span>
                         </div>
                         <div class="d-flex align-items-center">
                             <span>Personal email: <span th:text="${personal_email}"></span></span>
@@ -223,8 +223,10 @@
                                     </a>
                                     <span th:unless="${discourse_username}">Not Linked</span>
                                 </div>
-                                <a href="/unlink-discourse" th:if="${discourse_username}" class="unlink">Unlink Account</a>
-                                <a href="/link-discourse" th:unless="${discourse_username}" class="unlink">Link Account</a>
+                                <a href="/unlink-discourse" th:if="${discourse_username}" class="unlink">Unlink
+                                    Account</a>
+                                <a href="/link-discourse" th:unless="${discourse_username}" class="unlink">Link
+                                    Account</a>
                             </div>
                         </div>
 
@@ -263,9 +265,9 @@
                                 <span th:if="${!is_voting_member and (!is_primary_account or !was_active_past_90_days)}">You are not eligible to register ❌.</span>
                                 <span th:if="${!is_voting_member and !is_primary_account}"><br/><br/>Only primary DMS accounts can vote in DMS elections.</span>
                                 <th:block th:if="${!is_voting_member and !was_active_past_90_days}">
-                                    <span><br/><br/>Your account was inactive on <span
-                                            th:text="${last_inactive_date}"></span> (<span
-                                            th:text="${days_since_last_inactive}"></span>).</span>
+                                        <span><br/><br/>Your account was inactive on <span
+                                                th:text="${last_inactive_date}"></span> (<span
+                                                th:text="${days_since_last_inactive}"></span>).</span>
                                 </th:block>
                             </b>
                             <br/>
@@ -301,15 +303,15 @@
                 <div class="linked-accounts">Assigned Groups</div>
                 <div class="discourse-icon-1-parent">
                     <div th:if="${groups}">
-                        <span th:each="group : ${groups}">
-                                <a style="margin:4px" type="button" class="btn btn-outline-primary btn-sm"
-                                   th:href="|/groups/${group.slug}|" th:text="${group.name}"></a>
-                        </span>
+                            <span th:each="group : ${groups}">
+                                    <a style="margin:4px" type="button" class="btn btn-outline-primary btn-sm"
+                                       th:href="|/groups/${group.slug}|" th:text="${group.name}"></a>
+                            </span>
                     </div>
                     <div th:unless="${groups}">
-                        <span th:if="${is_self}">You are not assigned to any groups 🙁. Groups are used to grant access to
-                            DMS equipment for various committees. Sign-up for a class on the
-                            <a href="https://calendar.dallasmakerspace.org">calendar</a> to get qualified.</span>
+                            <span th:if="${is_self}">You are not assigned to any groups 🙁. Groups are used to grant access to
+                                DMS equipment for various committees. Sign-up for a class on the
+                                <a href="https://calendar.dallasmakerspace.org">calendar</a> to get qualified.</span>
                         <span th:unless="${is_self}">No groups assigned yet!</span>
                     </div>
                 </div>
@@ -340,13 +342,16 @@
                     aria-label="Close"></button>
         </div>
     </div>
+</div>
 
 
-    <!-- Bootstrap JS should be at the bottom of the body -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-            crossorigin="anonymous"></script>
-    <!-- App JS -->
-    <script src="../static/js/app.js"></script>
+<!-- Bootstrap JS should be at the bottom of the body -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+<!-- App JS -->
+<script src="../static/js/app.js"></script>
+<script src="../static/js/dms-page-loader.js" defer></script>
+
 </body>
 </html>
