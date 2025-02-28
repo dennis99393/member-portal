@@ -86,6 +86,7 @@
         .accounts-container {
             display: flex;
             flex-direction: column;
+            padding: 0 75px 0 75px;
         }
         @media (min-width: 768px) {
             .accounts-container {
@@ -98,11 +99,77 @@
                 display: none;
             }
         }
+
+        /* Voting Rights card */
+        .vote-logo {
+            width: 50px;
+            height: 50px;
+            opacity: 75%;
+        }
+
+        .btn-register {
+            background-color: #0d6efd;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            width: 100%;
+        }
+
+        .info-link {
+            color: #6c757d;
+            font-size: 0.85rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .info-link svg {
+            margin-right: 5px;
+        }
+
+        .cancel-link {
+            color: #6c757d;
+            text-decoration: none;
+            font-weight: 500;
+            display: block;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .cancel-link:hover {
+            text-decoration: underline;
+        }
+
+        .card-title {
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .status-container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .status-container {
+                max-width: 60.666%; /* 4 columns out of 12 */
+            }
+        }
+        .dms-card {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: none;
+            padding: 6px 24px 12px 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
     </style>
 </head>
 <body>
 <header class="top-nav" th:replace="fragments/header :: header"></header>
-<div class="container">
+<div class="container pb-8">
     <div class="row">
         <div class="col-md-4">
             <!-- Member bio card -->
@@ -144,7 +211,7 @@
                         </div>
 
                         <div th:unless="${enabled}" class="d-flex align-items-center mb-3">
-                            <span class="material-symbols-outlined text-dander">encrypted_off</span>
+                            <span class="material-symbols-outlined text-dander card-item-icon">encrypted_off</span>
                             <span class="text-danger">Disabled Profile</span>
                         </div>
 
@@ -204,7 +271,7 @@
         </div>
         <div class="col-md-8">
             <!-- Linked accounts card -->
-            <div th:if="${is_self}" class="card bg-light mt-4">
+            <div th:if="${is_self}" class="dms-card shadow-sm mt-4">
                 <div class="card-body pt-0 pb-4">
                     <h4 class="card-title mt-3 mb-4 dms-card-title">Linked Accounts</h4>
                     <div class="accounts-container">
@@ -245,79 +312,85 @@
             </div>
 
             <!-- Voting Rights card -->
-            <div th:if="${(is_self and !is_voter_registration_test_mode_enabled) or (is_infra and is_voter_registration_test_mode_enabled)}"
-                 class="card-linked-accounts">
-                <div class="linked-accounts">Voting Rights <span th:if="${!is_self}"
-                                                                 style="color:red;font-size:0.7em;font-weight:normal;"><br/>[Member View for testing - Infra only]</span>
-                </div>
-                <div class="discourse-icon-1-parent">
-                    <img
-                            class="discourse-icon-1"
-                            loading="lazy"
-                            alt=""
-                            src="../static/images/vote.svg"/>
+            <div class="dms-card shadow-sm mt-4"
+                 th:if="${(is_self and !is_voter_registration_test_mode_enabled) or (is_infra and is_voter_registration_test_mode_enabled)}">
+                <div class="card-body pt-0 pb-4">
+                    <h4 class="card-title mt-3 mb-4 dms-card-title">Voting Rights</h4><!--<span th:if="${!is_self}"
+                                                                                            class="text-sm text-danger">[Member View for testing - Infra only]</span>-->
 
-                    <div class="frame-wrapper">
-                        <div class="talk-member-parent">
-                            <b>
-                                <span th:if="${is_voting_member}">Congratulations! You are currently registered to vote in DMS elections 🥳.</span>
-                                <span th:if="${!is_voting_member and is_primary_account and was_active_past_90_days}">You are eligible to register.</span>
-                                <span th:if="${!is_voting_member and (!is_primary_account or !was_active_past_90_days)}">You are not eligible to register ❌.</span>
-                                <span th:if="${!is_voting_member and !is_primary_account}"><br/><br/>Only primary DMS accounts can vote in DMS elections.</span>
-                                <th:block th:if="${!is_voting_member and !was_active_past_90_days}">
-                                        <span><br/><br/>Your account was inactive on <span
-                                                th:text="${last_inactive_date}"></span> (<span
-                                                th:text="${days_since_last_inactive}"></span>).</span>
-                                </th:block>
-                            </b>
-                            <br/>
+                    <!-- Centered content with max 4 cols width -->
+                    <div class="status-container">
+                        <div class="d-flex align-items-center justify-content-center mb-4">
+                            <div class="me-3">
+                                <img src="../static/images/vote.svg" alt="Vote"
+                                     class="vote-logo">
+                            </div>
+                            <div>
+                                <p th:if="${is_voting_member}" class="mb-0" id="congratsText">
+                                    Congratulations! You are currently registered to vote in DMS elections 🥳.</p>
+                                <p th:if="${!is_voting_member and is_primary_account and was_active_past_90_days}"
+                                   class="mb-0" id="statusText">You are eligible to register.</p>
+                                <p th:if="${!is_voting_member and (!is_primary_account or !was_active_past_90_days)}">
+                                    You are not eligible to register ❌.<br>
+                                    <span th:if="${!is_voting_member and !is_primary_account}">Only primary DMS
+                                    accounts can vote in DMS elections.</span>
+                                    <span th:if="${!is_voting_member and !was_active_past_90_days}">Your account was inactive on <span
+                                            th:text="${last_inactive_date} + ' (' + ${days_since_last_inactive} + ').'"></span>
+                                    </span>
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div>
-                    <a th:if="${!is_voting_member and is_primary_account and was_active_past_90_days}"
-                       class="btn btn-primary" th:href="'@' + ${preferred_username} + '/register-voting'">Register to
-                        vote</a>
-                    <a th:if="${is_voting_member}" class="link-secondary"
-                       th:href="'@' + ${preferred_username} + '/unregister-voting'">Cancel
-                        registration</a>
-                </div>
-                <div style="font-size:0.7em;">
-                    <a href="https://source.dallasmakerspace.org/display/Board/2018+Board+of+Directors+Annual+Election+Procedures"
-                       target="_blank" style="text-decoration:none">
-                        <small class="text-muted">
-                            <!-- Info icon -->
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor"
-                                 style="padding-bottom:3px;"
+
+                    <div class="row justify-content-center">
+                        <div class="col-sm-8 col-md-6 text-center">
+                            <a th:if="${!is_voting_member and is_primary_account and was_active_past_90_days}"
+                               class="btn btn-primary" th:href="'@' + ${preferred_username} + '/register-voting'">Register
+                                to
+                                vote</a>
+                            <a th:if="${is_voting_member}" class="link-secondary"
+                               th:href="'@' + ${preferred_username} + '/unregister-voting'">Cancel
+                                registration</a>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <a class="info-link"
+                           href="https://source.dallasmakerspace.org/display/Board/2018+Board+of+Directors+Annual+Election+Procedures">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                  class="bi bi-info-circle" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
                             </svg>
                             DMS elections procedures
-                        </small>
-                    </a>
+                        </a>
+                    </div>
                 </div>
             </div>
+
             <!-- Assigned groups card -->
-            <div class="card-linked-accounts">
-                <div class="linked-accounts">Assigned Groups</div>
-                <div class="discourse-icon-1-parent">
+            <div class="dms-card shadow-sm mt-4">
+                <div class="card-body pt-0 pb-4">
+                    <h4 class="card-title mt-3 mb-4 dms-card-title">Assigned Groups</h4>
                     <div th:if="${groups}">
-                            <span th:each="group : ${groups}">
-                                    <a style="margin:4px" type="button" class="btn btn-outline-primary btn-sm"
-                                       th:href="|/groups/${group.slug}|" th:text="${group.name}"></a>
-                            </span>
+                        <span th:each="group : ${groups}">
+                            <a style="margin:4px;" type="button" class="btn btn-outline-primary btn-sm"
+                               th:href="|/groups/${group.slug}|" th:text="${group.name}"></a>
+                        </span>
                     </div>
                     <div th:unless="${groups}">
-                            <span th:if="${is_self}">You are not assigned to any groups 🙁. Groups are used to grant access to
-                                DMS equipment for various committees. Sign-up for a class on the
-                                <a href="https://calendar.dallasmakerspace.org">calendar</a> to get qualified.</span>
+                        <span th:if="${is_self}">You are not assigned to any groups 🙁. Groups are used to grant access to
+                            DMS equipment for various committees. Sign-up for a class on the
+                            <a href="https://calendar.dallasmakerspace.org">calendar</a> to get qualified.</span>
                         <span th:unless="${is_self}">No groups assigned yet!</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Bottom padding -->
+    <div style="height: 100px;"></div>
 
 
     <!-- Bootstrap Toast for success / error messages -->

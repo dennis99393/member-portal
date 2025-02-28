@@ -45,7 +45,8 @@ constructor(
             "membership_duration" to memberDurationString,
             "enabled" to requestedMember.enabled.toString(),
         )
-    if (requestedMember.groups.isNotEmpty()) jsonMap["groups"] = requestedMember.groups
+    if (requestedMember.groups.isNotEmpty())
+        jsonMap["groups"] = requestedMember.groups.sortedBy { it.name }
     if (requestedMember.discourseUsername.isNullOrEmpty().not()) {
       jsonMap["discourse_username"] = requestedMember.discourseUsername as Any
     }
