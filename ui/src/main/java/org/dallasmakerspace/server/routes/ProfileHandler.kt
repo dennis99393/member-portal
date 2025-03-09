@@ -101,7 +101,7 @@ constructor(
       session?.isVoterRegistrationSuccess = false
       call.sessions.set(session)
       jsonMap["toast_message"] = "Successfully registered to vote."
-      jsonMap["toast_btn_url"] = "/unregister-voting"
+      jsonMap["toast_btn_url"] = "@${requestedMember.username}/unregister-voting"
       jsonMap["toast_btn_label"] = "Unregister"
     }
   }
