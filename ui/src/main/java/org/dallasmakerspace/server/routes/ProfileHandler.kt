@@ -29,7 +29,7 @@ constructor(
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun handle(call: ApplicationCall) {
-    super.handle(call)
+
     // Get username requested from path /profile/@{preferred_username}
     val requestedUsername =
         call.parameters["preferred_username"]

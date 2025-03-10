@@ -18,7 +18,7 @@ constructor(
     private val memberService: MemberService
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
-    super.handle(call)
+
     // Get username requested from path /profile/@{preferred_username}
     val requestedUsername =
         call.parameters["preferred_username"]

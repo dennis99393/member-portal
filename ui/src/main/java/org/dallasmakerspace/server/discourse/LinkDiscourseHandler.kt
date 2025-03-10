@@ -21,7 +21,7 @@ constructor(
     private val discourseLinkProvider: DiscourseSSOProvider
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
-    super.handle(call)
+
     val username =
         userInfo["preferred_username"] as? String
             ?: throw AuthException("No username found in user info")

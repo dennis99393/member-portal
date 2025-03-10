@@ -16,26 +16,30 @@ fun Application.configureRouting() {
 
   routing {
     authenticate("DMS") {
-      get(RouteFactory.Paths.LOGIN.path) { RouteFactory.getHandler(call)?.handle(call) }
+      get(RouteFactory.Paths.LOGIN.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       get(RouteFactory.Paths.OIDC_CALLBACK.path) {
-        RouteFactory.getHandler(RouteFactory.Paths.OIDC_CALLBACK.path)?.handle(call)
+        RouteFactory.getHandler(RouteFactory.Paths.OIDC_CALLBACK.path)?.handleBase(call)
       }
     }
 
-    get(RouteFactory.Paths.INDEX.path) { RouteFactory.getHandler(call)?.handle(call) }
-    get(RouteFactory.Paths.PROFILE.path) { RouteFactory.getHandler(call)?.handle(call) }
-    get(RouteFactory.Paths.PROFILEME.path) { RouteFactory.getHandler(call)?.handle(call) }
-    get(RouteFactory.Paths.DISCOURSE_LINK.path) { RouteFactory.getHandler(call)?.handle(call) }
-    get(RouteFactory.Paths.DISCOURSE_UNLINK.path) { RouteFactory.getHandler(call)?.handle(call) }
-    get(RouteFactory.Paths.DISCOURSE_CALLBACK.path) {
-      RouteFactory.getHandler(RouteFactory.Paths.DISCOURSE_CALLBACK.path)?.handle(call)
+    get(RouteFactory.Paths.INDEX.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+    get(RouteFactory.Paths.PROFILE.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+    get(RouteFactory.Paths.PROFILEME.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+    get(RouteFactory.Paths.DISCOURSE_LINK.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+    get(RouteFactory.Paths.DISCOURSE_UNLINK.path) {
+      RouteFactory.getHandler(call)?.handleBase(call)
     }
-    get(RouteFactory.Paths.GROUPS.path) { RouteFactory.getHandler(call)?.handle(call) }
-    get(RouteFactory.Paths.SEARCH_PRELOAD.path) { RouteFactory.getHandler(call)?.handle(call) }
-    get(RouteFactory.Paths.REGISTER_VOTING.path) { RouteFactory.getHandler(call)?.handle(call) }
-    get(RouteFactory.Paths.UNREGISTER_VOTING.path) { RouteFactory.getHandler(call)?.handle(call) }
+    get(RouteFactory.Paths.DISCOURSE_CALLBACK.path) {
+      RouteFactory.getHandler(RouteFactory.Paths.DISCOURSE_CALLBACK.path)?.handleBase(call)
+    }
+    get(RouteFactory.Paths.GROUPS.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+    get(RouteFactory.Paths.SEARCH_PRELOAD.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+    get(RouteFactory.Paths.REGISTER_VOTING.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+    get(RouteFactory.Paths.UNREGISTER_VOTING.path) {
+      RouteFactory.getHandler(call)?.handleBase(call)
+    }
 
-    get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handle(call) }
+    get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handleBase(call) }
 
     // Block all bots from crawling the site
     get("robots.txt") {

@@ -26,7 +26,14 @@ abstract class AuthRouteHandler(
   protected var isBoard = false
   protected var isOfficer = false
 
-  override suspend fun handle(call: ApplicationCall) {
+  override suspend fun handleBase(call: ApplicationCall) {
+    checkSession(call)
+    if (userInfo.isEmpty().not()) {
+      handle(call)
+    }
+  }
+
+  suspend fun checkSession(call: ApplicationCall) {
     session = call.sessions.get<UserSession>()
     val accessToken = session?.accessToken
     if (accessToken != null) {
@@ -48,6 +55,7 @@ abstract class AuthRouteHandler(
         throw e
       }
     } else {
+      userInfo = emptyMap()
       redirectToLogin(call)
     }
   }

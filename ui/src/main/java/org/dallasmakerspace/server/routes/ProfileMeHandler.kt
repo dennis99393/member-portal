@@ -16,7 +16,7 @@ constructor(loggerFactory: LoggerFactory, userInfoProvider: UserInfoProvider) :
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun handle(call: ApplicationCall) {
-    super.handle(call)
+
     val username = userInfo["preferred_username"] as String
 
     log.debug("Username: {}", username)

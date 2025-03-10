@@ -22,7 +22,7 @@ constructor(
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun handle(call: ApplicationCall) {
-    super.handle(call)
+
     // Get username requested from path /profile/@{preferred_username}
     val requestedGroupSlug =
         call.parameters["group_slug"] ?: throw AuthException("No group slug found in url path")

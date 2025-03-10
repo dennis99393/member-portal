@@ -20,7 +20,7 @@ constructor(
 
   @Suppress("TooGenericExceptionCaught")
   override suspend fun handle(call: ApplicationCall) {
-    super.handle(call)
+
     log.debug("SearchPreloadHandler start")
 
     val cacheKey = "searchPreload"

@@ -14,10 +14,12 @@ constructor(loggerFactory: LoggerFactory, userInfoProvider: UserInfoProvider) :
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun handle(call: ApplicationCall) {
-    super.handle(call)
+
     log.info("Handle request: ${call.request}")
-    val jsonMap: MutableMap<String, Any> = userInfo.toMutableMap()
-    jsonMap["profile_url"] = "./profile/@${jsonMap["preferred_username"]}"
-    call.respond(ThymeleafContent("index", jsonMap))
+    if (userInfo.isEmpty().not()) {
+      val jsonMap: MutableMap<String, Any> = userInfo.toMutableMap()
+      jsonMap["profile_url"] = "./profile/@${jsonMap["preferred_username"]}"
+      call.respond(ThymeleafContent("index", jsonMap))
+    }
   }
 }
