@@ -9,7 +9,7 @@
           rel="stylesheet">
 </head>
 <body>
-<header class="top-nav" th:replace="fragments/header :: header"></header>
+<header class="top-nav" th:replace="~{fragments/header :: header}"></header>
 <div class="container">
     <h2>Error - Not Found (404)</h2>
     <p th:text="${message}"/>

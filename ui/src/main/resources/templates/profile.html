@@ -169,7 +169,7 @@
     </style>
 </head>
 <body>
-<header class="top-nav" th:replace="fragments/header :: header"></header>
+<header class="top-nav" th:replace="~{fragments/header :: header}"></header>
 <div class="container pb-8">
     <div class="row">
         <div class="col-md-4">
@@ -337,6 +337,9 @@
                                     accounts can vote in DMS elections.</span>
                                     <span th:if="${!is_voting_member and !was_active_past_90_days}">Your account was inactive on <span
                                             th:text="${last_inactive_date} + ' (' + ${days_since_last_inactive} + ').'"></span>
+                                        <br/>Please <a
+                                                href="https://accounts.dallasmakerspace.org/accounts/submitticket.php"
+                                                target="_blank">open a ticket</a> if you believe this is an error or to request an exception.
                                     </span>
                                 </p>
                             </div>
