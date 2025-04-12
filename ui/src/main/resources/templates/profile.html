@@ -335,7 +335,7 @@
                                     You are not eligible to register ❌.<br>
                                     <span th:if="${!is_voting_member and !is_primary_account}">Only primary DMS
                                     accounts can vote in DMS elections.</span>
-                                    <span th:if="${!is_voting_member and !was_active_past_90_days}">Your account was inactive on <span
+                                    <span th:if="${!is_voting_member and !was_active_past_90_days}">Your account was not active on <span
                                             th:text="${last_inactive_date} + ' (' + ${days_since_last_inactive} + ').'"></span>
                                         <br/>Please <a
                                                 href="https://accounts.dallasmakerspace.org/accounts/submitticket.php"
