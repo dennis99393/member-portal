@@ -314,10 +314,10 @@
 
             <!-- Voting Rights card -->
             <div class="dms-card shadow-sm mt-4"
-                 th:if="${(is_self and !is_voter_registration_test_mode_enabled) or (is_infra and is_voter_registration_test_mode_enabled)}">
+                 th:if="${(is_self and !is_voter_registration_test_mode_enabled) or (is_infra)}">
                 <div class="card-body pt-0 pb-4">
-                    <h4 class="card-title mt-3 mb-4 dms-card-title">Voting Rights</h4><!--<span th:if="${!is_self}"
-                                                                                            class="text-sm text-danger">[Member View for testing - Infra only]</span>-->
+                    <h4 class="card-title mt-3 mb-4 dms-card-title">Voting Rights</h4><span th:if="${!is_self}"
+                                                                                            class="text-sm text-danger">[Member View for testing - Infra only]</span>
 
                     <!-- Centered content with max 4 cols width -->
                     <div class="status-container">
