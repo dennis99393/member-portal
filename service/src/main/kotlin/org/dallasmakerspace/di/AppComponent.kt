@@ -8,6 +8,8 @@ import org.dallasmakerspace.core.DBMasterConnection
 import org.dallasmakerspace.core.DBMemberPortalConnection
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.cron.MemberRefreshCronJob
+import org.dallasmakerspace.dataviz.DataVizRouter
+import org.dallasmakerspace.dataviz.di.DataVizModule
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.MemberService
 
@@ -18,7 +20,8 @@ import org.dallasmakerspace.members.MemberService
             AppModule::class,
             ActiveDirectoryModule::class,
             DiscourseModule::class,
-            MembersModule::class])
+            MembersModule::class,
+            DataVizModule::class])
 interface AppComponent {
   fun inject(application: Application)
 
@@ -35,4 +38,6 @@ interface AppComponent {
   fun getLoggerFactory(): LoggerFactory
 
   fun getMemberRefreshCronJob(): MemberRefreshCronJob
+
+  fun getDataVizRouter(): DataVizRouter
 }
