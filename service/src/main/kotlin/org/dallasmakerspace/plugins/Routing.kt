@@ -16,6 +16,7 @@ import org.dallasmakerspace.auth.apiKey
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.cron.MemberRefreshCronJob
 import org.dallasmakerspace.cron.MemberRefreshCronJobParams
+import org.dallasmakerspace.dataviz.DataVizRouter
 import org.dallasmakerspace.di.DaggerAppComponent
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.MemberService
@@ -51,6 +52,7 @@ fun Application.configureRouting() {
     val memberRefreshCronJob: MemberRefreshCronJob by lazy {
       DaggerAppComponent.create().getMemberRefreshCronJob()
     }
+    val dataVizRouter: DataVizRouter by lazy { DaggerAppComponent.create().getDataVizRouter() }
 
     get("/") {
       call.respondText(
@@ -139,6 +141,12 @@ fun Application.configureRouting() {
       get<BadgeLookup> {
         val member = memberService.getMemberByBadgeNumber(it.badgeNumber)
         call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
+      }
+
+      get("/data-viz/*") {
+        val method = call.request.path().substringAfter("/data-viz/")
+        val respone = dataVizRouter.route(method)
+        call.respond(ApiResponse(Status.SUCCESS, "Backend API $method", respone))
       }
     }
   }
