@@ -21,6 +21,8 @@ object RouteFactory {
     return path
         .replace("@[a-zA-Z0-9_-]*".toRegex(), "@{preferred_username}")
         .replace("/groups/.*".toRegex(), "/groups/{group_slug}")
+        .replace("/reports/.*".toRegex(), "/reports/*/*")
+        .replace("/backend-api/.*".toRegex(), "/backend-api/{...}")
   }
 
   fun getHandler(path: String): IRouteHandler? {
@@ -43,6 +45,8 @@ object RouteFactory {
     SEARCH_PRELOAD("/search-preload"),
     REGISTER_VOTING("/profile/@{preferred_username}/register-voting"),
     UNREGISTER_VOTING("/profile/@{preferred_username}/unregister-voting"),
+    REPORT("/reports/*/*"),
+    BACKEND_API("/backend-api/{...}"),
   }
 }
 

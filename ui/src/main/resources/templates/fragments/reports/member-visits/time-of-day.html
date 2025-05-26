@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="report">
+    <dms-data-visualizer
+            dataUrl="/backend-api/data-viz/time-of-day"
+            renderAs="table"
+            title="Activity by Time of Day"
+            description="Average number of members visiting DMS for the past 90 days grouped by the time of day. This data is derived from badge swipes."
+    ></dms-data-visualizer>
+</div>
+</body>
+</html>

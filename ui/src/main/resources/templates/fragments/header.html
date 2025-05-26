@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 <nav class="navbar navbar-expand-lg custom-navbar" th:fragment="header">
     <div class="container">
@@ -10,6 +10,45 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarContent">
+            <!-- Reports -->
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item dropdown"
+                    th:if="${@org.dallasmakerspace.server.reports.ReportGraph@getRoot() != null}">
+                    <a class="nav-link dropdown-toggle" href="javascript:void(0)" role="button"
+                       data-bs-toggle="dropdown"
+                       data-bs-auto-close="outside" aria-expanded="false">Reports</a>
+                    <ul class="dropdown-menu">
+                        <th:block
+                                th:each="reportNode : ${@org.dallasmakerspace.server.reports.ReportGraph@getRoot().children}">
+                            <!-- Disabled item if no children - this is for WIP reports -->
+                            <li th:if="${reportNode.children == null || reportNode.children.empty}">
+                                <a class="dropdown-item disabled" th:href="'/reports/' + ${reportNode.urlSlug}"
+                                   th:text="${reportNode.name}"></a>
+                            </li>
+
+                            <!-- Dropdown if has children -->
+                            <li class="dropend" th:if="${reportNode.children != null && !reportNode.children.empty}">
+                                <a class="dropdown-item dropdown-toggle" href="javascript:void(0)"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside" aria-expanded="false" th:text="${reportNode.name}"></a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li th:each="childNode : ${reportNode.children}">
+                                        <a class="dropdown-item"
+                                           th:href="'/reports/' + ${reportNode.urlSlug} + '/' + ${childNode.urlSlug}"
+                                           th:text="${childNode.name}"></a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </th:block>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item"
+                               href="https://talk.dallasmakerspace.org/new-topic?category=Infrastructure&title=%5BMemberPortal%5D%20Report%20suggestion&body=Please%20provide%20details%20about%20the%20report%20you%20would%20like%20to%20see.%0A%0A**Report%20Name:**%0A**Description:**"
+                               target="_blank">Suggest a report</a></li>
+                    </ul>
+                </li>
+            </ul>
             <ul class="navbar-nav me-auto">
             </ul>
 

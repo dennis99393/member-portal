@@ -9,6 +9,7 @@ import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.models.DMSGroup
 import org.dallasmakerspace.server.models.DMSMember
 
+@Suppress("TooGenericExceptionCaught")
 @Singleton
 class MemberServiceClient
 @Inject
@@ -98,6 +99,21 @@ constructor(
     } catch (ex: Exception) {
       log.error("Failed to remove $username from group: $groupName", ex)
       throw MemberServiceException("Failed to remove $username from group: $groupName", ex)
+    }
+  }
+
+  /**
+   * Call the backend API with the given path, sessionId, and username. This is just a proxy for the
+   * backend API, it will just pass the parameters through and return the response as a String.
+   */
+  suspend fun callBackendApi(path: String, sessionId: String?): Map<String, Any> {
+    try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/$path", apiHeaders)
+      return result
+    } catch (ex: Exception) {
+      log.error("Failed to call backend API: $path ", ex)
+      throw MemberServiceException("Failed to call backend API: $path", ex)
     }
   }
 }

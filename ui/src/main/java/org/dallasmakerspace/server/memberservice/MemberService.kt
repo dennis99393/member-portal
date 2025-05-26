@@ -74,4 +74,7 @@ constructor(
         username,
         DMSGroup.getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
   }
+
+  suspend fun callBackendApi(path: String, sessionId: String?) =
+      memberServiceClient.callBackendApi(path, sessionId)
 }

@@ -7,6 +7,7 @@ import dagger.multibindings.StringKey
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
+import org.dallasmakerspace.server.routes.BackendApiHandler
 import org.dallasmakerspace.server.routes.GroupsHandler
 import org.dallasmakerspace.server.routes.IRouteHandler
 import org.dallasmakerspace.server.routes.IndexHandler
@@ -15,6 +16,7 @@ import org.dallasmakerspace.server.routes.OidcCallbackHandler
 import org.dallasmakerspace.server.routes.PingHandler
 import org.dallasmakerspace.server.routes.ProfileHandler
 import org.dallasmakerspace.server.routes.ProfileMeHandler
+import org.dallasmakerspace.server.routes.ReportHandler
 import org.dallasmakerspace.server.routes.SearchPreloadHandler
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 
@@ -80,4 +82,21 @@ class RoutesModule {
       userInfoProvider: UserInfoProvider,
       memberService: MemberService
   ): IRouteHandler = GroupsHandler(loggerFactory, memberService, userInfoProvider)
+
+  @IntoMap
+  @Provides
+  @StringKey("/reports/*/*")
+  fun providesReportHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+  ): IRouteHandler = ReportHandler(loggerFactory, userInfoProvider)
+
+  @IntoMap
+  @Provides
+  @StringKey("/backend-api/{...}")
+  fun providesBackendApiHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService
+  ): IRouteHandler = BackendApiHandler(loggerFactory, memberService, userInfoProvider)
 }

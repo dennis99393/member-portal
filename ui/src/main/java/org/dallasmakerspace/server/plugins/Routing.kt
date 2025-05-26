@@ -38,6 +38,8 @@ fun Application.configureRouting() {
     get(RouteFactory.Paths.UNREGISTER_VOTING.path) {
       RouteFactory.getHandler(call)?.handleBase(call)
     }
+    get(RouteFactory.Paths.REPORT.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+    get(RouteFactory.Paths.BACKEND_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handleBase(call) }
 
