@@ -11,27 +11,12 @@ import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable
 data class DataVizResponse(
-    val title: String?,
-    val description: String?,
     val data: List<DataItem>?,
     val dataFields: List<DataField>,
     val metadata: Map<String, String>? = null
 )
 
 @Serializable data class DataItem(val values: Map<String, JsonElement>)
-
-@Serializable
-sealed class SerializableValue {
-  @Serializable data class StringValue(val value: String) : SerializableValue()
-
-  @Serializable data class DoubleValue(val value: Double) : SerializableValue()
-
-  @Serializable data class IntValue(val value: Int) : SerializableValue()
-
-  @Serializable data class BooleanValue(val value: Boolean) : SerializableValue()
-
-  @Serializable object NullValue : SerializableValue()
-}
 
 @Serializable
 data class DataField(
