@@ -6,6 +6,7 @@ import dagger.multibindings.ElementsIntoSet
 import org.dallasmakerspace.dataviz.DataVizReport
 import org.dallasmakerspace.dataviz.reports.TimeOfDayReport
 import org.dallasmakerspace.dataviz.reports.VisitorsByDayReport
+import org.dallasmakerspace.dataviz.reports.calendar.CalTrendsEvents
 
 @Module
 class DataVizModule {
@@ -13,8 +14,9 @@ class DataVizModule {
   @ElementsIntoSet
   fun provideReports(
       visitorsByDayReport: VisitorsByDayReport,
-      timeOfDayReport: TimeOfDayReport
+      timeOfDayReport: TimeOfDayReport,
+      calTrendsEvents: CalTrendsEvents,
   ): Set<DataVizReport> {
-    return setOf(visitorsByDayReport, timeOfDayReport)
+    return setOf(visitorsByDayReport, timeOfDayReport, calTrendsEvents)
   }
 }

@@ -1,5 +1,7 @@
 package org.dallasmakerspace.dataviz.reports
 
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
@@ -12,10 +14,12 @@ import org.dallasmakerspace.models.DataVizResponse
 import org.dallasmakerspace.models.toJsonElement
 import org.dallasmakerspace.models.toJsonElementForDate
 
+private const val MILLIS_IN_SECOND = 1000f
+
 abstract class SqlReport(private val genericRepository: GenericRepository) : DataVizReport() {
 
   // Helper function to infer DataType from a value
-  private fun inferDataType(value: Any?): DataType {
+  protected fun inferDataType(value: Any?): DataType {
     return when (value) {
       is String -> DataType.STRING
       is Number -> DataType.NUMBER // Covers Int, Long, Double, Float, BigDecimal
@@ -29,16 +33,29 @@ abstract class SqlReport(private val genericRepository: GenericRepository) : Dat
   abstract fun getQuery(): String
 
   override suspend fun getData(): DataVizResponse {
+    val startTime = System.currentTimeMillis()
     val dbData = genericRepository.getReportData(getQuery().trimIndent())
+    val endTime = System.currentTimeMillis()
+    val timeTaken = endTime - startTime
+    val timeTakenInSec = String.format(Locale.US, "%.3f", timeTaken / MILLIS_IN_SECOND)
 
     val dataFields: List<DataField> = getDataFields(dbData)
 
     val dataItems: List<DataItem>? = getDataItems(dbData)
 
-    return DataVizResponse(data = dataItems, dataFields = dataFields)
+    val metadata: Map<String, String> =
+        mapOf(
+            "Generated at" to
+                DateTimeFormatter.ISO_DATE_TIME.format(
+                    Instant.now().atZone(java.time.ZoneId.of("America/Chicago"))),
+            "Time taken" to "$timeTakenInSec sec",
+            "SQL Query" to getQuery().trimIndent(),
+        )
+
+    return DataVizResponse(data = dataItems, dataFields = dataFields, metadata = metadata)
   }
 
-  private fun getDataItems(dbData: GenericRepository.QueryResult?) =
+  protected open fun getDataItems(dbData: GenericRepository.QueryResult?) =
       dbData?.data?.map { row ->
         val valuesMap =
             row.entries.associate { entry ->
@@ -62,7 +79,7 @@ abstract class SqlReport(private val genericRepository: GenericRepository) : Dat
         DataItem(values = valuesMap)
       }
 
-  private fun getDataFields(dbData: GenericRepository.QueryResult?) =
+  protected open fun getDataFields(dbData: GenericRepository.QueryResult?) =
       dbData?.data?.firstOrNull()?.let { firstRow ->
         firstRow.keys.map { columnName ->
           DataField(
