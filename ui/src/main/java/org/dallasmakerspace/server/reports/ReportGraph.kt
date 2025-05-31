@@ -13,6 +13,14 @@ object ReportGraph {
                     name = "Calendar",
                     description = "Calendar reports",
                     urlSlug = "calendar",
+                    children =
+                        listOf(
+                            ReportNode(
+                                name = "Event Trends",
+                                description = "Calendar trends",
+                                urlSlug = "event-trends",
+                            ),
+                        ),
                 ),
                 ReportNode(
                     name = "Member Visits",

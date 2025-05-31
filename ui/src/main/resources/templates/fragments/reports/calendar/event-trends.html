@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="report">
+    <dms-data-visualizer
+            dataUrl="/backend-api/data-viz/trends-events"
+            renderAs="line"
+            title="Events Organized by Week"
+            description="Number of events organized every week at DMS for past couple of years. This data can show long term trends as well as seasonal patterns."
+    ></dms-data-visualizer>
+</div>
+</body>
+</html>
