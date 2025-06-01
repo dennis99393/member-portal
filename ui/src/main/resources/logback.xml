@@ -86,7 +86,7 @@
 
     <root level="${ENV_LOG_LEVEL:-debug}">
         <appender-ref ref="COLOR"/>
-        <!--<appender-ref ref="ELASTIC"/>-->
+        <appender-ref ref="ELASTIC"/>
     </root>
     <logger name="io.netty" level="INFO"/>
     <logger name="io.ktor" level="INFO"/>
