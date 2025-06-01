@@ -10,6 +10,7 @@ import io.ktor.server.resources.*
 import io.ktor.server.resources.patch
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.apiKey
@@ -145,7 +146,8 @@ fun Application.configureRouting() {
 
       get("/data-viz/*") {
         val method = call.request.path().substringAfter("/data-viz/")
-        val respone = dataVizRouter.route(method)
+        val params = call.request.queryParameters.toMap()
+        val respone = dataVizRouter.route(method, params)
         call.respond(ApiResponse(Status.SUCCESS, "Backend API $method", respone))
       }
     }

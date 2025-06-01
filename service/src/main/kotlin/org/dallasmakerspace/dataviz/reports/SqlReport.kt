@@ -32,7 +32,7 @@ abstract class SqlReport(private val genericRepository: GenericRepository) : Dat
 
   abstract fun getQuery(): String
 
-  override suspend fun getData(): DataVizResponse {
+  override suspend fun getData(params: Map<String, List<String>>): DataVizResponse {
     val startTime = System.currentTimeMillis()
     val dbData = genericRepository.getReportData(getQuery().trimIndent())
     val endTime = System.currentTimeMillis()
