@@ -28,7 +28,7 @@ jobs:
           java-version: '21'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Run Build
         run: ./gradlew build
@@ -63,11 +63,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-#      - uses: actions/delete-package-versions@v5
-#        with:
-#          package-name: dallas-makerspace/${{ github.event.repository.name }}:latest
-#          package-type: 'container'
-#          min-versions-to-keep: 5
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: member-profile-service
+          package-type: 'container'
+          min-versions-to-keep: 5
 
   deploy:
     needs: build-and-push-image
