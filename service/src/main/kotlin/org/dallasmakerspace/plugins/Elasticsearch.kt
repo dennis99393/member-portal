@@ -16,7 +16,7 @@ import org.slf4j.MDC
 
 fun Application.configureElasticsearch() {
   intercept(ApplicationCallPipeline.Monitoring) {
-    // logToElasticsearch(this.call, ElasticsearchClientManager.client)
+    logToElasticsearch(this.call, ElasticsearchClientManager.client)
   }
 }
 
