@@ -7,6 +7,7 @@ import org.dallasmakerspace.dataviz.DataVizReport
 import org.dallasmakerspace.dataviz.reports.TimeOfDayReport
 import org.dallasmakerspace.dataviz.reports.VisitorsByDayReport
 import org.dallasmakerspace.dataviz.reports.calendar.CalTrendsEvents
+import org.dallasmakerspace.dataviz.reports.calendar.FirstEvents
 
 @Module
 class DataVizModule {
@@ -16,7 +17,8 @@ class DataVizModule {
       visitorsByDayReport: VisitorsByDayReport,
       timeOfDayReport: TimeOfDayReport,
       calTrendsEvents: CalTrendsEvents,
+      firstEvents: FirstEvents,
   ): Set<DataVizReport> {
-    return setOf(visitorsByDayReport, timeOfDayReport, calTrendsEvents)
+    return setOf(visitorsByDayReport, timeOfDayReport, calTrendsEvents, firstEvents)
   }
 }

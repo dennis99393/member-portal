@@ -3,6 +3,7 @@ package org.dallasmakerspace.db.master
 import java.sql.ResultSet
 import javax.inject.Inject
 import kotlinx.serialization.Serializable
+import org.jetbrains.exposed.sql.statements.StatementType
 
 class GenericRepository @Inject constructor() {
 
@@ -22,7 +23,7 @@ class GenericRepository @Inject constructor() {
   suspend fun getReportData(query: String): QueryResult? {
     return suspendTransaction {
       // Execute the query and get the result
-      this.exec(query) { resultSet: ResultSet ->
+      this.exec(query, explicitStatementType = StatementType.SELECT) { resultSet: ResultSet ->
         val columns = mutableListOf<ColumnInfo>()
         val data = mutableListOf<Map<String, Any?>>()
 
