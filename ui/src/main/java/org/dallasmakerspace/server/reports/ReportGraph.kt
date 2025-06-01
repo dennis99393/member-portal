@@ -20,6 +20,11 @@ object ReportGraph {
                                 description = "Calendar trends",
                                 urlSlug = "event-trends",
                             ),
+                            ReportNode(
+                                name = "First Events",
+                                description = "First event for new members",
+                                urlSlug = "first-events",
+                            ),
                         ),
                 ),
                 ReportNode(
