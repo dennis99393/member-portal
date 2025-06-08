@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="report">
+    <dms-data-visualizer
+            dataUrl="/backend-api/data-viz/active-members"
+            renderAs="line"
+            title="Active members by month"
+            description="Number of active members at DMS for past couple of years. This data is sourced from the billing system (WHMCS) and includes both primary and addon accounts."
+    ></dms-data-visualizer>
+</div>
+</body>
+</html>

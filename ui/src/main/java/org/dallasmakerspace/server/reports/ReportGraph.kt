@@ -10,6 +10,19 @@ object ReportGraph {
         children =
             listOf(
                 ReportNode(
+                    name = "Membership",
+                    description = "Membership reports",
+                    urlSlug = "membership",
+                    children =
+                        listOf(
+                            ReportNode(
+                                name = "Active members",
+                                description = "Active member trends",
+                                urlSlug = "active-members",
+                            ),
+                        ),
+                ),
+                ReportNode(
                     name = "Calendar",
                     description = "Calendar reports",
                     urlSlug = "calendar",
