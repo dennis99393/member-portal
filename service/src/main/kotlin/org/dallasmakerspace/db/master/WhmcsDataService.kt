@@ -85,10 +85,16 @@ constructor(
     }
 
     return AccountStatus(
-        wasActiveInRange = !hasAnyInactiveDate, lastInactiveDate = lastInactiveDate)
+        wasActiveInRange = !hasAnyInactiveDate,
+        lastInactiveDate = lastInactiveDate,
+        regDate = userProducts.firstOrNull()?.regDate)
   }
 }
 
 // Data structure to hold whether the account was active in the given range and the last inactive
 // date
-data class AccountStatus(val wasActiveInRange: Boolean, val lastInactiveDate: LocalDate?)
+data class AccountStatus(
+    val wasActiveInRange: Boolean,
+    val lastInactiveDate: LocalDate?,
+    val regDate: LocalDate?
+)

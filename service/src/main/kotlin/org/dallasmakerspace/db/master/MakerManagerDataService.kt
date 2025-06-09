@@ -48,6 +48,7 @@ data class AccountInfo(
     var lastInactiveDate: LocalDate? = null,
     var addonAccounts: List<Account> = emptyList(),
     var primaryAccount: Account? = null,
+    var regDate: LocalDate? = null,
 )
 
 // Addon account info

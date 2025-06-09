@@ -5,6 +5,8 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.google.i18n.phonenumbers.Phonenumber
 import javax.inject.Inject
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toKotlinLocalDate
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.core.LoggerFactory
@@ -69,6 +71,7 @@ constructor(
         if (accountStatus != null) {
           accountInfo.wasActivePast90Days = accountStatus.wasActiveInRange
           accountInfo.lastInactiveDate = accountStatus.lastInactiveDate?.toKotlinLocalDate()
+          accountInfo.regDate = accountStatus.regDate?.toKotlinLocalDate()
         }
       }
     }
@@ -83,7 +86,7 @@ constructor(
         getNormalizedPhoneNumber(adMember.telephoneNumber, adMember.sAMAccountName)
     dbMember.badgeNumber = adMember.employeeID
     dbMember.enabled = adMember.enabled
-    dbMember.memberSince = calculateMemberSince(adMember.whenCreated)
+    dbMember.memberSince = calculateMemberSince(accountInfo?.regDate)
     dbMember.groups =
         adMember.groups.map { group ->
           DMSGroup(
@@ -146,6 +149,8 @@ constructor(
   }
 
   /** Calculates the memberSince date from the whenCreated string. */
+  @Deprecated(
+      "Use org.dallasmakerspace.members.MemberService.calculateMemberSince(java.time.LocalDate) instead")
   @Suppress("MagicNumber")
   private fun calculateMemberSince(whenCreated: String?): Instant? {
     if (whenCreated == null) {
@@ -168,6 +173,15 @@ constructor(
                 whenCreated.substring(12, 14) +
                 "Z")
     return instant
+  }
+
+  /** Calculates the memberSince date from a LocalDate. */
+  private fun calculateMemberSince(localDate: LocalDate?): Instant? {
+    if (localDate == null) {
+      return null
+    }
+    // Convert LocalDate to Instant at the start of the day in UTC
+    return localDate.atStartOfDayIn(kotlinx.datetime.TimeZone.UTC)
   }
 
   suspend fun updateMember(username: String, memberFromApi: DMSMember) {
