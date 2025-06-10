@@ -13,7 +13,7 @@ class VisitorsByDayReport @Inject constructor(genericRepository: GenericReposito
       """
           SELECT
               DATE(CONVERT_TZ(e.created, 'UTC', 'America/Chicago')) AS Date,
-            COUNT(DISTINCT e.userId) AS 'Unique Users'
+            COUNT(DISTINCT e.userId) AS 'Unique Members'
           FROM
             `AccessControl`.events e
           WHERE

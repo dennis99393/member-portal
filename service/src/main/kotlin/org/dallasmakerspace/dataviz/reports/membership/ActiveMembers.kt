@@ -58,9 +58,7 @@ WITH
       COUNT(DISTINCT h.userid) AS cnt
     FROM month_list AS ml
     JOIN `dms-whmcs`.`tblhosting` AS h
-      -- ignore packageids representing donations and gift cards
-      ON h.packageid NOT IN (14,15,16,17,18,25,28,29)
-     AND h.regdate        <= ml.month_end
+     ON h.regdate        <= ml.month_end
      AND (h.termination_date = '0000-00-00'
           OR h.termination_date > ml.month_end)
     GROUP BY ml.yr, ml.mn
