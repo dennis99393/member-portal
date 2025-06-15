@@ -8,8 +8,9 @@
 <div th:fragment="report">
     <dms-data-visualizer
             dataUrl="/backend-api/data-viz/time-of-day"
-            renderAs="table"
+            renderAs="line"
             title="Activity by Time of Day"
+            alwaysShowRawData="true"
             description="Average number of members visiting DMS for the past 90 days grouped by the time of day. This data is derived from badge swipes."
     ></dms-data-visualizer>
 </div>

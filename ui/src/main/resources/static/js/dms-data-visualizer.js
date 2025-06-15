@@ -6,6 +6,7 @@ class DmsDataVisualizer extends LitElement {
         renderAs: { type: String },
         title: { type: String },
         description: { type: String },
+        alwaysShowRawData: { type: Boolean, state: false},
         _chartData: { type: Object },
         _errorMessage: { type: String },
         _loading: { type: Boolean },
@@ -308,11 +309,13 @@ class DmsDataVisualizer extends LitElement {
             <canvas id="${canvasId}"></canvas>
           </div>
           <div class="buttons-container">
-            <button @click="${toggleTable}">
-              ${this._showTable ? 'Hide' : 'Show'} Raw Data
-            </button>
+            ${!this.alwaysShowRawData ? html`
+              <button @click="${toggleTable}">
+                ${this._showTable ? 'Hide' : 'Show'} Raw Data
+              </button>
+            ` : ''}
           </div>
-          ${this._showTable ? this._renderTable() : ''}
+          ${this.alwaysShowRawData || this._showTable ? this._renderTable() : ''}
         `;
 
         // Use a promise to render the chart after the canvas is added to the DOM
