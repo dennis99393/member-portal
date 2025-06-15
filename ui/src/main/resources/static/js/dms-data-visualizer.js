@@ -14,6 +14,7 @@ import { DmsTableBase } from './dms-table-base.js';
  * @prop {String} description - Optional description text
  * @prop {Boolean} alwaysShowRawData - For charts, whether to always show the data table
  * @prop {Number} yAxisMin - Optional minimum value for the y-axis (for line charts)
+ * @prop {Boolean} filterable - Whether to enable filtering for tables
  */
 class DmsDataVisualizer extends LitElement {
     static properties = {
@@ -23,6 +24,7 @@ class DmsDataVisualizer extends LitElement {
         description: { type: String },
         alwaysShowRawData: { type: Boolean, state: false},
         yAxisMin: { type: Number },
+        filterable: { type: Boolean },
         _chartData: { type: Object },
         _errorMessage: { type: String },
         _loading: { type: Boolean },
@@ -78,6 +80,7 @@ class DmsDataVisualizer extends LitElement {
         this.title = '';
         this.description = '';
         this.yAxisMin = null;
+        this.filterable = false;
         this._chartData = null;
         this._errorMessage = '';
         this._loading = false;
@@ -143,7 +146,8 @@ class DmsDataVisualizer extends LitElement {
         if (this.renderAs === 'table') {
             contentHtml = html`<dms-table-visualizer
                 .data=${this._chartData}
-                .errorMessage=${this._errorMessage}>
+                .errorMessage=${this._errorMessage}
+                .filterable=${this.filterable}>
             </dms-table-visualizer>`;
         } else if (this.renderAs === 'line') {
             const toggleTable = () => {
@@ -170,7 +174,8 @@ class DmsDataVisualizer extends LitElement {
                 ${this.alwaysShowRawData || this._showTable ? html`
                     <dms-table-visualizer
                         .data=${this._chartData}
-                        .errorMessage=${this._errorMessage}>
+                        .errorMessage=${this._errorMessage}
+                        .filterable=${this.filterable}>
                     </dms-table-visualizer>
                 ` : ''}
             `;
@@ -208,7 +213,8 @@ class DmsDataVisualizer extends LitElement {
         return html`
             <dms-table-base
                 .rows=${metadataEntries}
-                .isMetadata=${true}>
+                .isMetadata=${true}
+                .filterable=${this.filterable}>
             </dms-table-base>
         `;
     }

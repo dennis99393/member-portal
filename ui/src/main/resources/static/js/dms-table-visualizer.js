@@ -7,11 +7,13 @@ import { DmsTableBase } from './dms-table-base.js';
  * @element dms-table-visualizer
  * @prop {Object} data - Data object containing dataFields (column definitions) and data (rows)
  * @prop {String} errorMessage - Optional error message to display
+ * @prop {Boolean} filterable - Whether to enable filtering for the table
  */
 class DmsTableVisualizer extends LitElement {
     static properties = {
         data: { type: Object },
         errorMessage: { type: String },
+        filterable: { type: Boolean },
     };
 
     static styles = css`
@@ -28,6 +30,7 @@ class DmsTableVisualizer extends LitElement {
         super();
         this.data = null;
         this.errorMessage = '';
+        this.filterable = false;
     }
 
     render() {
@@ -59,7 +62,8 @@ class DmsTableVisualizer extends LitElement {
         return html`
             <dms-table-base
                 .headers=${headers}
-                .rows=${rows}>
+                .rows=${rows}
+                .filterable=${this.filterable}>
             </dms-table-base>
         `;
     }
