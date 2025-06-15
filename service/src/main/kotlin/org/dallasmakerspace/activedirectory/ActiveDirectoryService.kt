@@ -4,7 +4,7 @@ import dagger.Reusable
 import javax.inject.Inject
 
 private const val GROUP_NAME_PREFIX_LENGTH = 3
-private const val MAX_GROUP_MEMBERS = 20
+private const val MAX_GROUP_MEMBERS = 10000
 
 @Reusable
 class ActiveDirectoryService
@@ -114,13 +114,19 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
   /** {@inheritDoc} */
   override fun getGroup(groupname: String): ADGroup {
     val adResult = activeDirectoryClient.getGroup(groupname)
+
+    // Extract administrators from the result if available
+    val administrators =
+        (adResult["administrators"] as? Array<*>)?.map { it.toString() } ?: emptyList()
+
     return ADGroup(
         cn = adResult["cn"].toString(),
         description = adResult["description"]?.toString(),
         distinguishedName = adResult["distinguishedName"].toString(),
         objectGuid = adResult["objectGUID"]?.toString(), // Convert bytes to GUID String
         members = parseMembers(adResult),
-        membersListIncomplete = (adResult["member"] as Array<*>).size > MAX_GROUP_MEMBERS)
+        membersListIncomplete = (adResult["member"] as Array<*>).size > MAX_GROUP_MEMBERS,
+        administrators = administrators)
   }
 
   /** {@inheritDoc} */
@@ -161,13 +167,17 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
    *   e.g. - "CN=John Doe1337,OU=Members,DC=dms,DC=local".
    *     @return The list of ADUser objects. Empty list if the input list is null.
    */
-  private fun parseMembers(attributeMap: Map<String, Any?>): List<ADUser> {
+  private fun parseMembers(attributeMap: Map<String, Any?>?): List<ADUser> {
+    if (attributeMap.isNullOrEmpty()) return emptyList()
     // Get the list of members from the attribute map "member" or "member;range=0-1499" attribute.
     val allMembers = (attributeMap["member"] as? Array<*>) ?: emptyList<String>()
     // Take first [MAX_GROUP_MEMBERS] members from the list.
     val members = (allMembers as Array<*>).take(MAX_GROUP_MEMBERS)
     // Fetch the ADUser object for each member.
-    return getMembersByDnList(members.map { it.toString() })
+    return members
+        .map { it.toString() }
+        .chunked(100)
+        .flatMap { subChunk -> getMembersByDnList(subChunk) }
   }
 
   /**

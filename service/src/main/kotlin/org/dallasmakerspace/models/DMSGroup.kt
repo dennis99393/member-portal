@@ -10,4 +10,5 @@ data class DMSGroup(
     val objectGuid: String?,
     val membersListIncomplete: Boolean = false,
     val members: List<DMSMember>?,
+    val administrators: List<String>? = null,
 )

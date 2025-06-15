@@ -275,7 +275,8 @@ constructor(
                             members = null)
                       })
             },
-        membersListIncomplete = adGroup.membersListIncomplete)
+        membersListIncomplete = adGroup.membersListIncomplete,
+        administrators = adGroup.administrators)
   }
 
   suspend fun addMembersToGroup(memberUsernames: List<String>, groupslug: String) {

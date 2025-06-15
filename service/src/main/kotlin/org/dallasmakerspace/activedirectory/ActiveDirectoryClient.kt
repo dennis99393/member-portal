@@ -9,8 +9,6 @@ import com.unboundid.ldap.sdk.SearchRequest
 import com.unboundid.ldap.sdk.SearchRequest.ALL_USER_ATTRIBUTES
 import com.unboundid.ldap.sdk.SearchScope
 import com.unboundid.ldap.sdk.SimpleBindRequest
-import com.unboundid.ldap.sdk.controls.ServerSideSortRequestControl
-import com.unboundid.ldap.sdk.controls.SortKey
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -97,7 +95,9 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
             "distinguishedName",
             "description",
             "member",
-            "objectGUID")
+            "objectGUID",
+            "managedBy",
+            "nTSecurityDescriptor")
 
     val groupEntry =
         searchResult.searchEntries.firstOrNull()
@@ -113,40 +113,114 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
         (group["distinguishedName"] as String?)?.replace("(", "\\28")?.replace(")", "\\29")
             ?: throw ADException("Group DN not found")
 
-    // Sort the members by 'whenCreated' attribute so we get the most recent members first
-    val sortKey = SortKey("whenCreated", true)
-    val sortRequestControl = ServerSideSortRequestControl(sortKey)
+    // Get all members with paging to handle large groups
+    val allMembers = getAllGroupMembers(groupDN)
 
-    // Search for enabled users who are members of the group
-    val userFilter =
-        Filter.create(
-            "(&(objectCategory=person)(objectClass=user)(memberOf=$groupDN)" +
-                "(!(userAccountControl:1.2.840.113556.1.4.803:=2)))")
+    // Get group administrators - entities that can modify the group
+    val groupAdmins = getGroupAdministrators(groupEntry)
 
-    val searchRequest =
-        SearchRequest(
-            "DC=dms,DC=local",
-            SearchScope.SUB,
-            userFilter,
-            "distinguishedName",
-        )
-
-    // Add the sort control to the search request
-    searchRequest.addControl(sortRequestControl)
-
-    // Perform the search with the server-side sort control
-    val userSearchResult = ldapPool.search(searchRequest)
-
-    val enabledMembers = userSearchResult.searchEntries.map { it.dn }
-
-    // Convert the list to an array to make it Serializable
-    val enabledMembersArray = enabledMembers.toTypedArray()
-
-    // Update the 'member' attribute to include only enabled members
+    // Update the group information
     val updatedGroup = group.toMutableMap()
-    updatedGroup["member"] = enabledMembersArray
+    updatedGroup["member"] = allMembers.toTypedArray()
+    updatedGroup["administrators"] = groupAdmins.toTypedArray()
 
     return updatedGroup
+  }
+
+  /**
+   * Retrieves all members of a group, handling pagination for large groups.
+   *
+   * @param groupDN The distinguished name of the group
+   * @return List of distinguished names of all members
+   */
+  private fun getAllGroupMembers(groupDN: String): List<String> {
+    val allMembers = mutableListOf<String>()
+
+    // Query the group directly using its DN to get all members
+    // The correct way to retrieve large groups is to query the group's member attribute with range
+    // retrieval
+    val groupFilter = Filter.createEqualityFilter("distinguishedName", groupDN)
+
+    // Use a range to retrieve all members in batches
+    var rangeStart = 0
+    val rangeSize = 1000
+    var hasMoreMembers = true
+
+    while (hasMoreMembers) {
+      val rangeEnd = if (rangeStart == 0) rangeSize - 1 else "*"
+      val attributeName = "member;range=$rangeStart-$rangeEnd"
+
+      val searchRequest =
+          SearchRequest("DC=dms,DC=local", SearchScope.SUB, groupFilter, attributeName)
+
+      val searchResult = ldapPool.search(searchRequest)
+
+      if (searchResult.searchEntries.isEmpty()) {
+        break
+      }
+
+      val entry = searchResult.searchEntries.first()
+      val rangeAttribute = entry.attributes.find { it.name.startsWith("member;range=") }
+
+      if (rangeAttribute != null) {
+        val rangeValues = rangeAttribute.values
+        if (rangeValues != null && rangeValues.isNotEmpty()) {
+          allMembers.addAll(rangeValues)
+        }
+
+        // Check if we need to continue retrieving more members
+        if (rangeAttribute.name.endsWith("-*")) {
+          hasMoreMembers = false
+        } else {
+          rangeStart += rangeSize
+        }
+      } else {
+        // If no range attribute is found but there's a standard member attribute, use that
+        val memberAttribute = entry.getAttribute("member")
+        if (memberAttribute != null && memberAttribute.values != null) {
+          allMembers.addAll(memberAttribute.values)
+        }
+        hasMoreMembers = false
+      }
+    }
+
+    return allMembers
+  }
+
+  /**
+   * Retrieves the list of users/groups that have permissions to modify the group.
+   *
+   * @param groupEntry The LDAP entry for the group
+   * @return List of distinguished names of administrators
+   */
+  private fun getGroupAdministrators(groupEntry: com.unboundid.ldap.sdk.Entry): List<String> {
+    val administrators = mutableListOf<String>()
+
+    // First check managedBy attribute
+    val managedBy = groupEntry.getAttributeValue("managedBy")
+    if (!managedBy.isNullOrEmpty()) {
+      administrators.add(managedBy)
+    }
+
+    // Check nTSecurityDescriptor to find who has permissions to modify the group
+    // This is a simplified approach since full security descriptor parsing is complex
+
+    // Add domain admins (they always have permission)
+    val domainAdminsFilter =
+        Filter.createANDFilter(
+            listOf(
+                Filter.createEqualityFilter("name", "Domain Admins"),
+                Filter.createEqualityFilter("objectCategory", "group")))
+
+    val domainAdminsResult =
+        ldapPool.search("DC=dms,DC=local", SearchScope.SUB, domainAdminsFilter, "distinguishedName")
+
+    val domainAdminsDN = domainAdminsResult.searchEntries.firstOrNull()?.dn?.toString()
+    if (!domainAdminsDN.isNullOrEmpty()) {
+      administrators.add(domainAdminsDN)
+    }
+
+    return administrators
   }
 
   /** {@inheritDoc} */

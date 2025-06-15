@@ -6,5 +6,6 @@ data class ADGroup(
     val distinguishedName: String,
     val objectGuid: String?,
     val members: List<ADUser>,
-    val membersListIncomplete: Boolean
+    val membersListIncomplete: Boolean,
+    val administrators: List<String> = emptyList()
 )
