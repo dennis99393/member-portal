@@ -13,6 +13,7 @@ import { DmsTableBase } from './dms-table-base.js';
  * @prop {String} title - Optional title for the visualization
  * @prop {String} description - Optional description text
  * @prop {Boolean} alwaysShowRawData - For charts, whether to always show the data table
+ * @prop {Number} yAxisMin - Optional minimum value for the y-axis (for line charts)
  */
 class DmsDataVisualizer extends LitElement {
     static properties = {
@@ -21,6 +22,7 @@ class DmsDataVisualizer extends LitElement {
         title: { type: String },
         description: { type: String },
         alwaysShowRawData: { type: Boolean, state: false},
+        yAxisMin: { type: Number },
         _chartData: { type: Object },
         _errorMessage: { type: String },
         _loading: { type: Boolean },
@@ -75,6 +77,7 @@ class DmsDataVisualizer extends LitElement {
         this.renderAs = 'table';
         this.title = '';
         this.description = '';
+        this.yAxisMin = null;
         this._chartData = null;
         this._errorMessage = '';
         this._loading = false;
@@ -152,7 +155,8 @@ class DmsDataVisualizer extends LitElement {
                 <dms-line-chart-visualizer
                     .data=${this._chartData}
                     .title=${this.title}
-                    .errorMessage=${this._errorMessage}>
+                    .errorMessage=${this._errorMessage}
+                    .yAxisMin=${this.yAxisMin}>
                 </dms-line-chart-visualizer>
 
                 <div class="buttons-container">

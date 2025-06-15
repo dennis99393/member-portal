@@ -8,12 +8,14 @@ import { LitElement, html, css } from 'https://cdn.jsdelivr.net/npm/lit@3.3.0/+e
  * @prop {Object} data - Data object with dataFields (column definitions) and data (rows)
  * @prop {String} title - Optional chart title
  * @prop {String} errorMessage - Optional error message to display
+ * @prop {Number} yAxisMin - Optional minimum value for the y-axis
  */
 class DmsLineChartVisualizer extends LitElement {
     static properties = {
         data: { type: Object },
         title: { type: String },
         errorMessage: { type: String },
+        yAxisMin: { type: Number },
     };
 
     static styles = css`
@@ -37,6 +39,7 @@ class DmsLineChartVisualizer extends LitElement {
         this.data = null;
         this.title = '';
         this.errorMessage = '';
+        this.yAxisMin = null;
     }
 
     render() {
@@ -130,6 +133,7 @@ class DmsLineChartVisualizer extends LitElement {
                 scales: {
                     y: {
                         beginAtZero: true,
+                        min: this.yAxisMin !== null ? this.yAxisMin : undefined,
                     },
                 },
             },
