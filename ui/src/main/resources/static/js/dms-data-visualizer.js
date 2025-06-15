@@ -15,6 +15,9 @@ import { DmsTableBase } from './dms-table-base.js';
  * @prop {Boolean} alwaysShowRawData - For charts, whether to always show the data table
  * @prop {Number} yAxisMin - Optional minimum value for the y-axis (for line charts)
  * @prop {Boolean} filterable - Whether to enable filtering for tables
+ * @prop {Boolean} paginated - Whether to enable pagination for tables
+ * @prop {Number} pageSize - Number of rows per page (default: 20)
+ * @prop {Number} paginateAfter - Enable pagination automatically when rows exceed this number (default: 20)
  */
 class DmsDataVisualizer extends LitElement {
     static properties = {
@@ -25,6 +28,9 @@ class DmsDataVisualizer extends LitElement {
         alwaysShowRawData: { type: Boolean, state: false},
         yAxisMin: { type: Number },
         filterable: { type: Boolean },
+        paginated: { type: Boolean },
+        pageSize: { type: Number },
+        paginateAfter: { type: Number },
         _chartData: { type: Object },
         _errorMessage: { type: String },
         _loading: { type: Boolean },
@@ -81,6 +87,9 @@ class DmsDataVisualizer extends LitElement {
         this.description = '';
         this.yAxisMin = null;
         this.filterable = false;
+        this.paginated = false;
+        this.pageSize = 20;
+        this.paginateAfter = 20;
         this._chartData = null;
         this._errorMessage = '';
         this._loading = false;
@@ -147,7 +156,10 @@ class DmsDataVisualizer extends LitElement {
             contentHtml = html`<dms-table-visualizer
                 .data=${this._chartData}
                 .errorMessage=${this._errorMessage}
-                .filterable=${this.filterable}>
+                .filterable=${this.filterable}
+                .paginated=${this.paginated}
+                .pageSize=${this.pageSize}
+                .paginateAfter=${this.paginateAfter}>
             </dms-table-visualizer>`;
         } else if (this.renderAs === 'line') {
             const toggleTable = () => {
@@ -175,7 +187,10 @@ class DmsDataVisualizer extends LitElement {
                     <dms-table-visualizer
                         .data=${this._chartData}
                         .errorMessage=${this._errorMessage}
-                        .filterable=${this.filterable}>
+                        .filterable=${this.filterable}
+                        .paginated=${this.paginated}
+                        .pageSize=${this.pageSize}
+                        .paginateAfter=${this.paginateAfter}>
                     </dms-table-visualizer>
                 ` : ''}
             `;
@@ -214,7 +229,10 @@ class DmsDataVisualizer extends LitElement {
             <dms-table-base
                 .rows=${metadataEntries}
                 .isMetadata=${true}
-                .filterable=${this.filterable}>
+                .filterable=${this.filterable}
+                .paginated=${this.paginated}
+                .pageSize=${this.pageSize}
+                .paginateAfter=${this.paginateAfter}>
             </dms-table-base>
         `;
     }

@@ -8,12 +8,18 @@ import { DmsTableBase } from './dms-table-base.js';
  * @prop {Object} data - Data object containing dataFields (column definitions) and data (rows)
  * @prop {String} errorMessage - Optional error message to display
  * @prop {Boolean} filterable - Whether to enable filtering for the table
+ * @prop {Boolean} paginated - Whether to enable pagination for the table
+ * @prop {Number} pageSize - Number of rows per page (default: 20)
+ * @prop {Number} paginateAfter - Enable pagination automatically when rows exceed this number (default: 20)
  */
 class DmsTableVisualizer extends LitElement {
     static properties = {
         data: { type: Object },
         errorMessage: { type: String },
         filterable: { type: Boolean },
+        paginated: { type: Boolean },
+        pageSize: { type: Number },
+        paginateAfter: { type: Number }
     };
 
     static styles = css`
@@ -31,6 +37,9 @@ class DmsTableVisualizer extends LitElement {
         this.data = null;
         this.errorMessage = '';
         this.filterable = false;
+        this.paginated = false;
+        this.pageSize = 20;
+        this.paginateAfter = 20;
     }
 
     render() {
@@ -63,7 +72,10 @@ class DmsTableVisualizer extends LitElement {
             <dms-table-base
                 .headers=${headers}
                 .rows=${rows}
-                .filterable=${this.filterable}>
+                .filterable=${this.filterable}
+                .paginated=${this.paginated}
+                .pageSize=${this.pageSize}
+                .paginateAfter=${this.paginateAfter}>
             </dms-table-base>
         `;
     }

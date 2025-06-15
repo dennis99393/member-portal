@@ -8,6 +8,9 @@ import { LitElement, html, css } from 'https://cdn.jsdelivr.net/npm/lit@3.3.0/+e
  * @prop {Array} rows - Data rows. For regular tables: array of arrays. For metadata: array of [key, value] pairs.
  * @prop {Boolean} isMetadata - Whether to render as a metadata table (key-value pairs)
  * @prop {Boolean} filterable - Whether to enable filtering for the table
+ * @prop {Boolean} paginated - Whether to enable pagination for the table
+ * @prop {Number} pageSize - Number of rows per page (default: 20)
+ * @prop {Number} paginateAfter - Enable pagination automatically when rows exceed this number (default: 20)
  */
 class DmsTableBase extends LitElement {
     static properties = {
@@ -15,8 +18,13 @@ class DmsTableBase extends LitElement {
         rows: { type: Array },
         isMetadata: { type: Boolean },
         filterable: { type: Boolean },
+        paginated: { type: Boolean },
+        pageSize: { type: Number },
+        paginateAfter: { type: Number },
         _filterText: { type: String, state: true },
-        _filteredRows: { type: Array, state: true }
+        _filteredRows: { type: Array, state: true },
+        _currentPage: { type: Number, state: true },
+        _totalPages: { type: Number, state: true }
     };
 
     static styles = css`
@@ -89,9 +97,52 @@ class DmsTableBase extends LitElement {
             border: 1px solid #ddd;
             margin-top: 16px;
         }
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .pagination-button {
+            padding: 6px 12px;
+            margin: 0 4px;
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 32px;
+            text-align: center;
+        }
+        .pagination-button:hover:not(.active, .disabled) {
+            background-color: #e8e8e8;
+        }
+        .pagination-button.active {
+            background-color: #4a90e2;
+            color: white;
+            border-color: #4a90e2;
+        }
+        .pagination-button.disabled {
+            color: #999;
+            cursor: not-allowed;
+        }
+        .pagination-info {
+            margin: 0 8px;
+            font-size: 14px;
+            color: #666;
+        }
         @media (max-width: 768px) {
             .filter-container {
                 max-width: 100%;
+            }
+            .pagination-container {
+                justify-content: center;
+            }
+            .pagination-info {
+                flex-basis: 100%;
+                text-align: center;
+                margin-bottom: 8px;
             }
         }
     `;
@@ -102,13 +153,25 @@ class DmsTableBase extends LitElement {
         this.rows = [];
         this.isMetadata = false;
         this.filterable = false;
+        this.paginated = false;
+        this.pageSize = 20;
+        this.paginateAfter = 20;
         this._filterText = '';
         this._filteredRows = [];
+        this._currentPage = 1;
+        this._totalPages = 1;
     }
 
     updated(changedProperties) {
         if (changedProperties.has('rows') || changedProperties.has('_filterText')) {
             this._filterRows();
+            this._updatePagination();
+        }
+
+        if (changedProperties.has('_filteredRows') ||
+        changedProperties.has('pageSize') ||
+        changedProperties.has('_currentPage')) {
+            this._updatePagination();
         }
     }
 
@@ -133,6 +196,29 @@ class DmsTableBase extends LitElement {
                     return String(cell).toLowerCase().includes(searchTerm);
                 });
             });
+        }
+    }
+
+    _updatePagination() {
+        const rowsToUse = this._filteredRows.length > 0 ? this._filteredRows : this.rows;
+        this._totalPages = Math.max(1, Math.ceil(rowsToUse.length / this.pageSize));
+
+        // Reset current page if out of bounds
+        if (this._currentPage > this._totalPages) {
+            this._currentPage = 1;
+        }
+    }
+
+    _changePage(newPage) {
+        if (newPage >= 1 && newPage <= this._totalPages) {
+            this._currentPage = newPage;
+            // Scroll to top of table when changing page
+            setTimeout(() => {
+                const table = this.shadowRoot.querySelector('table');
+                if (table) {
+                    table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 0);
         }
     }
 
@@ -163,6 +249,10 @@ class DmsTableBase extends LitElement {
 
     render() {
         const hasFilteredData = this._filterText && this._filteredRows.length === 0;
+        const rowsToUse = this._filteredRows.length > 0 ? this._filteredRows : this.rows;
+
+        // Determine if pagination should be shown
+        const shouldPaginate = this.paginated || (!this.paginated && rowsToUse.length > this.paginateAfter);
 
         return html`
             <div class="table-container">
@@ -188,12 +278,95 @@ class DmsTableBase extends LitElement {
                     <table class="${this.isMetadata ? 'metadata-table' : ''}">
                         ${this.isMetadata ? this._renderMetadataTable() : this._renderRegularTable()}
                     </table>
+
+                    ${shouldPaginate && this._totalPages > 1 ? this._renderPagination() : ''}
                 `}
             </div>
         `;
     }
 
+    _renderPagination() {
+        const rowsToUse = this._filteredRows.length > 0 ? this._filteredRows : this.rows;
+        const startIndex = (this._currentPage - 1) * this.pageSize + 1;
+        const endIndex = Math.min(startIndex + this.pageSize - 1, rowsToUse.length);
+
+        // Generate page buttons - show first, last, current, and adjacent pages
+        const pageButtons = [];
+
+        // Add first page
+        pageButtons.push(this._renderPageButton(1));
+
+        // Add ellipsis if needed
+        if (this._currentPage > 3) {
+            pageButtons.push(html`<span class="pagination-button disabled">...</span>`);
+        }
+
+        // Add adjacent pages
+        for (let i = Math.max(2, this._currentPage - 1); i <= Math.min(this._totalPages - 1, this._currentPage + 1); i++) {
+            if (i === 1 || i === this._totalPages) continue; // Skip first and last (added separately)
+            pageButtons.push(this._renderPageButton(i));
+        }
+
+        // Add ellipsis if needed
+        if (this._currentPage < this._totalPages - 2) {
+            pageButtons.push(html`<span class="pagination-button disabled">...</span>`);
+        }
+
+        // Add last page if more than one page
+        if (this._totalPages > 1) {
+            pageButtons.push(this._renderPageButton(this._totalPages));
+        }
+
+        return html`
+            <div class="pagination-container">
+                <button
+                    class="pagination-button ${this._currentPage === 1 ? 'disabled' : ''}"
+                    @click="${() => this._changePage(this._currentPage - 1)}"
+                    ?disabled="${this._currentPage === 1}"
+                >
+                    &lt;
+                </button>
+
+                ${pageButtons}
+
+                <button
+                    class="pagination-button ${this._currentPage === this._totalPages ? 'disabled' : ''}"
+                    @click="${() => this._changePage(this._currentPage + 1)}"
+                    ?disabled="${this._currentPage === this._totalPages}"
+                >
+                    &gt;
+                </button>
+
+                <span class="pagination-info">
+                    Showing ${startIndex}-${endIndex} of ${rowsToUse.length} entries
+                </span>
+            </div>
+        `;
+    }
+
+    _renderPageButton(pageNum) {
+        return html`
+            <button
+                class="pagination-button ${this._currentPage === pageNum ? 'active' : ''}"
+                @click="${() => this._changePage(pageNum)}"
+            >
+                ${pageNum}
+            </button>
+        `;
+    }
+
     _renderRegularTable() {
+        const rowsToUse = this._filteredRows.length > 0 ? this._filteredRows : this.rows;
+        const shouldPaginate = this.paginated || (!this.paginated && rowsToUse.length > this.paginateAfter);
+
+        // Apply pagination to rows if needed
+        let visibleRows = rowsToUse;
+        if (shouldPaginate) {
+            const startIdx = (this._currentPage - 1) * this.pageSize;
+            const endIdx = Math.min(startIdx + this.pageSize, rowsToUse.length);
+            visibleRows = rowsToUse.slice(startIdx, endIdx);
+        }
+
         return html`
             <thead>
                 <tr>
@@ -201,7 +374,7 @@ class DmsTableBase extends LitElement {
                 </tr>
             </thead>
             <tbody>
-                ${(this._filteredRows.length > 0 ? this._filteredRows : this.rows).map(row => html`
+                ${visibleRows.map(row => html`
                     <tr>
                         ${row.map(cell => html`<td>${cell === null ? 'null' : cell}</td>`)}
                     </tr>
@@ -211,9 +384,20 @@ class DmsTableBase extends LitElement {
     }
 
     _renderMetadataTable() {
+        const rowsToUse = this._filteredRows.length > 0 ? this._filteredRows : this.rows;
+        const shouldPaginate = this.paginated || (!this.paginated && rowsToUse.length > this.paginateAfter);
+
+        // Apply pagination to rows if needed
+        let visibleRows = rowsToUse;
+        if (shouldPaginate) {
+            const startIdx = (this._currentPage - 1) * this.pageSize;
+            const endIdx = Math.min(startIdx + this.pageSize, rowsToUse.length);
+            visibleRows = rowsToUse.slice(startIdx, endIdx);
+        }
+
         return html`
             <tbody>
-                ${(this._filteredRows.length > 0 ? this._filteredRows : this.rows).map(([key, value]) => html`
+                ${visibleRows.map(([key, value]) => html`
                     <tr>
                         <td>${key}</td>
                         <td>${key === 'SQL Query' ? html`<pre>${value}</pre>` : value}</td>
