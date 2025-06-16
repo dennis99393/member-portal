@@ -151,6 +151,17 @@ fun Application.configureRouting() {
         call.respond(ApiResponse(Status.SUCCESS, "Backend API $method", respone))
       }
     }
+    post("/webhook/*") {
+      // Log request details
+      call.receiveText().let { body ->
+        log.info(
+            "Webhook request received: path=${call.request.path()}, " +
+                "query params=${call.request.queryParameters.entries().map { "${it.key}:${it.value}" }.joinToString { ";" }}, " +
+                "headers=${call.request.headers.entries().map{ "${it.key}:${it.value}" }.joinToString { ";" }}, " +
+                "body=$body")
+      }
+      call.respond(Status.SUCCESS)
+    }
   }
 }
 
