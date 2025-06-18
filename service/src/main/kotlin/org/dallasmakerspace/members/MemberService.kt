@@ -63,9 +63,13 @@ constructor(
     val relatedAccounts = makerManagerDataService.getAccountInfoMap(listOf(username))
 
     val accountInfo = relatedAccounts[username]
-    if (accountInfo != null && accountInfo.isPrimaryAccount) {
-      accountInfo.primaryAccount?.let { account ->
-        val whmcsId = account.whmcsId
+    if (accountInfo != null) {
+      val account =
+          if (accountInfo.isPrimaryAccount) accountInfo.primaryAccount
+          else accountInfo.addonAccounts.find { it.username == username }
+
+      account?.let {
+        val whmcsId = it.whmcsId
         // Get the account status from WHMCS
         val accountStatus = whmcsDataService.getAccountInfoMap(listOf(whmcsId))[whmcsId]
         if (accountStatus != null) {
