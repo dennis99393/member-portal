@@ -89,6 +89,10 @@ constructor(
         lastInactiveDate = lastInactiveDate,
         regDate = userProducts.firstOrNull()?.regDate)
   }
+
+  suspend fun getAccountRegdate(whmcsId: Int): LocalDate? {
+    return whmcsDataRepository.getAccountRegdate(whmcsId)
+  }
 }
 
 // Data structure to hold whether the account was active in the given range and the last inactive

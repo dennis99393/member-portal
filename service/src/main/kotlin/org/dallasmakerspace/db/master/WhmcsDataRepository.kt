@@ -69,6 +69,37 @@ class WhmcsDataRepository @Inject constructor() {
 
     return result
   }
+
+  /**
+   * Get the regdate of the earliest record in tblhosting table
+   *
+   * @param whmcsId WHMCS user ID to get the earliest registration date for
+   * @return The earliest registration date for the user, or null if no records found
+   */
+  suspend fun getAccountRegdate(whmcsId: Int): LocalDate? {
+    var earliestRegdate: LocalDate? = null
+
+    suspendTransaction {
+      val query =
+          """
+        SELECT MIN(regdate) as earliest_regdate
+        FROM `dms-whmcs`.tblhosting
+        WHERE userid = $whmcsId
+      """
+              .trimIndent()
+
+      this.exec(query) { resultSet: ResultSet ->
+        if (resultSet.next()) {
+          val regdateStr = resultSet.getString("earliest_regdate")
+          if (regdateStr != null && regdateStr != "0000-00-00") {
+            earliestRegdate = LocalDate.parse(regdateStr)
+          }
+        }
+      }
+    }
+
+    return earliestRegdate
+  }
 }
 
 data class WhmcsProductInfo(

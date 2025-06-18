@@ -75,7 +75,14 @@ constructor(
         if (accountStatus != null) {
           accountInfo.wasActivePast90Days = accountStatus.wasActiveInRange
           accountInfo.lastInactiveDate = accountStatus.lastInactiveDate?.toKotlinLocalDate()
-          accountInfo.regDate = accountStatus.regDate?.toKotlinLocalDate()
+          accountInfo.regDate =
+              if (accountInfo.isPrimaryAccount)
+                  whmcsDataService.getAccountRegdate(whmcsId)?.toKotlinLocalDate()
+              else
+                  calculateMemberSince(adMember.whenCreated)?.let { createdInstant ->
+                    java.time.LocalDate.ofEpochDay(createdInstant.epochSeconds / 86_400)
+                        .toKotlinLocalDate()
+                  }
         }
       }
     }
