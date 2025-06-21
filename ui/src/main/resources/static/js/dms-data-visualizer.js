@@ -167,12 +167,24 @@ class DmsDataVisualizer extends LitElement {
                 this.requestUpdate();
             };
 
+            const toggleAnnotations = () => {
+                const lineChart = this.shadowRoot.querySelector('dms-line-chart-visualizer');
+                if (lineChart) {
+                    lineChart.toggleAnnotations();
+                    this.requestUpdate();
+                }
+            };
+
+            // Track annotation visibility state
+            this._annotationsVisible = true;
+
             contentHtml = html`
                 <dms-line-chart-visualizer
                     .data=${this._chartData}
                     .title=${this.title}
                     .errorMessage=${this._errorMessage}
-                    .yAxisMin=${this.yAxisMin}>
+                    .yAxisMin=${this.yAxisMin}
+                    @updated=${this._onChartUpdated}>
                 </dms-line-chart-visualizer>
 
                 <div class="buttons-container">
@@ -181,6 +193,7 @@ class DmsDataVisualizer extends LitElement {
                             ${this._showTable ? 'Hide' : 'Show'} Raw Data
                         </button>
                     ` : ''}
+                    <span id="annotation-button-container"></span>
                 </div>
 
                 ${this.alwaysShowRawData || this._showTable ? html`
@@ -216,6 +229,46 @@ class DmsDataVisualizer extends LitElement {
             </div>
             ${this._showMetadata ? this._renderMetadataTable() : ''}
         `;
+    }
+
+    _onChartUpdated(event) {
+        console.log('Chart updated:', event.detail);
+
+        const { chart, lineChart } = event.detail;
+
+        // Expose the chart and lineChart component to external consumers
+        // via a custom event
+        this.dispatchEvent(new CustomEvent('chartRendered', {
+            detail: {
+                chart: chart,
+                lineChart: lineChart
+            },
+            bubbles: true,
+            composed: true // Allow the event to cross shadow DOM boundaries
+        }));
+
+        // Add Show/Hide Annotations button only if there are annotations
+        setTimeout(() => {
+            if (lineChart && lineChart.annotations && lineChart.annotations.length > 0) {
+                // Get the container for the annotations button
+                const buttonContainer = this.shadowRoot.querySelector('#annotation-button-container');
+                if (buttonContainer) {
+                    // Clear any existing content
+                    buttonContainer.innerHTML = '';
+
+                    // Create the button element
+                    const button = document.createElement('button');
+                    button.innerText = lineChart.showAnnotations ? 'Hide Annotations' : 'Show Annotations';
+                    button.addEventListener('click', () => {
+                        lineChart.toggleAnnotations();
+                        button.innerText = lineChart.showAnnotations ? 'Hide Annotations' : 'Show Annotations';
+                    });
+
+                    // Add the button to the container
+                    buttonContainer.appendChild(button);
+                }
+            }
+        }, 100); // Small delay to ensure chart is fully rendered
     }
 
     _renderMetadataTable() {

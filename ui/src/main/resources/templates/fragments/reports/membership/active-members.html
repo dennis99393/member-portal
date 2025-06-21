@@ -12,7 +12,41 @@
             title="Active members by month"
             description="Number of active members at DMS for past couple of years. This data is sourced from the billing system (WHMCS) and includes both primary and addon accounts as well as regular donors."
             yAxisMin="1200"
+            id="active-members-chart"
     ></dms-data-visualizer>
+
+    <script>
+        document.getElementById('active-members-chart').addEventListener('chartRendered', (event) => {
+            const { lineChart, chart } = event.detail;
+
+            if (lineChart) {
+                const newRateAnnotation = {
+                    type: 'line',
+                    mode: 'vertical',
+                    scaleID: 'x',
+                    value: 'Apr',
+                    borderColor: 'rgba(255, 99, 132, 0.7)',
+                    borderWidth: 2,
+                    borderDash: [6, 6],
+                    label: {
+                        display: true,
+                        content: ['Apr-2025: New rate in effect.', 'Click for details.'],
+                        position: 'start',
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                        color: 'white',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    click: function() {
+                        window.open('https://talk.dallasmakerspace.org/t/member-rate-increase-effective-4-19-25/115906', '_blank');
+                    }
+                };
+
+                lineChart.addAnnotation(newRateAnnotation);
+            }
+        });
+    </script>
 </div>
 </body>
 </html>
