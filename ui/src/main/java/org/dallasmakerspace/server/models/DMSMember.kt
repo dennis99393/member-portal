@@ -52,7 +52,7 @@ class DMSMember(
           discourseUsername = data["discourseUsername"] as String?,
           discourseAvatarUrl = data["discourseAvatarUrl"] as String?,
           discordUserId = data["discordUserId"] as String?,
-          memberSince = Instant.parse(data["memberSince"] as String),
+          memberSince = (data["memberSince"] as? String)?.let { Instant.parse(it) },
           groups = groups,
           accountInfo = accountInfo)
     }
