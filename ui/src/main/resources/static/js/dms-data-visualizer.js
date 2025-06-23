@@ -41,7 +41,6 @@ class DmsDataVisualizer extends LitElement {
     static styles = css`
     :host {
       display: block;
-      padding: 16px;
       font-family: sans-serif;
     }
     .container {

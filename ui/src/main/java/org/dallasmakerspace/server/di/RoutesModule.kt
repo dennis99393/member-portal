@@ -85,7 +85,7 @@ class RoutesModule {
 
   @IntoMap
   @Provides
-  @StringKey("/reports/*/*")
+  @StringKey("/reports/{...}")
   fun providesReportHandler(
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,

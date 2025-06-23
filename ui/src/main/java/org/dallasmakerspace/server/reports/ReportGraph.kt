@@ -42,7 +42,7 @@ object ReportGraph {
                 ),
                 ReportNode(
                     name = "Member Visits",
-                    description = "Reports generated from badge swipes",
+                    description = "Reports from badge swipes",
                     urlSlug = "member-visits",
                     children =
                         listOf(
