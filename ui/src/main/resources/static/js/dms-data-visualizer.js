@@ -1,6 +1,7 @@
 import { LitElement, html, css } from 'https://cdn.jsdelivr.net/npm/lit@3.3.0/+esm';
 import { DmsTableVisualizer } from './dms-table-visualizer.js';
 import { DmsLineChartVisualizer } from './dms-line-chart-visualizer.js';
+import { DmsBarChartVisualizer } from './dms-bar-chart-visualizer.js';
 import { DmsTableBase } from './dms-table-base.js';
 
 /**
@@ -9,15 +10,17 @@ import { DmsTableBase } from './dms-table-base.js';
  *
  * @element dms-data-visualizer
  * @prop {String} dataUrl - URL to fetch JSON data from
- * @prop {String} renderAs - Visualization type: 'table' or 'line'
+ * @prop {String} renderAs - Visualization type: 'table', 'line', or 'bar'
  * @prop {String} title - Optional title for the visualization
  * @prop {String} description - Optional description text
  * @prop {Boolean} alwaysShowRawData - For charts, whether to always show the data table
- * @prop {Number} yAxisMin - Optional minimum value for the y-axis (for line charts)
+ * @prop {Number} yAxisMin - Optional minimum value for the y-axis (for charts)
  * @prop {Boolean} filterable - Whether to enable filtering for tables
  * @prop {Boolean} paginated - Whether to enable pagination for tables
  * @prop {Number} pageSize - Number of rows per page (default: 20)
  * @prop {Number} paginateAfter - Enable pagination automatically when rows exceed this number (default: 20)
+ * @prop {Boolean} horizontal - For bar charts, whether to display horizontally (default: false)
+ * @prop {Boolean} stacked - For bar charts, whether bars should be stacked (default: false)
  */
 class DmsDataVisualizer extends LitElement {
     static properties = {
@@ -27,6 +30,8 @@ class DmsDataVisualizer extends LitElement {
         description: { type: String },
         alwaysShowRawData: { type: Boolean, state: false},
         yAxisMin: { type: Number },
+        horizontal: { type: Boolean },
+        stacked: { type: Boolean },
         filterable: { type: Boolean },
         paginated: { type: Boolean },
         pageSize: { type: Number },
@@ -86,10 +91,13 @@ class DmsDataVisualizer extends LitElement {
         this.title = '';
         this.description = '';
         this.yAxisMin = null;
+        this.horizontal = false;
+        this.stacked = false;
         this.filterable = false;
         this.paginated = false;
         this.pageSize = 20;
         this.paginateAfter = 20;
+        this.alwaysShowRawData = false;
         this._chartData = null;
         this._errorMessage = '';
         this._loading = false;
@@ -167,14 +175,6 @@ class DmsDataVisualizer extends LitElement {
                 this.requestUpdate();
             };
 
-            const toggleAnnotations = () => {
-                const lineChart = this.shadowRoot.querySelector('dms-line-chart-visualizer');
-                if (lineChart) {
-                    lineChart.toggleAnnotations();
-                    this.requestUpdate();
-                }
-            };
-
             // Track annotation visibility state
             this._annotationsVisible = true;
 
@@ -207,9 +207,49 @@ class DmsDataVisualizer extends LitElement {
                     </dms-table-visualizer>
                 ` : ''}
             `;
+        } else if (this.renderAs === 'bar') {
+            const toggleTable = () => {
+                this._showTable = !this._showTable;
+                this.requestUpdate();
+            };
+
+            // Track annotation visibility state
+            this._annotationsVisible = true;
+
+            contentHtml = html`
+                <dms-bar-chart-visualizer
+                    .data=${this._chartData}
+                    .title=${this.title}
+                    .errorMessage=${this._errorMessage}
+                    .yAxisMin=${this.yAxisMin}
+                    .horizontal=${this.horizontal}
+                    .stacked=${this.stacked}
+                    @updated=${this._onChartUpdated}>
+                </dms-bar-chart-visualizer>
+
+                <div class="buttons-container">
+                    ${!this.alwaysShowRawData ? html`
+                        <button @click="${toggleTable}">
+                            ${this._showTable ? 'Hide' : 'Show'} Raw Data
+                        </button>
+                    ` : ''}
+                    <span id="annotation-button-container"></span>
+                </div>
+
+                ${this.alwaysShowRawData || this._showTable ? html`
+                    <dms-table-visualizer
+                        .data=${this._chartData}
+                        .errorMessage=${this._errorMessage}
+                        .filterable=${this.filterable}
+                        .paginated=${this.paginated}
+                        .pageSize=${this.pageSize}
+                        .paginateAfter=${this.paginateAfter}>
+                    </dms-table-visualizer>
+                ` : ''}
+            `;
         } else {
             contentHtml = html`<div class="error">
-                Unsupported render mode: ${this.renderAs}. Use 'table' or 'line'.
+                Unsupported render mode: ${this.renderAs}. Use 'table', 'line', or 'bar'.
             </div>`;
         }
 
@@ -234,14 +274,18 @@ class DmsDataVisualizer extends LitElement {
     _onChartUpdated(event) {
         console.log('Chart updated:', event.detail);
 
-        const { chart, lineChart } = event.detail;
+        const { chart, lineChart, barChart } = event.detail;
 
-        // Expose the chart and lineChart component to external consumers
+        // Determine which chart component we're dealing with
+        const chartComponent = lineChart || barChart;
+
+        // Expose the chart and chart component to external consumers
         // via a custom event
         this.dispatchEvent(new CustomEvent('chartRendered', {
             detail: {
                 chart: chart,
-                lineChart: lineChart
+                lineChart: lineChart,
+                barChart: barChart
             },
             bubbles: true,
             composed: true // Allow the event to cross shadow DOM boundaries
@@ -249,7 +293,7 @@ class DmsDataVisualizer extends LitElement {
 
         // Add Show/Hide Annotations button only if there are annotations
         setTimeout(() => {
-            if (lineChart && lineChart.annotations && lineChart.annotations.length > 0) {
+            if (chartComponent && chartComponent.annotations && chartComponent.annotations.length > 0) {
                 // Get the container for the annotations button
                 const buttonContainer = this.shadowRoot.querySelector('#annotation-button-container');
                 if (buttonContainer) {
@@ -258,10 +302,10 @@ class DmsDataVisualizer extends LitElement {
 
                     // Create the button element
                     const button = document.createElement('button');
-                    button.innerText = lineChart.showAnnotations ? 'Hide Annotations' : 'Show Annotations';
+                    button.innerText = chartComponent.showAnnotations ? 'Hide Annotations' : 'Show Annotations';
                     button.addEventListener('click', () => {
-                        lineChart.toggleAnnotations();
-                        button.innerText = lineChart.showAnnotations ? 'Hide Annotations' : 'Show Annotations';
+                        chartComponent.toggleAnnotations();
+                        button.innerText = chartComponent.showAnnotations ? 'Hide Annotations' : 'Show Annotations';
                     });
 
                     // Add the button to the container
