@@ -24,6 +24,7 @@ import org.dallasmakerspace.members.MemberService
 import org.dallasmakerspace.routing.BadgeLookup
 import org.dallasmakerspace.routing.Groups
 import org.dallasmakerspace.routing.Members
+import org.dallasmakerspace.webhook.WebhookRouter
 
 @Suppress("LongMethod")
 fun Application.configureRouting() {
@@ -54,6 +55,7 @@ fun Application.configureRouting() {
       DaggerAppComponent.create().getMemberRefreshCronJob()
     }
     val dataVizRouter: DataVizRouter by lazy { DaggerAppComponent.create().getDataVizRouter() }
+    val webhookRouter: WebhookRouter by lazy { DaggerAppComponent.create().getWebhookRouter() }
 
     get("/") {
       call.respondText(
@@ -152,15 +154,23 @@ fun Application.configureRouting() {
       }
     }
     post("/webhook/*") {
-      // Log request details
-      call.receiveText().let { body ->
-        log.info(
-            "Webhook request received: path=${call.request.path()}, " +
-                "query params=${call.request.queryParameters.entries().map { "${it.key}:${it.value}" }.joinToString { ";" }}, " +
-                "headers=${call.request.headers.entries().map{ "${it.key}:${it.value}" }.joinToString { ";" }}, " +
-                "body=$body")
+      val path = call.request.path().substringAfter("/webhook/")
+      val body = call.receiveText()
+
+      // Log request details for debugging
+      log.info(
+          "Webhook request received: path=${call.request.path()}, " +
+              "query params=${call.request.queryParameters.entries().map { "${it.key}:${it.value}" }.joinToString { ";" }}, " +
+              "headers=${call.request.headers.entries().map{ "${it.key}:${it.value}" }.joinToString { ";" }}")
+
+      // Route the webhook to appropriate handler
+      val result = webhookRouter.route(path, body)
+
+      if (result.success) {
+        call.respond(ApiResponse(Status.SUCCESS, result.message, null))
+      } else {
+        call.respond(HttpStatusCode.BadRequest, ApiResponse(Status.ERROR, result.message, null))
       }
-      call.respond(Status.SUCCESS)
     }
   }
 }

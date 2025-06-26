@@ -1,0 +1,51 @@
+package org.dallasmakerspace.members.db
+
+import kotlinx.datetime.toKotlinLocalDateTime
+import org.dallasmakerspace.models.GroupHistory
+import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.EntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.alias
+import org.jetbrains.exposed.sql.javatime.datetime
+
+/** Exposed table for the mariaDB table - group_history. */
+object GroupHistoryTable : IdTable<Int>("group_history") {
+  val idColumn = integer("id").autoIncrement().entityId()
+  val actorId = integer("actor_id").references(ProfileTable.idColumn)
+  val memberId = integer("member_id").references(ProfileTable.idColumn)
+  val groupId = integer("group_id").references(GroupsTable.idColumn)
+  val eventTimestamp = datetime("event_timestamp")
+  val created = datetime("created")
+
+  override val id: Column<EntityID<Int>>
+    get() = idColumn
+}
+
+class GroupHistoryDAO(id: EntityID<Int>) : Entity<Int>(id) {
+  companion object : EntityClass<Int, GroupHistoryDAO>(GroupHistoryTable)
+
+  var actorId by GroupHistoryTable.actorId
+  var memberId by GroupHistoryTable.memberId
+  var groupId by GroupHistoryTable.groupId
+  var eventTimestamp by GroupHistoryTable.eventTimestamp
+  var created by GroupHistoryTable.created
+}
+
+/** Column aliases to handle joins for profile references */
+object GroupHistoryColumnAliases {
+  val actorProfileAlias = ProfileTable.alias("actor_profile")
+  val memberProfileAlias = ProfileTable.alias("member_profile")
+  val groupsAlias = GroupsTable.alias("group")
+}
+
+fun daoToGroupHistoryModel(resultRow: ResultRow) =
+    GroupHistory(
+        resultRow[GroupHistoryTable.idColumn].value,
+        resultRow[GroupHistoryColumnAliases.actorProfileAlias[ProfileTable.username]].toString(),
+        resultRow[GroupHistoryColumnAliases.memberProfileAlias[ProfileTable.username]].toString(),
+        resultRow[GroupHistoryColumnAliases.groupsAlias[GroupsTable.name]],
+        resultRow[GroupHistoryTable.eventTimestamp].toKotlinLocalDateTime(),
+        resultRow[GroupHistoryTable.created].toKotlinLocalDateTime())

@@ -12,6 +12,8 @@ import org.dallasmakerspace.dataviz.DataVizRouter
 import org.dallasmakerspace.dataviz.di.DataVizModule
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.MemberService
+import org.dallasmakerspace.webhook.WebhookRouter
+import org.dallasmakerspace.webhook.di.WebhookModule
 
 @Singleton
 @Component(
@@ -21,7 +23,8 @@ import org.dallasmakerspace.members.MemberService
             ActiveDirectoryModule::class,
             DiscourseModule::class,
             MembersModule::class,
-            DataVizModule::class])
+            DataVizModule::class,
+            WebhookModule::class])
 interface AppComponent {
   fun inject(application: Application)
 
@@ -40,4 +43,6 @@ interface AppComponent {
   fun getMemberRefreshCronJob(): MemberRefreshCronJob
 
   fun getDataVizRouter(): DataVizRouter
+
+  fun getWebhookRouter(): WebhookRouter
 }

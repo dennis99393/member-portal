@@ -1,0 +1,8 @@
+package org.dallasmakerspace.models
+
+import kotlinx.datetime.LocalDateTime
+import kotlinx.serialization.Serializable
+
+/** Represents an Active Directory group in the system. */
+@Serializable
+data class Group(val id: Int, val name: String, val dn: String, val created: LocalDateTime)

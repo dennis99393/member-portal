@@ -35,3 +35,36 @@ CREATE TABLE `activity_log` (
   CONSTRAINT `activity_log_actor_profile_FK` FOREIGN KEY (`actor_profile_row_id`) REFERENCES `profile` (`id`),
   CONSTRAINT `activity_log_subject_profile_FK` FOREIGN KEY (`subject_profile_row_id`) REFERENCES `profile` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store activity log of various events for members, usually write ops performed on a member profile';
+
+-- member_profile.groups definition
+
+DROP TABLE IF EXISTS `groups`;
+CREATE TABLE `groups` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id is auto increment primary key.',
+  `name` varchar(255) NOT NULL COMMENT 'The name of the group',
+  `dn` varchar(512) NOT NULL COMMENT 'The distinguished name (DN) of the group in Active Directory',
+  `created` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'The timestamp when the record was created in our database',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `groups_name_UNQ` (`name`),
+  UNIQUE KEY `groups_dn_UNQ` (`dn`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Reference table for groups in Active Directory';
+
+-- member_profile.group_history definition
+
+DROP TABLE IF EXISTS `group_history`;
+CREATE TABLE `group_history` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id is auto increment primary key.',
+  `actor_id` int(10) unsigned NOT NULL COMMENT 'The ID of the user who performed the group action',
+  `member_id` int(10) unsigned NOT NULL COMMENT 'The ID of the member affected by the group action',
+  `group_id` int(10) unsigned NOT NULL COMMENT 'The ID of the group that was modified',
+  `event_timestamp` timestamp NOT NULL COMMENT 'The timestamp when the event occurred in Active Directory',
+  `created` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'The timestamp when the record was created in our database',
+  PRIMARY KEY (`id`),
+  KEY `group_history_actor_id_IDX` (`actor_id`) USING BTREE,
+  KEY `group_history_member_id_IDX` (`member_id`) USING BTREE,
+  KEY `group_history_group_id_IDX` (`group_id`) USING BTREE,
+  KEY `group_history_event_timestamp_IDX` (`event_timestamp`) USING BTREE,
+  CONSTRAINT `group_history_actor_FK` FOREIGN KEY (`actor_id`) REFERENCES `profile` (`id`),
+  CONSTRAINT `group_history_member_FK` FOREIGN KEY (`member_id`) REFERENCES `profile` (`id`),
+  CONSTRAINT `group_history_group_FK` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store history of group membership changes from Active Directory';
