@@ -13,9 +13,12 @@ class DistributionRate @Inject constructor(genericRepository: GenericRepository)
   override fun getQuery() =
       """
 SELECT CONCAT('$', CAST(amount AS UNSIGNED), ' - ', billingcycle) AS amount_billing, COUNT(*) AS count
-FROM `dms-whmcs`.tblhosting 
-WHERE domainstatus = 'Active'
-GROUP BY amount_billing
+FROM (
+    SELECT amount, billingcycle FROM `dms-whmcs`.tblhosting WHERE domainstatus = 'Active'
+    UNION ALL
+    SELECT recurring AS amount, billingcycle FROM `dms-whmcs`.tblhostingaddons WHERE status = 'Active'
+) AS combined
+GROUP BY amount, billingcycle
 ORDER BY CAST(amount AS UNSIGNED);
       """
 }
