@@ -1,8 +1,8 @@
 package org.dallasmakerspace.dataviz.reports.membership
 
+import javax.inject.Inject
 import org.dallasmakerspace.dataviz.reports.SqlReport
 import org.dallasmakerspace.db.master.GenericRepository
-import javax.inject.Inject
 
 class DistributionDistance @Inject constructor(genericRepository: GenericRepository) :
     SqlReport(genericRepository) {
