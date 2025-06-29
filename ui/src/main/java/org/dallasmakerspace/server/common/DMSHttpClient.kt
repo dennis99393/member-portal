@@ -19,7 +19,12 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
 
   private fun getClient() =
       HttpClient(CIO) {
-        engine { endpoint { keepAliveTime = 0 } }
+        engine {
+          endpoint {
+            keepAliveTime = 0
+            requestTimeout = 30_000
+          }
+        }
         install(ContentNegotiation) { jackson {} }
         install(Logging) {
           logger = Logger.DEFAULT

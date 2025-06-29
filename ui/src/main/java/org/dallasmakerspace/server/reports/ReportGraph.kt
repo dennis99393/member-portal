@@ -20,6 +20,11 @@ object ReportGraph {
                                 description = "Active member trends",
                                 urlSlug = "active-members",
                             ),
+                            ReportNode(
+                                name = "Distribution",
+                                description = "Distribution of members",
+                                urlSlug = "distribution",
+                            ),
                         ),
                 ),
                 ReportNode(

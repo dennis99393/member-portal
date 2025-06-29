@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'https://cdn.jsdelivr.net/npm/lit@3.3.0/+esm';
+import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3.3.0/directives/unsafe-html.js';
 import { DmsTableVisualizer } from './dms-table-visualizer.js';
 import { DmsLineChartVisualizer } from './dms-line-chart-visualizer.js';
 import { DmsBarChartVisualizer } from './dms-bar-chart-visualizer.js';
@@ -138,7 +139,7 @@ class DmsDataVisualizer extends LitElement {
         return html`
       <div class="container">
         ${this.title ? html`<h2>${this.title}</h2>` : ''}
-        ${this.description ? html`<p>${this.description}</p>` : ''}
+        ${this.description ? html`<p>${unsafeHTML(this.description)}</p>` : ''}
         ${this._loading
             ? html`
               <div class="loading">

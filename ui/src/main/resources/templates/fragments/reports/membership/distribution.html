@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="report">
+    <p>
+        This set of reports shows the distribution of active members along various dimensions - member rates, commute
+        distance, tenure, number of events attended
+    </p>
+    <dms-data-visualizer
+            dataUrl="/backend-api/data-viz/dist-rate"
+            renderAs="bar"
+            title="Member rate distribution"
+            description="This report shows the distribution of active members by their membership rate. <br/><span style='color:red'>Note:</span> This report is pending verification."
+            id="active-members-rate-chart"
+    ></dms-data-visualizer>
+    <dms-data-visualizer
+            dataUrl="/backend-api/data-viz/dist-distance"
+            renderAs="bar"
+            title="Member distance distribution"
+            description="This report shows the distribution of active members by their distance from DMS. It shows how far people have to commute to reach DMS. This is based on the zip codes that members provided during signup."
+            id="dist-distance"
+    ></dms-data-visualizer>
+</div>
+</body>
+</html>
+
