@@ -9,7 +9,9 @@
     </appender>
     <appender name="COLOR" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%aphighlight(%d{YYYY-MM-dd HH:mm:ss.SSS} %-5level [%X{CallId}:%X{userid:-NO_USER}] %(%logger){25} - %msg%n)</pattern>
+            <pattern>%aphighlight(%d{YYYY-MM-dd HH:mm:ss.SSS} %-5level [%X{CallId}:%X{userid:-NO_USER}] %(%logger){25} -
+                %msg%n)
+            </pattern>
         </encoder>
     </appender>
 
@@ -31,7 +33,7 @@
         <rawJsonMessage>false</rawJsonMessage> <!-- optional (default false) -->
         <includeMdc>false</includeMdc> <!-- optional (default false) -->
         <maxMessageSize>100</maxMessageSize> <!-- optional (default -1 -->
-        <authentication class="org.dallasmakerspace.core.logging.ElasticsearchAuth" /> <!-- optional -->
+        <authentication class="org.dallasmakerspace.core.logging.ElasticsearchAuth"/> <!-- optional -->
         <objectSerialization>true</objectSerialization> <!-- optional (default false) -->
         <keyPrefix>data.</keyPrefix> <!-- optional (default None) -->
         <operation>index</operation> <!-- optional (supported: index, create, update, delete - default create) -->
@@ -83,7 +85,7 @@
 
     <root level="${ENV_LOG_LEVEL:-debug}">
         <appender-ref ref="COLOR"/>
-        <appender-ref ref="ELASTIC" />
+        <appender-ref ref="ELASTIC"/>
     </root>
     <logger name="org.apache" level="INFO"/>
     <logger name="io.netty" level="INFO"/>

@@ -9,18 +9,31 @@ import org.dallasmakerspace.dataviz.reports.VisitorsByDayReport
 import org.dallasmakerspace.dataviz.reports.calendar.CalTrendsEvents
 import org.dallasmakerspace.dataviz.reports.calendar.FirstEvents
 import org.dallasmakerspace.dataviz.reports.membership.ActiveMembers
+import org.dallasmakerspace.dataviz.reports.membership.DistributionDistance
+import org.dallasmakerspace.dataviz.reports.membership.DistributionRate
 
 @Module
 class DataVizModule {
   @Provides
   @ElementsIntoSet
+  @Suppress("LongParameterList")
   fun provideReports(
       visitorsByDayReport: VisitorsByDayReport,
       timeOfDayReport: TimeOfDayReport,
       calTrendsEvents: CalTrendsEvents,
       firstEvents: FirstEvents,
       activeMembers: ActiveMembers,
+      distributionDistance: DistributionDistance,
+      distributionRate: DistributionRate,
   ): Set<DataVizReport> {
-    return setOf(visitorsByDayReport, timeOfDayReport, calTrendsEvents, firstEvents, activeMembers)
+    return setOf(
+        visitorsByDayReport,
+        timeOfDayReport,
+        calTrendsEvents,
+        firstEvents,
+        activeMembers,
+        distributionDistance,
+        distributionRate,
+    )
   }
 }
