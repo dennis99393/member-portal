@@ -7,4 +7,6 @@ interface IDiscourseApiClient {
       memberUsernamesList: List<String>,
       groupId: DiscourseService.GroupId
   )
+
+  suspend fun getUserProfile(username: String): DiscourseUserProfile
 }

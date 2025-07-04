@@ -27,4 +27,20 @@ class DiscourseApiClientMock @Inject constructor(loggerFactory: LoggerFactory) :
     // throw DiscourseApiException("DiscourseApiClientMock: Failed to remove member")
     return
   }
+
+  override suspend fun getUserProfile(username: String): DiscourseUserProfile {
+    log.info("Mocked fetching user profile for username: $username")
+    return DiscourseUserProfile(
+        user =
+            DiscourseUser(
+                id = 12345,
+                username = username,
+                name = "Mock User",
+                avatarTemplate =
+                    "/user_avatar/talk.dallasmakerspace.org/$username/{size}/123_2.png",
+                title = "Mock Title",
+                admin = false,
+                moderator = false,
+                trustLevel = 1))
+  }
 }

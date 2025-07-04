@@ -3,12 +3,12 @@ package org.dallasmakerspace.discourse
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.logging.*
-import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.serialization.json.Json
 import okio.IOException
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.core.LoggerFactory
@@ -20,6 +20,11 @@ class DiscourseApiClient
 @Inject
 constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : IDiscourseApiClient {
   private val log = loggerFactory.create(javaClass)
+
+  private val json = Json {
+    ignoreUnknownKeys = true
+    coerceInputValues = true
+  }
 
   private fun getClient() =
       HttpClient(CIO) {
@@ -56,6 +61,48 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
         throw DiscourseApiException(
             "Failed to remove $memberUsernamesList from $groupId: ${response.status} - ${response.bodyAsText()}")
       }
+    }
+  }
+
+  override suspend fun getUserProfile(username: String): DiscourseUserProfile {
+    val baseUrl = DISCOURSE_BASE_URL
+    val apiKey = appConfig.requireStringProperty("app.discourse.apiKey")
+    val url = "$baseUrl/u/$username.json"
+
+    try {
+      val response =
+          getClient().use {
+            it.request(url) {
+              method = HttpMethod.Get
+              header("Api-Key", apiKey)
+              header("Api-Username", "system")
+            }
+          }
+
+      when (response.status) {
+        HttpStatusCode.OK -> {
+          log.debug("Successfully fetched user profile for username: $username")
+          val responseBody = response.bodyAsText()
+          return json.decodeFromString<DiscourseUserProfile>(responseBody)
+        }
+        HttpStatusCode.NotFound -> {
+          throw DiscourseApiException("User not found: $username")
+        }
+        HttpStatusCode.Forbidden -> {
+          throw DiscourseApiException("Access denied when fetching user profile for: $username")
+        }
+        else -> {
+          throw DiscourseApiException(
+              "Failed to fetch user profile for $username: ${response.status} - ${response.bodyAsText()}")
+        }
+      }
+    } catch (e: IOException) {
+      throw DiscourseApiException("Failed to fetch user profile for $username", e)
+    } catch (e: kotlinx.serialization.SerializationException) {
+      throw DiscourseApiException("Failed to parse user profile response for $username", e)
+    } catch (e: DiscourseApiException) {
+      // Re-throw DiscourseApiException without wrapping
+      throw e
     }
   }
 

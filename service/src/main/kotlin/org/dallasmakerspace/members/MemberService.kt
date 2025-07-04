@@ -12,6 +12,7 @@ import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.db.master.MakerManagerDataService
 import org.dallasmakerspace.db.master.WhmcsDataService
+import org.dallasmakerspace.discourse.DiscourseAvatarService
 import org.dallasmakerspace.discourse.DiscourseService
 import org.dallasmakerspace.models.ActivityLogEvent
 import org.dallasmakerspace.models.DMSGroup
@@ -25,6 +26,7 @@ class MemberService
 constructor(
     loggerFactory: LoggerFactory,
     private val discourseService: DiscourseService,
+    private val discourseAvatarService: DiscourseAvatarService,
     private val memberRepository: MemberRepository,
     private val whmcsDataService: WhmcsDataService,
     private val activityLogService: ActivityLogService,
@@ -109,7 +111,62 @@ constructor(
               members = null)
         }
     dbMember.accountInfo = relatedAccounts[username]
+
+    // Refresh discourse avatar URL if member has a discourse username
+    dbMember.discourseAvatarUrl = refreshDiscourseAvatar(dbMember)
+
     return dbMember
+  }
+
+  /**
+   * Refreshes the discourse avatar URL for a member if they have a discourse username. Implements
+   * smart caching and fallback mechanisms.
+   *
+   * @param member The member to refresh avatar for
+   * @return The updated avatar URL, or the existing one if refresh fails/is skipped
+   */
+  private suspend fun refreshDiscourseAvatar(member: DMSMember): String? {
+    val discourseUsername = member.discourseUsername
+
+    // Return existing avatar URL if no discourse username
+    if (discourseUsername.isNullOrBlank()) {
+      log.debug("Member ${member.username} has no discourse username, skipping avatar refresh")
+      return member.discourseAvatarUrl
+    }
+
+    try {
+      // Attempt to refresh avatar URL using the avatar service
+      // The service has its own caching to prevent excessive API calls
+      val refreshedAvatarUrl = discourseAvatarService.refreshAvatarUrl(discourseUsername)
+
+      if (refreshedAvatarUrl != null) {
+        // Successfully refreshed - update database if URL changed
+        if (refreshedAvatarUrl != member.discourseAvatarUrl) {
+          val updateSuccess =
+              memberRepository.updateDiscourseAvatarUrl(member.username, refreshedAvatarUrl)
+          if (updateSuccess) {
+            log.debug(
+                "Successfully updated discourse avatar URL for ${member.username}: $refreshedAvatarUrl")
+            return refreshedAvatarUrl
+          } else {
+            log.warn(
+                "Failed to update discourse avatar URL in database for ${member.username}, using existing URL")
+            return member.discourseAvatarUrl // Fallback to existing URL
+          }
+        } else {
+          log.debug("Discourse avatar URL unchanged for ${member.username}")
+          return member.discourseAvatarUrl
+        }
+      } else {
+        // Avatar service returned null (likely due to caching or API failure)
+        log.debug("Avatar refresh returned null for ${member.username}, using existing URL")
+        return member.discourseAvatarUrl // Fallback to existing URL
+      }
+    } catch (e: Exception) {
+      // Error during avatar refresh - fallback to existing URL
+      log.warn("Failed to refresh discourse avatar for ${member.username}: ${e.message}")
+      return member.discourseAvatarUrl // Fallback to existing URL
+    }
   }
 
   suspend fun getMemberByBadgeNumber(badgeNumber: String): DMSMember {

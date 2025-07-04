@@ -1,4 +1,3 @@
-
 val ktorVersion: String by project
 val kotlinVersion: String by project
 val logbackVersion: String by project
@@ -6,77 +5,76 @@ val exposedVersion: String by project
 val daggerVersion: String by project
 
 plugins {
-    kotlin("jvm") version "2.0.21"
-    kotlin("plugin.serialization") version "2.0.21"
-    id("io.ktor.plugin") version "3.0.1"
-    id("com.google.devtools.ksp") version "2.0.21-1.0.28"
-    id("org.jetbrains.kotlinx.kover") version "0.7.6"
-    id("com.ncorti.ktfmt.gradle") version "0.18.0"
-    id("io.gitlab.arturbosch.detekt") version "1.23.6"
+  kotlin("jvm") version "2.0.21"
+  kotlin("plugin.serialization") version "2.0.21"
+  id("io.ktor.plugin") version "3.0.1"
+  id("com.google.devtools.ksp") version "2.0.21-1.0.28"
+  id("org.jetbrains.kotlinx.kover") version "0.7.6"
+  id("com.ncorti.ktfmt.gradle") version "0.18.0"
+  id("io.gitlab.arturbosch.detekt") version "1.23.6"
 }
 
 version = "0.0.1"
 
 application {
-    mainClass.set("org.dallasmakerspace.ApplicationKt")
+  mainClass.set("org.dallasmakerspace.ApplicationKt")
 
-    val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+  val isDevelopment: Boolean = project.ext.has("development")
+  applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
-repositories {
-    mavenCentral()
-}
+repositories { mavenCentral() }
 
 dependencies {
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.google.dagger:dagger:$daggerVersion")
-    ksp ("com.google.dagger:dagger-compiler:$daggerVersion")
-    implementation("com.googlecode.libphonenumber:libphonenumber:8.13.5")
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
-    // Ktor common packages
-    implementation("io.ktor:ktor-utils:$ktorVersion")
-    // Ktor client packages used for making HTTP requests
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    implementation("io.ktor:ktor-client-json:$ktorVersion")
-    implementation("io.ktor:ktor-client-logging:$ktorVersion")
-    // Ktor server packages
-    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-cors:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm")
-    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
-    implementation("com.h2database:h2:2.2.220")
-    implementation("io.ktor:ktor-server-call-id-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-gson-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
-    implementation("io.ktor:ktor-server-call-logging-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-swagger-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("io.ktor:ktor-server-caching-headers-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-compression-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-resources:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
-    implementation("com.unboundid:unboundid-ldapsdk:6.0.7")                         // LDAP Integration
-    implementation("com.ucasoft.ktor:ktor-simple-cache:0.+")                        // In memory cache
-    implementation("com.ucasoft.ktor:ktor-simple-memory-cache:0.+")                 // In memory cache
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation("org.mariadb.jdbc:mariadb-java-client:3.4.0")
-    // Elasticsearch logging
-    implementation("co.elastic.clients:elasticsearch-java:8.14.3")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
-    implementation("com.agido:logback-elasticsearch-appender:3.0.11")
+  implementation("com.squareup.okhttp3:okhttp:4.12.0")
+  implementation("com.google.dagger:dagger:$daggerVersion")
+  ksp("com.google.dagger:dagger-compiler:$daggerVersion")
+  implementation("com.googlecode.libphonenumber:libphonenumber:8.13.5")
+  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+  // Ktor common packages
+  implementation("io.ktor:ktor-utils:$ktorVersion")
+  // Ktor client packages used for making HTTP requests
+  implementation("io.ktor:ktor-client-core:$ktorVersion")
+  implementation("io.ktor:ktor-client-cio:$ktorVersion")
+  implementation("io.ktor:ktor-client-json:$ktorVersion")
+  implementation("io.ktor:ktor-client-logging:$ktorVersion")
+  implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+  // Ktor server packages
+  implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-cors:$ktorVersion")
+  implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
+  implementation("io.ktor:ktor-server-content-negotiation-jvm")
+  implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+  implementation("org.jetbrains.exposed:exposed-dao:$exposedVersion")
+  implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
+  implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+  implementation("com.h2database:h2:2.2.220")
+  implementation("io.ktor:ktor-server-call-id-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-serialization-gson-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+  implementation("io.ktor:ktor-server-call-logging-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-swagger-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
+  implementation("io.ktor:ktor-server-caching-headers-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-compression-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-resources:$ktorVersion")
+  implementation("io.ktor:ktor-server-auth:$ktorVersion")
+  implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
+  implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+  implementation("com.unboundid:unboundid-ldapsdk:6.0.7") // LDAP Integration
+  implementation("com.ucasoft.ktor:ktor-simple-cache:0.+") // In memory cache
+  implementation("com.ucasoft.ktor:ktor-simple-memory-cache:0.+") // In memory cache
+  implementation("ch.qos.logback:logback-classic:$logbackVersion")
+  implementation("org.mariadb.jdbc:mariadb-java-client:3.4.0")
+  // Elasticsearch logging
+  implementation("co.elastic.clients:elasticsearch-java:8.14.3")
+  implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+  implementation("com.agido:logback-elasticsearch-appender:3.0.11")
 
-    testImplementation("io.ktor:ktor-server-test-host")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("org.mockito:mockito-core:4.11.0")
-    testImplementation("org.mockito:mockito-inline:4.11.0")
-    testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
+  testImplementation("io.ktor:ktor-server-test-host")
+  testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+  testImplementation("junit:junit:4.13.2")
+  testImplementation("org.mockito:mockito-core:4.11.0")
+  testImplementation("org.mockito:mockito-inline:4.11.0")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
 }

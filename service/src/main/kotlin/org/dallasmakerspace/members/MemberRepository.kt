@@ -7,6 +7,7 @@ import org.dallasmakerspace.members.db.ProfileTable
 import org.dallasmakerspace.members.db.suspendTransaction
 import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.models.daoToProfileModel
+import org.jetbrains.exposed.sql.and
 
 /**
  * Manages member data. Fetches and updates member data. Contains validation and orchestration logic
@@ -87,6 +88,95 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
           discordUserId = member.discordUserId
         }
       }
+    }
+  }
+
+  /**
+   * Updates the discourse avatar URL for a specific member.
+   *
+   * @param username The username of the member to update.
+   * @param avatarUrl The new discourse avatar URL.
+   * @return true if the update was successful, false if the member doesn't exist.
+   */
+  suspend fun updateDiscourseAvatarUrl(username: String, avatarUrl: String): Boolean {
+    return try {
+      suspendTransaction {
+        val existingMember = ProfileDAO.find { ProfileTable.username eq username }.firstOrNull()
+        if (existingMember != null) {
+          existingMember.discourseAvatarUrl = avatarUrl
+          log.debug("Updated discourse avatar URL for member: $username")
+          true
+        } else {
+          log.warn("Cannot update discourse avatar URL - member not found: $username")
+          false
+        }
+      }
+    } catch (e: Exception) {
+      log.error("Failed to update discourse avatar URL for member: $username", e)
+      false
+    }
+  }
+
+  /**
+   * Updates discourse avatar URLs for multiple members in a batch operation. This is more efficient
+   * than individual updates for bulk operations.
+   *
+   * @param avatarUpdates A map of username to avatar URL.
+   * @return A map of username to success status (true if updated, false if failed).
+   */
+  suspend fun updateDiscourseAvatarUrls(avatarUpdates: Map<String, String>): Map<String, Boolean> {
+    val results = mutableMapOf<String, Boolean>()
+
+    avatarUpdates.forEach { (username, avatarUrl) ->
+      results[username] =
+          try {
+            suspendTransaction {
+              val existingMember =
+                  ProfileDAO.find { ProfileTable.username eq username }.firstOrNull()
+              if (existingMember != null) {
+                existingMember.discourseAvatarUrl = avatarUrl
+                true
+              } else {
+                log.warn("Cannot update discourse avatar URL - member not found: $username")
+                false
+              }
+            }
+          } catch (e: Exception) {
+            log.error("Failed to update discourse avatar URL for member: $username", e)
+            false
+          }
+    }
+
+    val successCount = results.values.count { it }
+    val totalCount = results.size
+    log.info("Batch updated discourse avatar URLs: $successCount/$totalCount successful")
+
+    return results
+  }
+
+  /**
+   * Gets members who have discourse usernames but missing or outdated avatar URLs. This is useful
+   * for bulk avatar refresh operations.
+   *
+   * @return A list of members with discourse usernames that need avatar updates.
+   */
+  suspend fun getMembersNeedingAvatarRefresh(): List<DMSMember> {
+    return suspendTransaction {
+      ProfileDAO.find {
+            ProfileTable.discourseUsername.isNotNull() and ProfileTable.discourseAvatarUrl.isNull()
+          }
+          .map { daoToProfileModel(it) }
+    }
+  }
+
+  /**
+   * Gets members who have discourse usernames, used for avatar refresh operations.
+   *
+   * @return A list of members with discourse usernames.
+   */
+  suspend fun getMembersWithDiscourseUsernames(): List<DMSMember> {
+    return suspendTransaction {
+      ProfileDAO.find { ProfileTable.discourseUsername.isNotNull() }.map { daoToProfileModel(it) }
     }
   }
 }
