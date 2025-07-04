@@ -75,7 +75,7 @@ class MemberServiceAvatarTest {
       val result = simulateAvatarRefresh(testMember)
 
       assertEquals(existingAvatarUrl, result)
-      verify(mockDiscourseAvatarService, never()).refreshAvatarUrl(any())
+      verify(mockDiscourseAvatarService, never()).refreshAvatarUrl(any(), any())
       verify(mockMemberRepository, never()).updateDiscourseAvatarUrl(any(), any())
     }
   }

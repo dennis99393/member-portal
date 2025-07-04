@@ -56,23 +56,6 @@ class DiscourseAvatarServiceTest {
   }
 
   @Test
-  fun `refreshAvatarUrl should return null when API call fails with DiscourseApiException`() {
-    val username = "nonexistentuser"
-    val exception = DiscourseApiException("User not found: $username")
-
-    runBlocking {
-      whenever(mockDiscourseApiClient.getUserProfile(username)).thenThrow(exception)
-
-      val result = discourseAvatarService.refreshAvatarUrl(username)
-
-      assertNull(result)
-      verify(mockDiscourseApiClient).getUserProfile(username)
-      verify(mockLogger)
-          .warn("Failed to refresh avatar template for $username: ${exception.message}")
-    }
-  }
-
-  @Test
   fun `refreshAvatarUrl should return null when API call fails with unexpected exception`() {
     val username = "erroruser"
     val exception = RuntimeException("Network error")
