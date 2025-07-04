@@ -7,7 +7,6 @@ import io.ktor.server.thymeleaf.*
 import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
-import kotlin.collections.set
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import kotlinx.datetime.format.byUnicodePattern
@@ -35,6 +34,11 @@ constructor(
         call.parameters["preferred_username"]
             ?: throw AuthException("No username found in url path")
     val requestedMember = memberService.getMember(requestedUsername, session?.sessionId)
+    val avatarUrl =
+        requestedMember.discourseAvatarUrl
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { "https://talk.dallasmakerspace.org$it" }
+            ?.replace("{size}", "144") ?: ""
     val memberSinceString = getMemberSinceString(requestedMember.memberSince)
     val memberDurationString = getMemberDurationString(requestedMember.memberSince)
     val jsonMap =
@@ -43,7 +47,7 @@ constructor(
             "preferred_username" to requestedMember.username,
             "member_since" to memberSinceString,
             "membership_duration" to memberDurationString,
-            "enabled" to requestedMember.enabled.toString(),
+            "avatar_url" to avatarUrl,
         )
     if (requestedMember.groups.isNotEmpty())
         jsonMap["groups"] = requestedMember.groups.sortedBy { it.name }
