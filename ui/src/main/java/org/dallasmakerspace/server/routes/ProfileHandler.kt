@@ -4,9 +4,6 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
-import java.time.Instant
-import java.time.ZoneId
-import javax.inject.Inject
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import kotlinx.datetime.format.byUnicodePattern
@@ -16,6 +13,9 @@ import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.models.DMSMember
 import org.dallasmakerspace.server.plugins.AuthException
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
+import java.time.Instant
+import java.time.ZoneId
+import javax.inject.Inject
 
 class ProfileHandler
 @Inject
@@ -47,6 +47,7 @@ constructor(
             "preferred_username" to requestedMember.username,
             "member_since" to memberSinceString,
             "membership_duration" to memberDurationString,
+            "enabled" to requestedMember.enabled.toString(),
             "avatar_url" to avatarUrl,
         )
     if (requestedMember.groups.isNotEmpty())

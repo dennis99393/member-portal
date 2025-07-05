@@ -212,10 +212,10 @@
                                 </span>
                         </div>
 
-                        <!--                        <div th:unless="${enabled}" class="d-flex align-items-center mb-3">-->
-                        <!--                            <span class="material-symbols-outlined text-dander card-item-icon">encrypted_off</span>-->
-                        <!--                            <span class="text-danger">Disabled Profile</span>-->
-                        <!--                        </div>-->
+                        <div th:unless="${enabled}" class="d-flex align-items-center mb-3">
+                            <span class="material-symbols-outlined text-dander card-item-icon">encrypted_off</span>
+                            <span class="text-danger">Disabled Profile</span>
+                        </div>
 
                         <th:block th:if="${is_self}">
                             <hr>
