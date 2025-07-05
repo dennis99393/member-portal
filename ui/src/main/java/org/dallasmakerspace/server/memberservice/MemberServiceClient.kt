@@ -1,13 +1,13 @@
 package org.dallasmakerspace.server.memberservice
 
 import io.ktor.util.*
+import javax.inject.Inject
+import javax.inject.Singleton
 import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.DMSHttpClient
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.models.DMSGroup
 import org.dallasmakerspace.server.models.DMSMember
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Suppress("TooGenericExceptionCaught")
 @Singleton

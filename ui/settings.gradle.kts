@@ -1,2 +1,2 @@
-rootProject.name = "member-profile-ui"
-
+rootProject.name =
+    "member-profile-ui"
