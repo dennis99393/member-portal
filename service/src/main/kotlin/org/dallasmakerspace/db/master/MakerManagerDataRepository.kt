@@ -18,6 +18,19 @@ data class MakerManagerUser(
     val adActive: Boolean
 )
 
+// New data class for the getAllUsers query
+data class MakerManagerUserInfo(
+    val makerManagerId: Int,
+    val firstName: String?,
+    val lastName: String?,
+    val username: String,
+    val email: String?,
+    val whmcsUserId: Int,
+    val adActive: Boolean,
+    val phone: String?,
+    val badgeNumber: String?
+)
+
 @Singleton
 class MakerManagerDataRepository @Inject constructor() {
   /**
@@ -68,6 +81,45 @@ class MakerManagerDataRepository @Inject constructor() {
 
     // Convert the results to a map, maintaining the same return type
     return results.groupBy { it.username }
+  }
+
+  /**
+   * Get all users from MakerManager database
+   *
+   * @return List of MakerManagerUserInfo containing all users
+   */
+  suspend fun getAllUsers(): List<MakerManagerUserInfo> {
+    return suspendTransaction {
+      val query =
+          """
+        SELECT u.id as makermanager_id, u.first_name, u.last_name, u.username, u.email, u.whmcs_user_id, u.ad_active,
+        REGEXP_REPLACE(u.phone, '[^0-9]+', '') as phone, b.number as badge_number
+        FROM `dms-makermanager`.users u
+        LEFT JOIN `dms-makermanager`.badges b ON u.id = b.user_id
+      """
+              .trimIndent()
+
+      val users = mutableListOf<MakerManagerUserInfo>()
+
+      this.exec(query) { resultSet: ResultSet ->
+        while (resultSet.next()) {
+          users.add(
+              MakerManagerUserInfo(
+                  makerManagerId = resultSet.getInt("makermanager_id"),
+                  firstName = resultSet.getString("first_name"),
+                  lastName = resultSet.getString("last_name"),
+                  username = resultSet.getString("username"),
+                  email = resultSet.getString("email"),
+                  whmcsUserId = resultSet.getInt("whmcs_user_id"),
+                  adActive = resultSet.getInt("ad_active") == 1,
+                  phone = resultSet.getString("phone"),
+                  badgeNumber = resultSet.getString("badge_number")))
+        }
+        users
+      } ?: emptyList()
+
+      users
+    }
   }
 }
 

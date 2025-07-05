@@ -38,6 +38,15 @@ constructor(private val makerManagerDataRepository: MakerManagerDataRepository) 
     }
     return result
   }
+
+  /**
+   * Get all users from MakerManager database
+   *
+   * @return List of MakerManagerUserInfo containing all users
+   */
+  suspend fun getAllUsers(): List<MakerManagerUserInfo> {
+    return makerManagerDataRepository.getAllUsers()
+  }
 }
 
 // Account level info

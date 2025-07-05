@@ -74,12 +74,9 @@ fun Application.configureRouting() {
       /** Member profile operations * */
       get<Members> { members ->
         val loggedInDays = members.loggedInDays
-        val memberList = memberService.getMembersLoggedInDays(loggedInDays)
-        call.respond(
-            ApiResponse(
-                Status.SUCCESS,
-                "Members logged in last $loggedInDays days: ${memberList.size}",
-                memberList))
+        // Use the new getAllMembers method instead of getMembersLoggedInDays
+        val memberList = memberService.getAllMembers()
+        call.respond(ApiResponse(Status.SUCCESS, "All members: ${memberList.size}", memberList))
       }
 
       get<Members.DMSMember> { memberRequested ->

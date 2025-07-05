@@ -308,7 +308,35 @@ constructor(
   }
 
   suspend fun getAllMembers(): List<DMSMember> {
-    return memberRepository.getAllMembers()
+    // Get all users from MakerManager
+    val makerManagerUsers = makerManagerDataService.getAllUsers()
+
+    // Get all members from the repository to get discourse usernames
+    val dbMembers = memberRepository.getAllMembers()
+
+    // Create a map of usernames to discourse usernames for quick lookup
+    val discourseUsernameMap = dbMembers.associateBy({ it.username }, { it.discourseUsername })
+
+    // Combine the data from MakerManager and repository
+    return makerManagerUsers.map { mmUser ->
+      DMSMember(
+          id = mmUser.makerManagerId,
+          username = mmUser.username,
+          firstName = mmUser.firstName,
+          lastName = mmUser.lastName,
+          displayName =
+              "${mmUser.firstName ?: ""} ${mmUser.lastName ?: ""}".trim().takeIf {
+                it.isNotEmpty()
+              },
+          personalEmail = mmUser.email,
+          phoneNumber = mmUser.phone,
+          badgeNumber = mmUser.badgeNumber,
+          enabled = mmUser.adActive,
+          discourseUsername = discourseUsernameMap[mmUser.username],
+          memberSince = null, // Not available in MakerManager query
+          groups = emptyList(),
+          accountInfo = null)
+    }
   }
 
   fun getGroup(groupslug: String): DMSGroup {
