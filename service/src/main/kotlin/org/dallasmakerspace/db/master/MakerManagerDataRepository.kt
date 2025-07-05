@@ -1,12 +1,12 @@
 package org.dallasmakerspace.db.master
 
+import java.sql.ResultSet
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import org.dallasmakerspace.core.DBMasterConnection
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import java.sql.ResultSet
-import javax.inject.Inject
-import javax.inject.Singleton
 
 // Data class to represent a user in MakerManager
 data class MakerManagerUser(
