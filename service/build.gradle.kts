@@ -10,7 +10,7 @@ plugins {
   id("io.ktor.plugin") version "3.0.1"
   id("com.google.devtools.ksp") version "2.0.21-1.0.28"
   id("org.jetbrains.kotlinx.kover") version "0.7.6"
-  id("com.ncorti.ktfmt.gradle") version "0.18.0"
+  // id("com.ncorti.ktfmt.gradle") version "0.23.0"
   id("io.gitlab.arturbosch.detekt") version "1.23.6"
 }
 
