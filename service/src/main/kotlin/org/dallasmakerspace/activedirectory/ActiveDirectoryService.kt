@@ -130,6 +130,12 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
   }
 
   /** {@inheritDoc} */
+  override fun getAllGroups(): List<ADGroup> {
+    val adResults = activeDirectoryClient.getAllGroups()
+    return adResults.map { (groupName, groupData) -> parseGroup(groupData) }
+  }
+
+  /** {@inheritDoc} */
   override fun getMembersByLoggedInDays(days: Int): List<ADUser> {
     val adSearchResult: Map<String, Map<String, Any?>> =
         activeDirectoryClient.getUsersByLogonDays(days)
@@ -202,6 +208,39 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
           membersListIncomplete = false,
       )
     } ?: emptyList()
+  }
+
+  /**
+   * Parses a single group's attribute map into an ADGroup object.
+   *
+   * @param attributeMap The map of attributes for the group
+   * @return The ADGroup object
+   */
+  private fun parseGroup(attributeMap: Map<String, Any?>): ADGroup {
+    val cn = attributeMap["cn"]?.toString() ?: ""
+    val description = attributeMap["description"]?.toString()
+    val distinguishedName = attributeMap["distinguishedName"]?.toString() ?: ""
+    val objectGuid = attributeMap["objectGUID"]?.toString()
+
+    // For getAllGroups, we just want the member count, not the full member list
+    val memberCount =
+        when (val memberData = attributeMap["member"]) {
+          is Int -> memberData
+          is Array<*> -> memberData.size
+          else -> 0
+        }
+
+    val administrators =
+        (attributeMap["administrators"] as? Array<*>)?.map { it.toString() } ?: emptyList()
+
+    return ADGroup(
+        cn = cn,
+        description = description,
+        distinguishedName = distinguishedName,
+        objectGuid = objectGuid,
+        members = emptyList(), // Don't load members for getAllGroups to improve performance
+        membersListIncomplete = memberCount > 0, // Indicate that members are not loaded
+        administrators = administrators)
   }
 
   /** {@inheritDoc} */

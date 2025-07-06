@@ -9,11 +9,11 @@ import com.unboundid.ldap.sdk.SearchRequest
 import com.unboundid.ldap.sdk.SearchRequest.ALL_USER_ATTRIBUTES
 import com.unboundid.ldap.sdk.SearchScope
 import com.unboundid.ldap.sdk.SimpleBindRequest
+import org.dallasmakerspace.core.AppConfig
+import org.dallasmakerspace.core.LoggerFactory
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
-import org.dallasmakerspace.core.AppConfig
-import org.dallasmakerspace.core.LoggerFactory
 
 private const val INITIAL_LDAP_CONNECTIONS = 3
 
@@ -475,6 +475,37 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
       val userDN = user.dn.toString()
       val mod = Modification(ModificationType.ADD, "member", userDN)
       ldapPool.modify(groupDN, mod)
+    }
+  }
+
+  /** {@inheritDoc} */
+  override fun getAllGroups(): Map<String, Map<String, Any?>> {
+    val groupFilter = Filter.createEqualityFilter("objectCategory", "group")
+
+    val searchResult =
+        ldapPool.search(
+            "OU=Groups,DC=dms,DC=local",
+            SearchScope.SUB,
+            groupFilter,
+            "cn",
+            "distinguishedName",
+            "description",
+            "objectGUID",
+            "member")
+
+    return searchResult.searchEntries.associate { groupEntry ->
+      val groupName = groupEntry.getAttributeValue("cn")
+      val group =
+          groupEntry.attributes.associate {
+            it.name to
+                if (it.name == "member") {
+                  // For member count, just return the count without loading all members
+                  it.values?.size ?: 0
+                } else {
+                  it.values.firstOrNull()
+                }
+          }
+      groupName to group
     }
   }
 

@@ -20,6 +20,7 @@ import org.dallasmakerspace.cron.MemberRefreshCronJobParams
 import org.dallasmakerspace.dataviz.DataVizRouter
 import org.dallasmakerspace.di.DaggerAppComponent
 import org.dallasmakerspace.members.ActivityLogService
+import org.dallasmakerspace.members.GroupService
 import org.dallasmakerspace.members.MemberService
 import org.dallasmakerspace.routing.BadgeLookup
 import org.dallasmakerspace.routing.Groups
@@ -48,6 +49,7 @@ fun Application.configureRouting() {
   }
   routing {
     val memberService: MemberService by lazy { DaggerAppComponent.create().getMemberService() }
+    val groupsService: GroupService by lazy { DaggerAppComponent.create().getGroupService() }
     val activityLogService: ActivityLogService by lazy {
       DaggerAppComponent.create().getActivityLogService()
     }
@@ -90,6 +92,11 @@ fun Application.configureRouting() {
         memberService.updateMember(update.parent.username, routeObjectToModel(updatedMember))
         call.respond(
             ApiResponse(Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember))
+      }
+
+      get<Groups> {
+        val groupsList = groupsService.getAllGroups()
+        call.respond(ApiResponse(Status.SUCCESS, "All groups: ${groupsList.size}", groupsList))
       }
 
       get<Groups.DMSGroup> { groupRequested ->

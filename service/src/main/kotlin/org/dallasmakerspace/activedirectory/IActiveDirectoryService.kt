@@ -37,6 +37,9 @@ interface IActiveDirectoryService {
   /** Gets the ADGroup object for the given groupname. */
   fun getGroup(groupname: String): ADGroup
 
+  /** Gets all ADGroup objects from Active Directory. */
+  fun getAllGroups(): List<ADGroup>
+
   /**
    * Gets the ADUser objects for the given list of distinguished names.
    *

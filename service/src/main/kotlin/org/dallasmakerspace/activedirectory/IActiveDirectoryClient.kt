@@ -5,6 +5,8 @@ interface IActiveDirectoryClient {
 
   fun getGroup(groupname: String): Map<String, Any?>
 
+  fun getAllGroups(): Map<String, Map<String, Any?>>
+
   /**
    * Gets the user objects for the given list of distinguished names.
    *

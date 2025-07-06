@@ -23,12 +23,34 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
   /** {@inheritDoc} */
   override fun getGroup(groupname: String): ADGroup {
     return ADGroup(
-        cn = "3D Printer Basics",
-        description = "Qualified to use 3D printers",
-        distinguishedName = "cn=Members,ou=Security,ou=Groups,dc=dms,dc=local",
-        objectGuid = null,
-        listOf(),
-        false)
+        cn = groupname,
+        description = "Mock group description",
+        distinguishedName = "CN=$groupname,OU=Groups,DC=dms,DC=local",
+        objectGuid = "mock-guid",
+        members = emptyList(),
+        membersListIncomplete = false,
+        administrators = emptyList())
+  }
+
+  /** {@inheritDoc} */
+  override fun getAllGroups(): List<ADGroup> {
+    return listOf(
+        ADGroup(
+            cn = "Mock Group 1",
+            description = "Mock group 1 description",
+            distinguishedName = "CN=Mock Group 1,OU=Groups,DC=dms,DC=local",
+            objectGuid = "mock-guid-1",
+            members = emptyList(),
+            membersListIncomplete = false,
+            administrators = emptyList()),
+        ADGroup(
+            cn = "Mock Group 2",
+            description = "Mock group 2 description",
+            distinguishedName = "CN=Mock Group 2,OU=Groups,DC=dms,DC=local",
+            objectGuid = "mock-guid-2",
+            members = emptyList(),
+            membersListIncomplete = false,
+            administrators = emptyList()))
   }
 
   /** {@inheritDoc} */

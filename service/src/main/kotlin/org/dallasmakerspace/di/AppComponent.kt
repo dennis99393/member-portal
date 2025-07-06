@@ -2,7 +2,6 @@ package org.dallasmakerspace.di
 
 import dagger.Component
 import io.ktor.server.application.*
-import javax.inject.Singleton
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.core.DBMasterConnection
 import org.dallasmakerspace.core.DBMemberPortalConnection
@@ -11,9 +10,11 @@ import org.dallasmakerspace.cron.MemberRefreshCronJob
 import org.dallasmakerspace.dataviz.DataVizRouter
 import org.dallasmakerspace.dataviz.di.DataVizModule
 import org.dallasmakerspace.members.ActivityLogService
+import org.dallasmakerspace.members.GroupService
 import org.dallasmakerspace.members.MemberService
 import org.dallasmakerspace.webhook.WebhookRouter
 import org.dallasmakerspace.webhook.di.WebhookModule
+import javax.inject.Singleton
 
 @Singleton
 @Component(
@@ -31,6 +32,8 @@ interface AppComponent {
   fun getAppConfig(): AppConfig
 
   fun getMemberService(): MemberService
+
+  fun getGroupService(): GroupService
 
   fun getActivityLogService(): ActivityLogService
 
