@@ -1,11 +1,12 @@
 package org.dallasmakerspace.server.memberservice
 
-import javax.inject.Inject
 import org.dallasmakerspace.server.common.HttpException
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.models.DMSGroup
 import org.dallasmakerspace.server.models.DMSMember
+import org.dallasmakerspace.server.models.SearchPreloadResponse
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
+import javax.inject.Inject
 
 class MemberService
 @Inject
@@ -57,7 +58,7 @@ constructor(
     return memberServiceClient.getGroup(groupName, sessionId)
   }
 
-  suspend fun getSearchPreload(sessionId: String?): List<DMSMember> {
+  suspend fun getSearchPreload(sessionId: String?): SearchPreloadResponse {
     return memberServiceClient.getSearchPreloads(sessionId)
   }
 

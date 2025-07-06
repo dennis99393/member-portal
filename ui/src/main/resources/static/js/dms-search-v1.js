@@ -102,7 +102,7 @@ class DMSSearch extends HTMLElement {
       </style>
       <div class="dms-search-container">
       <div class="search-input-container">
-        <input type="text" placeholder="Search members...">
+        <input type="text" placeholder="Search members + groups ...">
         <button class="clear-button">✕</button>
       </div>
       <div class="results-container">
@@ -145,14 +145,21 @@ class DMSSearch extends HTMLElement {
     handleSearch() {
         const input = this.shadowRoot.querySelector('input');
         const query = input.value.toLowerCase();
-        const results = this.members.filter(member =>
-        (member.displayName?.toLowerCase().includes(query) || '') ||
-        (member.username?.toLowerCase().includes(query) || '') ||
-        (member.discourseUsername?.toLowerCase().includes(query) || '') ||
-        (member.badgeNumber === query || '') ||
-        (member.personalEmail === query || '') ||
-        (member.phoneNumber === query || '')
-        );
+        const results = this.members.filter(item => {
+            if (item.type === 'member') {
+                return (item.displayName?.toLowerCase().includes(query) || '') ||
+                (item.username?.toLowerCase().includes(query) || '') ||
+                (item.discourseUsername?.toLowerCase().includes(query) || '') ||
+                (item.badgeNumber === query || '') ||
+                (item.personalEmail === query || '') ||
+                (item.phoneNumber === query || '');
+            } else if (item.type === 'group') {
+                return (item.displayName?.toLowerCase().includes(query) || '') ||
+                (item.username?.toLowerCase().includes(query) || '') ||
+                (item.description?.toLowerCase().includes(query) || '');
+            }
+            return false;
+        });
         this.displayResults(results);
     }
 
@@ -164,10 +171,15 @@ class DMSSearch extends HTMLElement {
         resultsList.innerHTML = '';
 
         if (results.length > 0) {
-            results.slice(0, this.maxResults).forEach(member => {
+            results.slice(0, this.maxResults).forEach(item => {
                 const li = document.createElement('li');
-                li.textContent = `${member.displayName} @${member.username}`;
-                li.addEventListener('click', () => this.handleMemberClick(member));
+                if (item.type === 'member') {
+                    li.textContent = `${item.displayName} @${item.username}`;
+                    li.addEventListener('click', () => this.handleMemberClick(item));
+                } else if (item.type === 'group') {
+                    li.textContent = `${item.displayName} (Group)`;
+                    li.addEventListener('click', () => this.handleGroupClick(item));
+                }
                 resultsList.appendChild(li);
             });
             resultsContainer.style.display = 'block';
@@ -181,6 +193,11 @@ class DMSSearch extends HTMLElement {
     handleMemberClick(member) {
         console.log(`Clicked on member: ${member.username}`);
         window.location.href = `/profile/@${member.username}`;
+    }
+
+    handleGroupClick(group) {
+        console.log(`Clicked on group: ${group.username}`);
+        window.location.href = `/groups/${group.username}`;
     }
 
     clearSearch() {

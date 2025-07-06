@@ -1,13 +1,16 @@
 package org.dallasmakerspace.server.memberservice
 
 import io.ktor.util.*
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.DMSHttpClient
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.models.DMSGroup
 import org.dallasmakerspace.server.models.DMSMember
+import org.dallasmakerspace.server.models.SearchPreloadResponse
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Suppress("TooGenericExceptionCaught")
 @Singleton
@@ -67,19 +70,41 @@ constructor(
     return DMSGroup.fromMap(data)
   }
 
-  suspend fun getSearchPreloads(sessionId: String?): List<DMSMember> {
-    val userMap =
-        try {
-          val apiHeaders = getApiHeaders(sessionId)
-          dmsHttpClient.get("$baseUrl/members", apiHeaders)
-        } catch (ignored: Exception) {
-          log.error("Failed to get search preloads", ignored)
-          throw MemberServiceException("Failed to get search preloads", ignored)
-        }
-    val data =
-        userMap["data"] as List<*>?
-            ?: throw MemberServiceException("data attribute missing required")
-    return data.map { DMSMember.fromMap(it as Map<String, Any?>) }
+  suspend fun getSearchPreloads(sessionId: String?): SearchPreloadResponse = coroutineScope {
+    val apiHeaders = getApiHeaders(sessionId)
+
+    // Fetch members and groups in parallel
+    val membersDeferred = async {
+      try {
+        val userMap = dmsHttpClient.get("$baseUrl/members", apiHeaders)
+        val data =
+            userMap["data"] as List<*>?
+                ?: throw MemberServiceException("data attribute missing required")
+        data.map { DMSMember.fromMap(it as Map<String, Any?>) }
+      } catch (ignored: Exception) {
+        log.error("Failed to get search preloads - members", ignored)
+        throw MemberServiceException("Failed to get search preloads - members", ignored)
+      }
+    }
+
+    val groupsDeferred = async {
+      try {
+        val groupMap = dmsHttpClient.get("$baseUrl/groups", apiHeaders)
+        val data =
+            groupMap["data"] as List<*>?
+                ?: throw MemberServiceException("data attribute missing required")
+        data.map { DMSGroup.fromMap(it as Map<String, Any?>) }
+      } catch (ignored: Exception) {
+        log.error("Failed to get search preloads - groups", ignored)
+        throw MemberServiceException("Failed to get search preloads - groups", ignored)
+      }
+    }
+
+    // Wait for both requests to complete
+    val members = membersDeferred.await()
+    val groups = groupsDeferred.await()
+
+    SearchPreloadResponse(members, groups)
   }
 
   suspend fun addToGroup(sessionId: String?, username: String, groupName: String) {

@@ -3,11 +3,11 @@ package org.dallasmakerspace.server.routes
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import java.util.concurrent.*
-import javax.inject.Inject
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
+import java.util.concurrent.*
+import javax.inject.Inject
 
 class SearchPreloadHandler
 @Inject
@@ -35,19 +35,17 @@ constructor(
 
     val jsonMap: MutableMap<String, Any> = mutableMapOf()
     try {
-      val preloadList = memberService.getSearchPreload(session?.sessionId)
-      // Print out list size
-      log.debug("SearchPreloadHandler preloadList size: ${preloadList.size}")
-      // Return list with only DMSMember.displayName and DMSMember.discordUserId
-      jsonMap["status"] = "SUCCESS"
-      jsonMap["data"] =
-          preloadList.map {
+      val preloadResponse = memberService.getSearchPreload(session?.sessionId)
+
+      // Process members
+      val memberData =
+          preloadResponse.members.map {
             val record =
                 mutableMapOf(
                     "displayName" to it.displayName,
                     "username" to it.username,
                     "discourseUsername" to it.discourseUsername,
-                )
+                    "type" to "member")
             if (isInfra) {
               record["badgeNumber"] = it.badgeNumber
               record["personalEmail"] = it.personalEmail
@@ -55,6 +53,27 @@ constructor(
             }
             record
           }
+
+      // Process groups
+      val groupData =
+          preloadResponse.groups.map {
+            mapOf(
+                "displayName" to it.name,
+                "username" to it.slug,
+                "description" to it.description,
+                "type" to "group")
+          }
+
+      // Combine members and groups
+      val combinedData = memberData + groupData
+
+      log.debug("SearchPreloadHandler members size: ${preloadResponse.members.size}")
+      log.debug("SearchPreloadHandler groups size: ${preloadResponse.groups.size}")
+      log.debug("SearchPreloadHandler combined size: ${combinedData.size}")
+
+      jsonMap["status"] = "SUCCESS"
+      jsonMap["data"] = combinedData
+
       cache[cacheKey] = Pair(currentTime, jsonMap)
       call.respond(jsonMap)
     } catch (e: Exception) {
