@@ -1,10 +1,9 @@
 package org.dallasmakerspace.cron
 
 import dagger.Reusable
-import javax.inject.Inject
-import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.dallasmakerspace.activedirectory.ADUser
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.core.logging.AppInMemoryLogger
@@ -12,6 +11,8 @@ import org.dallasmakerspace.discourse.DiscourseAvatarService
 import org.dallasmakerspace.members.MemberComparator
 import org.dallasmakerspace.members.MemberRepository
 import org.dallasmakerspace.members.MemberService
+import javax.inject.Inject
+import kotlin.random.Random
 
 /**
  * This class is responsible for refreshing the member list from Active Directory. It is intended to
@@ -42,7 +43,15 @@ constructor(
     val startTime = System.currentTimeMillis()
 
     val dbMembers = memberService.getAllMembers()
-    val adMembers = activeDirectoryService.getMembersByUsernameList(dbMembers.map { it.username })
+    val adMembers =
+        dbMembers
+            .map { it.username }
+            .chunked(AD_READ_BATCH_SIZE)
+            .map { chunk -> activeDirectoryService.getMembersByUsernameList(chunk) }
+            .fold(mutableMapOf<String, ADUser?>()) { acc, map ->
+              acc.putAll(map)
+              acc
+            }
 
     log.info("Found members in DB: ${dbMembers.size}; Found users in AD: ${adMembers.size}")
 
@@ -67,6 +76,7 @@ constructor(
               .getMembersWithDiscourseUsernames()
               .filter { it.discourseUsername != null }
               .shuffled() // Randomize order to distribute load
+              .take(AVATAR_REFRESH_DAILY_LIMIT) // Limit to a reasonable number per run
         } else {
           emptyList()
         }
@@ -189,13 +199,16 @@ constructor(
     return Pair(successful, failed)
   }
 
-  companion object {
-    private const val MAX_MEMBER_PROCESS_BATCH_SIZE = 10
-    private const val DELAY_BETWEEN_BATCHES_MILLIS = 50L
+  private companion object {
+    const val AD_READ_BATCH_SIZE = 100
+
+    const val MAX_MEMBER_PROCESS_BATCH_SIZE = 10
+    const val DELAY_BETWEEN_BATCHES_MILLIS = 50L
 
     // Avatar refresh constants
-    private const val AVATAR_REFRESH_BATCH_SIZE = 5
-    private const val AVATAR_DELAY_BETWEEN_BATCHES_MILLIS = 200L
-    private const val AVATAR_DELAY_BETWEEN_CALLS_MILLIS = 100L
+    const val AVATAR_REFRESH_BATCH_SIZE = 5
+    const val AVATAR_REFRESH_DAILY_LIMIT = 100
+    const val AVATAR_DELAY_BETWEEN_BATCHES_MILLIS = 200L
+    const val AVATAR_DELAY_BETWEEN_CALLS_MILLIS = 100L
   }
 }
