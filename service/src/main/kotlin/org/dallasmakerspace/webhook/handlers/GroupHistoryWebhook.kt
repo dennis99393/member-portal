@@ -43,8 +43,8 @@ constructor(
         return WebhookResult(false, "Could not find user with DN: $memberDn")
       }
 
-      val memberUsername = event.Subject.UserName
-      val actorUsername = adUsers[0].sAMAccountName
+      val memberUsername = adUsers[0].sAMAccountName
+      val actorUsername = event.Subject.UserName
       val groupName = event.TargetGroup.Name
 
       // Get actor and member IDs from the memberService
