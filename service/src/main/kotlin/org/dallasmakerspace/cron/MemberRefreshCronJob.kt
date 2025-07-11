@@ -208,7 +208,7 @@ constructor(
 
     // Avatar refresh constants
     const val AVATAR_REFRESH_BATCH_SIZE = 5
-    const val AVATAR_REFRESH_DAILY_LIMIT = 100
+    const val AVATAR_REFRESH_DAILY_LIMIT = 60
     const val AVATAR_DELAY_BETWEEN_BATCHES_MILLIS = 200L
     const val AVATAR_DELAY_BETWEEN_CALLS_MILLIS = 100L
   }
