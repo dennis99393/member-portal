@@ -1,8 +1,5 @@
 package org.dallasmakerspace.cron
 
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.core.LoggerFactory
@@ -19,6 +16,9 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.slf4j.Logger
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class MemberRefreshCronJobAvatarTest {
 
@@ -74,7 +74,7 @@ class MemberRefreshCronJobAvatarTest {
 
     runBlocking {
       // Setup mocks
-      whenever(mockMemberService.getAllMembers()).thenReturn(testMembers)
+      whenever(mockMemberService.getAllMembersWithProfiles()).thenReturn(testMembers)
       whenever(mockActiveDirectoryService.getMembersByUsernameList(any())).thenReturn(emptyMap())
       whenever(mockMemberRepository.getMembersWithDiscourseUsernames()).thenReturn(testMembers)
       whenever(mockDiscourseAvatarService.refreshAvatarUrl("user1_discourse"))
