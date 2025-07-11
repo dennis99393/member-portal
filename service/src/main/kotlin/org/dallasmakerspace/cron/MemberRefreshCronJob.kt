@@ -42,7 +42,7 @@ constructor(
         "**************************************************************************************")
     val startTime = System.currentTimeMillis()
 
-    val dbMembers = memberService.getAllMembers()
+    val dbMembers = memberService.getAllMembersWithProfiles()
     val adMembers =
         dbMembers
             .map { it.username }
@@ -114,7 +114,8 @@ constructor(
 
           val modeText = if (params.isRunningInShadowMode) " (shadow mode)" else ""
           log.debug(
-              "Avatar batch ${batchIndex + 1}/${avatarBatches.size} completed$modeText: ${batchResults.first} successful, ${batchResults.second} failed")
+              "Avatar batch ${batchIndex + 1}/${avatarBatches.size} completed$modeText:" +
+                  " ${batchResults.first} successful, ${batchResults.second} failed")
         } catch (e: Exception) {
           log.error("Error processing avatar batch ${batchIndex + 1}: ${e.message}", e)
           avatarRefreshFailed += avatarBatch.size

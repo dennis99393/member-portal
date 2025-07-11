@@ -3,7 +3,6 @@ package org.dallasmakerspace.members
 import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.google.i18n.phonenumbers.Phonenumber
-import javax.inject.Inject
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atStartOfDayIn
@@ -19,6 +18,7 @@ import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.routing.Groups
 import org.dallasmakerspace.voterregistration.VoterRegistrationManager
+import javax.inject.Inject
 
 @Suppress("LongParameterList")
 class MemberService
@@ -305,6 +305,10 @@ constructor(
         listOf(requireNotNull(dbMember.discourseUsername)))
     activityLogService.insertActivityLogEntry(
         subjectUsername = dbMember.username, event = ActivityLogEvent.UNLINK_DISCOURSE)
+  }
+
+  suspend fun getAllMembersWithProfiles(): List<DMSMember> {
+    return memberRepository.getAllMembers()
   }
 
   suspend fun getAllMembers(): List<DMSMember> {
