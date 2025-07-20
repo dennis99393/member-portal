@@ -343,9 +343,11 @@ constructor(
     }
   }
 
-  fun getGroup(groupslug: String): DMSGroup {
+  suspend fun getGroup(groupslug: String): DMSGroup {
     val groupname = Groups.getNameFromSlug(groupslug)
     val adGroup = activeDirectoryService.getGroup(groupname)
+    // Get the members from DB so we can include their discourse usernames and other details.
+    val dbMembers = memberRepository.getAllMembers()
     return DMSGroup(
         name = adGroup.cn,
         description = adGroup.description,
@@ -353,12 +355,16 @@ constructor(
         objectGuid = adGroup.objectGuid,
         members =
             adGroup.members.map {
+              // Find corresponding DB member
+              val dbMember = dbMembers.find { db -> db.username == it.sAMAccountName }
               DMSMember(
                   -1,
                   it.sAMAccountName,
                   firstName = it.givenName,
                   lastName = it.sn,
                   displayName = it.displayName,
+                  avatarUrl = dbMember?.discourseAvatarUrl,
+                  discourseUsername = dbMember?.discourseUsername,
                   personalEmail = it.mail,
                   phoneNumber = getNormalizedPhoneNumber(it.telephoneNumber, it.sAMAccountName),
                   badgeNumber = it.employeeID,
