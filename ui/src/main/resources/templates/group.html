@@ -33,15 +33,16 @@
         </div>
         <div class="col-md-8">
             <!-- Assigned members card -->
-            <div class="card mt-4">
+            <div class="dms-card shadow-sm mt-4">
                 <div class="card-body">
-                    <h3 class="card-title mb-3">Members Assigned</h3>
+                    <h4 class="card-title mt-3 mb-4 dms-card-title">Members Assigned</h4>
                     <div class="card-text">
                         <div th:if="${members}" class="member-list">
-                            <div th:each="member : ${members}" class="member-item mb-2">
-                                <span th:text="${member.displayName}" class="fw-bold"></span>
-                                <a class="ms-2 text-decoration-none"
-                                   th:href="|/profile/@${member.username}|" th:text="|@${member.username}|"></a>
+                            <div th:each="member : ${members}" class="member-item mb-3">
+                                <dms-member-card
+                                        th:attr="username=${member.username},displayName=${member.displayName},avatarUrl=${member.avatarUrl}"
+                                        state="mini">
+                                </dms-member-card>
                             </div>
                             <div th:if="${memberlist_incomplete}" class="alert alert-warning mt-3" role="alert">
                                 <strong>⚠️ Note:</strong> Only some of the assigned members are listed above.
@@ -65,6 +66,7 @@
         crossorigin="anonymous"></script>
 <!-- App JS -->
 <script src="/static/js/app.js"></script>
+<script src="/static/js/dms-member-card.js" type="module"></script>
 <script src="/static/js/dms-page-loader.js" defer></script>
 </body>
 </html>

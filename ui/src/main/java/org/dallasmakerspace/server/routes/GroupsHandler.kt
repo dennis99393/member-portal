@@ -2,15 +2,13 @@ package org.dallasmakerspace.server.routes
 
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
-import javax.inject.Inject
-import kotlin.collections.set
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.models.DMSGroup
 import org.dallasmakerspace.server.plugins.AuthException
+import javax.inject.Inject
 
 class GroupsHandler
 @Inject
@@ -36,7 +34,27 @@ constructor(
             "slug" to requestedGroup.slug,
         )
     if (requestedGroup.members.isNotEmpty()) {
-      jsonMap["members"] = requestedGroup.members
+      // Process members to add proper avatar URLs
+      val processedMembers =
+          requestedGroup.members.map { member ->
+            val avatarUrl =
+                member.avatarUrl
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.let { "https://talk.dallasmakerspace.org$it" }
+                    ?.replace("{size}", "144") ?: ""
+
+            // Create a map with processed avatar URL
+            mutableMapOf<String, Any?>(
+                "username" to member.username,
+                "displayName" to member.displayName,
+                "avatarUrl" to avatarUrl,
+                "discourseUsername" to member.discourseUsername,
+                "discourseAvatarUrl" to member.discourseAvatarUrl,
+                "discordUserId" to member.discordUserId,
+            )
+          }
+
+      jsonMap["members"] = processedMembers
       jsonMap["memberlist_incomplete"] = requestedGroup.membersListIncomplete
     }
     requestedGroup.description?.let { jsonMap["description"] = it }
