@@ -5,6 +5,9 @@ class DMSSearch extends HTMLElement {
         this.members = [];
         this.maxResults = 10; // Default value
         this.dataFetched = false;
+        this.isRequestInFlight = false;
+        this.abortController = null;
+        this.spinnerTimeout = null;
     }
 
     static get observedAttributes() {
@@ -58,6 +61,20 @@ class DMSSearch extends HTMLElement {
           padding: 10px 0;
           background-color: transparent;
         }
+        .spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid #f3f3f3;
+          border-top: 2px solid #5f6368;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-right: 8px;
+          display: none;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
         .clear-button {
           background: none;
           border: none;
@@ -65,6 +82,14 @@ class DMSSearch extends HTMLElement {
           font-size: 18px;
           color: #5f6368;
           display: none;
+        }
+        .error-message {
+          color: #d93025;
+          font-size: 14px;
+          padding: 8px 15px;
+          display: none;
+          border-top: 1px solid #fce8e6;
+          background-color: #fef7f0;
         }
         .results-container {
           width: 100%;
@@ -102,9 +127,11 @@ class DMSSearch extends HTMLElement {
       </style>
       <div class="dms-search-container">
       <div class="search-input-container">
+        <div class="spinner"></div>
         <input type="text" placeholder="Search members + groups ...">
         <button class="clear-button">✕</button>
       </div>
+      <div class="error-message"></div>
       <div class="results-container">
         <div class="loading-indicator" style="display: none;">Loading...</div>
         <ul class="results-list"></ul>
@@ -125,26 +152,82 @@ class DMSSearch extends HTMLElement {
     }
 
     async handleFocus() {
-        if (!this.dataFetched) {
+        if (!this.dataFetched && !this.isRequestInFlight) {
             await this.fetchMembers();
             this.dataFetched = true;
         }
     }
 
     async fetchMembers() {
+        if (this.isRequestInFlight) {
+            return;
+        }
+
+        this.isRequestInFlight = true;
+        this.hideErrorMessage();
+        this.showSpinner();
+
+        // Create new AbortController for this request
+        this.abortController = new AbortController();
+
         try {
-            // Replace this URL with your actual API endpoint
-            const response = await fetch('/search-preload');
-            let json = await response.json();
+            // Create timeout promise
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Request timeout')), 5000);
+            });
+
+            // Create fetch promise with abort signal
+            const fetchPromise = fetch('/search-preload', {
+                signal: this.abortController.signal,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            // Race between fetch and timeout
+            const response = await Promise.race([fetchPromise, timeoutPromise]);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const json = await response.json();
             this.members = json["data"];
+
         } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('Request was aborted');
+                return;
+            }
+
             console.error('Error fetching search preload:', error);
+            this.showErrorMessage('Failed to load search data. Please try again.');
+        } finally {
+            this.isRequestInFlight = false;
+            this.hideSpinner();
+            this.abortController = null;
         }
     }
 
     handleSearch() {
         const input = this.shadowRoot.querySelector('input');
         const query = input.value.toLowerCase();
+
+        // If we don't have data and no request is in flight, start a new request
+        if (!this.dataFetched && !this.isRequestInFlight) {
+            this.fetchMembers().then(() => {
+                // After data is fetched, perform the search
+                if (this.dataFetched) {
+                    this.performSearch(query);
+                }
+            });
+            return;
+        }
+
+        this.performSearch(query);
+    }
+
+    performSearch(query) {
         const results = this.members.filter(item => {
             if (item.type === 'member') {
                 return (item.displayName?.toLowerCase().includes(query) || '') ||
@@ -161,6 +244,49 @@ class DMSSearch extends HTMLElement {
             return false;
         });
         this.displayResults(results);
+    }
+
+    showSpinner() {
+        // Clear any existing timeout
+        if (this.spinnerTimeout) {
+            clearTimeout(this.spinnerTimeout);
+        }
+
+        // Show spinner after 500ms delay
+        this.spinnerTimeout = setTimeout(() => {
+            const spinner = this.shadowRoot.querySelector('.spinner');
+            if (spinner && this.isRequestInFlight) {
+                spinner.style.display = 'block';
+            }
+        }, 500);
+    }
+
+    hideSpinner() {
+        // Clear timeout if spinner hasn't been shown yet
+        if (this.spinnerTimeout) {
+            clearTimeout(this.spinnerTimeout);
+            this.spinnerTimeout = null;
+        }
+
+        const spinner = this.shadowRoot.querySelector('.spinner');
+        if (spinner) {
+            spinner.style.display = 'none';
+        }
+    }
+
+    showErrorMessage(message) {
+        const errorElement = this.shadowRoot.querySelector('.error-message');
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+    }
+
+    hideErrorMessage() {
+        const errorElement = this.shadowRoot.querySelector('.error-message');
+        if (errorElement) {
+            errorElement.style.display = 'none';
+        }
     }
 
     displayResults(results) {
@@ -205,6 +331,7 @@ class DMSSearch extends HTMLElement {
         input.value = '';
         this.toggleClearButton();
         this.displayResults([]);
+        this.hideErrorMessage();
     }
 
     toggleClearButton() {
