@@ -173,7 +173,7 @@ class DMSSearch extends HTMLElement {
         try {
             // Create timeout promise
             const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Request timeout')), 5000);
+                setTimeout(() => reject(new Error('Request timeout')), 35000);
             });
 
             // Create fetch promise with abort signal
