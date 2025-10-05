@@ -8,6 +8,7 @@ class DMSSearch extends HTMLElement {
         this.isRequestInFlight = false;
         this.abortController = null;
         this.spinnerTimeout = null;
+        this.hadError = false;
     }
 
     static get observedAttributes() {
@@ -193,7 +194,7 @@ class DMSSearch extends HTMLElement {
 
             const json = await response.json();
             this.members = json["data"];
-
+            this.dataFetched = true;
         } catch (error) {
             if (error.name === 'AbortError') {
                 console.log('Request was aborted');
@@ -213,13 +214,24 @@ class DMSSearch extends HTMLElement {
         const input = this.shadowRoot.querySelector('input');
         const query = input.value.toLowerCase();
 
+        // If there was an error, clear it and retry the API before searching
+        const hadError = this.hadError === true;
+        this.hideErrorMessage();
+
+        if (hadError) {
+            if (this.isRequestInFlight && this.abortController) {
+                this.abortController.abort();
+            }
+            this.fetchMembers().then(() => {
+                this.performSearch(query);
+            });
+            return;
+        }
+
         // If we don't have data and no request is in flight, start a new request
         if (!this.dataFetched && !this.isRequestInFlight) {
             this.fetchMembers().then(() => {
-                // After data is fetched, perform the search
-                if (this.dataFetched) {
-                    this.performSearch(query);
-                }
+                this.performSearch(query);
             });
             return;
         }
@@ -280,6 +292,7 @@ class DMSSearch extends HTMLElement {
             errorElement.textContent = message;
             errorElement.style.display = 'block';
         }
+        this.hadError = true;
     }
 
     hideErrorMessage() {
@@ -287,6 +300,7 @@ class DMSSearch extends HTMLElement {
         if (errorElement) {
             errorElement.style.display = 'none';
         }
+        this.hadError = false;
     }
 
     displayResults(results) {

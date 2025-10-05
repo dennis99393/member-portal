@@ -1,8 +1,10 @@
 package org.dallasmakerspace.server.memberservice
 
 import io.ktor.util.*
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withTimeout
 import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.DMSHttpClient
 import org.dallasmakerspace.server.common.logging.LoggerFactory
@@ -11,6 +13,7 @@ import org.dallasmakerspace.server.models.DMSMember
 import org.dallasmakerspace.server.models.SearchPreloadResponse
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("TooGenericExceptionCaught")
 @Singleton
@@ -19,14 +22,15 @@ class MemberServiceClient
 constructor(
     loggerFactory: LoggerFactory,
     appConfig: AppConfig,
-    private val dmsHttpClient: DMSHttpClient
+    private val dmsHttpClient: DMSHttpClient,
 ) {
   private val log = loggerFactory.create(javaClass)
   private val baseUrl = appConfig.requireStringProperty("app.member-service.url")
   private val authHeaders =
       mapOf(
           "X-Api-Key" to appConfig.requireStringProperty("app.member-service.api-key"),
-          "X-Api-Client" to appConfig.requireStringProperty("app.member-service.api-client"))
+          "X-Api-Client" to appConfig.requireStringProperty("app.member-service.api-client"),
+      )
 
   suspend fun getMember(username: String, sessionId: String?): DMSMember {
     val userMap =
@@ -71,40 +75,58 @@ constructor(
   }
 
   suspend fun getSearchPreloads(sessionId: String?): SearchPreloadResponse = coroutineScope {
-    val apiHeaders = getApiHeaders(sessionId)
+    val overallTimeoutMs = 15_000L
 
-    // Fetch members and groups in parallel
-    val membersDeferred = async {
-      try {
-        val userMap = dmsHttpClient.get("$baseUrl/members", apiHeaders)
-        val data =
-            userMap["data"] as List<*>?
-                ?: throw MemberServiceException("data attribute missing required")
-        data.map { DMSMember.fromMap(it as Map<String, Any?>) }
-      } catch (ignored: Exception) {
-        log.error("Failed to get search preloads - members", ignored)
-        throw MemberServiceException("Failed to get search preloads - members", ignored)
+    withTimeout(overallTimeoutMs) {
+      val apiHeaders = getApiHeaders(sessionId)
+
+      // Fetch members and groups in parallel with per-request timeouts
+      val membersDeferred = async {
+        try {
+          withTimeout(12_000L) {
+            val userMap = dmsHttpClient.get("$baseUrl/members", apiHeaders)
+            val data =
+                userMap["data"] as List<*>?
+                    ?: throw MemberServiceException("data attribute missing required")
+            data.map { DMSMember.fromMap(it as Map<String, Any?>) }
+          }
+        } catch (ex: TimeoutCancellationException) {
+          log.error("Timed out getting search preloads - members", ex)
+          throw MemberServiceException("Timed out getting search preloads - members", ex)
+        } catch (ex: CancellationException) {
+          throw ex
+        } catch (ex: Exception) {
+          log.error("Failed to get search preloads - members", ex)
+          throw MemberServiceException("Failed to get search preloads - members", ex)
+        }
       }
-    }
 
-    val groupsDeferred = async {
-      try {
-        val groupMap = dmsHttpClient.get("$baseUrl/groups", apiHeaders)
-        val data =
-            groupMap["data"] as List<*>?
-                ?: throw MemberServiceException("data attribute missing required")
-        data.map { DMSGroup.fromMap(it as Map<String, Any?>) }
-      } catch (ignored: Exception) {
-        log.error("Failed to get search preloads - groups", ignored)
-        throw MemberServiceException("Failed to get search preloads - groups", ignored)
+      val groupsDeferred = async {
+        try {
+          withTimeout(12_000L) {
+            val groupMap = dmsHttpClient.get("$baseUrl/groups", apiHeaders)
+            val data =
+                groupMap["data"] as List<*>?
+                    ?: throw MemberServiceException("data attribute missing required")
+            data.map { DMSGroup.fromMap(it as Map<String, Any?>) }
+          }
+        } catch (ex: TimeoutCancellationException) {
+          log.error("Timed out getting search preloads - groups", ex)
+          throw MemberServiceException("Timed out getting search preloads - groups", ex)
+        } catch (ex: CancellationException) {
+          throw ex
+        } catch (ex: Exception) {
+          log.error("Failed to get search preloads - groups", ex)
+          throw MemberServiceException("Failed to get search preloads - groups", ex)
+        }
       }
+
+      // Wait for both requests to complete
+      val members = membersDeferred.await()
+      val groups = groupsDeferred.await()
+
+      SearchPreloadResponse(members, groups)
     }
-
-    // Wait for both requests to complete
-    val members = membersDeferred.await()
-    val groups = groupsDeferred.await()
-
-    SearchPreloadResponse(members, groups)
   }
 
   suspend fun addToGroup(sessionId: String?, username: String, groupName: String) {

@@ -9,9 +9,9 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.util.*
+import org.dallasmakerspace.server.common.logging.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Singleton
-import org.dallasmakerspace.server.common.logging.LoggerFactory
 
 @Singleton
 class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
@@ -21,8 +21,11 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
       HttpClient(CIO) {
         engine {
           endpoint {
-            keepAliveTime = 0
+            keepAliveTime = 10_000
+            maxConnectionsPerRoute = 100
             requestTimeout = 30_000
+            connectTimeout = 10_000
+            connectAttempts = 2
           }
         }
         install(ContentNegotiation) { jackson {} }
