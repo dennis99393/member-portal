@@ -23,7 +23,7 @@ constructor(
     loggerFactory: LoggerFactory,
     private val memberService: MemberService,
     userInfoProvider: UserInfoProvider,
-    private val voterRegistrationManager: VoterRegistrationManager
+    private val voterRegistrationManager: VoterRegistrationManager,
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
@@ -37,8 +37,12 @@ constructor(
     val avatarUrl =
         requestedMember.discourseAvatarUrl
             ?.takeIf { it.isNotEmpty() }
-            ?.let { "https://talk.dallasmakerspace.org$it" }
-            ?.replace("{size}", "144") ?: ""
+            ?.let { url ->
+              when {
+                url.startsWith("//") -> "https:$url"
+                else -> "https://talk.dallasmakerspace.org$url"
+              }.replace("{size}", "144")
+            } ?: ""
     val memberSinceString = getMemberSinceString(requestedMember.memberSince)
     val memberDurationString = getMemberDurationString(requestedMember.memberSince)
     val jsonMap =
@@ -90,7 +94,7 @@ constructor(
   private fun setToastMessage(
       call: ApplicationCall,
       jsonMap: MutableMap<String, Any>,
-      requestedMember: DMSMember
+      requestedMember: DMSMember,
   ) {
     if (session?.isDiscourseLinkSuccess == true) {
       log.info("Setting toast message for ${requestedMember.username} successful discourse link")
@@ -102,7 +106,8 @@ constructor(
       jsonMap["toast_btn_label"] = "Unlink"
     } else if (session?.isVoterRegistrationSuccess == true) {
       log.info(
-          "Setting toast message for ${requestedMember.username} successful voter registration")
+          "Setting toast message for ${requestedMember.username} successful voter registration"
+      )
       session?.isVoterRegistrationSuccess = false
       call.sessions.set(session)
       jsonMap["toast_message"] = "Successfully registered to vote."

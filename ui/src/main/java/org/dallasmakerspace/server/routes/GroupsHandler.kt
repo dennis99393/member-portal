@@ -15,7 +15,7 @@ class GroupsHandler
 constructor(
     loggerFactory: LoggerFactory,
     private val memberService: MemberService,
-    userInfoProvider: UserInfoProvider
+    userInfoProvider: UserInfoProvider,
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
@@ -40,8 +40,12 @@ constructor(
             val avatarUrl =
                 member.avatarUrl
                     ?.takeIf { it.isNotEmpty() }
-                    ?.let { "https://talk.dallasmakerspace.org$it" }
-                    ?.replace("{size}", "144") ?: ""
+                    ?.let { url ->
+                      when {
+                        url.startsWith("//") -> "https:$url"
+                        else -> "https://talk.dallasmakerspace.org$url"
+                      }.replace("{size}", "144")
+                    } ?: ""
 
             // Create a map with processed avatar URL
             mutableMapOf<String, Any?>(
