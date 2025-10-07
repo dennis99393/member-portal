@@ -17,7 +17,7 @@ import javax.inject.Singleton
 class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
   private val log = loggerFactory.create(javaClass)
 
-  private val client =
+  private fun getClient() =
       HttpClient(CIO) {
         engine {
           endpoint {
@@ -35,10 +35,8 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
         }
       }
 
-  private fun getClient(): HttpClient = client
-
   suspend fun get(url: String, customHeaders: StringValues): Map<String, Any> {
-    val resp = getClient().let { it.get(url) { headers { appendAll(customHeaders) } } }
+    val resp = getClient().use { it.get(url) { headers { appendAll(customHeaders) } } }
     if (resp.status.isSuccess()) {
       return resp.body<Map<String, Any>>()
     } else {
@@ -57,7 +55,7 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
 
   suspend fun patch(url: String, authHeaders: StringValues, payload: Any) {
     val resp =
-        getClient().let {
+        getClient().use {
           it.patch {
             url(url)
             headers { appendAll(authHeaders) }
@@ -73,7 +71,7 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
 
   suspend fun delete(url: String, authHeaders: StringValues, payload: Any) {
     val resp =
-        getClient().let {
+        getClient().use {
           it.delete {
             url(url)
             headers { appendAll(authHeaders) }
