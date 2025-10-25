@@ -43,9 +43,7 @@ object GroupHistoryColumnAliases {
 
 fun daoToGroupHistoryModel(resultRow: ResultRow) =
     GroupHistory(
-        resultRow[GroupHistoryTable.idColumn].value,
         resultRow[GroupHistoryColumnAliases.actorProfileAlias[ProfileTable.username]].toString(),
         resultRow[GroupHistoryColumnAliases.memberProfileAlias[ProfileTable.username]].toString(),
-        resultRow[GroupHistoryColumnAliases.groupsAlias[GroupsTable.name]],
         resultRow[GroupHistoryTable.eventTimestamp].toKotlinLocalDateTime(),
-        resultRow[GroupHistoryTable.created].toKotlinLocalDateTime())
+    )

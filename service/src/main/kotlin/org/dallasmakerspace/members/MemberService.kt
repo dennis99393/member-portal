@@ -33,6 +33,7 @@ constructor(
     private val makerManagerDataService: MakerManagerDataService,
     private val activeDirectoryService: ActiveDirectoryService,
     private val voterRegistrationManager: VoterRegistrationManager,
+    private val groupHistoryRepository: GroupHistoryRepository,
 ) {
   private val log = loggerFactory.create(javaClass)
 
@@ -378,6 +379,8 @@ constructor(
     val adGroup = activeDirectoryService.getGroup(groupname)
     // Get the members from DB so we can include their discourse usernames and other details.
     val dbMembers = memberRepository.getAllMembers()
+    // Get group history
+    val groupHistory = groupHistoryRepository.getGroupHistoryByName(groupname)
     return DMSGroup(
         name = adGroup.cn,
         description = adGroup.description,
@@ -415,6 +418,7 @@ constructor(
             },
         membersListIncomplete = adGroup.membersListIncomplete,
         administrators = adGroup.administrators,
+        history = groupHistory,
     )
   }
 

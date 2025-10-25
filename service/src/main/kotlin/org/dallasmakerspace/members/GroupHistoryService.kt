@@ -1,8 +1,5 @@
 package org.dallasmakerspace.members
 
-import java.time.LocalDateTime
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.datetime.toJavaLocalDateTime
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.members.db.GroupDAO
@@ -17,9 +14,13 @@ import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.models.GroupHistory
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /** Service for managing group history operations. */
 @Singleton
@@ -27,7 +28,7 @@ class GroupHistoryService
 @Inject
 constructor(
     private val memberService: MemberService,
-    private val activeDirectoryService: ActiveDirectoryService
+    private val activeDirectoryService: ActiveDirectoryService,
 ) {
   private val logger = LoggerFactory.getLogger(GroupHistoryService::class.java)
 
@@ -44,7 +45,7 @@ constructor(
       actorUsername: String,
       memberDn: String,
       groupName: String,
-      eventTimestamp: kotlinx.datetime.LocalDateTime
+      eventTimestamp: kotlinx.datetime.LocalDateTime,
   ): Boolean {
     try {
       // Get member username from DN by querying Active Directory
@@ -108,40 +109,45 @@ constructor(
    * Gets the history for a specific group.
    *
    * @param groupName The name of the group
-   * @return A list of group history events
+   * @return A list of group history events from the last 6 months
    */
   fun getGroupHistory(groupName: String): List<GroupHistory> {
     return transaction {
       val actorProfileAlias = GroupHistoryColumnAliases.actorProfileAlias
       val memberProfileAlias = GroupHistoryColumnAliases.memberProfileAlias
       val groupsAlias = GroupHistoryColumnAliases.groupsAlias
+      val sixMonthsAgo = LocalDateTime.now().minusMonths(6)
 
       (GroupHistoryTable.join(
                   actorProfileAlias,
                   JoinType.INNER,
                   additionalConstraint = {
                     GroupHistoryTable.actorId eq actorProfileAlias[ProfileTable.idColumn]
-                  })
+                  },
+              )
               .join(
                   memberProfileAlias,
                   JoinType.INNER,
                   additionalConstraint = {
                     GroupHistoryTable.memberId eq memberProfileAlias[ProfileTable.idColumn]
-                  })
+                  },
+              )
               .join(
                   groupsAlias,
                   JoinType.INNER,
                   additionalConstraint = {
                     GroupHistoryTable.groupId eq groupsAlias[GroupsTable.idColumn]
-                  }))
+                  },
+              ))
           .slice(
-              GroupHistoryTable.idColumn,
               actorProfileAlias[ProfileTable.username],
               memberProfileAlias[ProfileTable.username],
-              groupsAlias[GroupsTable.name],
               GroupHistoryTable.eventTimestamp,
-              GroupHistoryTable.created)
-          .select { groupsAlias[GroupsTable.name] eq groupName }
+          )
+          .select {
+            (groupsAlias[GroupsTable.name] eq groupName) and
+                (GroupHistoryTable.eventTimestamp greaterEq sixMonthsAgo)
+          }
           .orderBy(GroupHistoryTable.eventTimestamp, SortOrder.DESC)
           .map { daoToGroupHistoryModel(it) }
     }
@@ -151,40 +157,45 @@ constructor(
    * Gets the history for a specific member.
    *
    * @param username The username of the member
-   * @return A list of group history events
+   * @return A list of group history events from the last 6 months
    */
   fun getMemberGroupHistory(username: String): List<GroupHistory> {
     return transaction {
       val actorProfileAlias = GroupHistoryColumnAliases.actorProfileAlias
       val memberProfileAlias = GroupHistoryColumnAliases.memberProfileAlias
       val groupsAlias = GroupHistoryColumnAliases.groupsAlias
+      val sixMonthsAgo = LocalDateTime.now().minusMonths(6)
 
       (GroupHistoryTable.join(
                   actorProfileAlias,
                   JoinType.INNER,
                   additionalConstraint = {
                     GroupHistoryTable.actorId eq actorProfileAlias[ProfileTable.idColumn]
-                  })
+                  },
+              )
               .join(
                   memberProfileAlias,
                   JoinType.INNER,
                   additionalConstraint = {
                     GroupHistoryTable.memberId eq memberProfileAlias[ProfileTable.idColumn]
-                  })
+                  },
+              )
               .join(
                   groupsAlias,
                   JoinType.INNER,
                   additionalConstraint = {
                     GroupHistoryTable.groupId eq groupsAlias[GroupsTable.idColumn]
-                  }))
+                  },
+              ))
           .slice(
-              GroupHistoryTable.idColumn,
               actorProfileAlias[ProfileTable.username],
               memberProfileAlias[ProfileTable.username],
-              groupsAlias[GroupsTable.name],
               GroupHistoryTable.eventTimestamp,
-              GroupHistoryTable.created)
-          .select { memberProfileAlias[ProfileTable.username] eq username }
+          )
+          .select {
+            (memberProfileAlias[ProfileTable.username] eq username) and
+                (GroupHistoryTable.eventTimestamp greaterEq sixMonthsAgo)
+          }
           .orderBy(GroupHistoryTable.eventTimestamp, SortOrder.DESC)
           .map { daoToGroupHistoryModel(it) }
     }

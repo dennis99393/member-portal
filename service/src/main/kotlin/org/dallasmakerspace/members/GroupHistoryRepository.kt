@@ -1,7 +1,5 @@
 package org.dallasmakerspace.members
 
-import java.time.LocalDateTime
-import javax.inject.Inject
 import org.dallasmakerspace.members.db.GroupDAO
 import org.dallasmakerspace.members.db.GroupHistoryColumnAliases.actorProfileAlias
 import org.dallasmakerspace.members.db.GroupHistoryColumnAliases.groupsAlias
@@ -15,8 +13,11 @@ import org.dallasmakerspace.members.db.suspendTransaction
 import org.dallasmakerspace.models.GroupHistory
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import javax.inject.Inject
 
 /** Manages the group history records. CRUD operations using GroupHistoryDAO. */
 class GroupHistoryRepository @Inject constructor() {
@@ -33,17 +34,20 @@ class GroupHistoryRepository @Inject constructor() {
             actorProfileAlias,
             JoinType.INNER,
             GroupHistoryTable.actorId,
-            actorProfileAlias[ProfileTable.idColumn])
+            actorProfileAlias[ProfileTable.idColumn],
+        )
         .join(
             memberProfileAlias,
             JoinType.INNER,
             GroupHistoryTable.memberId,
-            memberProfileAlias[ProfileTable.idColumn])
+            memberProfileAlias[ProfileTable.idColumn],
+        )
         .join(
             groupsAlias,
             JoinType.INNER,
             GroupHistoryTable.groupId,
-            groupsAlias[GroupsTable.idColumn])
+            groupsAlias[GroupsTable.idColumn],
+        )
         .select { GroupHistoryTable.groupId eq groupId }
         .orderBy(GroupHistoryTable.eventTimestamp, SortOrder.DESC)
         .map { daoToGroupHistoryModel(it) }
@@ -53,25 +57,33 @@ class GroupHistoryRepository @Inject constructor() {
    * Fetches the group history records by group name.
    *
    * @param groupName The name of the group.
-   * @return List of group history records.
+   * @return List of group history records from the last 6 months.
    */
   suspend fun getGroupHistoryByName(groupName: String): List<GroupHistory> = suspendTransaction {
+    val sixMonthsAgo = LocalDateTime.now().minusMonths(6)
+
     GroupHistoryTable.join(
             actorProfileAlias,
             JoinType.INNER,
             GroupHistoryTable.actorId,
-            actorProfileAlias[ProfileTable.idColumn])
+            actorProfileAlias[ProfileTable.idColumn],
+        )
         .join(
             memberProfileAlias,
             JoinType.INNER,
             GroupHistoryTable.memberId,
-            memberProfileAlias[ProfileTable.idColumn])
+            memberProfileAlias[ProfileTable.idColumn],
+        )
         .join(
             groupsAlias,
             JoinType.INNER,
             GroupHistoryTable.groupId,
-            groupsAlias[GroupsTable.idColumn])
-        .select { groupsAlias[GroupsTable.name] eq groupName }
+            groupsAlias[GroupsTable.idColumn],
+        )
+        .select {
+          (groupsAlias[GroupsTable.name] eq groupName) and
+              (GroupHistoryTable.eventTimestamp greaterEq sixMonthsAgo)
+        }
         .orderBy(GroupHistoryTable.eventTimestamp, SortOrder.DESC)
         .map { daoToGroupHistoryModel(it) }
   }
@@ -87,17 +99,20 @@ class GroupHistoryRepository @Inject constructor() {
             actorProfileAlias,
             JoinType.INNER,
             GroupHistoryTable.actorId,
-            actorProfileAlias[ProfileTable.idColumn])
+            actorProfileAlias[ProfileTable.idColumn],
+        )
         .join(
             memberProfileAlias,
             JoinType.INNER,
             GroupHistoryTable.memberId,
-            memberProfileAlias[ProfileTable.idColumn])
+            memberProfileAlias[ProfileTable.idColumn],
+        )
         .join(
             groupsAlias,
             JoinType.INNER,
             GroupHistoryTable.groupId,
-            groupsAlias[GroupsTable.idColumn])
+            groupsAlias[GroupsTable.idColumn],
+        )
         .select { GroupHistoryTable.memberId eq memberId }
         .orderBy(GroupHistoryTable.eventTimestamp, SortOrder.DESC)
         .map { daoToGroupHistoryModel(it) }
@@ -115,17 +130,20 @@ class GroupHistoryRepository @Inject constructor() {
                 actorProfileAlias,
                 JoinType.INNER,
                 GroupHistoryTable.actorId,
-                actorProfileAlias[ProfileTable.idColumn])
+                actorProfileAlias[ProfileTable.idColumn],
+            )
             .join(
                 memberProfileAlias,
                 JoinType.INNER,
                 GroupHistoryTable.memberId,
-                memberProfileAlias[ProfileTable.idColumn])
+                memberProfileAlias[ProfileTable.idColumn],
+            )
             .join(
                 groupsAlias,
                 JoinType.INNER,
                 GroupHistoryTable.groupId,
-                groupsAlias[GroupsTable.idColumn])
+                groupsAlias[GroupsTable.idColumn],
+            )
             .select { memberProfileAlias[ProfileTable.username] eq username }
             .orderBy(GroupHistoryTable.eventTimestamp, SortOrder.DESC)
             .map { daoToGroupHistoryModel(it) }
@@ -144,7 +162,7 @@ class GroupHistoryRepository @Inject constructor() {
       actorId: Int,
       memberId: Int,
       groupId: Int,
-      eventTimestamp: java.time.LocalDateTime
+      eventTimestamp: java.time.LocalDateTime,
   ): GroupHistory = suspendTransaction {
     val historyDao =
         GroupHistoryDAO.new {
@@ -160,17 +178,20 @@ class GroupHistoryRepository @Inject constructor() {
             actorProfileAlias,
             JoinType.INNER,
             GroupHistoryTable.actorId,
-            actorProfileAlias[ProfileTable.idColumn])
+            actorProfileAlias[ProfileTable.idColumn],
+        )
         .join(
             memberProfileAlias,
             JoinType.INNER,
             GroupHistoryTable.memberId,
-            memberProfileAlias[ProfileTable.idColumn])
+            memberProfileAlias[ProfileTable.idColumn],
+        )
         .join(
             groupsAlias,
             JoinType.INNER,
             GroupHistoryTable.groupId,
-            groupsAlias[GroupsTable.idColumn])
+            groupsAlias[GroupsTable.idColumn],
+        )
         .select { GroupHistoryTable.idColumn eq historyDao.id }
         .map { daoToGroupHistoryModel(it) }
         .first()
