@@ -30,6 +30,24 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Administrators card -->
+            <div class="card shadow-sm overflow-hidden mt-4" th:if="${administrators}">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Administrators</h5>
+                    <div class="card-text">
+                        <ul class="list-unstyled mb-0">
+                            <li th:each="admin : ${administrators}" class="mb-2">
+                                <a th:href="${admin.link}"
+                                   th:text="${admin.name}"
+                                   class="text-decoration-none">
+                                </a>
+                                <span th:if="${admin.isGroup}" class="badge bg-secondary ms-2">Group</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="col-md-8">
             <!-- Assigned members card -->
