@@ -50,7 +50,8 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
           objectGuid = memberMap["objectGUID"].toString(),
           whenCreated = memberMap["whenCreated"].toString(),
           enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
-          groups = groups)
+          groups = groups,
+      )
     }
   }
 
@@ -75,7 +76,8 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
               objectGuid = memberMap["objectGUID"].toString(),
               whenCreated = memberMap["whenCreated"].toString(),
               enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
-              groups = groups)
+              groups = groups,
+          )
         }
         .filterNotNull()
   }
@@ -107,7 +109,8 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
           objectGuid = memberMap["objectGUID"].toString(),
           whenCreated = memberMap["whenCreated"].toString(),
           enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
-          groups = groups)
+          groups = groups,
+      )
     }
   }
 
@@ -126,7 +129,8 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
         objectGuid = adResult["objectGUID"]?.toString(), // Convert bytes to GUID String
         members = parseMembers(adResult),
         membersListIncomplete = (adResult["member"] as Array<*>).size > MAX_GROUP_MEMBERS,
-        administrators = administrators)
+        administrators = administrators,
+    )
   }
 
   /** {@inheritDoc} */
@@ -161,7 +165,8 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
           objectGuid = memberMap["objectGUID"].toString(),
           whenCreated = memberMap["whenCreated"].toString(),
           enabled = memberMap["userAccountControl"].toString().toInt() and 2 != 2,
-          groups = groups)
+          groups = groups,
+      )
     }
   }
 
@@ -184,6 +189,7 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
         .map { it.toString() }
         .chunked(100)
         .flatMap { subChunk -> getMembersByDnList(subChunk) }
+        .filter { it.enabled }
   }
 
   /**
@@ -240,7 +246,8 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
         objectGuid = objectGuid,
         members = emptyList(), // Don't load members for getAllGroups to improve performance
         membersListIncomplete = memberCount > 0, // Indicate that members are not loaded
-        administrators = administrators)
+        administrators = administrators,
+    )
   }
 
   /** {@inheritDoc} */
