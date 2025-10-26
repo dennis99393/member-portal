@@ -80,7 +80,7 @@
             <div class="dms-card shadow-sm mt-4">
                 <div class="card-body">
                     <h4 class="card-title mt-3 mb-4 dms-card-title">Members Assigned <span th:if="${members}"
-                                                                                           th:text="'(' + ${#lists.size(members)} + ')'"></span>
+                                                                                           th:text="'(' + ${#lists.size(members)} + ' active)'"></span>
                     </h4>
                     <div class="card-text">
                         <div th:if="${members}" class="member-list">
