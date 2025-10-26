@@ -3,6 +3,39 @@ package org.dallasmakerspace.server.models
 import io.ktor.http.*
 import org.dallasmakerspace.server.models.DMSGroup.Companion.getNameFromSlug
 import org.dallasmakerspace.server.models.DMSGroup.Companion.getSlugFromName
+import java.time.Instant
+
+data class GroupHistoryEvent(
+    val actorUsername: String,
+    val memberUsername: String,
+    val eventTimestamp: Instant,
+) {
+  companion object {
+    fun fromMap(data: Map<String, Any?>): GroupHistoryEvent {
+      val timestampStr = data["eventTimestamp"] as String
+      // Handle timestamps that may not have seconds (e.g., "2025-10-08T01:40" ->
+      // "2025-10-08T01:40:00")
+      val normalizedTimestamp =
+          if (timestampStr.matches(Regex("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$"))) {
+            "${timestampStr}:00Z"
+          } else if (
+              !timestampStr.endsWith("Z") &&
+                  !timestampStr.contains("+") &&
+                  !timestampStr.contains("Z")
+          ) {
+            "${timestampStr}Z"
+          } else {
+            timestampStr
+          }
+
+      return GroupHistoryEvent(
+          actorUsername = data["actorUsername"] as String,
+          memberUsername = data["memberUsername"] as String,
+          eventTimestamp = Instant.parse(normalizedTimestamp),
+      )
+    }
+  }
+}
 
 data class DMSGroup(
     val name: String,
@@ -13,6 +46,7 @@ data class DMSGroup(
     val membersListIncomplete: Boolean = false,
     val members: List<DMSMember> = emptyList(),
     val administrators: List<String> = emptyList(), // List of DNs (Distinguished Names)
+    val history: List<GroupHistoryEvent> = emptyList(),
 ) {
   companion object {
     fun fromMap(data: Map<String, Any?>): DMSGroup {
@@ -22,6 +56,10 @@ data class DMSGroup(
           } ?: emptyList()
       val administrators =
           (data["administrators"] as List<*>?)?.filterIsInstance<String>() ?: emptyList()
+      val history =
+          (data["history"] as List<*>?)?.filterIsInstance<Map<String, Any?>>()?.map {
+            GroupHistoryEvent.fromMap(it)
+          } ?: emptyList()
       return DMSGroup(
           name = data["name"] as String,
           description = data["description"] as String?,
@@ -31,6 +69,7 @@ data class DMSGroup(
           membersListIncomplete = data["membersListIncomplete"] as Boolean,
           members = members,
           administrators = administrators,
+          history = history,
       )
     }
 

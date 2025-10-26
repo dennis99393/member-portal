@@ -3,11 +3,14 @@ package org.dallasmakerspace.server.routes
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
+import io.ktor.util.*
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.models.DMSGroup
 import org.dallasmakerspace.server.plugins.AuthException
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class GroupsHandler
@@ -76,6 +79,57 @@ constructor(
             )
           }
       jsonMap["administrators"] = processedAdmins
+    }
+
+    // Process history - limit to last 5 events and convert to Central Time
+    if (requestedGroup.history.isNotEmpty()) {
+      val centralZone = ZoneId.of("America/Chicago")
+      val dateTimeFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")
+
+      val processedHistory =
+          requestedGroup.history.take(5).map { event ->
+            val centralTime = event.eventTimestamp.atZone(centralZone)
+
+            // Find member details from the group members list
+            val memberMember = requestedGroup.members.find { it.username == event.memberUsername }
+
+            // Handle special service accounts for actor
+            val actorData =
+                when (event.actorUsername.toLowerCasePreservingASCIIRules()) {
+                  "svc_modile" ->
+                      mapOf(
+                          "displayName" to "DMS Learn",
+                          "link" to "https://learn.dallasmakerspace.org",
+                          "isExternal" to true,
+                      )
+                  "svc_makermanager3" ->
+                      mapOf(
+                          "displayName" to "DMS Calendar",
+                          "link" to "https://calendar.dallasmakerspace.org",
+                          "isExternal" to true,
+                      )
+                  else -> {
+                    val actorMember =
+                        requestedGroup.members.find { it.username == event.actorUsername }
+                    mapOf(
+                        "displayName" to (actorMember?.displayName ?: event.actorUsername),
+                        "link" to "/profile/@${event.actorUsername}",
+                        "isExternal" to false,
+                    )
+                  }
+                }
+
+            mutableMapOf<String, Any?>(
+                "actorDisplayName" to actorData["displayName"],
+                "actorLink" to actorData["link"],
+                "actorIsExternal" to actorData["isExternal"],
+                "memberUsername" to event.memberUsername,
+                "memberDisplayName" to (memberMember?.displayName ?: event.memberUsername),
+                "formattedTimestamp" to centralTime.format(dateTimeFormatter),
+                "timestamp" to event.eventTimestamp.toString(),
+            )
+          }
+      jsonMap["history"] = processedHistory
     }
 
     requestedGroup.description?.let { jsonMap["description"] = it }

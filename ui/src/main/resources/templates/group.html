@@ -48,6 +48,29 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Recent Changes card -->
+            <div class="card shadow-sm overflow-hidden mt-4" th:if="${history}">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Recent Changes</h5>
+                    <div class="card-text">
+                        <div th:each="event, iterStat : ${history}"
+                             th:class="${'mb-3 pb-3' + (iterStat.last ? '' : ' border-bottom')}">
+                            <div>
+                                <a th:href="'/profile/@' + ${event.memberUsername}"
+                                   th:text="${event.memberDisplayName}"
+                                   class="text-decoration-none"></a>
+                                <span class="text-muted"> added by </span>
+                                <a th:href="${event.actorLink}"
+                                   th:text="${event.actorDisplayName}"
+                                   th:target="${event.actorIsExternal ? '_blank' : '_self'}"
+                                   class="text-decoration-none"></a>
+                            </div>
+                            <small class="text-muted" th:text="${event.formattedTimestamp}"></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="col-md-8">
             <!-- Assigned members card -->
