@@ -104,7 +104,7 @@ constructor(
                           "link" to "#",
                           "isExternal" to false,
                       )
-                  event.actorUsername.toLowerCasePreservingASCIIRules() == "svc_modile" ->
+                  event.actorUsername.toLowerCasePreservingASCIIRules() == "svc_moodle" ->
                       mapOf(
                           "displayName" to "DMS Learn",
                           "link" to "https://learn.dallasmakerspace.org",
