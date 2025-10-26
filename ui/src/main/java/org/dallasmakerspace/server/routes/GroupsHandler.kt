@@ -95,14 +95,22 @@ constructor(
 
             // Handle special service accounts for actor
             val actorData =
-                when (event.actorUsername.toLowerCasePreservingASCIIRules()) {
-                  "svc_modile" ->
+                when {
+                  // Special case: svc_makermanager3 in "Voting Members" group should show "self"
+                  requestedGroupName.equals("Voting Members", ignoreCase = true) &&
+                      event.actorUsername.equals("svc_makermanager3", ignoreCase = true) ->
+                      mapOf(
+                          "displayName" to "self",
+                          "link" to "#",
+                          "isExternal" to false,
+                      )
+                  event.actorUsername.toLowerCasePreservingASCIIRules() == "svc_modile" ->
                       mapOf(
                           "displayName" to "DMS Learn",
                           "link" to "https://learn.dallasmakerspace.org",
                           "isExternal" to true,
                       )
-                  "svc_makermanager3" ->
+                  event.actorUsername.toLowerCasePreservingASCIIRules() == "svc_makermanager3" ->
                       mapOf(
                           "displayName" to "DMS Calendar",
                           "link" to "https://calendar.dallasmakerspace.org",

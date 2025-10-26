@@ -61,7 +61,10 @@
                                    th:text="${event.memberDisplayName}"
                                    class="text-decoration-none"></a>
                                 <span class="text-muted"> added by </span>
-                                <a th:href="${event.actorLink}"
+                                <span th:if="${event.actorDisplayName == 'self'}"
+                                      th:text="${event.actorDisplayName}"></span>
+                                <a th:unless="${event.actorDisplayName == 'self'}"
+                                   th:href="${event.actorLink}"
                                    th:text="${event.actorDisplayName}"
                                    th:target="${event.actorIsExternal ? '_blank' : '_self'}"
                                    class="text-decoration-none"></a>
