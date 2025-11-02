@@ -83,8 +83,9 @@
                                                                                            th:text="'(' + ${#lists.size(members)} + ' active)'"></span>
                     </h4>
                     <div class="card-text">
-                        <div th:if="${members}" class="member-list">
-                            <div th:each="member : ${members}" class="member-item mb-3">
+                        <div th:if="${members}" class="member-list" style="display:flex; flex-wrap:wrap; gap:10px;">
+                            <div th:each="member : ${members}" class="member-item mb-3"
+                                 style="flex-grow: 0.5; flex-basis: 200px; padding: 5px;">
                                 <dms-member-card
                                         th:attr="username=${member.username},displayName=${member.displayName},avatarUrl=${member.avatarUrl}"
                                         state="mini">
