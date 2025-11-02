@@ -68,16 +68,19 @@ constructor(
     // Process administrators
     if (requestedGroup.administrators.isNotEmpty()) {
       val processedAdmins =
-          requestedGroup.administrators.map { dn ->
-            val name = DMSGroup.parseCNFromDN(dn)
-            val isGroup = DMSGroup.isGroupDN(dn)
-            mutableMapOf<String, Any?>(
-                "name" to name,
-                "isGroup" to isGroup,
-                "link" to
-                    if (isGroup) "/groups/${DMSGroup.getSlugFromName(name)}" else "/profile/@$name",
-            )
-          }
+          requestedGroup.administrators
+              .filter { it.contains("Domain Admins").not() }
+              .map { dn ->
+                val name = DMSGroup.parseCNFromDN(dn)
+                val isGroup = DMSGroup.isGroupDN(dn)
+                mutableMapOf<String, Any?>(
+                    "name" to name,
+                    "isGroup" to isGroup,
+                    "link" to
+                        if (isGroup) "/groups/${DMSGroup.getSlugFromName(name)}"
+                        else "/profile/@$name",
+                )
+              }
       jsonMap["administrators"] = processedAdmins
     }
 
