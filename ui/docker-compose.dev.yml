@@ -1,0 +1,29 @@
+services:
+  ldap:
+    extends:
+      file: ./dms-ad-openldap/docker-compose.yml
+      service: openldap
+    networks:
+      member-profile-network:
+        aliases:
+          - openldap
+  keycloak:
+    extends:
+      file: ./dms-ad-openldap/docker-compose.yml
+      service: keycloak
+    networks:
+      member-profile-network:
+        aliases:
+          - keycloak
+  phpldapadmin:
+    extends:
+      file: ./dms-ad-openldap/docker-compose.yml
+      service: phpldapadmin
+    networks:
+      member-profile-network:
+        aliases:
+          - phpldapadmin
+    links:
+      - ldap
+networks:
+  member-profile-network:

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="report">
+    <dms-data-visualizer
+            dataUrl="/backend-api/data-viz/visitors-by-day"
+            renderAs="line"
+            title="Visitors by Date"
+            description="Number of members visiting DMS for the past 90 days. This data is derived from badge swipes.<br/><span style='color:red'>Note:</span> This report is broken as of 10/9 🙁. More details in Jira <a href='https://tasks.dallasmakerspace.org/browse/INFRA-348' target='_blank'>IT-INFRA-348</a>."
+            id="visitors-chart"
+    ></dms-data-visualizer>
+
+    <script>
+        // Add annotation for the 15th anniversary event using the chartRendered event
+        document.getElementById('visitors-chart').addEventListener('chartRendered', (event) => {
+            const { lineChart, chart } = event.detail;
+
+            if (lineChart) {
+                // Create an annotation
+                const powerOutageAnnotation = {
+                    id: 'anniversary-annotation',
+                    type: 'line',
+                    mode: 'vertical',   // Explicitly set vertical mode
+                    scaleID: 'x',       // Anchor to x-axis
+                    value: '2025-09-13', // Date value
+                    borderColor: 'rgba(255, 0, 0, 0.7)',
+                    borderWidth: 2,
+                    borderDash: [6, 6],
+                    drawTime: 'afterDatasetsDraw',
+                    label: {
+                        display: true,
+                        content: ['15th Anniversary Celbrations','Click for details.'],
+                        position: '85%',
+                        backgroundColor: 'rgba(255, 0, 0, 0.7)',
+                        color: 'white',
+                        font: {
+                            weight: 'bold'
+                        },
+                        padding: 6,
+                        textAlign: 'center'
+                    },
+                    click: function() {
+                        window.open('https://talk.dallasmakerspace.org/t/15th-anniversary-celebration-saturday/120707', '_blank');
+                    }
+                };
+
+                // Add the annotation to the chart
+                lineChart.addAnnotation(powerOutageAnnotation);
+            }
+        });
+    </script>
+</div>
+</body>
+</html>
