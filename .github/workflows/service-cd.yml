@@ -1,12 +1,15 @@
-name: CD
+name: Service CD
 
 on:
   push:
     branches: [ "master" ]
+    paths:
+      - 'service/**'
+      - '.github/workflows/service-cd.yml'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: app-member-profile-ui
+  IMAGE_NAME: app-member-profile-service
 
 jobs:
   build-and-push-image:
@@ -31,10 +34,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run Build
-        run: ./gradlew build
+        run: ./gradlew :service:build
 
       - name: Run Tests
-        run: ./gradlew test
+        run: ./gradlew :service:test
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -55,17 +58,17 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: service
           push: true
-          file: prod.Dockerfile
-          tags: ghcr.io/dallas-makerspace/${{ github.event.repository.name }}:latest
+          file: service/prod.Dockerfile
+          tags: ghcr.io/dallas-makerspace/member-profile-service:latest
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - uses: actions/delete-package-versions@v5
         with:
-          package-name: member-profile-ui
+          package-name: member-profile-service
           package-type: 'container'
           min-versions-to-keep: 5
 
@@ -84,10 +87,10 @@ jobs:
 
       - name: Pull latest Docker image
         run: |
-          docker pull ghcr.io/dallas-makerspace/member-profile-ui:latest
+          docker pull ghcr.io/dallas-makerspace/member-profile-service:latest
 
       - name: Recreate Docker container
         run: |
-          docker stop member-profile-ui || true
-          docker rm member-profile-ui || true
-          docker run -d --restart unless-stopped --network member-portal --env-file ~/member-profile/actions-runner-ui/.env --name member-profile-ui -p 8080:8000 ghcr.io/dallas-makerspace/member-profile-ui:latest
+          docker stop member-profile-service || true
+          docker rm member-profile-service || true
+          docker run -d --restart unless-stopped --network member-portal --env-file ~/member-profile/actions-runner-service/.env --name member-profile-service -p 8081:8081 ghcr.io/dallas-makerspace/member-profile-service:latest
