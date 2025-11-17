@@ -1,7 +1,6 @@
 package org.dallasmakerspace.server
 
-import io.ktor.server.engine.applicationEngineEnvironment
-import io.ktor.server.engine.connector
+import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
@@ -20,24 +19,17 @@ class ThymeleafServerIntegrationTest {
 
   companion object {
 
-    private lateinit var server: NettyApplicationEngine
+    private lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
 
     @BeforeClass
     @JvmStatic
     fun setup() {
-      val env = applicationEngineEnvironment {
-        module {
-          configureHttp()
-          configureRouting()
-          configureTemplating()
-          configureStatusPages()
-        }
-        connector {
-          host = "127.0.0.1"
-          port = 8080
-        }
-      }
-      server = embeddedServer(Netty, env).start(false)
+      server = embeddedServer(Netty, host = "127.0.0.1", port = 8080) {
+        configureHttp()
+        configureRouting()
+        configureTemplating()
+        configureStatusPages()
+      }.start(false)
     }
 
     @AfterClass

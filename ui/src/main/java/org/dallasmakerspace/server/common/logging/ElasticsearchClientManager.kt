@@ -7,7 +7,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
-import io.ktor.util.pipeline.*
 import java.io.IOException
 import java.security.cert.X509Certificate
 import java.time.Instant
@@ -67,7 +66,7 @@ object ElasticsearchClientManager {
   }
 }
 
-suspend fun PipelineContext<Unit, ApplicationCall>.logToElasticsearch(client: ElasticsearchClient) {
+suspend fun logToElasticsearch(call: ApplicationCall, client: ElasticsearchClient) {
   val request = call.request
   val response = call.response
   // Do not log redirect responses and static files
@@ -83,7 +82,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.logToElasticsearch(client: El
           "method" to request.httpMethod.value,
           "app" to "member-profile-ui",
           "host" to request.host(),
-          "ip" to request.origin.remoteAddress,
+          "ip" to request.origin.remoteHost,
           "sessionid" to MDC.get("sessionid")?.toString(),
           "userid" to MDC.get("userid")?.toString(),
           "uri" to request.uri,

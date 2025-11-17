@@ -5,10 +5,10 @@ val exposedVersion: String by project
 val daggerVersion: String by project
 
 plugins {
-  kotlin("jvm") version "2.0.21"
-  kotlin("plugin.serialization") version "2.0.21"
-  id("io.ktor.plugin") version "3.0.1"
-  id("com.google.devtools.ksp") version "2.0.21-1.0.28"
+  kotlin("jvm") version "2.2.20"
+  kotlin("plugin.serialization") version "2.2.20"
+  id("io.ktor.plugin") version "3.3.0"
+  id("com.google.devtools.ksp") version "2.2.20-2.0.2"
   id("org.jetbrains.kotlinx.kover") version "0.7.6"
   // id("com.ncorti.ktfmt.gradle") version "0.23.0"
   id("io.gitlab.arturbosch.detekt") version "1.23.6"
@@ -78,3 +78,5 @@ dependencies {
   testImplementation("org.mockito:mockito-inline:4.11.0")
   testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
 }
+
+kotlin { jvmToolchain(21) }

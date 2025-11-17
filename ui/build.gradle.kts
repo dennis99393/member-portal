@@ -1,10 +1,10 @@
 description = "Web UI for Member Profiles"
 
-val ktorVersion = "2.3.5"
-val daggerVersion = "2.48"
+val ktorVersion: String by project
+val daggerVersion: String by project
+val logbackVersion: String by project
 val kotlinxVersion = "1.6.0"
-val logbackVersion = "1.4.14"
-val kotlinTestUnit = "1.9.23"
+val kotlinTestUnit = "2.2.20"
 val seleniumVersion = "4.19.1"
 
 repositories { mavenCentral() }
@@ -46,16 +46,16 @@ dependencies {
   testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
   testImplementation("io.ktor", "ktor-client-mock", ktorVersion)
   testImplementation("io.ktor", "ktor-serialization-kotlinx-json", ktorVersion)
-  testImplementation("io.ktor", "ktor-server-tests", ktorVersion)
+  testImplementation("io.ktor", "ktor-server-test-host", ktorVersion)
   testImplementation("org.jetbrains.kotlin", "kotlin-test-junit", kotlinTestUnit)
   testImplementation("org.seleniumhq.selenium", "selenium-java", seleniumVersion)
 }
 
 plugins {
-  kotlin("jvm") version "1.9.23"
-  kotlin("plugin.serialization") version "1.9.23"
-  id("com.google.devtools.ksp") version "1.9.23-1.0.20"
-  id("io.ktor.plugin") version "2.3.5"
+  kotlin("jvm") version "2.2.20"
+  kotlin("plugin.serialization") version "2.2.20"
+  id("com.google.devtools.ksp") version "2.2.20-2.0.2"
+  id("io.ktor.plugin") version "3.3.0"
   id("org.jetbrains.kotlinx.kover") version "0.7.6"
   // id("com.ncorti.ktfmt.gradle") version "0.23.0"
   id("io.gitlab.arturbosch.detekt") version "1.23.6"

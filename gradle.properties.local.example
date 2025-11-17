@@ -1,0 +1,10 @@
+# Local Gradle properties - Copy to gradle.properties.local and customize
+# This file is gitignored and contains machine-specific settings
+
+# Set this to your JDK 21 installation path
+# Windows example:
+# org.gradle.java.home=C:/Users/YourUsername/.jdks/temurin-21.0.2
+
+# macOS/Linux example:
+# org.gradle.java.home=/usr/lib/jvm/java-21-openjdk
+# org.gradle.java.home=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home
