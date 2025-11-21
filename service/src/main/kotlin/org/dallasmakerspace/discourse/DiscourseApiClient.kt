@@ -100,9 +100,6 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
       throw DiscourseApiException("Failed to fetch user profile for $username", e)
     } catch (e: kotlinx.serialization.SerializationException) {
       throw DiscourseApiException("Failed to parse user profile response for $username", e)
-    } catch (e: DiscourseApiException) {
-      // Re-throw DiscourseApiException without wrapping
-      throw e
     }
   }
 
@@ -144,5 +141,119 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
     val json = """{"usernames": "$memberList"}"""
 
     performDiscourseApiOperation(url, method, json, apiKey, onResponse)
+  }
+
+  override suspend fun createPost(title: String, raw: String, categoryId: Int): DiscoursePostResponse {
+    val baseUrl = DISCOURSE_BASE_URL
+    val apiKey = appConfig.requireStringProperty("app.discourse.apiKey")
+    val url = "$baseUrl/posts.json"
+
+    val jsonBody = """{"title": "${title.replace("\"", "\\\"")}", "raw": "${raw.replace("\"", "\\\"")}", "category": $categoryId}"""
+
+    try {
+      val response =
+          getClient().use {
+            it.request(url) {
+              method = HttpMethod.Post
+              header("Api-Key", apiKey)
+              header("Api-Username", "system")
+              contentType(ContentType.Application.Json)
+              setBody(jsonBody)
+            }
+          }
+
+      when (response.status) {
+        HttpStatusCode.OK -> {
+          log.debug("Successfully created post: $title")
+          val responseBody = response.bodyAsText()
+          return json.decodeFromString<DiscoursePostResponse>(responseBody)
+        }
+        HttpStatusCode.UnprocessableEntity -> {
+          throw DiscourseApiException(
+              "Failed to create post '$title': ${response.status} - ${response.bodyAsText()}")
+        }
+        else -> {
+          throw DiscourseApiException(
+              "Failed to create post '$title': ${response.status} - ${response.bodyAsText()}")
+        }
+      }
+    } catch (e: IOException) {
+      throw DiscourseApiException("Failed to create post '$title'", e)
+    } catch (e: kotlinx.serialization.SerializationException) {
+      throw DiscourseApiException("Failed to parse create post response for '$title'", e)
+    }
+  }
+
+  override suspend fun updateTopicStatus(topicId: Int, status: String, enabled: Boolean) {
+    val baseUrl = DISCOURSE_BASE_URL
+    val apiKey = appConfig.requireStringProperty("app.discourse.apiKey")
+    val url = "$baseUrl/t/$topicId/status"
+
+    val jsonBody = """{"status": "$status", "enabled": "$enabled"}"""
+
+    try {
+      val response =
+          getClient().use {
+            it.request(url) {
+              method = HttpMethod.Put
+              header("Api-Key", apiKey)
+              header("Api-Username", "system")
+              contentType(ContentType.Application.Json)
+              setBody(jsonBody)
+            }
+          }
+
+      when (response.status) {
+        HttpStatusCode.OK -> {
+          log.debug("Successfully updated topic $topicId status: $status = $enabled")
+        }
+        else -> {
+          throw DiscourseApiException(
+              "Failed to update topic $topicId status: ${response.status} - ${response.bodyAsText()}")
+        }
+      }
+    } catch (e: IOException) {
+      throw DiscourseApiException("Failed to update topic $topicId status", e)
+    }
+  }
+
+  override suspend fun pinTopic(topicId: Int, pinned: Boolean, pinGlobally: Boolean) {
+    val status = if (pinGlobally) "pinned_globally" else "pinned"
+    updateTopicStatus(topicId, status, pinned)
+  }
+
+  override suspend fun searchTopics(query: String, categoryId: Int?): DiscourseSearchResponse {
+    val baseUrl = DISCOURSE_BASE_URL
+    val apiKey = appConfig.requireStringProperty("app.discourse.apiKey")
+
+    val categoryParam = if (categoryId != null) "&category=$categoryId" else ""
+    val url = "$baseUrl/search.json?q=${java.net.URLEncoder.encode(query, "UTF-8")}$categoryParam"
+
+    try {
+      val response =
+          getClient().use {
+            it.request(url) {
+              method = HttpMethod.Get
+              header("Api-Key", apiKey)
+              header("Api-Username", "system")
+            }
+          }
+
+      when (response.status) {
+        HttpStatusCode.OK -> {
+          log.debug("Successfully searched topics with query: $query")
+          val responseBody = response.bodyAsText()
+          return json.decodeFromString<DiscourseSearchResponse>(responseBody)
+        }
+        else -> {
+          throw DiscourseApiException(
+              "Failed to search topics: ${response.status} - ${response.bodyAsText()}")
+        }
+      }
+    } catch (e: IOException) {
+      throw DiscourseApiException("Failed to search topics with query: $query", e)
+    } catch (e: kotlinx.serialization.SerializationException) {
+      throw DiscourseApiException("Failed to parse search response for query: $query", e)
+    }
   }
 }

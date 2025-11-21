@@ -43,4 +43,27 @@ class DiscourseApiClientMock @Inject constructor(loggerFactory: LoggerFactory) :
                 moderator = false,
                 trustLevel = 1))
   }
+
+  override suspend fun createPost(title: String, raw: String, categoryId: Int): DiscoursePostResponse {
+    log.info("Mocked creating post: $title in category $categoryId")
+    return DiscoursePostResponse(
+        id = kotlin.random.Random.nextInt(1000, 9999),
+        topicId = kotlin.random.Random.nextInt(1000, 9999),
+        topicSlug = title.lowercase().replace(" ", "-").replace(Regex("[^a-z0-9-]"), "")
+    )
+  }
+
+  override suspend fun updateTopicStatus(topicId: Int, status: String, enabled: Boolean) {
+    log.info("Mocked updating topic $topicId status: $status = $enabled")
+  }
+
+  override suspend fun pinTopic(topicId: Int, pinned: Boolean, pinGlobally: Boolean) {
+    val globalText = if (pinGlobally) " globally" else ""
+    log.info("Mocked ${if (pinned) "pinning" else "unpinning"} topic $topicId$globalText")
+  }
+
+  override suspend fun searchTopics(query: String, categoryId: Int?): DiscourseSearchResponse {
+    log.info("Mocked searching topics with query: $query in category: $categoryId")
+    return DiscourseSearchResponse(topics = emptyList(), posts = emptyList())
+  }
 }

@@ -18,6 +18,8 @@ import org.dallasmakerspace.auth.requireRole
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.cron.MemberRefreshCronJob
 import org.dallasmakerspace.cron.MemberRefreshCronJobParams
+import org.dallasmakerspace.cron.ShowAndTellCronJob
+import org.dallasmakerspace.cron.ShowAndTellCronJobParams
 import org.dallasmakerspace.dataviz.DataVizRouter
 import org.dallasmakerspace.di.DaggerAppComponent
 import org.dallasmakerspace.members.ActivityLogService
@@ -57,6 +59,9 @@ fun Application.configureRouting() {
     }
     val memberRefreshCronJob: MemberRefreshCronJob by lazy {
       DaggerAppComponent.create().getMemberRefreshCronJob()
+    }
+    val showAndTellCronJob: ShowAndTellCronJob by lazy {
+      DaggerAppComponent.create().getShowAndTellCronJob()
     }
     val dataVizRouter: DataVizRouter by lazy { DaggerAppComponent.create().getDataVizRouter() }
     val webhookRouter: WebhookRouter by lazy { DaggerAppComponent.create().getWebhookRouter() }
@@ -179,6 +184,14 @@ fun Application.configureRouting() {
               call.request.queryParameters["isRunningInShadowMode"]?.toBoolean() ?: true
           val params = MemberRefreshCronJobParams(isRunningInShadowMode)
           val result = memberRefreshCronJob.run(params)
+          call.respond(result)
+        }
+
+        get("/cron/show-and-tell") {
+          val isRunningInShadowMode =
+              call.request.queryParameters["isRunningInShadowMode"]?.toBoolean() ?: true
+          val params = ShowAndTellCronJobParams(isRunningInShadowMode)
+          val result = showAndTellCronJob.run(params)
           call.respond(result)
         }
       }

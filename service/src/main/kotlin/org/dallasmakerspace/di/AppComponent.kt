@@ -7,6 +7,7 @@ import org.dallasmakerspace.core.DBMasterConnection
 import org.dallasmakerspace.core.DBMemberPortalConnection
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.cron.MemberRefreshCronJob
+import org.dallasmakerspace.cron.ShowAndTellCronJob
 import org.dallasmakerspace.dataviz.DataVizRouter
 import org.dallasmakerspace.dataviz.di.DataVizModule
 import org.dallasmakerspace.members.ActivityLogService
@@ -26,6 +27,7 @@ import javax.inject.Singleton
             MembersModule::class,
             DataVizModule::class,
             WebhookModule::class])
+@Suppress("TooManyFunctions")
 interface AppComponent {
   fun inject(application: Application)
 
@@ -44,6 +46,8 @@ interface AppComponent {
   fun getLoggerFactory(): LoggerFactory
 
   fun getMemberRefreshCronJob(): MemberRefreshCronJob
+
+  fun getShowAndTellCronJob(): ShowAndTellCronJob
 
   fun getDataVizRouter(): DataVizRouter
 

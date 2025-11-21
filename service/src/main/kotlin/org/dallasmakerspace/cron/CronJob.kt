@@ -5,7 +5,7 @@ import org.dallasmakerspace.core.LoggerFactory
 
 /** Marker interface for a cron job. */
 abstract class CronJob<T : CronJobParams>(
-    klass: KClass<MemberRefreshCronJobParams>,
+    klass: KClass<out T>,
     loggerFactory: LoggerFactory
 ) {
   val log = loggerFactory.createInMemoryLogger(klass.java)
