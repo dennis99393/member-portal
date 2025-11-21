@@ -39,3 +39,8 @@ out/
 /.run/
 .gradle/
 /.kotlin/
+
+### Environment Variables ###
+.env
+.env.local
+.env.*.local

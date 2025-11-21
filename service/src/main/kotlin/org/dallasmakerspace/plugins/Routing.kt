@@ -14,6 +14,7 @@ import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.apiKey
+import org.dallasmakerspace.auth.requireRole
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.cron.MemberRefreshCronJob
 import org.dallasmakerspace.cron.MemberRefreshCronJobParams
@@ -36,7 +37,8 @@ fun Application.configureRouting() {
       log.error("Failed to process request", cause)
       call.respond(
           HttpStatusCode.InternalServerError,
-          ApiResponse(Status.ERROR, cause.localizedMessage, null))
+          ApiResponse(Status.ERROR, cause.localizedMessage, null),
+      )
     }
   }
   val apiKeyAuthProvider: ApiKeyAuthProvider.Configuration.() -> Unit = {
@@ -65,96 +67,130 @@ fun Application.configureRouting() {
               "<ul><li>member-profile-service - <a href='openapi'>/openapi</a></li>" +
               "<li>badge-lookup-service - <a href='badge-lookup/openapi'>/badge-lookup/openai</a></li>" +
               "</ul></body></html>",
-          ContentType.Text.Html)
+          ContentType.Text.Html,
+      )
     }
     swaggerUI(path = "openapi")
     swaggerUI(
-        path = "badge-lookup/openapi", swaggerFile = "openapi/documentation-badge-lookup.yaml")
+        path = "badge-lookup/openapi",
+        swaggerFile = "openapi/documentation-badge-lookup.yaml",
+    )
 
     authenticate(ApiKeyAuthProvider.X_API_KEY) {
 
-      /** Member profile operations * */
-      get<Members> { members ->
-        val loggedInDays = members.loggedInDays
-        // Use the new getAllMembers method instead of getMembersLoggedInDays
-        val memberList = memberService.getAllMembers()
-        call.respond(ApiResponse(Status.SUCCESS, "All members: ${memberList.size}", memberList))
+      /** Member profile operations - READ * */
+      requireRole("member:read") {
+        get<Members> { members ->
+          val loggedInDays = members.loggedInDays
+          // Use the new getAllMembers method instead of getMembersLoggedInDays
+          val memberList = memberService.getAllMembers()
+          call.respond(ApiResponse(Status.SUCCESS, "All members: ${memberList.size}", memberList))
+        }
+
+        get<Members.DMSMember> { memberRequested ->
+          val member = memberService.getMemberByUsername(memberRequested.username)
+          call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
+        }
+
+        /** Activity Log operations - requires member:read since it's member data * */
+        get<Members.DMSMember.ActivityLog> { activityLogRequested ->
+          // Get activity log ...
+          val activityLog =
+              activityLogService.getMemberActivityLog(activityLogRequested.parent.username)
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS,
+                  "Activity log for ${activityLogRequested.parent.username}",
+                  activityLog,
+              )
+          )
+        }
       }
 
-      get<Members.DMSMember> { memberRequested ->
-        val member = memberService.getMemberByUsername(memberRequested.username)
-        call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
+      /** Member profile operations - WRITE * */
+      requireRole("member:write") {
+        patch<Members.DMSMember.Update> { update ->
+          // Update member ...
+          val updatedMember = call.receive<Members.DMSMember>()
+          memberService.updateMember(update.parent.username, routeObjectToModel(updatedMember))
+          call.respond(
+              ApiResponse(Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember)
+          )
+        }
       }
 
-      patch<Members.DMSMember.Update> { update ->
-        // Update member ...
-        val updatedMember = call.receive<Members.DMSMember>()
-        memberService.updateMember(update.parent.username, routeObjectToModel(updatedMember))
-        call.respond(
-            ApiResponse(Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember))
+      /** Group operations - READ * */
+      requireRole("group:read") {
+        get<Groups> {
+          val groupsList = groupsService.getAllGroups()
+          call.respond(ApiResponse(Status.SUCCESS, "All groups: ${groupsList.size}", groupsList))
+        }
+
+        get<Groups.DMSGroup> { groupRequested ->
+          val group = memberService.getGroup(groupRequested.groupslug)
+          call.respond(ApiResponse(Status.SUCCESS, "Group ${group.name}", group))
+        }
       }
 
-      get<Groups> {
-        val groupsList = groupsService.getAllGroups()
-        call.respond(ApiResponse(Status.SUCCESS, "All groups: ${groupsList.size}", groupsList))
+      /** Group operations - WRITE * */
+      requireRole("group:write") {
+        patch<Groups.DMSGroup.Add> { groupRequested ->
+          // Update group ...
+          val memberUsername = call.receive<String>()
+          val groupslug = groupRequested.parent.groupslug
+          memberService.addMembersToGroup(listOf(memberUsername), groupslug)
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS,
+                  "Added member to $groupslug updated: $memberUsername",
+                  null,
+              )
+          )
+        }
+
+        delete<Groups.DMSGroup.Add> { groupRequested ->
+          // Update group ...
+          val memberUsername = call.receive<String>()
+          val groupslug = groupRequested.parent.groupslug
+          memberService.removeMembersToGroup(listOf(memberUsername), groupslug)
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS,
+                  "Removed member to $groupslug updated: $memberUsername",
+                  null,
+              )
+          )
+        }
       }
 
-      get<Groups.DMSGroup> { groupRequested ->
-        val group = memberService.getGroup(groupRequested.groupslug)
-        call.respond(ApiResponse(Status.SUCCESS, "Group ${group.name}", group))
+      /** Badge lookup operations * */
+      requireRole("badge:read") {
+        get<BadgeLookup> {
+          val member = memberService.getMemberByBadgeNumber(it.badgeNumber)
+          call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
+        }
       }
 
-      patch<Groups.DMSGroup.Add> { groupRequested ->
-        // Update group ...
-        val memberUsername = call.receive<String>()
-        val groupslug = groupRequested.parent.groupslug
-        memberService.addMembersToGroup(listOf(memberUsername), groupslug)
-        call.respond(
-            ApiResponse(
-                Status.SUCCESS, "Added member to ${groupslug} updated: ${memberUsername}", null))
+      /** Administrative cron operations * */
+      requireRole("cron:execute") {
+        get("/cron/member-refresh") {
+          // Get query string param for isRunningInShadowMode
+          val isRunningInShadowMode =
+              call.request.queryParameters["isRunningInShadowMode"]?.toBoolean() ?: true
+          val params = MemberRefreshCronJobParams(isRunningInShadowMode)
+          val result = memberRefreshCronJob.run(params)
+          call.respond(result)
+        }
       }
 
-      delete<Groups.DMSGroup.Add> { groupRequested ->
-        // Update group ...
-        val memberUsername = call.receive<String>()
-        val groupslug = groupRequested.parent.groupslug
-        memberService.removeMembersToGroup(listOf(memberUsername), groupslug)
-        call.respond(
-            ApiResponse(
-                Status.SUCCESS, "Removed member to ${groupslug} updated: ${memberUsername}", null))
-      }
-
-      /** Activity Log operations * */
-      get<Members.DMSMember.ActivityLog> { activityLogRequested ->
-        // Get activity log ...
-        val activityLog =
-            activityLogService.getMemberActivityLog(activityLogRequested.parent.username)
-        call.respond(
-            ApiResponse(
-                Status.SUCCESS,
-                "Activity log for ${activityLogRequested.parent.username}",
-                activityLog))
-      }
-
-      get("/cron/member-refresh") {
-        // Get query string param for isRunningInShadowMode
-        val isRunningInShadowMode =
-            call.request.queryParameters["isRunningInShadowMode"]?.toBoolean() ?: true
-        val params = MemberRefreshCronJobParams(isRunningInShadowMode)
-        val result = memberRefreshCronJob.run(params)
-        call.respond(result)
-      }
-
-      get<BadgeLookup> {
-        val member = memberService.getMemberByBadgeNumber(it.badgeNumber)
-        call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
-      }
-
-      get("/data-viz/*") {
-        val method = call.request.path().substringAfter("/data-viz/")
-        val params = call.request.queryParameters.toMap()
-        val respone = dataVizRouter.route(method, params)
-        call.respond(ApiResponse(Status.SUCCESS, "Backend API $method", respone))
+      /** Data visualization reports * */
+      requireRole("dataviz:read") {
+        get("/data-viz/*") {
+          val method = call.request.path().substringAfter("/data-viz/")
+          val params = call.request.queryParameters.toMap()
+          val respone = dataVizRouter.route(method, params)
+          call.respond(ApiResponse(Status.SUCCESS, "Backend API $method", respone))
+        }
       }
     }
     post("/webhook/*") {
@@ -164,8 +200,10 @@ fun Application.configureRouting() {
       // Log request details for debugging
       log.info(
           "Webhook request received: path=${call.request.path()}, " +
-              "query params=${call.request.queryParameters.entries().map { "${it.key}:${it.value}" }.joinToString { ";" }}, " +
-              "headers=${call.request.headers.entries().map{ "${it.key}:${it.value}" }.joinToString { ";" }}")
+              "query params=${call.request.queryParameters.entries().map { "${it.key}:${it.value}" }
+                .joinToString { ";" }}, " +
+              "headers=${call.request.headers.entries().map{ "${it.key}:${it.value}" }.joinToString { ";" }}"
+      )
 
       // Route the webhook to appropriate handler
       val result = webhookRouter.route(path, body)
@@ -194,5 +232,5 @@ fun routeObjectToModel(it: Members.DMSMember): org.dallasmakerspace.models.DMSMe
 
 enum class Status {
   SUCCESS,
-  ERROR
+  ERROR,
 }
