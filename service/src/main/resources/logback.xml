@@ -85,7 +85,11 @@
 
     <root level="${ENV_LOG_LEVEL:-debug}">
         <appender-ref ref="COLOR"/>
-        <appender-ref ref="ELASTIC"/>
+        <if condition='property("ENABLE_ELASTIC_LOGGING").equalsIgnoreCase("true")'>
+            <then>
+                <appender-ref ref="ELASTIC"/>
+            </then>
+        </if>
     </root>
     <logger name="org.apache" level="INFO"/>
     <logger name="io.netty" level="INFO"/>

@@ -12,6 +12,7 @@ repositories { mavenCentral() }
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
   implementation("ch.qos.logback", "logback-classic", logbackVersion)
+  implementation("org.codehaus.janino:janino:3.1.12") // For conditional logback config
   implementation("com.google.dagger", "dagger", daggerVersion)
   ksp("com.google.dagger", "dagger-compiler", daggerVersion)
   implementation("com.squareup.okhttp3:okhttp:4.12.0")

@@ -65,6 +65,7 @@ dependencies {
   implementation("com.ucasoft.ktor:ktor-simple-cache:0.+") // In memory cache
   implementation("com.ucasoft.ktor:ktor-simple-memory-cache:0.+") // In memory cache
   implementation("ch.qos.logback:logback-classic:$logbackVersion")
+  implementation("org.codehaus.janino:janino:3.1.12") // For conditional logback config
   implementation("org.mariadb.jdbc:mariadb-java-client:3.4.0")
   // Elasticsearch logging
   implementation("co.elastic.clients:elasticsearch-java:8.14.3")
