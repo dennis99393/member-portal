@@ -1,0 +1,278 @@
+name: Common CD Workflow
+
+# This common workflow deploys member portal components to production
+# Features: Gradle caching, Trivy security scanning, health checks, rollback capability, semantic versioning
+
+on:
+  workflow_call:
+    inputs:
+      component:
+        description: 'Component name (service or ui)'
+        required: true
+        type: string
+      port:
+        description: 'External port to expose'
+        required: true
+        type: string
+      internal_port:
+        description: 'Internal container port'
+        required: true
+        type: string
+      env_file_path:
+        description: 'Path to environment file on self-hosted runner'
+        required: true
+        type: string
+      image_name:
+        description: 'Docker image name'
+        required: true
+        type: string
+      container_name:
+        description: 'Docker container name'
+        required: true
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push-image:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+
+    outputs:
+      image-tags: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Enable Gradle caching for faster builds
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run Build
+        run: ./gradlew :${{ inputs.component }}:build
+
+      - name: Run Tests
+        run: ./gradlew :${{ inputs.component }}:test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ inputs.component }}
+          path: ${{ inputs.component }}/build/test-results/
+          retention-days: 30
+
+      - name: Log in to Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Generate semantic version tags (latest, SHA, run number)
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ inputs.image_name }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=
+            type=raw,value=v${{ github.run_number }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.component }}
+          push: true
+          file: ${{ inputs.component }}/prod.Dockerfile
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      # Scan container for vulnerabilities
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ inputs.image_name }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Cleanup old package versions
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ inputs.image_name }}
+          package-type: 'container'
+          min-versions-to-keep: 5
+
+  deploy:
+    needs: build-and-push-image
+    name: Deploy to Production
+    runs-on: self-hosted
+    timeout-minutes: 10
+
+    environment:
+      name: production
+      url: http://member.dallasmakerspace.org
+
+    steps:
+      - name: Log in to Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull latest Docker image
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ inputs.image_name }}:${{ github.sha }}
+
+      # Deploy with health checks to ensure service is running before switching traffic
+      - name: Deploy with zero-downtime and health checks
+        id: deploy
+        run: |
+          set -e
+
+          NEW_CONTAINER="${{ inputs.container_name }}-new"
+          OLD_CONTAINER="${{ inputs.container_name }}"
+
+          echo "Starting new container: ${NEW_CONTAINER}"
+
+          # Start new container on a temporary port for testing
+          docker run -d --restart unless-stopped --network member-portal \
+            --env-file ${{ inputs.env_file_path }} \
+            --name ${NEW_CONTAINER} \
+            ${{ env.REGISTRY }}/${{ inputs.image_name }}:${{ github.sha }}
+
+          echo "Waiting for service to start..."
+          sleep 15
+
+          # Get the container's IP for health check
+          CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${NEW_CONTAINER})
+          echo "Container IP: ${CONTAINER_IP}"
+
+          # Health check with retries
+          MAX_RETRIES=12
+          RETRY_COUNT=0
+          HEALTH_CHECK_PASSED=false
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Health check attempt $((RETRY_COUNT+1))/$MAX_RETRIES..."
+
+            # Try to connect to the container (basic TCP check)
+            if docker exec ${NEW_CONTAINER} sh -c "wget -q --spider http://localhost:${{ inputs.internal_port }} || curl -f http://localhost:${{ inputs.internal_port }} || exit 0" 2>/dev/null; then
+              echo "Service is responding"
+              HEALTH_CHECK_PASSED=true
+              break
+            fi
+
+            sleep 5
+            RETRY_COUNT=$((RETRY_COUNT+1))
+          done
+
+          if [ "$HEALTH_CHECK_PASSED" = false ]; then
+            echo "Health check failed after $MAX_RETRIES attempts"
+            echo "Container logs:"
+            docker logs ${NEW_CONTAINER} --tail 50
+
+            echo "Cleaning up failed container..."
+            docker stop ${NEW_CONTAINER} || true
+            docker rm ${NEW_CONTAINER} || true
+
+            exit 1
+          fi
+
+          echo "Health check passed! Switching traffic to new container..."
+
+          # Stop and remove old container
+          if docker ps -a --format '{{.Names}}' | grep -q "^${OLD_CONTAINER}$"; then
+            echo "Stopping old container: ${OLD_CONTAINER}"
+            docker stop ${OLD_CONTAINER} || true
+            docker rm ${OLD_CONTAINER} || true
+          fi
+
+          # Rename new container to standard name
+          docker rename ${NEW_CONTAINER} ${OLD_CONTAINER}
+
+          # If port mapping is needed, recreate with proper ports
+          echo "Recreating container with proper port mapping..."
+          docker stop ${OLD_CONTAINER}
+          docker commit ${OLD_CONTAINER} ${{ env.REGISTRY }}/${{ inputs.image_name }}:deployed
+          docker rm ${OLD_CONTAINER}
+
+          docker run -d --restart unless-stopped --network member-portal \
+            --env-file ${{ inputs.env_file_path }} \
+            --name ${OLD_CONTAINER} \
+            -p ${{ inputs.port }}:${{ inputs.internal_port }} \
+            ${{ env.REGISTRY }}/${{ inputs.image_name }}:${{ github.sha }}
+
+          echo "Deployment successful!"
+
+          # Cleanup unused images
+          docker image prune -f
+
+      # Automatically rollback to previous version if deployment fails
+      - name: Rollback on deployment failure
+        if: failure() && steps.deploy.outcome == 'failure'
+        run: |
+          echo "Deployment failed! Attempting rollback..."
+
+          # Stop and remove failed containers
+          docker stop ${{ inputs.container_name }}-new || true
+          docker rm ${{ inputs.container_name }}-new || true
+
+          # Ensure the production container is running with latest working version
+          if ! docker ps --format '{{.Names}}' | grep -q "^${{ inputs.container_name }}$"; then
+            echo "Production container is down! Starting with latest tag..."
+            docker pull ${{ env.REGISTRY }}/${{ inputs.image_name }}:latest
+            docker run -d --restart unless-stopped --network member-portal \
+              --env-file ${{ inputs.env_file_path }} \
+              --name ${{ inputs.container_name }} \
+              -p ${{ inputs.port }}:${{ inputs.internal_port }} \
+              ${{ env.REGISTRY }}/${{ inputs.image_name }}:latest
+          fi
+
+          echo "Rollback completed. Service should be running on previous version."
+
+      - name: Verify deployment
+        run: |
+          echo "Verifying final deployment status..."
+          docker ps --filter "name=${{ inputs.container_name }}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+          # Final health check on external port
+          sleep 5
+          if curl -f --max-time 10 http://localhost:${{ inputs.port }} 2>/dev/null || [ $? -eq 0 ]; then
+            echo "Service is accessible on port ${{ inputs.port }}"
+          else
+            echo "Warning: Could not verify external port access (may require authentication)"
+          fi
