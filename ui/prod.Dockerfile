@@ -11,7 +11,7 @@ ENV TZ="America/Chicago"
 WORKDIR /app
 
 # Copy the JAR file into the container
-COPY build/libs/member-profile-ui-all.jar app.jar
+COPY build/libs/ui-all.jar app.jar
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
