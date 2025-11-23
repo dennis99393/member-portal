@@ -26,6 +26,18 @@ class AppConfig @Inject constructor() {
     return requireProperty(name).getString().toInt()
   }
 
+  fun requireLongProperty(name: String): Long {
+    return requireProperty(name).getString().toLong()
+  }
+
+  fun getStringProperty(name: String, defaultValue: String): String {
+    return config.propertyOrNull(name)?.getString() ?: defaultValue
+  }
+
+  fun getLongProperty(name: String, defaultValue: Long): Long {
+    return config.propertyOrNull(name)?.getString()?.toLong() ?: defaultValue
+  }
+
   companion object {
     private const val TAG = "AppConfig"
   }

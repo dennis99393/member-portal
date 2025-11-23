@@ -16,6 +16,8 @@ import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.apiKey
 import org.dallasmakerspace.auth.requireRole
 import org.dallasmakerspace.core.AppConfig
+import org.dallasmakerspace.cron.DoorSwipesCronJob
+import org.dallasmakerspace.cron.DoorSwipesCronJobParams
 import org.dallasmakerspace.cron.MemberRefreshCronJob
 import org.dallasmakerspace.cron.MemberRefreshCronJobParams
 import org.dallasmakerspace.cron.ShowAndTellCronJob
@@ -62,6 +64,9 @@ fun Application.configureRouting() {
     }
     val showAndTellCronJob: ShowAndTellCronJob by lazy {
       DaggerAppComponent.create().getShowAndTellCronJob()
+    }
+    val doorSwipesCronJob: DoorSwipesCronJob by lazy {
+      DaggerAppComponent.create().getDoorSwipesCronJob()
     }
     val dataVizRouter: DataVizRouter by lazy { DaggerAppComponent.create().getDataVizRouter() }
     val webhookRouter: WebhookRouter by lazy { DaggerAppComponent.create().getWebhookRouter() }
@@ -192,6 +197,15 @@ fun Application.configureRouting() {
               call.request.queryParameters["isRunningInShadowMode"]?.toBoolean() ?: true
           val params = ShowAndTellCronJobParams(isRunningInShadowMode)
           val result = showAndTellCronJob.run(params)
+          call.respond(result)
+        }
+
+        get("/cron/door-swipes") {
+          val minutes =
+              call.request.queryParameters["minutes"]?.toIntOrNull()
+                  ?: DoorSwipesCronJobParams.DEFAULT_MINUTES
+          val params = DoorSwipesCronJobParams(minutes)
+          val result = doorSwipesCronJob.run(params)
           call.respond(result)
         }
       }

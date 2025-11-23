@@ -6,10 +6,12 @@ import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.core.DBMasterConnection
 import org.dallasmakerspace.core.DBMemberPortalConnection
 import org.dallasmakerspace.core.LoggerFactory
+import org.dallasmakerspace.cron.DoorSwipesCronJob
 import org.dallasmakerspace.cron.MemberRefreshCronJob
 import org.dallasmakerspace.cron.ShowAndTellCronJob
 import org.dallasmakerspace.dataviz.DataVizRouter
 import org.dallasmakerspace.dataviz.di.DataVizModule
+import org.dallasmakerspace.doorcontroller.DoorControllerService
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.GroupService
 import org.dallasmakerspace.members.MemberService
@@ -24,6 +26,7 @@ import javax.inject.Singleton
             AppModule::class,
             ActiveDirectoryModule::class,
             DiscourseModule::class,
+            DoorControllerModule::class,
             MembersModule::class,
             DataVizModule::class,
             WebhookModule::class])
@@ -52,4 +55,8 @@ interface AppComponent {
   fun getDataVizRouter(): DataVizRouter
 
   fun getWebhookRouter(): WebhookRouter
+
+  fun getDoorControllerService(): DoorControllerService
+
+  fun getDoorSwipesCronJob(): DoorSwipesCronJob
 }
