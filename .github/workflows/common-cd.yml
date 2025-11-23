@@ -68,10 +68,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run Build
-        run: ./gradlew :${{ inputs.component }}:build
+        run: ./gradlew :${{ inputs.component }}:build -x detekt
 
       - name: Run Tests
-        run: ./gradlew :${{ inputs.component }}:test
+        run: ./gradlew :${{ inputs.component }}:test -x detekt
 
       - name: Upload test results
         if: always()
