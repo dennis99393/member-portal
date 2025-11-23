@@ -14,12 +14,28 @@ class AppConfig @Inject constructor() {
     }
   }
 
+  fun requireBooleanProperty(name: String): Boolean {
+    return requireProperty(name).getString().toBoolean()
+  }
+
   fun requireStringProperty(name: String): String {
     return requireProperty(name).getString()
   }
 
   fun requireIntProperty(name: String): Int {
     return requireProperty(name).getString().toInt()
+  }
+
+  fun requireLongProperty(name: String): Long {
+    return requireProperty(name).getString().toLong()
+  }
+
+  fun getStringProperty(name: String, defaultValue: String): String {
+    return config.propertyOrNull(name)?.getString() ?: defaultValue
+  }
+
+  fun getLongProperty(name: String, defaultValue: Long): Long {
+    return config.propertyOrNull(name)?.getString()?.toLong() ?: defaultValue
   }
 
   companion object {

@@ -1,6 +1,5 @@
 package org.dallasmakerspace.plugins
 
-// import org.dallasmakerspace.core.logging.logToElasticsearch
 import co.elastic.clients.elasticsearch.ElasticsearchClient
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -12,11 +11,16 @@ import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.core.logging.ElasticsearchClientManager
+import org.dallasmakerspace.di.DaggerAppComponent
 import org.slf4j.MDC
 
 fun Application.configureElasticsearch() {
-  intercept(ApplicationCallPipeline.Monitoring) {
-    logToElasticsearch(this.call, ElasticsearchClientManager.client)
+  val appConfig = DaggerAppComponent.create().getAppConfig()
+  val isDevelopment = appConfig.requireBooleanProperty("ktor.development")
+  if (!isDevelopment) {
+    intercept(ApplicationCallPipeline.Monitoring) {
+      logToElasticsearch(this.call, ElasticsearchClientManager.client)
+    }
   }
 }
 
@@ -24,9 +28,11 @@ suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) 
   val request = call.request
   val response = call.response
   // Do not log redirect responses and static files
-  if (response.status() == HttpStatusCode.TemporaryRedirect ||
-      request.uri.startsWith("/static") ||
-      request.uri.startsWith("/favicon.ico")) {
+  if (
+      response.status() == HttpStatusCode.TemporaryRedirect ||
+          request.uri.startsWith("/static") ||
+          request.uri.startsWith("/favicon.ico")
+  ) {
     return
   }
 
@@ -41,7 +47,8 @@ suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) 
           "userid" to MDC.get("userid")?.toString(),
           "uri" to request.uri,
           "status" to response.status()?.value,
-          "userAgent" to request.userAgent())
+          "userAgent" to request.userAgent(),
+      )
 
   withContext(Dispatchers.IO) {
     try {

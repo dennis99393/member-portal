@@ -85,7 +85,7 @@
 
     <root level="${ENV_LOG_LEVEL:-debug}">
         <appender-ref ref="COLOR"/>
-        <if condition='property("ENABLE_ELASTIC_LOGGING").equalsIgnoreCase("true")'>
+        <if condition='!property("io.ktor.development").equalsIgnoreCase("true")'>
             <then>
                 <appender-ref ref="ELASTIC"/>
             </then>

@@ -3,18 +3,10 @@ package org.dallasmakerspace.server.common.logging
 import co.elastic.clients.elasticsearch.ElasticsearchClient
 import co.elastic.clients.json.jackson.JacksonJsonpMapper
 import co.elastic.clients.transport.rest_client.RestClientTransport
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.*
-import io.ktor.server.request.*
-import java.io.IOException
 import java.security.cert.X509Certificate
-import java.time.Instant
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.apache.http.HttpHost
 import org.apache.http.HttpRequestInterceptor
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder
@@ -23,7 +15,6 @@ import org.apache.http.ssl.SSLContextBuilder
 import org.dallasmakerspace.server.di.DaggerAppComponent
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
-import org.slf4j.MDC
 
 object ElasticsearchClientManager {
   // We can't use Dagger to inject dependencies since this class is called from a library
@@ -63,37 +54,5 @@ object ElasticsearchClientManager {
     val restClient = restClientBuilder.build()
     val transport = RestClientTransport(restClient, JacksonJsonpMapper())
     ElasticsearchClient(transport)
-  }
-}
-
-suspend fun logToElasticsearch(call: ApplicationCall, client: ElasticsearchClient) {
-  val request = call.request
-  val response = call.response
-  // Do not log redirect responses and static files
-  if (response.status() == HttpStatusCode.TemporaryRedirect ||
-      request.uri.startsWith("/static") ||
-      request.uri.startsWith("/favicon.ico")) {
-    return
-  }
-
-  val logEntry =
-      mapOf(
-          "@timestamp" to Instant.now().toString(),
-          "method" to request.httpMethod.value,
-          "app" to "member-profile-ui",
-          "host" to request.host(),
-          "ip" to request.origin.remoteHost,
-          "sessionid" to MDC.get("sessionid")?.toString(),
-          "userid" to MDC.get("userid")?.toString(),
-          "uri" to request.uri,
-          "status" to response.status()?.value,
-          "userAgent" to request.userAgent())
-
-  withContext(Dispatchers.IO) {
-    try {
-      client.index { i -> i.index("logs").document(logEntry) }
-    } catch (e: IOException) {
-      ElasticsearchClientManager.log.error("Failed to log to Elasticsearch", e)
-    }
   }
 }
