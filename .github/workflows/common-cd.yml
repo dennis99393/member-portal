@@ -53,6 +53,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
       # Enable Gradle caching for faster builds
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -155,12 +158,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull latest Docker image
+        shell: bash
         run: |
           docker pull ${{ env.REGISTRY }}/${{ inputs.image_name }}:${{ github.sha }}
 
       # Deploy with health checks to ensure service is running before switching traffic
       - name: Deploy with zero-downtime and health checks
         id: deploy
+        shell: bash
         run: |
           set -e
 
@@ -245,6 +250,7 @@ jobs:
       # Automatically rollback to previous version if deployment fails
       - name: Rollback on deployment failure
         if: failure() && steps.deploy.outcome == 'failure'
+        shell: bash
         run: |
           echo "Deployment failed! Attempting rollback..."
 
@@ -266,6 +272,7 @@ jobs:
           echo "Rollback completed. Service should be running on previous version."
 
       - name: Verify deployment
+        shell: bash
         run: |
           echo "Verifying final deployment status..."
           docker ps --filter "name=${{ inputs.container_name }}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
