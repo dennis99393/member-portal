@@ -165,7 +165,7 @@ jobs:
       - name: Pull latest Docker image
         shell: bash
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ inputs.image_name }}:${{ github.sha }}
+          docker pull ${{ env.REGISTRY }}/${{ inputs.image_name }}:latest
 
       # Deploy with health checks to ensure service is running before switching traffic
       - name: Deploy with zero-downtime and health checks
@@ -183,7 +183,7 @@ jobs:
           docker run -d --restart unless-stopped --network member-portal \
             --env-file ${{ inputs.env_file_path }} \
             --name ${NEW_CONTAINER} \
-            ${{ env.REGISTRY }}/${{ inputs.image_name }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ inputs.image_name }}:latest
 
           echo "Waiting for service to start..."
           sleep 15
@@ -245,7 +245,7 @@ jobs:
             --env-file ${{ inputs.env_file_path }} \
             --name ${OLD_CONTAINER} \
             -p ${{ inputs.port }}:${{ inputs.internal_port }} \
-            ${{ env.REGISTRY }}/${{ inputs.image_name }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ inputs.image_name }}:latest
 
           echo "Deployment successful!"
 
