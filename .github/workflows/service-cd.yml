@@ -1,7 +1,7 @@
 name: Service CD
 
 # Deploys the member profile service to production
-# Includes: Gradle caching, Trivy security scanning, health checks, rollback capability
+# Includes: Gradle caching, Trivy security scanning, basic health checks
 
 on:
   push:

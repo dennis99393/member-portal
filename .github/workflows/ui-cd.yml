@@ -1,7 +1,7 @@
 name: UI CD
 
 # Deploys the member profile UI to production
-# Includes: Gradle caching, Trivy security scanning, health checks, rollback capability
+# Includes: Gradle caching, Trivy security scanning, basic health checks
 
 on:
   push:
