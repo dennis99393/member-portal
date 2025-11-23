@@ -67,8 +67,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Run Build
-        run: ./gradlew :${{ inputs.component }}:build -x detekt
+      - name: Run Build and Create Fat JAR
+        run: ./gradlew :${{ inputs.component }}:shadowJar -x detekt
 
       - name: Run Tests
         run: ./gradlew :${{ inputs.component }}:test -x detekt
