@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="report">
+    <dms-data-visualizer
+            dataUrl="/backend-api/data-viz/top-organizers"
+            renderAs="table"
+            title="Top Organizers"
+            description="Members who organized the most events in the past 90 days. Shows both the number of events organized and total attendees across all their events."
+    ></dms-data-visualizer>
+
+    <div style="margin-top: 3rem;"></div>
+
+    <dms-data-visualizer
+            dataUrl="/backend-api/data-viz/top-attendees"
+            renderAs="table"
+            title="Top Attendees"
+            description="Members who attended the most events in the past 90 days. Only includes events marked as attended."
+    ></dms-data-visualizer>
+</div>
+</body>
+</html>

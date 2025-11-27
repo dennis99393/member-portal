@@ -32,8 +32,8 @@ enum class DataType {
   STRING,
   NUMBER,
   DATE,
-  BOOLEAN
-  // Add other relevant data types
+  BOOLEAN,
+  MEMBER // Member card with username, displayName, avatarUrl
 }
 
 // Extension functions for easy conversion.

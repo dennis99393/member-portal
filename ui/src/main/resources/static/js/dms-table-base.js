@@ -1,4 +1,5 @@
 import { LitElement, html, css } from 'https://cdn.jsdelivr.net/npm/lit@3.3.0/+esm';
+import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3.3.0/directives/unsafe-html.js';
 
 /**
  * DmsTableBase - A base table component for rendering both regular and metadata tables.
@@ -193,6 +194,12 @@ class DmsTableBase extends LitElement {
             this._filteredRows = this.rows.filter(row => {
                 return row.some(cell => {
                     if (cell === null) return false;
+                    // Handle MEMBER objects - search in username and displayName
+                    if (typeof cell === 'object' && 'username' in cell) {
+                        const username = (cell.username || '').toLowerCase();
+                        const displayName = (cell.displayName || '').toLowerCase();
+                        return username.includes(searchTerm) || displayName.includes(searchTerm);
+                    }
                     return String(cell).toLowerCase().includes(searchTerm);
                 });
             });
@@ -355,6 +362,26 @@ class DmsTableBase extends LitElement {
         `;
     }
 
+    _renderCell(cell) {
+        // Check if cell is a MEMBER object (has username, displayName, avatarUrl properties)
+        if (cell !== null && typeof cell === 'object' && 'username' in cell) {
+            const username = cell.username || '';
+            const displayName = cell.displayName || username;
+            const avatarUrl = cell.avatarUrl || '';
+
+            // Return the dms-member-card component as HTML
+            return html`<dms-member-card
+                username="${username}"
+                displayName="${displayName}"
+                avatarUrl="${avatarUrl}"
+                state="mini">
+            </dms-member-card>`;
+        }
+
+        // Default rendering for other types
+        return cell === null ? 'null' : cell;
+    }
+
     _renderRegularTable() {
         const rowsToUse = this._filteredRows.length > 0 ? this._filteredRows : this.rows;
         const shouldPaginate = this.paginated || (!this.paginated && rowsToUse.length > this.paginateAfter);
@@ -376,7 +403,7 @@ class DmsTableBase extends LitElement {
             <tbody>
                 ${visibleRows.map(row => html`
                     <tr>
-                        ${row.map(cell => html`<td>${cell === null ? 'null' : cell}</td>`)}
+                        ${row.map(cell => html`<td>${this._renderCell(cell)}</td>`)}
                     </tr>
                 `)}
             </tbody>

@@ -43,6 +43,11 @@ object ReportGraph {
                                 description = "First event for new members",
                                 urlSlug = "first-events",
                             ),
+                            ReportNode(
+                                name = "Top Members",
+                                description = "Top event organizers and attendees",
+                                urlSlug = "top-members",
+                            ),
                         ),
                 ),
                 ReportNode(
