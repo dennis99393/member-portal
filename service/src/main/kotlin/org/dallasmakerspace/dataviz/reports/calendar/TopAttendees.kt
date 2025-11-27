@@ -47,11 +47,20 @@ constructor(
     // Get base data from parent (calendar DB query)
     val baseResponse = super.getData(params)
 
+    // Collect all usernames from the data
+    val usernames =
+        baseResponse.data
+            ?.mapNotNull { it.values["ad_username"]?.toString()?.removeSurrounding("\"") }
+            ?.filter { it.isNotBlank() } ?: emptyList()
+
+    // Batch fetch all members at once
+    val members = memberService.getMembersByUsernameList(usernames)
+
     // Enrich with profile data
     val enrichedData =
         baseResponse.data?.map { dataItem ->
           val adUsername = dataItem.values["ad_username"]?.toString()?.removeSurrounding("\"")
-          val member = adUsername?.let { memberService.getMemberByUsername(it) }
+          val member = adUsername?.let { members[it] }
 
           val avatarUrl =
               member

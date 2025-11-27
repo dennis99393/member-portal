@@ -121,6 +121,56 @@ constructor(
   }
 
   /**
+   * Fetches multiple members by their usernames in a single batch operation.
+   * This is optimized for performance when you need basic member data for multiple users.
+   *
+   * @param usernames List of usernames to fetch
+   * @return Map of username to DMSMember (only includes members that were found)
+   */
+  suspend fun getMembersByUsernameList(usernames: List<String>): Map<String, DMSMember> {
+    if (usernames.isEmpty()) return emptyMap()
+
+    // Batch fetch from Active Directory
+    val adMembers = activeDirectoryService.getMembersByUsernameList(usernames)
+
+    // Batch fetch from local DB
+    val dbMembers = memberRepository.getAllMembers().associateBy { it.username }
+
+    // Build enriched member objects - filter out null AD members
+    return adMembers
+        .filterValues { it != null }
+        .mapValues { (username, adMember) ->
+          // adMember is guaranteed non-null after filterValues
+          val adUser = adMember!!
+          val dbMember = dbMembers[username] ?: memberRepository.getMemberOrInsert(username, adUser.enabled)
+
+          // Populate member data
+          dbMember.firstName = adUser.givenName
+          dbMember.lastName = adUser.sn
+          dbMember.displayName = adUser.displayName
+          dbMember.personalEmail = adUser.mail
+          dbMember.phoneNumber = getNormalizedPhoneNumber(adUser.telephoneNumber, adUser.sAMAccountName)
+          dbMember.badgeNumber = adUser.employeeID
+          dbMember.enabled = adUser.enabled
+          dbMember.groups = adUser.groups.map { group ->
+            DMSGroup(
+                name = group.cn,
+                description = null,
+                distinguishedName = group.distinguishedName,
+                objectGuid = group.objectGuid,
+                membersListIncomplete = false,
+                members = null,
+            )
+          }
+
+          // Refresh discourse avatar URL
+          dbMember.discourseAvatarUrl = refreshDiscourseAvatar(dbMember)
+
+          dbMember
+        }
+  }
+
+  /**
    * Refreshes the discourse avatar URL for a member if they have a discourse username. Implements
    * smart caching and fallback mechanisms.
    *
