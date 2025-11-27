@@ -41,7 +41,35 @@ constructor(
 
     log.info("Retrieved ${result.events.size} swipe events from all controllers")
 
+    // Persist events to database
+    var insertedCount = 0
+    if (result.events.isNotEmpty()) {
+      log.info("Persisting ${result.events.size} events to database...")
+      insertedCount = doorControllerService.persistEvents(result.events)
+      log.info("Successfully inserted $insertedCount events (${result.events.size - insertedCount} duplicates skipped)")
+    }
+
+    // Print summary
+    log.info("")
+    log.info("=== SUMMARY ===")
+    log.info("Events retrieved:    ${result.events.size}")
+    log.info("Events persisted:    $insertedCount")
+    log.info("Duplicates skipped:  ${result.events.size - insertedCount}")
+    log.info("Controllers queried: ${result.errors.size + (result.events.map { it.controllerName }.distinct().size)}")
+    log.info("Errors encountered:  ${result.errors.size}")
+
+    // Event breakdown by type
+    val grantedCount = result.events.count { it.eventType == SwipeEventType.ACCESS_GRANTED }
+    val deniedCount = result.events.count { it.eventType == SwipeEventType.ACCESS_DENIED }
+    val unknownCount = result.events.count { it.eventType == SwipeEventType.UNKNOWN }
+    log.info("")
+    log.info("Event breakdown:")
+    log.info("  Access granted: $grantedCount")
+    log.info("  Access denied:  $deniedCount")
+    log.info("  Unknown:        $unknownCount")
+
     if (result.errors.isNotEmpty()) {
+      log.error("")
       log.error("Encountered ${result.errors.size} error(s) while reading swipes:")
       result.errors.forEach { error -> log.error("  ERROR: $error") }
       log.error("")
@@ -54,10 +82,12 @@ constructor(
     }
 
     if (result.events.isEmpty()) {
+      log.info("")
       log.info("No swipe events found in the past ${params.minutes} minutes")
     } else {
-      log.info("Swipe events (most recent first):")
-      result.events.forEach { event ->
+      log.info("")
+      log.info("Recent swipe events (most recent first):")
+      result.events.take(10).forEach { event ->
         val timestamp = DATE_FORMATTER.format(Instant.ofEpochMilli(event.timestamp))
         val eventTypeStr =
             when (event.eventType) {
@@ -70,6 +100,9 @@ constructor(
                 " - ${event.friendlyDoorName} " +
                 "(${event.controllerName} door ${event.doorNumber})"
         )
+      }
+      if (result.events.size > 10) {
+        log.info("  ... and ${result.events.size - 10} more events")
       }
     }
 

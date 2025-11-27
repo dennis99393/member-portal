@@ -84,6 +84,84 @@ class MakerManagerDataRepository @Inject constructor() {
   }
 
   /**
+   * Get user IDs for multiple badge numbers at a specific date/time
+   * Checks badge_histories for historical assignment, falls back to current badges
+   *
+   * @param badgeNumbersWithDates Map of badge numbers to their swipe dates
+   * @return Map of badge numbers to their user IDs (null if not found)
+   */
+  suspend fun getUserIdsByBadgeNumbers(
+      badgeNumbersWithDates: Map<String, String>
+  ): Map<String, Int?> {
+    if (badgeNumbersWithDates.isEmpty()) return emptyMap()
+
+    return suspendTransaction {
+      val results = mutableMapOf<String, Int?>()
+
+      badgeNumbersWithDates.forEach { (badgeNumber, swipeDate) ->
+        // Escape single quotes in parameters
+        val safeBadge = badgeNumber.replace("'", "''")
+        val safeDate = swipeDate.replace("'", "''")
+
+        // Query 1: Check badge_histories for historical assignment
+        val historyQuery =
+            """
+          SELECT last.user_id
+          FROM (
+              SELECT b.user_id, bh.changed_to
+              FROM `dms-makermanager`.badge_histories as bh
+              LEFT JOIN `dms-makermanager`.badges as b on b.id = bh.badge_id
+              WHERE TRIM(LEADING '0' FROM bh.badge_number) = TRIM(LEADING '0' FROM '$safeBadge')
+              AND bh.created <= '$safeDate'
+              ORDER BY bh.created DESC
+              LIMIT 1
+          ) as last
+          WHERE last.changed_to = 'active'
+        """
+                .trimIndent()
+
+        val historyResults =
+            this.exec(historyQuery) { resultSet: ResultSet ->
+              buildList {
+                if (resultSet.next()) {
+                  add(resultSet.getInt("user_id"))
+                }
+              }
+            } ?: emptyList()
+
+        var userId: Int? = historyResults.firstOrNull()
+
+        // Query 2: Fallback to current badges table if no history found
+        if (userId == null) {
+          val fallbackQuery =
+              """
+            SELECT b.user_id
+            FROM `dms-makermanager`.badges as b
+            WHERE TRIM(LEADING '0' FROM b.number) = TRIM(LEADING '0' FROM '$safeBadge')
+            LIMIT 1
+          """
+                  .trimIndent()
+
+          val fallbackResults =
+              this.exec(fallbackQuery) { resultSet: ResultSet ->
+                buildList {
+                  if (resultSet.next()) {
+                    add(resultSet.getInt("user_id"))
+                  }
+                }
+              } ?: emptyList()
+
+          userId = fallbackResults.firstOrNull()
+        }
+
+        results[badgeNumber] = userId
+      }
+
+      results
+    }
+  }
+
+  /**
    * Get all users from MakerManager database
    *
    * @return List of MakerManagerUserInfo containing all users

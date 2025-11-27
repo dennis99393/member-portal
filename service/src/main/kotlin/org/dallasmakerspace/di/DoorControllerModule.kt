@@ -23,9 +23,11 @@ class DoorControllerModule {
     @Singleton
     fun provideDoorControllerService(
         config: DoorControllerConfig,
+        doorEventsRepository: org.dallasmakerspace.doorcontroller.DoorEventsRepository,
+        makerManagerDataRepository: org.dallasmakerspace.db.master.MakerManagerDataRepository,
         loggerFactory: LoggerFactory
     ): DoorControllerService {
-        return DoorControllerService(config, loggerFactory)
+        return DoorControllerService(config, doorEventsRepository, makerManagerDataRepository, loggerFactory)
     }
 
     @Provides

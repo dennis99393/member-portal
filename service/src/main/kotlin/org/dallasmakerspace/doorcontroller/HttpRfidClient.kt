@@ -2,12 +2,15 @@ package org.dallasmakerspace.doorcontroller
 
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.network.sockets.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.io.Closeable
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.core.LoggerFactory
 
@@ -17,50 +20,111 @@ import org.dallasmakerspace.core.LoggerFactory
  * @param ip IP address of the controller
  * @param username Web interface username
  * @param password Web interface password
+ * @param timeoutSeconds Timeout in seconds for HTTP requests (default: 5)
  * @param loggerFactory Logger factory for creating logger instance
  */
 class HttpRfidClient(
     private val ip: String,
     private val username: String,
     private val password: String,
+    private val timeoutSeconds: Int = 5,
     loggerFactory: LoggerFactory,
 ) : Closeable {
   private val log = loggerFactory.create(HttpRfidClient::class.java)
-  private val httpClient = HttpClient(CIO)
+  private val httpClient = HttpClient(CIO) {
+    install(HttpTimeout) {
+      requestTimeoutMillis = timeoutSeconds * 1000L
+      connectTimeoutMillis = timeoutSeconds * 1000L
+      socketTimeoutMillis = timeoutSeconds * 1000L
+    }
+  }
   private val baseUrl = "http://$ip"
 
+  /** Maximum number of login attempts (includes initial attempt plus retries) */
+  private val maxLoginAttempts = 3
+
   /**
-   * Logs into the door controller web interface.
+   * Handles timeout exceptions with retry logic.
+   *
+   * @param e The timeout exception that occurred
+   * @param attempt Current attempt number
+   * @param exceptionType Description of the exception type for logging
+   * @return true if should retry, false if max attempts reached
+   */
+  private suspend fun handleTimeoutAndRetry(
+      e: Exception,
+      attempt: Int,
+      exceptionType: String
+  ): Boolean {
+    log.warn("$exceptionType for $ip on attempt $attempt/$maxLoginAttempts: ${e.message}")
+    if (attempt < maxLoginAttempts) {
+      val delayMs = 1000L * (1 shl (attempt - 1)) // 1s, 2s exponential backoff
+      log.info("Retrying login to $ip in ${delayMs}ms...")
+      delay(delayMs)
+      return true // Continue retrying
+    } else {
+      log.error("Login failed for $ip after $maxLoginAttempts attempts ($exceptionType)", e)
+      return false // Max attempts reached
+    }
+  }
+
+  /**
+   * Logs into the door controller web interface with automatic retry on timeout.
+   *
+   * Retries up to 2 times (3 total attempts) with exponential backoff if timeouts occur.
+   * Non-timeout errors (e.g., authentication failures) fail immediately without retry.
    *
    * @return true if login successful
    */
   private suspend fun login(): Boolean =
       withContext(Dispatchers.IO) {
-        try {
-          log.debug("Logging into door controller at $ip")
+        var attempt = 0
 
-          val response: HttpResponse =
-              httpClient.submitForm(
-                  url = "$baseUrl/ACT_ID_1",
-                  formParameters =
-                      Parameters.build {
-                        append("username", username)
-                        append("pwd", password)
-                        append("logId", "20101222")
-                      },
-              )
+        while (attempt < maxLoginAttempts) {
+          attempt++
+          try {
+            log.debug("Logging into door controller at $ip (attempt $attempt/$maxLoginAttempts)")
 
-          val success = response.status.isSuccess()
-          if (success) {
-            log.debug("Successfully logged into $ip")
-          } else {
-            log.error("Failed to login to $ip: ${response.status}")
+            val response: HttpResponse =
+                httpClient.submitForm(
+                    url = "$baseUrl/ACT_ID_1",
+                    formParameters =
+                        Parameters.build {
+                          append("username", username)
+                          append("pwd", password)
+                          append("logId", "20101222")
+                        },
+                )
+
+            val success = response.status.isSuccess()
+            if (success) {
+              if (attempt > 1) {
+                log.info("Successfully logged into $ip after $attempt attempts")
+              } else {
+                log.debug("Successfully logged into $ip")
+              }
+            } else {
+              log.error("Failed to login to $ip: ${response.status}")
+            }
+            return@withContext success
+          } catch (e: HttpRequestTimeoutException) {
+            if (!handleTimeoutAndRetry(e, attempt, "Login timeout")) {
+              return@withContext false
+            }
+          } catch (e: SocketTimeoutException) {
+            if (!handleTimeoutAndRetry(e, attempt, "Socket timeout")) {
+              return@withContext false
+            }
+          } catch (e: ConnectTimeoutException) {
+            if (!handleTimeoutAndRetry(e, attempt, "Connect timeout")) {
+              return@withContext false
+            }
+          } catch (e: Exception) {
+            log.error("Login failed for $ip on attempt $attempt: ${e.message}", e)
+            return@withContext false // Don't retry non-timeout errors
           }
-          success
-        } catch (e: Exception) {
-          log.error("Login failed for $ip: ${e.message}", e)
-          false
         }
+        false
       }
 
   /**
@@ -208,6 +272,8 @@ class HttpRfidClient(
                   timestamp = adjustedTimestamp,
                   eventType = eventType,
                   friendlyDoorName = "door_$doorNumber",
+                  recordId = recordId.toIntOrNull(),
+                  rawStatus = status,
               )
           )
 

@@ -10,6 +10,7 @@ data class DoorControllerConfig(
     val controllers: List<ControllerDefinition>,
 ) {
   companion object {
+    @Suppress("MagicNumber")
     fun fromAppConfig(appConfig: AppConfig): DoorControllerConfig {
       val timeoutSeconds = appConfig.requireIntProperty("app.door-controller.timeout-seconds")
       val username = appConfig.requireStringProperty("app.door-controller.username")
@@ -84,6 +85,8 @@ data class BadgeSwipeEvent(
     val timestamp: Long,
     val eventType: SwipeEventType,
     val friendlyDoorName: String,
+    val recordId: Int? = null,
+    val rawStatus: String? = null,
 )
 
 /** Type of badge swipe event. */
