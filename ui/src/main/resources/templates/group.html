@@ -28,6 +28,12 @@
                         <span th:if="${description}" th:text="${description}"></span>
                         <span th:unless="${description}" class="text-muted">No description for this group 🙁. Please ask the committee chair to add a description.</span>
                     </div>
+                    <div class="mt-3">
+                        <a th:href="'/reports/calendar/group-calendar?group=' + ${slug}"
+                           class="btn btn-outline-primary btn-sm">
+                            View Prerequisite Classes
+                        </a>
+                    </div>
                 </div>
             </div>
 

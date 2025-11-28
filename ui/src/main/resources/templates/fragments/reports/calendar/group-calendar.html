@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Prerequisite Events</title>
+</head>
+<body>
+<div th:fragment="report">
+    <dms-data-visualizer
+            th:attr="title=${'Prerequisite Events - ' + queryParams.get('group')},description=${'Attending any of these classes will assign the member to the AD group - ' + queryParams.get('group') + '. If there are no upcoming classes listed then you can request the organizers.'},dataUrl=${'/backend-api/data-viz/group-calendar?group=' + queryParams.get('group')}"
+            renderAs="table"
+    ></dms-data-visualizer>
+    <div th:unless="${queryParams.get('group')}" class="alert alert-warning">
+        <p>Group parameter is required. Please access this report from a group page.</p>
+    </div>
+</div>
+</body>
+</html>

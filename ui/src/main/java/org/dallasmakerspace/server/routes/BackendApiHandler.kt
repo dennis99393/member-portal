@@ -14,7 +14,9 @@ class BackendApiHandler(
 ) : AuthRouteHandler(loggerFactory, userInfoProvider) {
   override suspend fun handle(call: ApplicationCall) {
     val path = call.request.path().removePrefix("/backend-api/")
-    val result = memberService.callBackendApi(path, session?.sessionId)
+    val queryString = call.request.queryString()
+    val fullPath = if (queryString.isNotEmpty()) "$path?$queryString" else path
+    val result = memberService.callBackendApi(fullPath, session?.sessionId)
     call.respond(result)
   }
 }

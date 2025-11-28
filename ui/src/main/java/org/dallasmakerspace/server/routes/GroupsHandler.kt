@@ -34,7 +34,7 @@ constructor(
     val jsonMap: MutableMap<String, Any> =
         mutableMapOf(
             "name" to requestedGroupName,
-            "slug" to requestedGroup.slug,
+            "slug" to requestedGroupSlug,
         )
     if (requestedGroup.members.isNotEmpty()) {
       // Process members to add proper avatar URLs

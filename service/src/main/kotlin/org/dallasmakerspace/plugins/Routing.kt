@@ -214,7 +214,10 @@ fun Application.configureRouting() {
       requireRole("dataviz:read") {
         get("/data-viz/*") {
           val method = call.request.path().substringAfter("/data-viz/")
-          val params = call.request.queryParameters.toMap()
+          val params =
+              call.request.queryParameters.names().associateWith { paramName ->
+                call.request.queryParameters.getAll(paramName) ?: emptyList()
+              }
           val respone = dataVizRouter.route(method, params)
           call.respond(ApiResponse(Status.SUCCESS, "Backend API $method", respone))
         }

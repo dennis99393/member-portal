@@ -68,6 +68,12 @@ constructor(
 
     log.info("Rendering report template for ${childNode.name}")
 
+    // Extract query parameters to pass to template
+    val queryParams =
+        call.request.queryParameters.names().associateWith { paramName ->
+          call.request.queryParameters[paramName] ?: ""
+        }
+
     val templateData =
         mutableMapOf(
             "is_infra" to isInfra,
@@ -75,7 +81,9 @@ constructor(
             "parentNode" to parentNode,
             "childNode" to childNode,
             "reportTitle" to "${childNode.name} - Reports",
-            "showChildren" to false)
+            "showChildren" to false,
+            "queryParams" to queryParams,
+        )
 
     call.respond(ThymeleafContent("report", templateData))
   }
@@ -84,7 +92,7 @@ constructor(
       call: ApplicationCall,
       rootNode: ReportNode,
       parentNode: ReportNode?,
-      childNode: ReportNode?
+      childNode: ReportNode?,
   ) {
     val nodesToDisplay =
         when {
@@ -93,14 +101,18 @@ constructor(
           else -> rootNode.children
         }
 
+    // Filter out reports that support query params
+    val visibleNodes = nodesToDisplay?.filter { it.visibleInNav }
+
     val currentNodeName = childNode?.name ?: parentNode?.name ?: "Reports"
 
     val templateData =
         mutableMapOf(
             "is_infra" to isInfra,
-            "childrenNodes" to nodesToDisplay,
+            "childrenNodes" to visibleNodes,
             "showChildren" to true,
-            "reportTitle" to "$currentNodeName - Reports")
+            "reportTitle" to "$currentNodeName - Reports",
+        )
 
     if (parentNode != null) {
       templateData["parentNode"] = parentNode

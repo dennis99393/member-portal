@@ -19,20 +19,21 @@
                        data-bs-auto-close="outside" aria-expanded="false">Reports</a>
                     <ul class="dropdown-menu">
                         <th:block
-                                th:each="reportNode : ${@org.dallasmakerspace.server.reports.ReportGraph@getRoot().children}">
+                                th:each="reportNode : ${@org.dallasmakerspace.server.reports.ReportGraph@getRoot().getVisibleChildren()}">
                             <!-- Disabled item if no children - this is for WIP reports -->
-                            <li th:if="${reportNode.children == null || reportNode.children.empty}">
+                            <li th:if="${reportNode.children == null || reportNode.getVisibleChildren().empty}">
                                 <a class="dropdown-item disabled" th:href="'/reports/' + ${reportNode.urlSlug}"
                                    th:text="${reportNode.name}"></a>
                             </li>
 
                             <!-- Dropdown if has children -->
-                            <li class="dropend" th:if="${reportNode.children != null && !reportNode.children.empty}">
+                            <li class="dropend"
+                                th:if="${reportNode.children != null && !reportNode.getVisibleChildren().empty}">
                                 <a class="dropdown-item dropdown-toggle" href="javascript:void(0)"
                                    data-bs-toggle="dropdown"
                                    data-bs-auto-close="outside" aria-expanded="false" th:text="${reportNode.name}"></a>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li th:each="childNode : ${reportNode.children}">
+                                    <li th:each="childNode : ${reportNode.getVisibleChildren()}">
                                         <a class="dropdown-item"
                                            th:href="'/reports/' + ${reportNode.urlSlug} + '/' + ${childNode.urlSlug}"
                                            th:text="${childNode.name}"></a>

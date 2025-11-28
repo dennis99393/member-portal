@@ -6,7 +6,6 @@ object ReportGraph {
     return ReportNode(
         name = "root",
         description = "Root node of the report graph",
-        urlSlug = "reports",
         children =
             listOf(
                 ReportNode(
@@ -44,6 +43,12 @@ object ReportGraph {
                                 urlSlug = "first-events",
                             ),
                             ReportNode(
+                                name = "Group Calendar",
+                                description = "Prerequisite events for a specific group",
+                                urlSlug = "group-calendar",
+                                visibleInNav = false,
+                            ),
+                            ReportNode(
                                 name = "Top Members",
                                 description = "Top event organizers and attendees",
                                 urlSlug = "top-members",
@@ -66,8 +71,11 @@ object ReportGraph {
                                 description = "Average activity by time of day",
                                 urlSlug = "time-of-day",
                             ),
-                        )),
-            ))
+                        ),
+                ),
+            ),
+        urlSlug = "reports",
+    )
   }
 }
 
@@ -76,4 +84,9 @@ data class ReportNode(
     val description: String,
     val children: List<ReportNode>? = null,
     val urlSlug: String,
-)
+    val visibleInNav: Boolean = true,
+) {
+  fun getVisibleChildren(): List<ReportNode>? {
+    return children?.filter { it.visibleInNav }
+  }
+}

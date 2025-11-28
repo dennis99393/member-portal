@@ -8,6 +8,7 @@ import org.dallasmakerspace.dataviz.reports.TimeOfDayReport
 import org.dallasmakerspace.dataviz.reports.VisitorsByDayReport
 import org.dallasmakerspace.dataviz.reports.calendar.CalTrendsEvents
 import org.dallasmakerspace.dataviz.reports.calendar.FirstEvents
+import org.dallasmakerspace.dataviz.reports.calendar.GroupCalendarReport
 import org.dallasmakerspace.dataviz.reports.calendar.TopAttendees
 import org.dallasmakerspace.dataviz.reports.calendar.TopOrganizers
 import org.dallasmakerspace.dataviz.reports.membership.ActiveMembers
@@ -24,6 +25,7 @@ class DataVizModule {
       timeOfDayReport: TimeOfDayReport,
       calTrendsEvents: CalTrendsEvents,
       firstEvents: FirstEvents,
+      groupCalendarReport: GroupCalendarReport,
       topOrganizers: TopOrganizers,
       topAttendees: TopAttendees,
       activeMembers: ActiveMembers,
@@ -35,6 +37,7 @@ class DataVizModule {
         timeOfDayReport,
         calTrendsEvents,
         firstEvents,
+        groupCalendarReport,
         topOrganizers,
         topAttendees,
         activeMembers,
