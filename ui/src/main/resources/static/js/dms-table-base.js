@@ -194,6 +194,12 @@ class DmsTableBase extends LitElement {
             this._filteredRows = this.rows.filter(row => {
                 return row.some(cell => {
                     if (cell === null) return false;
+                    // Handle LINK objects - search in text and url
+                    if (typeof cell === 'object' && 'url' in cell) {
+                        const text = (cell.text || '').toLowerCase();
+                        const url = (cell.url || '').toLowerCase();
+                        return text.includes(searchTerm) || url.includes(searchTerm);
+                    }
                     // Handle MEMBER objects - search in username and displayName
                     if (typeof cell === 'object' && 'username' in cell) {
                         const username = (cell.username || '').toLowerCase();
@@ -363,6 +369,15 @@ class DmsTableBase extends LitElement {
     }
 
     _renderCell(cell) {
+        // Check if cell is a LINK object (has text and url properties)
+        if (cell !== null && typeof cell === 'object' && 'url' in cell) {
+            const text = cell.text || cell.url;
+            const url = cell.url || '';
+
+            // Return an anchor tag
+            return html`<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+        }
+
         // Check if cell is a MEMBER object (has username, displayName, avatarUrl properties)
         if (cell !== null && typeof cell === 'object' && 'username' in cell) {
             const username = cell.username || '';

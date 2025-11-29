@@ -59,6 +59,9 @@ class DmsTableVisualizer extends LitElement {
                 // Handle nulls and undefineds
                 if (value === null || value === undefined) {
                     rowData.push(null);
+                } else if (field.type === 'LINK') {
+                    // For LINK type, pass the raw object with text and url
+                    rowData.push(value);
                 } else if (field.type === 'MEMBER') {
                     // For MEMBER type, pass the raw object with username, displayName, avatarUrl
                     rowData.push(value);

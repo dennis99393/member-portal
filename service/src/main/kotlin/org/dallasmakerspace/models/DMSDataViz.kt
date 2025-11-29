@@ -33,7 +33,8 @@ enum class DataType {
   NUMBER,
   DATE,
   BOOLEAN,
-  MEMBER // Member card with username, displayName, avatarUrl
+  MEMBER, // Member card with username, displayName, avatarUrl
+  LINK // Link with text and url
 }
 
 // Extension functions for easy conversion.

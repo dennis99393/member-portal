@@ -59,7 +59,7 @@ constructor(
     val query =
         """
         SELECT
-            e.id,
+            e.id as event_id,
             e.name as event_name,
             e.event_start,
             c.ad_username as organizer_username,
@@ -123,10 +123,22 @@ constructor(
             put("avatarUrl", JsonPrimitive(avatarUrl))
           }
 
+          // Build event link
+          val eventLinkJson = buildJsonObject {
+            put("text", JsonPrimitive(dataItem.values["name"]?.toString()?.replace("\"", "") ?: ""))
+            put(
+                "url",
+                JsonPrimitive(
+                    "https://calendar.dallasmakerspace.org/events/view/" +
+                        "${dataItem.values["id"]?.toString()}"
+                ),
+            )
+          }
+
           DataItem(
               values =
                   mapOf(
-                      "Event" to (dataItem.values["name"] ?: JsonPrimitive("")),
+                      "Event" to eventLinkJson,
                       "Date" to (dataItem.values["event_start"] ?: JsonPrimitive("")),
                       "Organizer" to organizerJson,
                   )
@@ -148,7 +160,7 @@ constructor(
 
   override fun getDataFields(dbData: GenericRepository.QueryResult?): List<DataField> {
     return listOf(
-        DataField(name = "Event", type = DataType.STRING, label = "Event"),
+        DataField(name = "Event", type = DataType.LINK, label = "Event"),
         DataField(name = "Date", type = DataType.DATE, label = "Date"),
         DataField(name = "Organizer", type = DataType.MEMBER, label = "Organizer"),
     )
