@@ -18,7 +18,7 @@ jobs:
       component: ui
       port: "8080"
       internal_port: "8000"
-      env_file_path: ~/member-profile/actions-runner-ui/.env.ui
+      env_file_path: ~/member-profile/actions-runner-service/.env.ui
       image_name: dallas-makerspace/member-portal/ui
       container_name: member-profile-ui
     secrets: inherit
