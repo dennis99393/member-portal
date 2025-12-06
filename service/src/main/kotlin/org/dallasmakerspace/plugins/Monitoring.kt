@@ -2,16 +2,33 @@ package org.dallasmakerspace.plugins
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.plugins.*
 import io.ktor.server.plugins.callid.*
 import io.ktor.server.plugins.calllogging.*
 import io.ktor.server.request.*
 import io.ktor.util.date.*
+import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.core.logging.SessionIdGenerator
 import org.dallasmakerspace.di.DaggerAppComponent
+import org.slf4j.MDC
 import org.slf4j.event.Level
 
 fun Application.configureMonitoring() {
+  // Set MDC userid from API client principal for the entire request lifecycle
+  intercept(ApplicationCallPipeline.Monitoring) {
+    val principal = call.principal<ApiKeyAuthProvider.ApiKeyPrincipal>()
+    val apiClient = principal?.client
+
+    val useridCloseable = MDC.putCloseable("userid", apiClient)
+
+    try {
+      proceed()
+    } finally {
+      useridCloseable?.close()
+    }
+  }
+
   val loggerFactory = DaggerAppComponent.create().getLoggerFactory()
   install(CallLogging) {
     level = Level.INFO

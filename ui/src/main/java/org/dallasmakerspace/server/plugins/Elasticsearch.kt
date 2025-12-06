@@ -15,54 +15,6 @@ import org.dallasmakerspace.server.common.logging.ElasticsearchClientManager
 import org.dallasmakerspace.server.di.DaggerAppComponent
 
 fun Application.configureElasticsearch() {
-  val appConfig = DaggerAppComponent.create().getAppConfig()
-  val isDevelopment = appConfig.requireBooleanProperty("ktor.development")
-  if (!isDevelopment) {
-    intercept(ApplicationCallPipeline.Monitoring) {
-      logToElasticsearch(this.call, ElasticsearchClientManager.client)
-    }
-  }
-}
-
-suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) {
-  val request = call.request
-  val response = call.response
-  // Do not log redirect responses and static files
-  if (
-      response.status() == HttpStatusCode.TemporaryRedirect ||
-          request.uri.startsWith("/static") ||
-          request.uri.startsWith("/favicon.ico")
-  ) {
-    return
-  }
-
-  val session = try {
-    call.sessions.get<UserSession>()
-  } catch (e: Exception) {
-    null
-  }
-  val sessionId = session?.sessionId
-  val userId = session?.userId
-
-  val logEntry =
-      mapOf(
-          "@timestamp" to Instant.now().toString(),
-          "method" to request.httpMethod.value,
-          "app" to "member-profile-ui",
-          "host" to request.host(),
-          "ip" to request.origin.remoteAddress,
-          "sessionid" to sessionId,
-          "userid" to userId,
-          "uri" to request.uri,
-          "status" to response.status()?.value,
-          "userAgent" to request.userAgent(),
-      )
-
-  withContext(Dispatchers.IO) {
-    try {
-      client.index { i -> i.index("logs").document(logEntry) }
-    } catch (e: IOException) {
-      ElasticsearchClientManager.log.error("Failed to log to Elasticsearch", e)
-    }
-  }
+  // Elasticsearch logging is handled by logback ELASTIC appender
+  // This function is kept for future use if needed
 }
