@@ -9,33 +9,30 @@ import org.slf4j.MDC
 import org.slf4j.event.Level
 
 fun Application.configureMonitoring() {
+  // Set MDC values for the entire request lifecycle
+  intercept(ApplicationCallPipeline.Monitoring) {
+    val session = try {
+      call.sessions.get<UserSession>()
+    } catch (e: Exception) {
+      null
+    }
+    val sessionId = session?.sessionId
+    val userId = session?.userId
+
+    val useridCloseable = MDC.putCloseable("userid", userId)
+    val sessionidCloseable = MDC.putCloseable("sessionid", sessionId)
+
+    try {
+      proceed()
+    } finally {
+      useridCloseable?.close()
+      sessionidCloseable?.close()
+    }
+  }
+
   install(CallLogging) {
     level = Level.INFO
     // filter { call -> call.request.path().startsWith("/static").not() } // Don't log static
-
-    mdc("sessionid") { call ->
-      try {
-        val session = call.sessions.get<UserSession>()
-        val sessionId = session?.sessionId
-        call.application.log.info("MDC sessionid - Session exists: ${session != null}, SessionId: $sessionId")
-        sessionId
-      } catch (e: Exception) {
-        call.application.log.error("MDC sessionid - Exception getting session", e)
-        null
-      }
-    }
-
-    mdc("userid") { call ->
-      try {
-        val session = call.sessions.get<UserSession>()
-        val userId = session?.userId
-        call.application.log.info("MDC userid - Session exists: ${session != null}, UserId: $userId")
-        userId
-      } catch (e: Exception) {
-        call.application.log.error("MDC userid - Exception getting session", e)
-        null
-      }
-    }
 
     format { call ->
       val status = call.response.status()
