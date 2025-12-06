@@ -9,7 +9,7 @@ import org.slf4j.MDC
 import org.slf4j.event.Level
 
 fun Application.configureMonitoring() {
-  // Set MDC values for the entire request lifecycle
+  // Set MDC values for the entire request lifecycle so console logs show them
   intercept(ApplicationCallPipeline.Monitoring) {
     val session = try {
       call.sessions.get<UserSession>()

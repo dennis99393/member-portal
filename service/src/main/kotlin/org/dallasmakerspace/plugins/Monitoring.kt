@@ -15,20 +15,6 @@ import org.slf4j.MDC
 import org.slf4j.event.Level
 
 fun Application.configureMonitoring() {
-  // Set MDC userid from API client principal for the entire request lifecycle
-  intercept(ApplicationCallPipeline.Monitoring) {
-    val principal = call.principal<ApiKeyAuthProvider.ApiKeyPrincipal>()
-    val apiClient = principal?.client
-
-    val useridCloseable = MDC.putCloseable("userid", apiClient)
-
-    try {
-      proceed()
-    } finally {
-      useridCloseable?.close()
-    }
-  }
-
   val loggerFactory = DaggerAppComponent.create().getLoggerFactory()
   install(CallLogging) {
     level = Level.INFO
