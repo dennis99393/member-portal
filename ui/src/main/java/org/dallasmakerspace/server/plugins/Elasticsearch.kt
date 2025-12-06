@@ -5,7 +5,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
-import io.ktor.server.sessions.*
 import io.ktor.util.pipeline.*
 import java.io.IOException
 import java.time.Instant
@@ -13,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.server.common.logging.ElasticsearchClientManager
 import org.dallasmakerspace.server.di.DaggerAppComponent
+import org.slf4j.MDC
 
 fun Application.configureElasticsearch() {
   val appConfig = DaggerAppComponent.create().getAppConfig()
@@ -36,14 +36,6 @@ suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) 
     return
   }
 
-  val session = try {
-    call.sessions.get<UserSession>()
-  } catch (e: Exception) {
-    null
-  }
-  val sessionId = session?.sessionId
-  val userId = session?.userId
-
   val logEntry =
       mapOf(
           "@timestamp" to Instant.now().toString(),
@@ -51,8 +43,8 @@ suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) 
           "app" to "member-profile-ui",
           "host" to request.host(),
           "ip" to request.origin.remoteAddress,
-          "sessionid" to sessionId,
-          "userid" to userId,
+          "sessionid" to MDC.get("sessionid")?.toString(),
+          "userid" to MDC.get("userid")?.toString(),
           "uri" to request.uri,
           "status" to response.status()?.value,
           "userAgent" to request.userAgent(),

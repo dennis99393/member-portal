@@ -23,10 +23,10 @@ fun main() {
   embeddedServer(Netty, port = portStr.toInt(), host = "0.0.0.0") {
         configureTemplating()
         configureHttp()
-        configureSessions()
         configureRouting()
         configureStatusPages()
         configureMonitoring()
+        configureSessions()
         configureElasticsearch()
       }
       .start(wait = true)
