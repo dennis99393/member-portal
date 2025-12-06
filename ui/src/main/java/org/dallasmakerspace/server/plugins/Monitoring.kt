@@ -17,10 +17,10 @@ fun Application.configureMonitoring() {
       try {
         val session = call.sessions.get<UserSession>()
         val sessionId = session?.sessionId
-        application.log.info("MDC sessionid - Session exists: ${session != null}, SessionId: $sessionId")
+        call.application.log.info("MDC sessionid - Session exists: ${session != null}, SessionId: $sessionId")
         sessionId
       } catch (e: Exception) {
-        application.log.error("MDC sessionid - Exception getting session", e)
+        call.application.log.error("MDC sessionid - Exception getting session", e)
         null
       }
     }
@@ -29,10 +29,10 @@ fun Application.configureMonitoring() {
       try {
         val session = call.sessions.get<UserSession>()
         val userId = session?.userId
-        application.log.info("MDC userid - Session exists: ${session != null}, UserId: $userId")
+        call.application.log.info("MDC userid - Session exists: ${session != null}, UserId: $userId")
         userId
       } catch (e: Exception) {
-        application.log.error("MDC userid - Exception getting session", e)
+        call.application.log.error("MDC userid - Exception getting session", e)
         null
       }
     }
