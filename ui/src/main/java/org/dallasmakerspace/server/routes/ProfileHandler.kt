@@ -12,6 +12,7 @@ import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.models.DMSMember
 import org.dallasmakerspace.server.plugins.AuthException
+import org.dallasmakerspace.server.plugins.UserSession
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 import java.time.Instant
 import java.time.ZoneId
@@ -22,18 +23,26 @@ class ProfileHandler
 constructor(
     loggerFactory: LoggerFactory,
     private val memberService: MemberService,
-    userInfoProvider: UserInfoProvider,
+    private val userInfoProvider: UserInfoProvider,
     private val voterRegistrationManager: VoterRegistrationManager,
-) : AuthRouteHandler(loggerFactory, userInfoProvider) {
+) : IRouteHandler {
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun handle(call: ApplicationCall) {
+    // Get session (guaranteed to exist by auth_session authentication)
+    val session = call.sessions.get<UserSession>()
+        ?: throw AuthException("No session found")
+
+    // Fetch user info from OAuth provider
+    val userInfo = userInfoProvider.getUserInfo(session.accessToken!!)
+    val userGroups = (userInfo["groups"] as? List<*>) ?: emptyList<String>()
+    val isInfra = userGroups.contains("/Infrastructure")
 
     // Get username requested from path /profile/@{preferred_username}
     val requestedUsername =
         call.parameters["preferred_username"]
             ?: throw AuthException("No username found in url path")
-    val requestedMember = memberService.getMember(requestedUsername, session?.sessionId)
+    val requestedMember = memberService.getMember(requestedUsername, session.sessionId)
     val avatarUrl =
         requestedMember.discourseAvatarUrl
             ?.takeIf { it.isNotEmpty() }
@@ -87,7 +96,7 @@ constructor(
         jsonMap["whmcs_id"] = this.whmcsId
       }
     }
-    setToastMessage(call, jsonMap, requestedMember)
+    setToastMessage(call, jsonMap, requestedMember, session)
     call.respond(ThymeleafContent("profile", jsonMap))
   }
 
@@ -95,21 +104,20 @@ constructor(
       call: ApplicationCall,
       jsonMap: MutableMap<String, Any>,
       requestedMember: DMSMember,
+      session: UserSession,
   ) {
-    if (session?.isDiscourseLinkSuccess == true) {
+    if (session.isDiscourseLinkSuccess) {
       log.info("Setting toast message for ${requestedMember.username} successful discourse link")
-      session?.isDiscourseLinkSuccess = false
-      call.sessions.set(session)
+      call.sessions.set(session.copy(isDiscourseLinkSuccess = false))
       jsonMap["toast_message"] =
           "Successfully linked @${requestedMember.discourseUsername} to your profile."
       jsonMap["toast_btn_url"] = "/unlink-discourse"
       jsonMap["toast_btn_label"] = "Unlink"
-    } else if (session?.isVoterRegistrationSuccess == true) {
+    } else if (session.isVoterRegistrationSuccess) {
       log.info(
           "Setting toast message for ${requestedMember.username} successful voter registration"
       )
-      session?.isVoterRegistrationSuccess = false
-      call.sessions.set(session)
+      call.sessions.set(session.copy(isVoterRegistrationSuccess = false))
       jsonMap["toast_message"] = "Successfully registered to vote."
       jsonMap["toast_btn_url"] = "@${requestedMember.username}/unregister-voting"
       jsonMap["toast_btn_label"] = "Unregister"

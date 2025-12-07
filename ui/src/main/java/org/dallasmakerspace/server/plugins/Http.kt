@@ -10,6 +10,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.forwardedheaders.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.webjars.*
 import kotlin.collections.listOf
@@ -45,7 +46,14 @@ fun Application.configureHttp() {
           null
         }
       }
-      challenge { call.respondRedirect(RouteFactory.Paths.LOGIN.path, permanent = false) }
+      challenge {
+        val currentUri = call.request.uri
+        val encodedUri = java.net.URLEncoder.encode(currentUri, "UTF-8")
+        call.respondRedirect(
+            "${RouteFactory.Paths.LOGIN.path}?redirectUrl=$encodedUri",
+            permanent = false
+        )
+      }
     }
   }
   install(ContentNegotiation) { gson { setPrettyPrinting() } }

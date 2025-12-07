@@ -23,7 +23,12 @@ fun Application.configureRouting() {
     }
 
     get(RouteFactory.Paths.INDEX.path) { RouteFactory.getHandler(call)?.handleBase(call) }
-    get(RouteFactory.Paths.PROFILE.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+
+    // Protected routes using session authentication
+    authenticate("auth_session") {
+      get(RouteFactory.Paths.PROFILE.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+    }
+
     get(RouteFactory.Paths.PROFILEME.path) { RouteFactory.getHandler(call)?.handleBase(call) }
     get(RouteFactory.Paths.DISCOURSE_LINK.path) { RouteFactory.getHandler(call)?.handleBase(call) }
     get(RouteFactory.Paths.DISCOURSE_UNLINK.path) {

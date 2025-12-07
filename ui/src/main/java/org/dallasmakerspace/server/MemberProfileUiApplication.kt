@@ -8,6 +8,7 @@ import org.dallasmakerspace.server.plugins.configureElasticsearch
 import org.dallasmakerspace.server.plugins.configureHttp
 import org.dallasmakerspace.server.plugins.configureMonitoring
 import org.dallasmakerspace.server.plugins.configureRouting
+import org.dallasmakerspace.server.plugins.configureSessionEnrichment
 import org.dallasmakerspace.server.plugins.configureSessions
 import org.dallasmakerspace.server.plugins.configureStatusPages
 import org.dallasmakerspace.server.plugins.configureTemplating
@@ -24,6 +25,7 @@ fun main() {
         configureTemplating()
         configureHttp()
         configureSessions()
+        configureSessionEnrichment() // Must run after Sessions/Auth but before Monitoring
         configureMonitoring()
         configureRouting()
         configureStatusPages()
