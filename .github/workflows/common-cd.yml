@@ -26,6 +26,10 @@ on:
         description: 'Docker image name'
         required: true
         type: string
+      package_name:
+        description: 'Container package name for cleanup'
+        required: true
+        type: string
       container_name:
         description: 'Docker container name'
         required: true
