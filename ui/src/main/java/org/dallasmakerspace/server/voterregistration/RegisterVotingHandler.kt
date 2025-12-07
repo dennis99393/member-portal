@@ -8,7 +8,7 @@ import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.plugins.AuthException
-import org.dallasmakerspace.server.routes.AuthRouteHandler
+import org.dallasmakerspace.server.routes.AuthenticatedHandler
 
 class RegisterVotingHandler
 @Inject
@@ -16,10 +16,10 @@ constructor(
     loggerFactory: LoggerFactory,
     userInfoProvider: UserInfoProvider,
     private val memberService: MemberService
-) : AuthRouteHandler(loggerFactory, userInfoProvider) {
-  override suspend fun handle(call: ApplicationCall) {
+) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
+  override suspend fun handleAuthenticated(call: ApplicationCall) {
 
-    // Get username requested from path /profile/@{preferred_username}
+    // Get username requested from path /profile/@{preferred_username}/register-voting
     val requestedUsername =
         call.parameters["preferred_username"]
             ?: throw AuthException("No username found in url path")
@@ -31,11 +31,10 @@ constructor(
       throw AuthException("You can only register yourself for voting")
     }
 
-    memberService.registerVoting(session?.sessionId, requestedUsername)
+    memberService.registerVoting(session.sessionId, requestedUsername)
 
     // Set success flag in session
-    session?.isVoterRegistrationSuccess = true
-    call.sessions.set(session)
+    call.sessions.set(session.copy(isVoterRegistrationSuccess = true))
 
     call.respondRedirect("/profile/@$requestedUsername", permanent = false)
   }

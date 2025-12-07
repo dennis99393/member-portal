@@ -7,7 +7,7 @@ import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.plugins.AuthException
-import org.dallasmakerspace.server.routes.AuthRouteHandler
+import org.dallasmakerspace.server.routes.AuthenticatedHandler
 
 class UnregisterVotingHandler
 @Inject
@@ -15,10 +15,10 @@ constructor(
     loggerFactory: LoggerFactory,
     userInfoProvider: UserInfoProvider,
     private val memberService: MemberService
-) : AuthRouteHandler(loggerFactory, userInfoProvider) {
-  override suspend fun handle(call: ApplicationCall) {
+) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
+  override suspend fun handleAuthenticated(call: ApplicationCall) {
 
-    // Get username requested from path /profile/@{preferred_username}
+    // Get username requested from path /profile/@{preferred_username}/unregister-voting
     val requestedUsername =
         call.parameters["preferred_username"]
             ?: throw AuthException("No username found in url path")
@@ -30,7 +30,7 @@ constructor(
       throw AuthException("You can only cancel your own registration")
     }
 
-    memberService.unregisterVoting(session?.sessionId, requestedUsername)
+    memberService.unregisterVoting(session.sessionId, requestedUsername)
 
     call.respondRedirect("/profile/@$requestedUsername", permanent = false)
   }

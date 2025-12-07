@@ -12,10 +12,10 @@ import org.dallasmakerspace.server.common.logging.LoggerFactory
 class ProfileMeHandler
 @Inject
 constructor(loggerFactory: LoggerFactory, userInfoProvider: UserInfoProvider) :
-    AuthRouteHandler(loggerFactory, userInfoProvider) {
+    AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
-  override suspend fun handle(call: ApplicationCall) {
+  override suspend fun handleAuthenticated(call: ApplicationCall) {
 
     val username = userInfo["preferred_username"] as String
 

@@ -22,21 +22,13 @@ class ProfileHandler
 @Inject
 constructor(
     loggerFactory: LoggerFactory,
+    userInfoProvider: UserInfoProvider,
     private val memberService: MemberService,
-    private val userInfoProvider: UserInfoProvider,
     private val voterRegistrationManager: VoterRegistrationManager,
-) : IRouteHandler {
+) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
-  override suspend fun handle(call: ApplicationCall) {
-    // Get session (guaranteed to exist by auth_session authentication)
-    val session = call.sessions.get<UserSession>()
-        ?: throw AuthException("No session found")
-
-    // Fetch user info from OAuth provider
-    val userInfo = userInfoProvider.getUserInfo(session.accessToken!!)
-    val userGroups = (userInfo["groups"] as? List<*>) ?: emptyList<String>()
-    val isInfra = userGroups.contains("/Infrastructure")
+  override suspend fun handleAuthenticated(call: ApplicationCall) {
 
     // Get username requested from path /profile/@{preferred_username}
     val requestedUsername =

@@ -15,11 +15,11 @@ constructor(
     loggerFactory: LoggerFactory,
     userInfoProvider: UserInfoProvider,
     private val memberService: MemberService
-) : AuthRouteHandler(loggerFactory, userInfoProvider) {
+) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
   @Suppress("TooGenericExceptionCaught")
-  override suspend fun handle(call: ApplicationCall) {
+  override suspend fun handleAuthenticated(call: ApplicationCall) {
 
     log.debug("SearchPreloadHandler start")
 
@@ -35,7 +35,7 @@ constructor(
 
     val jsonMap: MutableMap<String, Any> = mutableMapOf()
     try {
-      val preloadResponse = memberService.getSearchPreload(session?.sessionId)
+      val preloadResponse = memberService.getSearchPreload(session.sessionId)
 
       // Process members
       val memberData =

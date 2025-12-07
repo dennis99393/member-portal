@@ -45,9 +45,9 @@ class DiscourseModule {
   @StringKey("/unlink-discourse")
   fun providesUnlinkDiscourseHandler(
       loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
       memberService: MemberService,
-      userInfoProvider: UserInfoProvider
-  ): IRouteHandler = UnlinkDiscourseHandler(loggerFactory, memberService, userInfoProvider)
+  ): IRouteHandler = UnlinkDiscourseHandler(loggerFactory, userInfoProvider, memberService)
 
   @IntoMap
   @Provides

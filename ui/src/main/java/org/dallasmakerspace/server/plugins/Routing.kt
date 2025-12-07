@@ -22,29 +22,27 @@ fun Application.configureRouting() {
       }
     }
 
-    get(RouteFactory.Paths.INDEX.path) { RouteFactory.getHandler(call)?.handleBase(call) }
-
     // Protected routes using session authentication
     authenticate("auth_session") {
+      get(RouteFactory.Paths.INDEX.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       get(RouteFactory.Paths.PROFILE.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.PROFILEME.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.GROUPS.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.SEARCH_PRELOAD.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.REPORT.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.BACKEND_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.DISCOURSE_LINK.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.DISCOURSE_UNLINK.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
+      get(RouteFactory.Paths.DISCOURSE_CALLBACK.path) {
+        RouteFactory.getHandler(RouteFactory.Paths.DISCOURSE_CALLBACK.path)?.handleBase(call)
+      }
+      get(RouteFactory.Paths.REGISTER_VOTING.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.UNREGISTER_VOTING.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
     }
-
-    get(RouteFactory.Paths.PROFILEME.path) { RouteFactory.getHandler(call)?.handleBase(call) }
-    get(RouteFactory.Paths.DISCOURSE_LINK.path) { RouteFactory.getHandler(call)?.handleBase(call) }
-    get(RouteFactory.Paths.DISCOURSE_UNLINK.path) {
-      RouteFactory.getHandler(call)?.handleBase(call)
-    }
-    get(RouteFactory.Paths.DISCOURSE_CALLBACK.path) {
-      RouteFactory.getHandler(RouteFactory.Paths.DISCOURSE_CALLBACK.path)?.handleBase(call)
-    }
-    get(RouteFactory.Paths.GROUPS.path) { RouteFactory.getHandler(call)?.handleBase(call) }
-    get(RouteFactory.Paths.SEARCH_PRELOAD.path) { RouteFactory.getHandler(call)?.handleBase(call) }
-    get(RouteFactory.Paths.REGISTER_VOTING.path) { RouteFactory.getHandler(call)?.handleBase(call) }
-    get(RouteFactory.Paths.UNREGISTER_VOTING.path) {
-      RouteFactory.getHandler(call)?.handleBase(call)
-    }
-    get(RouteFactory.Paths.REPORT.path) { RouteFactory.getHandler(call)?.handleBase(call) }
-    get(RouteFactory.Paths.BACKEND_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handleBase(call) }
 

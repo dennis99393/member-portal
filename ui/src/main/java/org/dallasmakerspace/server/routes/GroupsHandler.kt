@@ -17,18 +17,18 @@ class GroupsHandler
 @Inject
 constructor(
     loggerFactory: LoggerFactory,
-    private val memberService: MemberService,
     userInfoProvider: UserInfoProvider,
-) : AuthRouteHandler(loggerFactory, userInfoProvider) {
+    private val memberService: MemberService,
+) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
-  override suspend fun handle(call: ApplicationCall) {
+  override suspend fun handleAuthenticated(call: ApplicationCall) {
 
-    // Get username requested from path /profile/@{preferred_username}
+    // Get group slug requested from path /groups/{group_slug}
     val requestedGroupSlug =
         call.parameters["group_slug"] ?: throw AuthException("No group slug found in url path")
     val requestedGroupName = DMSGroup.getNameFromSlug(requestedGroupSlug)
-    val requestedGroup = memberService.getGroup(requestedGroupSlug, session?.sessionId)
+    val requestedGroup = memberService.getGroup(requestedGroupSlug, session.sessionId)
 
     log.debug("Group: {}", requestedGroup)
     val jsonMap: MutableMap<String, Any> =

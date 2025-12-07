@@ -9,17 +9,17 @@ import org.dallasmakerspace.server.common.logging.LoggerFactory
 
 class IndexHandler
 @Inject
-constructor(loggerFactory: LoggerFactory, userInfoProvider: UserInfoProvider) :
-    AuthRouteHandler(loggerFactory, userInfoProvider) {
+constructor(
+    loggerFactory: LoggerFactory,
+    userInfoProvider: UserInfoProvider
+) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
-  override suspend fun handle(call: ApplicationCall) {
-
+  override suspend fun handleAuthenticated(call: ApplicationCall) {
     log.info("Handle request: ${call.request}")
-    if (userInfo.isEmpty().not()) {
-      val jsonMap: MutableMap<String, Any> = userInfo.toMutableMap()
-      jsonMap["profile_url"] = "./profile/@${jsonMap["preferred_username"]}"
-      call.respond(ThymeleafContent("index", jsonMap))
-    }
+
+    val jsonMap: MutableMap<String, Any> = userInfo.toMutableMap()
+    jsonMap["profile_url"] = "./profile/@${jsonMap["preferred_username"]}"
+    call.respond(ThymeleafContent("index", jsonMap))
   }
 }

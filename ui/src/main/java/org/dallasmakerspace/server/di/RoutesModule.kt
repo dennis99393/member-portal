@@ -59,7 +59,7 @@ class RoutesModule {
       memberService: MemberService,
       voterRegistrationManager: VoterRegistrationManager
   ): IRouteHandler =
-      ProfileHandler(loggerFactory, memberService, userInfoProvider, voterRegistrationManager)
+      ProfileHandler(loggerFactory, userInfoProvider, memberService, voterRegistrationManager)
 
   @IntoMap
   @Provides
@@ -81,7 +81,7 @@ class RoutesModule {
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
       memberService: MemberService
-  ): IRouteHandler = GroupsHandler(loggerFactory, memberService, userInfoProvider)
+  ): IRouteHandler = GroupsHandler(loggerFactory, userInfoProvider, memberService)
 
   @IntoMap
   @Provides
@@ -98,5 +98,5 @@ class RoutesModule {
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
       memberService: MemberService
-  ): IRouteHandler = BackendApiHandler(loggerFactory, memberService, userInfoProvider)
+  ): IRouteHandler = BackendApiHandler(loggerFactory, userInfoProvider, memberService)
 }

@@ -9,14 +9,14 @@ import org.dallasmakerspace.server.memberservice.MemberService
 
 class BackendApiHandler(
     loggerFactory: LoggerFactory,
-    val memberService: MemberService,
     userInfoProvider: UserInfoProvider,
-) : AuthRouteHandler(loggerFactory, userInfoProvider) {
-  override suspend fun handle(call: ApplicationCall) {
+    val memberService: MemberService,
+) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
+  override suspend fun handleAuthenticated(call: ApplicationCall) {
     val path = call.request.path().removePrefix("/backend-api/")
     val queryString = call.request.queryString()
     val fullPath = if (queryString.isNotEmpty()) "$path?$queryString" else path
-    val result = memberService.callBackendApi(fullPath, session?.sessionId)
+    val result = memberService.callBackendApi(fullPath, session.sessionId)
     call.respond(result)
   }
 }

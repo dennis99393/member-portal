@@ -7,7 +7,7 @@ import kotlin.random.Random
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.plugins.AuthException
-import org.dallasmakerspace.server.routes.AuthRouteHandler
+import org.dallasmakerspace.server.routes.AuthenticatedHandler
 
 private const val NONCE_RANGE_START = 1000000
 private const val NONCE_RANGE_END = 9999999
@@ -19,8 +19,8 @@ constructor(
     userInfoProvider: UserInfoProvider,
     private val discourseNonceCache: DiscourseNonceCache,
     private val discourseLinkProvider: DiscourseSSOProvider
-) : AuthRouteHandler(loggerFactory, userInfoProvider) {
-  override suspend fun handle(call: ApplicationCall) {
+) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
+  override suspend fun handleAuthenticated(call: ApplicationCall) {
 
     val username =
         userInfo["preferred_username"] as? String

@@ -16,10 +16,10 @@ class ReportHandler
 constructor(
     loggerFactory: LoggerFactory,
     userInfoProvider: UserInfoProvider,
-) : AuthRouteHandler(loggerFactory, userInfoProvider) {
+) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
-  override suspend fun handle(call: ApplicationCall) {
+  override suspend fun handleAuthenticated(call: ApplicationCall) {
     // Extract the full path from the request
     val path = call.request.path()
 
