@@ -20,5 +20,6 @@ jobs:
       internal_port: "8000"
       env_file_path: ~/member-profile/actions-runner-service/.env.ui
       image_name: dallas-makerspace/member-portal/ui
+      package_name: member-portal/ui
       container_name: member-profile-ui
     secrets: inherit

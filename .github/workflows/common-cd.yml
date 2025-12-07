@@ -140,7 +140,7 @@ jobs:
         uses: actions/delete-package-versions@v5
         continue-on-error: true
         with:
-          package-name: ${{ inputs.image_name }}
+          package-name: ${{ inputs.package_name }}
           package-type: 'container'
           min-versions-to-keep: 5
 
