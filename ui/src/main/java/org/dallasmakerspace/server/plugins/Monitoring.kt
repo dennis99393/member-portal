@@ -19,8 +19,8 @@ fun Application.configureMonitoring() {
     val sessionId = session?.sessionId
     val userId = session?.userId
 
-    MDC.put("userid", userId)
-    MDC.put("sessionid", sessionId)
+    MDC.put("userid", userId ?: "NO_USER")
+    MDC.put("sessionid", sessionId ?: "NO_SESSION")
 
     try {
       proceed()
