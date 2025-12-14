@@ -1,5 +1,7 @@
 package org.dallasmakerspace.server.common
 
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -16,6 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
   private val log = loggerFactory.create(javaClass)
+  private val objectMapper = jacksonObjectMapper()
 
   private fun getClient() =
       HttpClient(CIO) {
@@ -44,11 +47,18 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
       val body = resp.body<String>()
       log.error("get: HTTP request failed: $body")
       val message =
-          if (body.contains("message") && body.contains("ERROR")) {
-            // Serialize the json to a map and extract the message attribute
-            val json = resp.body<Map<String, Any>>()
-            json["message"] as String
-          } else ""
+          try {
+            if (body.contains("message")) {
+              // Try to parse as JSON and extract the message attribute
+              val json = objectMapper.readValue(body, Map::class.java)
+              (json["message"] as? String) ?: "Status: ${resp.status}, Response: $body"
+            } else {
+              "Status: ${resp.status}, Response: $body"
+            }
+          } catch (e: JsonProcessingException) {
+            log.warn("get: Failed to parse error response as JSON: ${e.message}")
+            "Status: ${resp.status}, Response: $body"
+          }
       throw HttpException(message)
     }
   }
