@@ -14,40 +14,88 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
-        .main {
-            gap: 0;
+        .error-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-top: 2rem;
         }
         .error-container h2 {
-            margin-top: 20px;
-            margin-bottom: 20px;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #dc3545;
         }
-        .error-container div {
-            margin-top: 10px;
-            margin-bottom: 10px;
+        .error-message {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        .error-metadata {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .error-metadata div {
+            margin: 0.5rem 0;
+        }
+        .error-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        .technical-details-container {
+            margin-top: 1rem;
+        }
+        .technical-details-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0;
+            max-height: 50vh;
+            overflow: auto;
+        }
+        .technical-details-pre {
+            margin: 0;
+            padding: 1rem;
+            white-space: pre;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            background: transparent;
         }
     </style>
 </head>
 <body>
 <header class="top-nav" th:replace="~{fragments/header :: header}"></header>
-<div class="main">
-    <section class="main-inner">
-        <div class="error-container">
-            <h2>Server Error</h2>
-            <p th:text="${message}"/>
-            <div><span>Session: </span><span th:text="${sessionid}"></span></div>
-            <div><span>UserId: </span><span th:text="${userid}"></span></div>
-            <a class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#error-details" role="button"
-               aria-expanded="false" aria-controls="error-details">Technical Details</a>
-            <div class="row">
-                <div class="col">
-                    <div class="collapse" id="error-details">
-                        <div class="card card-body" th:text="${cause}">
-                        </div>
-                    </div>
-                </div>
+<div class="container">
+    <div class="error-container">
+        <h2>Server Error</h2>
+
+        <p class="error-message" th:text="${message}"></p>
+
+        <div class="error-metadata">
+            <div><strong>Session:</strong> <span id="session-id" th:text="${sessionid}"></span></div>
+            <div><strong>User ID:</strong> <span id="user-id" th:text="${userid}"></span></div>
+        </div>
+
+        <div class="error-actions">
+            <button id="toggle-details-btn" class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#error-details"
+                    aria-expanded="false" aria-controls="error-details">
+                Show Technical Details
+            </button>
+            <button class="btn btn-outline-secondary" onclick="copyErrorDetails(event)">
+                Copy Error Details
+            </button>
+        </div>
+
+        <div class="collapse technical-details-container" id="error-details">
+            <div class="technical-details-card">
+                <pre id="error-cause" class="technical-details-pre" th:text="${cause}"></pre>
             </div>
         </div>
-    </section>
+    </div>
 </div>
 
 <!-- Bootstrap JS should be at the bottom of the body -->
@@ -60,6 +108,84 @@
 <!-- App JS -->
 <script src="../static/js/app.js"></script>
 <script src="../static/js/dms-page-loader.js" defer></script>
+<script>
+// Toggle button text when collapse is shown/hidden
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleButton = document.getElementById('toggle-details-btn');
+    const errorDetailsCollapse = document.getElementById('error-details');
+
+    if (errorDetailsCollapse && toggleButton) {
+        errorDetailsCollapse.addEventListener('show.bs.collapse', function() {
+            toggleButton.textContent = 'Hide Technical Details';
+        });
+
+        errorDetailsCollapse.addEventListener('hide.bs.collapse', function() {
+            toggleButton.textContent = 'Show Technical Details';
+        });
+    }
+});
+
+function copyErrorDetails(event) {
+    const errorText = document.getElementById('error-cause').textContent;
+    const sessionId = document.getElementById('session-id').textContent;
+    const userId = document.getElementById('user-id').textContent;
+
+    const fullErrorDetails = 'Session: ' + sessionId + '\n' +
+                            'UserId: ' + userId + '\n\n' +
+                            errorText;
+
+    const button = event.target;
+    const originalText = button.textContent;
+
+    // Modern clipboard API with fallback
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fullErrorDetails).then(function() {
+            // Show success feedback
+            button.textContent = 'Copied!';
+            button.classList.remove('btn-outline-secondary');
+            button.classList.add('btn-success');
+
+            setTimeout(function() {
+                button.textContent = originalText;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-outline-secondary');
+            }, 2000);
+        }).catch(function(err) {
+            console.error('Failed to copy: ', err);
+            alert('Failed to copy error details. Please try selecting and copying manually.');
+        });
+    } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = fullErrorDetails;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            const success = document.execCommand('copy');
+            document.body.removeChild(textArea);
+
+            if (success) {
+                button.textContent = 'Copied!';
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('btn-success');
+
+                setTimeout(function() {
+                    button.textContent = originalText;
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-outline-secondary');
+                }, 2000);
+            } else {
+                alert('Failed to copy error details. Please try selecting and copying manually.');
+            }
+        } catch (err) {
+            document.body.removeChild(textArea);
+            alert('Failed to copy error details. Please try selecting and copying manually.');
+        }
+    }
+}
+</script>
 
 </body>
 </html>
