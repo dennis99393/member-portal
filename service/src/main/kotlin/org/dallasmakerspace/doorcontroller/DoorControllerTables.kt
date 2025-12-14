@@ -25,7 +25,7 @@ object DoorEventsTable : Table("AccessControl.events") {
   val id = integer("id").autoIncrement()
   val controllerId = integer("controllerId")
   val slotNumber = integer("slotNumber")
-  val dbindex = integer("dbindex").nullable()
+  val dbindex = integer("dbindex")
   val dbindextype = integer("dbindextype").default(0)
   val accessRequest = integer("accessRequest")
   val granted = integer("granted")

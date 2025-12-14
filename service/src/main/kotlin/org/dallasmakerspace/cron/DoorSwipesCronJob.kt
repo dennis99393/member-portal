@@ -37,7 +37,7 @@ constructor(
     )
     val startTime = System.currentTimeMillis()
 
-    val result = doorControllerService.readRecentSwipes(params.minutes)
+    val result = doorControllerService.readRecentSwipes()
 
     log.info("Retrieved ${result.events.size} swipe events from all controllers")
 
@@ -83,7 +83,7 @@ constructor(
 
     if (result.events.isEmpty()) {
       log.info("")
-      log.info("No swipe events found in the past ${params.minutes} minutes")
+      log.info("No swipe events found")
     } else {
       log.info("")
       log.info("Recent swipe events (most recent first):")

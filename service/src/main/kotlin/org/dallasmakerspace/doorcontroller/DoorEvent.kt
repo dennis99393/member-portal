@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 data class DoorEvent(
   val controllerId: Int,
   val slotNumber: Int,
-  val dbindex: Int? = null,
+  val dbindex: Int,
   val dbindextype: Int = 0,
   val accessRequest: Int = 0,
   val granted: Boolean,

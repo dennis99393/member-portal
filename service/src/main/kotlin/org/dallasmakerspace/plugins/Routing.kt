@@ -201,10 +201,7 @@ fun Application.configureRouting() {
         }
 
         get("/cron/door-swipes") {
-          val minutes =
-              call.request.queryParameters["minutes"]?.toIntOrNull()
-                  ?: DoorSwipesCronJobParams.DEFAULT_MINUTES
-          val params = DoorSwipesCronJobParams(minutes)
+          val params = DoorSwipesCronJobParams()
           val result = doorSwipesCronJob.run(params)
           call.respond(result)
         }

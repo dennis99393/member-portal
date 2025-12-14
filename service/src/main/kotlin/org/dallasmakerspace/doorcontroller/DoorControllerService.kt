@@ -41,12 +41,11 @@ class DoorControllerService @Inject constructor(
     /**
      * Reads recent badge swipe events from all controllers.
      *
-     * @param minutes Number of minutes to look back
      * @return BadgeSwipesResult containing all events and any errors
      */
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
-    suspend fun readRecentSwipes(minutes: Int): BadgeSwipesResult {
-        log.info("Reading badge swipes from past $minutes minutes across all controllers")
+    suspend fun readRecentSwipes(): BadgeSwipesResult {
+        log.info("Reading badge swipes from all controllers")
 
         val allEvents = mutableListOf<BadgeSwipeEvent>()
         val errors = mutableListOf<String>()
@@ -124,8 +123,14 @@ class DoorControllerService @Inject constructor(
             val userIdsByBadge = makerManagerDataRepository.getUserIdsByBadgeNumbers(badgeNumbersWithDates)
             log.debug("Looked up ${userIdsByBadge.size} user IDs for ${events.size} events")
 
+            // Filter out events with null recordId (required for dbindex)
+            val validEvents = events.filter { it.recordId != null }
+            if (validEvents.size < events.size) {
+                log.warn("Skipping ${events.size - validEvents.size} events with null recordId")
+            }
+
             // Convert BadgeSwipeEvents to DoorEvents
-            val doorEvents = events.mapNotNull { event ->
+            val doorEvents = validEvents.mapNotNull { event ->
                 try {
                     // Get controller definition
                     val controller = controllersByName[event.controllerName]
@@ -169,7 +174,7 @@ class DoorControllerService @Inject constructor(
                     DoorEvent(
                         controllerId = controllerId,
                         slotNumber = event.doorNumber,
-                        dbindex = event.recordId,
+                        dbindex = event.recordId!!, // Safe because we filtered for non-null recordId
                         dbindextype = 1, // 1 = from HTTP scraping, 0 = from MDB import
                         accessRequest = 0,
                         granted = granted,
@@ -190,7 +195,7 @@ class DoorControllerService @Inject constructor(
 
             // Batch insert events
             val insertedCount = doorEventsRepository.insertEvents(doorEvents)
-            log.info("Successfully persisted $insertedCount/${events.size} events to database")
+            log.info("Successfully persisted $insertedCount/${validEvents.size} events to database (${events.size} total retrieved)")
             return insertedCount
         } catch (e: Exception) {
             log.error("Failed to persist events: ${e.message}", e)
