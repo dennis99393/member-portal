@@ -61,7 +61,7 @@ constructor(
         SELECT
             e.id as event_id,
             e.name as event_name,
-            e.event_start,
+            DATE_FORMAT(CONVERT_TZ(e.event_start, 'GMT', 'America/Chicago'), '%b %e, %Y %l:%i %p') as event_start,
             c.ad_username as organizer_username,
             COUNT(r.ad_username) as attendee_count
         FROM `dms-calendar`.events e
