@@ -4,6 +4,7 @@ import org.dallasmakerspace.server.common.HttpException
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.models.DMSGroup
 import org.dallasmakerspace.server.models.DMSMember
+import org.dallasmakerspace.server.models.EventSummary
 import org.dallasmakerspace.server.models.SearchPreloadResponse
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 import javax.inject.Inject
@@ -78,4 +79,8 @@ constructor(
 
   suspend fun callBackendApi(path: String, sessionId: String?) =
       memberServiceClient.callBackendApi(path, sessionId)
+
+  suspend fun getEventsOrganizedByMember(username: String, limit: Int, sessionId: String?): List<EventSummary> {
+    return memberServiceClient.getEventsOrganizedByMember(username, limit, sessionId)
+  }
 }

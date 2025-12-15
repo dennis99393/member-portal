@@ -59,6 +59,7 @@ fun Application.configureRouting() {
     val activityLogService: ActivityLogService by lazy {
       DaggerAppComponent.create().getActivityLogService()
     }
+    val calendarService by lazy { DaggerAppComponent.create().getCalendarService() }
     val memberRefreshCronJob: MemberRefreshCronJob by lazy {
       DaggerAppComponent.create().getMemberRefreshCronJob()
     }
@@ -112,6 +113,20 @@ fun Application.configureRouting() {
                   Status.SUCCESS,
                   "Activity log for ${activityLogRequested.parent.username}",
                   activityLog,
+              )
+          )
+        }
+
+        /** Calendar Events operations - requires member:read since it's member data * */
+        get<Members.DMSMember.Events> { eventsRequested ->
+          // Get events organized by member ...
+          val events =
+              calendarService.getEventsOrganizedByMember(eventsRequested.parent.username, eventsRequested.limit)
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS,
+                  "Events organized by ${eventsRequested.parent.username}",
+                  events,
               )
           )
         }

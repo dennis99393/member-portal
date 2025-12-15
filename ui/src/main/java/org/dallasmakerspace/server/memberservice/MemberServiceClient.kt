@@ -9,6 +9,7 @@ import org.dallasmakerspace.server.common.DMSHttpClient
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.models.DMSGroup
 import org.dallasmakerspace.server.models.DMSMember
+import org.dallasmakerspace.server.models.EventSummary
 import org.dallasmakerspace.server.models.SearchPreloadResponse
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -154,6 +155,28 @@ constructor(
     } catch (ex: Exception) {
       log.error("Failed to call backend API: $path ", ex)
       throw MemberServiceException("Failed to call backend API: $path", ex)
+    }
+  }
+
+  suspend fun getEventsOrganizedByMember(username: String, limit: Int, sessionId: String?): List<EventSummary> {
+    try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/members/$username/events?limit=$limit", apiHeaders)
+      val data =
+          result["data"] as List<*>?
+              ?: throw MemberServiceException("data attribute missing required")
+      return data.map { eventMap ->
+        val event = eventMap as Map<*, *>
+        EventSummary(
+            id = (event["id"] as Number).toInt(),
+            name = event["name"] as String,
+            eventStart = event["eventStart"] as String,
+            status = event["status"] as String
+        )
+      }
+    } catch (ex: Exception) {
+      log.error("Failed to get events for member: $username", ex)
+      throw MemberServiceException("Failed to get events for member: $username", ex)
     }
   }
 }

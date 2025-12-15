@@ -11,11 +11,14 @@ import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.models.DMSMember
+import org.dallasmakerspace.server.models.EventSummary
 import org.dallasmakerspace.server.plugins.AuthException
 import org.dallasmakerspace.server.plugins.UserSession
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class ProfileHandler
@@ -88,6 +91,29 @@ constructor(
         jsonMap["whmcs_id"] = this.whmcsId
       }
     }
+
+    // Fetch events organized by the member
+    try {
+      val events = memberService.getEventsOrganizedByMember(requestedUsername, 5, session.sessionId)
+      if (events.isNotEmpty()) {
+        val formattedEvents = events.map { event ->
+          mapOf(
+              "id" to event.id,
+              "name" to event.name,
+              "eventStart" to formatEventDate(event.eventStart),
+              "relativeTime" to getRelativeTime(event.eventStart),
+              "status" to event.status,
+              "isUpcoming" to isUpcomingEvent(event.eventStart),
+              "url" to "https://calendar.dallasmakerspace.org/events/view/${event.id}"
+          )
+        }
+        jsonMap["events_organized"] = formattedEvents
+      }
+    } catch (e: Exception) {
+      log.warn("Failed to fetch events for member: $requestedUsername", e)
+      // Events are optional, so we continue without them
+    }
+
     setToastMessage(call, jsonMap, requestedMember, session)
     call.respond(ThymeleafContent("profile", jsonMap))
   }
@@ -163,5 +189,74 @@ constructor(
     val month = localDate.month.toString().lowercase().replaceFirstChar { it.uppercase() }
     val year = localDate.year.toString()
     return "$month $year"
+  }
+
+  /**
+   * Format an event date into a human-readable string.
+   *
+   * @param eventStart The event start date string (e.g., "2024-03-15 14:30:00" or "2024-03-15 14:30:00.0")
+   * @return A human-readable string like "Fri, Mar 15 at 2:30 PM"
+   */
+  private fun formatEventDate(eventStart: String): String {
+    return try {
+      // Remove milliseconds if present (e.g., "2024-03-15 14:30:00.0" -> "2024-03-15 14:30:00")
+      val cleanedEventStart = eventStart.substringBefore(".")
+      val dateTime = LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+      val zonedDateTime = dateTime.atZone(ZoneId.of("America/Chicago"))
+      zonedDateTime.format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"))
+    } catch (e: Exception) {
+      log.error("Failed to parse event date: $eventStart", e)
+      eventStart
+    }
+  }
+
+  /**
+   * Check if an event is upcoming (in the future).
+   *
+   * @param eventStart The event start date string
+   * @return true if the event is in the future, false otherwise
+   */
+  private fun isUpcomingEvent(eventStart: String): Boolean {
+    return try {
+      val cleanedEventStart = eventStart.substringBefore(".")
+      val dateTime = LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+      val zonedDateTime = dateTime.atZone(ZoneId.of("America/Chicago"))
+      zonedDateTime.toInstant().isAfter(Instant.now())
+    } catch (e: Exception) {
+      false
+    }
+  }
+
+  /**
+   * Get relative time description for an event.
+   *
+   * @param eventStart The event start date string
+   * @return A relative time string like "(2 days ago)" or "(tomorrow)"
+   */
+  @Suppress("MagicNumber")
+  private fun getRelativeTime(eventStart: String): String {
+    return try {
+      val cleanedEventStart = eventStart.substringBefore(".")
+      val dateTime = LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+      val zonedDateTime = dateTime.atZone(ZoneId.of("America/Chicago"))
+      val eventInstant = zonedDateTime.toInstant()
+      val now = Instant.now()
+
+      val secondsDiff = (eventInstant.epochSecond - now.epochSecond)
+      val daysDiff = secondsDiff / (60 * 60 * 24)
+
+      when {
+        daysDiff > 1 -> "(in $daysDiff days)"
+        daysDiff == 1L -> "(tomorrow)"
+        daysDiff == 0L && secondsDiff > 0 -> "(today)"
+        daysDiff == 0L && secondsDiff <= 0 -> "(today)"
+        daysDiff == -1L -> "(yesterday)"
+        daysDiff < -1 -> "(${-daysDiff} days ago)"
+        else -> ""
+      }
+    } catch (e: Exception) {
+      log.error("Failed to calculate relative time for: $eventStart", e)
+      ""
+    }
   }
 }

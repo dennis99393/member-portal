@@ -145,6 +145,32 @@
             margin-bottom: 20px;
         }
 
+        /* Events Organized card */
+        .event-item {
+            background-color: transparent !important;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .event-item:hover {
+            background-color: rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .event-item:hover .event-name {
+            text-decoration: underline;
+            color: #0d6efd;
+        }
+
+        .event-upcoming {
+            border-left: 3px solid #0d6efd;
+        }
+
+        .event-past {
+            opacity: 0.7;
+        }
+
         .status-container {
             max-width: 100%;
             margin: 0 auto;
@@ -378,6 +404,32 @@
                             DMS equipment for various committees. Sign-up for a class on the
                             <a href="https://calendar.dallasmakerspace.org">calendar</a> to get qualified.</span>
                         <span th:unless="${is_self}">No groups assigned yet!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Organized card -->
+            <div th:if="${events_organized}" class="dms-card shadow-sm mt-4">
+                <div class="card-body pt-0 pb-4">
+                    <h4 class="card-title mt-3 mb-4 dms-card-title">Events Organized</h4>
+                    <div class="list-group list-group-flush">
+                        <a th:each="event : ${events_organized}"
+                           th:href="${event.url}"
+                           target="_blank"
+                           class="list-group-item list-group-item-action px-0 border-0 event-item"
+                           th:classappend="${event.isUpcoming} ? 'event-upcoming' : 'event-past'">
+                            <div class="d-flex align-items-start">
+                                <span class="material-symbols-outlined card-item-icon mt-1 ms-md-3">event</span>
+                                <div class="flex-grow-1">
+                                    <div class="fw-medium event-name" th:text="${event.name}"></div>
+                                    <small class="text-muted">
+                                        <span th:text="${event.eventStart}"></span>
+                                        <span th:if="${event.relativeTime}" class="ms-1 fw-semibold" th:text="${event.relativeTime}"></span>
+                                    </small>
+                                </div>
+                                <span class="material-symbols-outlined text-muted ms-2 me-md-3 align-self-center" style="font-size: 18px;">open_in_new</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>

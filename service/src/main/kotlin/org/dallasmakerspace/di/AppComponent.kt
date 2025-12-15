@@ -2,6 +2,7 @@ package org.dallasmakerspace.di
 
 import dagger.Component
 import io.ktor.server.application.*
+import org.dallasmakerspace.calendar.CalendarService
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.core.DBMasterConnection
 import org.dallasmakerspace.core.DBMemberPortalConnection
@@ -25,6 +26,7 @@ import javax.inject.Singleton
         [
             AppModule::class,
             ActiveDirectoryModule::class,
+            CalendarModule::class,
             DiscourseModule::class,
             DoorControllerModule::class,
             MembersModule::class,
@@ -59,4 +61,6 @@ interface AppComponent {
   fun getDoorControllerService(): DoorControllerService
 
   fun getDoorSwipesCronJob(): DoorSwipesCronJob
+
+  fun getCalendarService(): CalendarService
 }

@@ -20,5 +20,7 @@ class Members(val loggedInDays: Int = 90) {
     class ActivityLog(val parent: DMSMember) {
       @Resource("add") class Add(val parent: ActivityLog)
     }
+
+    @Resource("events") class Events(val parent: DMSMember, val limit: Int = 5)
   }
 }
