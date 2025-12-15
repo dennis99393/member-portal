@@ -8,7 +8,7 @@ import { LitElement, html, css } from 'https://cdn.jsdelivr.net/npm/lit@3.3.0/+e
  * @prop {String} displayName - The member's display name (optional, defaults to username)
  * @prop {String} avatarUrl - URL to the member's avatar image (optional)
  * @prop {String} state - Display state: 'inline', 'mini', 'medium', 'large' (default: 'inline')
- * @prop {Boolean} openInNewWindow - Whether profile links should open in new window (default: true)
+ * @prop {Boolean} openInNewWindow - Whether profile links should open in new window (default: false)
  *
  * States:
  * - inline: Simple @username link (no card/border styling)
@@ -153,7 +153,7 @@ class DmsMemberCard extends LitElement {
         this.displayName = '';
         this.avatarUrl = '';
         this.state = 'inline';
-        this.openInNewWindow = true;
+        this.openInNewWindow = false;
     }
 
     /**
