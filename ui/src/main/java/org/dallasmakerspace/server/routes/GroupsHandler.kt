@@ -37,29 +37,39 @@ constructor(
             "slug" to requestedGroupSlug,
         )
     if (requestedGroup.members.isNotEmpty()) {
+      // Create a map of username to most recent timestamp from history
+      val memberTimestamps = requestedGroup.history
+          .groupBy { it.memberUsername }
+          .mapValues { (_, events) -> events.maxOf { it.eventTimestamp } }
+
       // Process members to add proper avatar URLs
       val processedMembers =
-          requestedGroup.members.map { member ->
-            val avatarUrl =
-                member.avatarUrl
-                    ?.takeIf { it.isNotEmpty() }
-                    ?.let { url ->
-                      when {
-                        url.startsWith("//") -> "https:$url"
-                        else -> "https://talk.dallasmakerspace.org$url"
-                      }.replace("{size}", "144")
-                    } ?: ""
+          requestedGroup.members
+              // Sort by most recent addition first
+              .sortedByDescending { member ->
+                memberTimestamps[member.username] ?: java.time.Instant.MIN
+              }
+              .map { member ->
+                val avatarUrl =
+                    member.avatarUrl
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let { url ->
+                          when {
+                            url.startsWith("//") -> "https:$url"
+                            else -> "https://talk.dallasmakerspace.org$url"
+                          }.replace("{size}", "144")
+                        } ?: ""
 
-            // Create a map with processed avatar URL
-            mutableMapOf<String, Any?>(
-                "username" to member.username,
-                "displayName" to member.displayName,
-                "avatarUrl" to avatarUrl,
-                "discourseUsername" to member.discourseUsername,
-                "discourseAvatarUrl" to member.discourseAvatarUrl,
-                "discordUserId" to member.discordUserId,
-            )
-          }
+                // Create a map with processed avatar URL
+                mutableMapOf<String, Any?>(
+                    "username" to member.username,
+                    "displayName" to member.displayName,
+                    "avatarUrl" to avatarUrl,
+                    "discourseUsername" to member.discourseUsername,
+                    "discourseAvatarUrl" to member.discourseAvatarUrl,
+                    "discordUserId" to member.discordUserId,
+                )
+              }
 
       jsonMap["members"] = processedMembers
       jsonMap["memberlist_incomplete"] = requestedGroup.membersListIncomplete
