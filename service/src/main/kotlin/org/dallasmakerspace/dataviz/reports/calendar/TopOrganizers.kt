@@ -26,22 +26,13 @@ constructor(
       SELECT
           c.ad_username,
           COUNT(DISTINCT e.id) AS `Event Count`,
-          COALESCE(SUM(attendee_counts.attendee_count), 0) AS `Total Attendees`
+          COUNT(DISTINCT CONCAT(e.id, '-', r.ad_username)) AS `Total Attendees`
       FROM
           `dms-calendar`.events e
       JOIN
           `dms-calendar`.contacts c ON e.contact_id = c.id
-      LEFT JOIN (
-          SELECT
-              event_id,
-              COUNT(DISTINCT ad_username) AS attendee_count
-          FROM
-              `dms-calendar`.registrations
-          WHERE
-              attended = 1
-          GROUP BY
-              event_id
-      ) AS attendee_counts ON e.id = attendee_counts.event_id
+      LEFT JOIN
+          `dms-calendar`.registrations r ON e.id = r.event_id AND r.attended = 1
       WHERE
           e.event_start >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
           AND e.status = 'completed'
