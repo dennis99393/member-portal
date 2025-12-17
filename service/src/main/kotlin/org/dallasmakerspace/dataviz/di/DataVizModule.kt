@@ -14,6 +14,7 @@ import org.dallasmakerspace.dataviz.reports.calendar.TopOrganizers
 import org.dallasmakerspace.dataviz.reports.membership.ActiveMembers
 import org.dallasmakerspace.dataviz.reports.membership.DistributionDistance
 import org.dallasmakerspace.dataviz.reports.membership.DistributionRate
+import org.dallasmakerspace.smartwaiver.SignedWaivers
 
 @Module
 class DataVizModule {
@@ -31,6 +32,7 @@ class DataVizModule {
       activeMembers: ActiveMembers,
       distributionDistance: DistributionDistance,
       distributionRate: DistributionRate,
+      signedWaivers: SignedWaivers,
   ): Set<DataVizReport> {
     return setOf(
         visitorsByDayReport,
@@ -43,6 +45,7 @@ class DataVizModule {
         activeMembers,
         distributionDistance,
         distributionRate,
+        signedWaivers,
     )
   }
 }

@@ -1,0 +1,70 @@
+package org.dallasmakerspace.smartwaiver
+
+import java.time.LocalDateTime
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class SmartwaiverListResponse(
+    val version: Int? = null,
+    val id: String? = null,
+    val ts: String? = null,
+    val type: String? = null,
+    val waivers: List<SmartwaiverSummary>? = null,
+    val count: Int? = null,
+    val pages: Int? = null,
+    @SerialName("pageSize") val pageSize: Int? = null
+)
+
+@Serializable
+data class SmartwaiverSearchResponse(
+    val version: Int? = null,
+    val id: String? = null,
+    val ts: String? = null,
+    val type: String? = null,
+    val search: SmartwaiverSearchMetadata? = null
+)
+
+@Serializable
+data class SmartwaiverSearchMetadata(
+    val guid: String,
+    val count: Int? = null,
+    val pages: Int? = null,
+    @SerialName("pageSize") val pageSize: Int? = null
+)
+
+@Serializable
+data class SmartwaiverSearchResultsResponse(
+    val version: Int? = null,
+    val id: String? = null,
+    val ts: String? = null,
+    val type: String? = null,
+    @SerialName("search_results") val searchResults: List<SmartwaiverSummary>? = null
+)
+
+@Serializable
+data class SmartwaiverSummary(
+    @SerialName("waiverId") val waiverId: String,
+    @SerialName("templateId") val templateId: String,
+    @SerialName("title") val title: String,
+    @SerialName("createdOn") val createdOn: String, // ISO 8601 format
+    @SerialName("expirationDate") val expirationDate: String? = null,
+    @SerialName("expired") val expired: Boolean? = null,
+    @SerialName("verified") val verified: Boolean? = null,
+    @SerialName("kiosk") val kiosk: Boolean? = null,
+    @SerialName("firstName") val firstName: String? = null,
+    @SerialName("middleName") val middleName: String? = null,
+    @SerialName("lastName") val lastName: String? = null,
+    @SerialName("dob") val dob: String? = null,
+    @SerialName("isMinor") val isMinor: Boolean? = null,
+    @SerialName("tags") val tags: List<String>? = null
+)
+
+data class WaiverSigningData(
+    val date: LocalDateTime,
+    val dayOfWeek: Int, // 1=Monday, 7=Sunday
+    val waiverId: String
+)
+
+class SmartwaiverApiException(message: String, cause: Throwable? = null) :
+    Exception(message, cause)

@@ -47,6 +47,16 @@
             }
         });
     </script>
+
+    <div style="margin-top: 3rem;"></div>
+
+    <dms-data-visualizer
+            dataUrl="/backend-api/data-viz/signed-waivers"
+            renderAs="line"
+            title="Signed Waivers"
+            description="Number of waivers signed over the past 90 days, broken down by total and specific tour days (Thursday and Saturday). This report is based on the SmartWaiver API."
+            id="signed-waivers-chart"
+    ></dms-data-visualizer>
 </div>
 </body>
 </html>

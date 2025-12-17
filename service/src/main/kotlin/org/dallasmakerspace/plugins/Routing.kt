@@ -226,10 +226,21 @@ fun Application.configureRouting() {
       requireRole("dataviz:read") {
         get("/data-viz/*") {
           val method = call.request.path().substringAfter("/data-viz/")
+
+          // Check for cache override in query parameter (e.g., ?cache=0 to bypass cache)
+          val bypassCache = call.request.queryParameters["cache"] == "0"
+
+          if (bypassCache) {
+            // Skip cache for this request
+            call.response.headers.append("Cache-Control", "no-cache")
+          }
+
           val params =
-              call.request.queryParameters.names().associateWith { paramName ->
-                call.request.queryParameters.getAll(paramName) ?: emptyList()
-              }
+              call.request.queryParameters.names()
+                  .filter { it != "cache" } // Exclude cache parameter from report params
+                  .associateWith { paramName ->
+                    call.request.queryParameters.getAll(paramName) ?: emptyList()
+                  }
           val respone = dataVizRouter.route(method, params)
           call.respond(ApiResponse(Status.SUCCESS, "Backend API $method", respone))
         }

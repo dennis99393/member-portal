@@ -7,7 +7,13 @@ import io.ktor.server.plugins.compression.*
 import kotlin.time.Duration.Companion.seconds
 
 fun Application.configureHTTP() {
-  install(SimpleCache) { memoryCache { invalidateAt = 10.seconds } }
+  install(SimpleCache) {
+    memoryCache {
+      // Short cache for most endpoints (10 seconds)
+      // Note: signed-waivers has its own 24-hour cache built-in
+      invalidateAt = 10.seconds
+    }
+  }
   @Suppress("MagicNumber")
   install(Compression) {
     gzip { priority = 1.0 }

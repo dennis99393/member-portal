@@ -1,6 +1,9 @@
 package org.dallasmakerspace.server.memberservice
 
 import io.ktor.util.*
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withTimeout
@@ -11,9 +14,6 @@ import org.dallasmakerspace.server.models.DMSGroup
 import org.dallasmakerspace.server.models.DMSMember
 import org.dallasmakerspace.server.models.EventSummary
 import org.dallasmakerspace.server.models.SearchPreloadResponse
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("TooGenericExceptionCaught")
 @Singleton
@@ -150,7 +150,8 @@ constructor(
   suspend fun callBackendApi(path: String, sessionId: String?): Map<String, Any> {
     try {
       val apiHeaders = getApiHeaders(sessionId)
-      val result = dmsHttpClient.get("$baseUrl/$path", apiHeaders)
+      var result: Map<String, Any>
+      withTimeout(120_000L) { result = dmsHttpClient.get("$baseUrl/$path", apiHeaders) }
       return result
     } catch (ex: Exception) {
       log.error("Failed to call backend API: $path ", ex)
@@ -158,7 +159,11 @@ constructor(
     }
   }
 
-  suspend fun getEventsOrganizedByMember(username: String, limit: Int, sessionId: String?): List<EventSummary> {
+  suspend fun getEventsOrganizedByMember(
+      username: String,
+      limit: Int,
+      sessionId: String?,
+  ): List<EventSummary> {
     try {
       val apiHeaders = getApiHeaders(sessionId)
       val result = dmsHttpClient.get("$baseUrl/members/$username/events?limit=$limit", apiHeaders)
@@ -171,7 +176,7 @@ constructor(
             id = (event["id"] as Number).toInt(),
             name = event["name"] as String,
             eventStart = event["eventStart"] as String,
-            status = event["status"] as String
+            status = event["status"] as String,
         )
       }
     } catch (ex: Exception) {

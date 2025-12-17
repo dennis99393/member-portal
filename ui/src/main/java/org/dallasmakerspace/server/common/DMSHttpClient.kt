@@ -26,7 +26,7 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
           endpoint {
             keepAliveTime = 10_000
             maxConnectionsPerRoute = 100
-            requestTimeout = 30_000
+            requestTimeout = 120_000 // 120 seconds for long-running reports
             connectTimeout = 10_000
             connectAttempts = 2
           }

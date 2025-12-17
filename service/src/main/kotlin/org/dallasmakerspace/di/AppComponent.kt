@@ -16,6 +16,7 @@ import org.dallasmakerspace.doorcontroller.DoorControllerService
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.GroupService
 import org.dallasmakerspace.members.MemberService
+import org.dallasmakerspace.smartwaiver.SmartwaiverModule
 import org.dallasmakerspace.webhook.WebhookRouter
 import org.dallasmakerspace.webhook.di.WebhookModule
 import javax.inject.Singleton
@@ -31,6 +32,7 @@ import javax.inject.Singleton
             DoorControllerModule::class,
             MembersModule::class,
             DataVizModule::class,
+            SmartwaiverModule::class,
             WebhookModule::class])
 @Suppress("TooManyFunctions")
 interface AppComponent {
