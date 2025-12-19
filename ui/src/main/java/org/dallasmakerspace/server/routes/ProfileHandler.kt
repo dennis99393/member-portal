@@ -239,17 +239,17 @@ constructor(
       val cleanedEventStart = eventStart.substringBefore(".")
       val dateTime = LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
       val zonedDateTime = dateTime.atZone(ZoneId.of("America/Chicago"))
-      val eventInstant = zonedDateTime.toInstant()
-      val now = Instant.now()
+      val nowChicago = Instant.now().atZone(ZoneId.of("America/Chicago"))
 
-      val secondsDiff = (eventInstant.epochSecond - now.epochSecond)
-      val daysDiff = secondsDiff / (60 * 60 * 24)
+      // Compare calendar dates in Chicago timezone
+      val eventDate = zonedDateTime.toLocalDate()
+      val todayDate = nowChicago.toLocalDate()
+      val daysDiff = java.time.temporal.ChronoUnit.DAYS.between(todayDate, eventDate)
 
       when {
         daysDiff > 1 -> "(in $daysDiff days)"
         daysDiff == 1L -> "(tomorrow)"
-        daysDiff == 0L && secondsDiff > 0 -> "(today)"
-        daysDiff == 0L && secondsDiff <= 0 -> "(today)"
+        daysDiff == 0L -> "(today)"
         daysDiff == -1L -> "(yesterday)"
         daysDiff < -1 -> "(${-daysDiff} days ago)"
         else -> ""

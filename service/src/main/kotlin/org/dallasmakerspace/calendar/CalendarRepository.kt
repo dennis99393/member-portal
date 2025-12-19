@@ -15,7 +15,8 @@ class CalendarRepository @Inject constructor(
   private val log = loggerFactory.create(javaClass)
 
   /**
-   * Fetches the most recent events organized by a member.
+   * Fetches events organized by a member, prioritized by proximity to today.
+   * Events closest to the current date (whether past or future) are returned first.
    *
    * @param username The username of the member to fetch events for.
    * @param limit The maximum number of events to return (default 5).
@@ -23,20 +24,23 @@ class CalendarRepository @Inject constructor(
    */
   suspend fun getEventsOrganizedByMember(username: String, limit: Int = 5): List<EventSummary> {
     val query = """
-      SELECT
-          e.id,
-          e.name,
-          CONVERT_TZ(e.event_start, '+00:00', 'America/Chicago') AS event_start_cst,
-          e.status
-      FROM
-          `dms-calendar`.events e
-      JOIN
-          `dms-calendar`.contacts c ON e.contact_id = c.id
-      WHERE
-          c.ad_username = '$username'
-      ORDER BY
-          e.event_start DESC
-      LIMIT $limit
+      SELECT * FROM (
+        SELECT
+            e.id,
+            e.name,
+            CONVERT_TZ(e.event_start, '+00:00', 'America/Chicago') AS event_start_cst,
+            e.status
+        FROM
+            `dms-calendar`.events e
+        JOIN
+            `dms-calendar`.contacts c ON e.contact_id = c.id
+        WHERE
+            c.ad_username = '$username'
+        ORDER BY
+            ABS(TIMESTAMPDIFF(SECOND, e.event_start, NOW())) ASC
+        LIMIT $limit
+      ) AS closest_events
+      ORDER BY event_start_cst DESC
     """
 
     log.debug("Fetching events organized by member: $username (limit: $limit)")
