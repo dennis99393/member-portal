@@ -9,7 +9,7 @@ data class DMSGroup(
     val distinguishedName: String,
     val objectGuid: String?,
     val membersListIncomplete: Boolean = false,
-    val members: List<DMSMember>?,
-    val administrators: List<String>? = null,
-    val history: List<GroupHistory>? = null,
+    val members: List<DMSMember> = emptyList(),
+    val administrators: List<String> = emptyList(),
+    val history: List<GroupHistory> = emptyList(),
 )

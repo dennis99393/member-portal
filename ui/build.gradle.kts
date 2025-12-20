@@ -10,6 +10,7 @@ val seleniumVersion = "4.19.1"
 repositories { mavenCentral() }
 
 dependencies {
+  implementation(project(":common-models"))
   implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
   implementation("ch.qos.logback", "logback-classic", logbackVersion)
   implementation("org.codehaus.janino:janino:3.1.12") // For conditional logback config
@@ -53,13 +54,13 @@ dependencies {
 }
 
 plugins {
-  kotlin("jvm") version "2.2.20"
-  kotlin("plugin.serialization") version "2.2.20"
-  id("com.google.devtools.ksp") version "2.2.20-2.0.2"
-  id("io.ktor.plugin") version "3.3.0"
-  id("org.jetbrains.kotlinx.kover") version "0.7.6"
+  kotlin("jvm")
+  kotlin("plugin.serialization")
+  id("com.google.devtools.ksp")
+  id("io.ktor.plugin")
+  id("org.jetbrains.kotlinx.kover")
   // id("com.ncorti.ktfmt.gradle") version "0.23.0"
-  id("io.gitlab.arturbosch.detekt") version "1.23.6"
+  id("io.gitlab.arturbosch.detekt")
 }
 
 version = "0.0.1"

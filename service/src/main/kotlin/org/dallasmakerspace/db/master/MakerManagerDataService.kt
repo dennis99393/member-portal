@@ -2,8 +2,8 @@ package org.dallasmakerspace.db.master
 
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.datetime.LocalDate
-import kotlinx.serialization.Serializable
+import org.dallasmakerspace.models.Account
+import org.dallasmakerspace.models.AccountInfo
 
 /**
  * Service for interacting with the dms-master database server. Includes AccessControl,
@@ -48,22 +48,3 @@ constructor(private val makerManagerDataRepository: MakerManagerDataRepository) 
     return makerManagerDataRepository.getAllUsers()
   }
 }
-
-// Account level info
-@Serializable
-data class AccountInfo(
-    var isPrimaryAccount: Boolean = false,
-    var wasActivePast90Days: Boolean? = null,
-    var lastInactiveDate: LocalDate? = null,
-    var addonAccounts: List<Account> = emptyList(),
-    var primaryAccount: Account? = null,
-    var regDate: LocalDate? = null,
-)
-
-// Addon account info
-@Serializable
-data class Account(
-    val username: String,
-    val whmcsId: Int,
-    val isActive: Boolean,
-)

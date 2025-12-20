@@ -5,13 +5,13 @@ val exposedVersion: String by project
 val daggerVersion: String by project
 
 plugins {
-  kotlin("jvm") version "2.2.20"
-  kotlin("plugin.serialization") version "2.2.20"
-  id("io.ktor.plugin") version "3.3.0"
-  id("com.google.devtools.ksp") version "2.2.20-2.0.2"
-  id("org.jetbrains.kotlinx.kover") version "0.7.6"
+  kotlin("jvm")
+  kotlin("plugin.serialization")
+  id("io.ktor.plugin")
+  id("com.google.devtools.ksp")
+  id("org.jetbrains.kotlinx.kover")
   // id("com.ncorti.ktfmt.gradle") version "0.23.0"
-  id("io.gitlab.arturbosch.detekt") version "1.23.6"
+  id("io.gitlab.arturbosch.detekt")
 }
 
 version = "0.0.1"
@@ -26,6 +26,7 @@ application {
 repositories { mavenCentral() }
 
 dependencies {
+  implementation(project(":common-models"))
   implementation("com.squareup.okhttp3:okhttp:4.12.0")
   implementation("com.google.dagger:dagger:$daggerVersion")
   ksp("com.google.dagger:dagger-compiler:$daggerVersion")

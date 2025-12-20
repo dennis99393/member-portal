@@ -60,7 +60,7 @@ constructor(
                             distinguishedName = group.distinguishedName,
                             objectGuid = group.objectGuid,
                             membersListIncomplete = false,
-                            members = null)
+                            members = emptyList())
                       })
             },
         membersListIncomplete = adGroup.membersListIncomplete,

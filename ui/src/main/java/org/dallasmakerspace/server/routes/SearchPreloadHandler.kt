@@ -6,6 +6,7 @@ import io.ktor.server.response.*
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
+import org.dallasmakerspace.server.models.slug
 import java.util.concurrent.*
 import javax.inject.Inject
 

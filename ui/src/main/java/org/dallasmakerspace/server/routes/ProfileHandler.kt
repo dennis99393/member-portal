@@ -7,11 +7,13 @@ import io.ktor.server.thymeleaf.*
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import kotlinx.datetime.format.byUnicodePattern
+import kotlinx.datetime.toJavaInstant
+import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
-import org.dallasmakerspace.server.models.DMSMember
 import org.dallasmakerspace.server.models.EventSummary
+import org.dallasmakerspace.server.models.slug
 import org.dallasmakerspace.server.plugins.AuthException
 import org.dallasmakerspace.server.plugins.UserSession
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
@@ -47,8 +49,8 @@ constructor(
                 else -> "https://talk.dallasmakerspace.org$url"
               }.replace("{size}", "144")
             } ?: ""
-    val memberSinceString = getMemberSinceString(requestedMember.memberSince)
-    val memberDurationString = getMemberDurationString(requestedMember.memberSince)
+    val memberSinceString = getMemberSinceString(requestedMember.memberSince?.toJavaInstant())
+    val memberDurationString = getMemberDurationString(requestedMember.memberSince?.toJavaInstant())
     val jsonMap =
         mutableMapOf(
             "name" to requestedMember.displayName as Any,
@@ -59,7 +61,13 @@ constructor(
             "avatar_url" to avatarUrl,
         )
     if (requestedMember.groups.isNotEmpty())
-        jsonMap["groups"] = requestedMember.groups.sortedBy { it.name }
+        jsonMap["groups"] = requestedMember.groups.sortedBy { it.name }.map { group ->
+          mapOf(
+              "name" to group.name,
+              "slug" to group.slug,
+              "description" to group.description
+          )
+        }
     if (requestedMember.discourseUsername.isNullOrEmpty().not()) {
       jsonMap["discourse_username"] = requestedMember.discourseUsername as Any
     }

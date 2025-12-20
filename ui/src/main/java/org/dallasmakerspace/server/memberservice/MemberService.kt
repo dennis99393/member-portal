@@ -1,11 +1,12 @@
 package org.dallasmakerspace.server.memberservice
 
+import org.dallasmakerspace.models.DMSGroup
+import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.server.common.HttpException
 import org.dallasmakerspace.server.common.logging.LoggerFactory
-import org.dallasmakerspace.server.models.DMSGroup
-import org.dallasmakerspace.server.models.DMSMember
 import org.dallasmakerspace.server.models.EventSummary
 import org.dallasmakerspace.server.models.SearchPreloadResponse
+import org.dallasmakerspace.server.models.getSlugFromName
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 import javax.inject.Inject
 
@@ -67,14 +68,14 @@ constructor(
     memberServiceClient.addToGroup(
         sessionId,
         username,
-        DMSGroup.getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
+        getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
   }
 
   suspend fun unregisterVoting(sessionId: String?, username: String) {
     memberServiceClient.removeFromGroup(
         sessionId,
         username,
-        DMSGroup.getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
+        getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
   }
 
   suspend fun callBackendApi(path: String, sessionId: String?) =

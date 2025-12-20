@@ -109,7 +109,7 @@ constructor(
               distinguishedName = group.distinguishedName,
               objectGuid = group.objectGuid,
               membersListIncomplete = false,
-              members = null,
+              members = emptyList(),
           )
         }
     dbMember.accountInfo = relatedAccounts[username]
@@ -159,7 +159,7 @@ constructor(
                 distinguishedName = group.distinguishedName,
                 objectGuid = group.objectGuid,
                 membersListIncomplete = false,
-                members = null,
+                members = emptyList(),
             )
           }
 
@@ -246,7 +246,7 @@ constructor(
               distinguishedName = group.distinguishedName,
               objectGuid = group.objectGuid,
               membersListIncomplete = false,
-              members = null,
+              members = emptyList(),
           )
         }
     return dbMember
@@ -461,7 +461,7 @@ constructor(
                             distinguishedName = group.distinguishedName,
                             objectGuid = group.objectGuid,
                             membersListIncomplete = false,
-                            members = null,
+                            members = emptyList(),
                         )
                       },
               )

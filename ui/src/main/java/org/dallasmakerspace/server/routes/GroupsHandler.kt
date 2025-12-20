@@ -4,10 +4,15 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
 import io.ktor.util.*
+import kotlinx.datetime.toJavaLocalDateTime
+import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
-import org.dallasmakerspace.server.models.DMSGroup
+import org.dallasmakerspace.server.models.getNameFromSlug
+import org.dallasmakerspace.server.models.getSlugFromName
+import org.dallasmakerspace.server.models.isGroupDN
+import org.dallasmakerspace.server.models.parseCNFromDN
 import org.dallasmakerspace.server.plugins.AuthException
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -27,7 +32,7 @@ constructor(
     // Get group slug requested from path /groups/{group_slug}
     val requestedGroupSlug =
         call.parameters["group_slug"] ?: throw AuthException("No group slug found in url path")
-    val requestedGroupName = DMSGroup.getNameFromSlug(requestedGroupSlug)
+    val requestedGroupName = getNameFromSlug(requestedGroupSlug)
     val requestedGroup = memberService.getGroup(requestedGroupSlug, session.sessionId)
 
     log.debug("Group: {}", requestedGroup)
@@ -47,7 +52,7 @@ constructor(
           requestedGroup.members
               // Sort by most recent addition first
               .sortedByDescending { member ->
-                memberTimestamps[member.username] ?: java.time.Instant.MIN
+                memberTimestamps[member.username] ?: kotlinx.datetime.LocalDateTime(1970, 1, 1, 0, 0, 0)
               }
               .map { member ->
                 val avatarUrl =
@@ -81,13 +86,13 @@ constructor(
           requestedGroup.administrators
               .filter { it.contains("Domain Admins").not() }
               .map { dn ->
-                val name = DMSGroup.parseCNFromDN(dn)
-                val isGroup = DMSGroup.isGroupDN(dn)
+                val name = parseCNFromDN(dn)
+                val isGroup = isGroupDN(dn)
                 mutableMapOf<String, Any?>(
                     "name" to name,
                     "isGroup" to isGroup,
                     "link" to
-                        if (isGroup) "/groups/${DMSGroup.getSlugFromName(name)}"
+                        if (isGroup) "/groups/${getSlugFromName(name)}"
                         else "/profile/@$name",
                 )
               }
@@ -101,7 +106,7 @@ constructor(
 
       val processedHistory =
           requestedGroup.history.take(5).map { event ->
-            val centralTime = event.eventTimestamp.atZone(centralZone)
+            val centralTime = event.eventTimestamp.toJavaLocalDateTime().atZone(centralZone)
 
             // Find member details from the group members list
             val memberMember = requestedGroup.members.find { it.username == event.memberUsername }

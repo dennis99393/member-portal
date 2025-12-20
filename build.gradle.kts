@@ -3,6 +3,12 @@
 
 plugins {
     base
+    kotlin("jvm") version "2.2.20" apply false
+    kotlin("plugin.serialization") version "2.2.20" apply false
+    id("com.google.devtools.ksp") version "2.2.20-2.0.2" apply false
+    id("io.ktor.plugin") version "3.3.0" apply false
+    id("org.jetbrains.kotlinx.kover") version "0.7.6" apply false
+    id("io.gitlab.arturbosch.detekt") version "1.23.6" apply false
 }
 
 // Load local properties if they exist (gitignored for machine-specific settings)

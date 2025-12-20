@@ -7,13 +7,16 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withTimeout
+import org.dallasmakerspace.models.DMSGroup
+import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.DMSHttpClient
 import org.dallasmakerspace.server.common.logging.LoggerFactory
-import org.dallasmakerspace.server.models.DMSGroup
-import org.dallasmakerspace.server.models.DMSMember
 import org.dallasmakerspace.server.models.EventSummary
 import org.dallasmakerspace.server.models.SearchPreloadResponse
+import org.dallasmakerspace.server.models.dmsGroupFromMap
+import org.dallasmakerspace.server.models.dmsMemberFromMap
+import org.dallasmakerspace.server.models.dmsMemberToMap
 
 @Suppress("TooGenericExceptionCaught")
 @Singleton
@@ -44,12 +47,12 @@ constructor(
     val data =
         userMap["data"] as Map<*, *>?
             ?: throw MemberServiceException("data attribute missing required")
-    return DMSMember.fromMap(data as Map<String, Any?>)
+    return dmsMemberFromMap(data as Map<String, Any?>)
   }
 
   suspend fun patchMember(username: String, member: DMSMember, sessionId: String?) {
     val apiHeaders = getApiHeaders(sessionId)
-    val userMap = DMSMember.toMap(member)
+    val userMap = dmsMemberToMap(member)
     dmsHttpClient.patch("$baseUrl/members/$username/update", apiHeaders, userMap)
   }
 
@@ -71,7 +74,7 @@ constructor(
     val data =
         if (groupMap["data"] is Map<*, *>) groupMap["data"] as Map<String, Any?>
         else throw MemberServiceException("data attribute missing required")
-    return DMSGroup.fromMap(data)
+    return dmsGroupFromMap(data)
   }
 
   suspend fun getSearchPreloads(sessionId: String?): SearchPreloadResponse = coroutineScope {
@@ -88,7 +91,7 @@ constructor(
               val data =
                   userMap["data"] as List<*>?
                       ?: throw MemberServiceException("data attribute missing required")
-              data.map { DMSMember.fromMap(it as Map<String, Any?>) }
+              data.map { dmsMemberFromMap(it as Map<String, Any?>) }
             }
           } catch (ex: TimeoutCancellationException) {
             log.error("Timed out getting search preloads - members", ex)
@@ -107,7 +110,7 @@ constructor(
               val data =
                   groupMap["data"] as List<*>?
                       ?: throw MemberServiceException("data attribute missing required")
-              data.map { DMSGroup.fromMap(it as Map<String, Any?>) }
+              data.map { dmsGroupFromMap(it as Map<String, Any?>) }
             }
           } catch (ex: TimeoutCancellationException) {
             log.error("Timed out getting search preloads - groups", ex)
