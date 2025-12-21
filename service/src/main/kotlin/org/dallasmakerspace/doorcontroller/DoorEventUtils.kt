@@ -1,9 +1,6 @@
 package org.dallasmakerspace.doorcontroller
 
-/**
- * Utility functions for door event processing
- * Ported from Python upload.py script
- */
+/** Utility functions for door event processing Ported from Python upload.py script */
 object DoorEventUtils {
 
   /**

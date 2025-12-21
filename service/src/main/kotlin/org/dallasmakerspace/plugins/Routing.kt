@@ -27,17 +27,17 @@ import org.dallasmakerspace.di.DaggerAppComponent
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.GroupService
 import org.dallasmakerspace.members.MemberService
+import org.dallasmakerspace.members.db.ProfileDAO
+import org.dallasmakerspace.members.db.suspendTransaction
+import org.dallasmakerspace.models.NamespaceOwnerType
+import org.dallasmakerspace.routing.*
 import org.dallasmakerspace.routing.BadgeLookup
 import org.dallasmakerspace.routing.Groups
 import org.dallasmakerspace.routing.Members
 import org.dallasmakerspace.routing.ShortLinksResource
-import org.dallasmakerspace.routing.*
 import org.dallasmakerspace.shortlinks.RedirectResult
 import org.dallasmakerspace.shortlinks.ShortLinksService
 import org.dallasmakerspace.webhook.WebhookRouter
-import org.dallasmakerspace.models.NamespaceOwnerType
-import org.dallasmakerspace.members.db.ProfileDAO
-import org.dallasmakerspace.members.db.suspendTransaction
 
 @Suppress("LongMethod")
 fun Application.configureRouting() {
@@ -123,22 +123,23 @@ fun Application.configureRouting() {
                   Status.SUCCESS,
                   "Activity log for ${activityLogRequested.parent.username}",
                   activityLog,
-              )
-          )
+              ))
         }
 
         /** Calendar Events operations - requires member:read since it's member data * */
         get<Members.DMSMember.Events> { eventsRequested ->
           // Get events organized by member ...
           val events =
-              calendarService.getEventsOrganizedByMember(eventsRequested.parent.username, eventsRequested.limit)
+              calendarService.getEventsOrganizedByMember(
+                  eventsRequested.parent.username,
+                  eventsRequested.limit,
+              )
           call.respond(
               ApiResponse(
                   Status.SUCCESS,
                   "Events organized by ${eventsRequested.parent.username}",
                   events,
-              )
-          )
+              ))
         }
       }
 
@@ -149,8 +150,8 @@ fun Application.configureRouting() {
           val updatedMember = call.receive<Members.DMSMember>()
           memberService.updateMember(update.parent.username, routeObjectToModel(updatedMember))
           call.respond(
-              ApiResponse(Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember)
-          )
+              ApiResponse(
+                  Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember))
         }
       }
 
@@ -179,8 +180,7 @@ fun Application.configureRouting() {
                   Status.SUCCESS,
                   "Added member to $groupslug updated: $memberUsername",
                   null,
-              )
-          )
+              ))
         }
 
         delete<Groups.DMSGroup.Add> { groupRequested ->
@@ -193,8 +193,7 @@ fun Application.configureRouting() {
                   Status.SUCCESS,
                   "Removed member to $groupslug updated: $memberUsername",
                   null,
-              )
-          )
+              ))
         }
       }
 
@@ -232,7 +231,6 @@ fun Application.configureRouting() {
         }
       }
 
-
       /** Data visualization reports * */
       requireRole("dataviz:read") {
         get("/data-viz/*") {
@@ -247,7 +245,8 @@ fun Application.configureRouting() {
           }
 
           val params =
-              call.request.queryParameters.names()
+              call.request.queryParameters
+                  .names()
                   .filter { it != "cache" } // Exclude cache parameter from report params
                   .associateWith { paramName ->
                     call.request.queryParameters.getAll(paramName) ?: emptyList()
@@ -270,7 +269,9 @@ fun Application.configureRouting() {
             call.respond(ApiResponse(Status.SUCCESS, "Namespace found", namespace))
           } else {
             call.respond(
-                HttpStatusCode.NotFound, ApiResponse(Status.ERROR, "Namespace not found", null))
+                HttpStatusCode.NotFound,
+                ApiResponse(Status.ERROR, "Namespace not found", null),
+            )
           }
         }
 
@@ -285,7 +286,9 @@ fun Application.configureRouting() {
             call.respond(ApiResponse(Status.SUCCESS, "Short link found", link))
           } else {
             call.respond(
-                HttpStatusCode.NotFound, ApiResponse(Status.ERROR, "Short link not found", null))
+                HttpStatusCode.NotFound,
+                ApiResponse(Status.ERROR, "Short link not found", null),
+            )
           }
         }
 
@@ -301,7 +304,8 @@ fun Application.configureRouting() {
               ApiResponse(
                   Status.SUCCESS,
                   "Popular short links retrieved",
-                  popularLinks.map { (link, clicks) -> PopularShortLinkResponse(link, clicks) }))
+                  popularLinks.map { (link, clicks) -> PopularShortLinkResponse(link, clicks) },
+              ))
         }
       }
 
@@ -309,126 +313,211 @@ fun Application.configureRouting() {
         post("/short-links/namespaces/create") {
           val request = call.receive<CreateNamespaceRequest>()
           val username = call.request.headers["X-Username"]
-          val creatorProfileId = username?.let {
-            suspendTransaction { ProfileDAO.findById(it)?.idColumn?.value }
-          }
+          val creatorProfileId =
+              username?.let { suspendTransaction { ProfileDAO.findById(it)?.idColumn?.value } }
 
-          val result = shortLinksService.createNamespace(
-              name = request.name,
-              ownerType = when (request.ownerType) {
-                "committee" -> NamespaceOwnerType.COMMITTEE
-                "system" -> NamespaceOwnerType.SYSTEM
-                else -> throw IllegalArgumentException("Invalid owner type")
-              },
-              ownerGroupId = request.ownerGroupId,
-              description = request.description,
-              primaryAlias = request.primaryAlias,
-              additionalAliases = request.additionalAliases,
-              createdBy = creatorProfileId)
+          val result =
+              shortLinksService.createNamespace(
+                  name = request.name,
+                  ownerType =
+                      when (request.ownerType) {
+                        "committee" -> NamespaceOwnerType.COMMITTEE
+                        "system" -> NamespaceOwnerType.SYSTEM
+                        else -> throw IllegalArgumentException("Invalid owner type")
+                      },
+                  ownerGroupId = request.ownerGroupId,
+                  description = request.description,
+                  primaryAlias = request.primaryAlias,
+                  additionalAliases = request.additionalAliases,
+                  createdBy = creatorProfileId,
+              )
 
           result.fold(
               onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Namespace created", it)) },
-              onFailure = { call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, it.message ?: "Failed to create namespace", null)) })
+              onFailure = {
+                call.respond(
+                    HttpStatusCode.BadRequest,
+                    ApiResponse(Status.ERROR, it.message ?: "Failed to create namespace", null),
+                )
+              },
+          )
         }
 
         patch("/short-links/namespaces/{id}/update") {
-          val id = call.parameters["id"]?.toIntOrNull()
-              ?: return@patch call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, "Invalid namespace ID", null))
+          val id =
+              call.parameters["id"]?.toIntOrNull()
+                  ?: return@patch call.respond(
+                      HttpStatusCode.BadRequest,
+                      ApiResponse(Status.ERROR, "Invalid namespace ID", null),
+                  )
 
           val updates = call.receive<UpdateNamespaceRequest>()
-          val existing = shortLinksService.getNamespace(id)
-              ?: return@patch call.respond(HttpStatusCode.NotFound,
-                  ApiResponse(Status.ERROR, "Namespace not found", null))
+          val existing =
+              shortLinksService.getNamespace(id)
+                  ?: return@patch call.respond(
+                      HttpStatusCode.NotFound,
+                      ApiResponse(Status.ERROR, "Namespace not found", null),
+                  )
 
-          val updated = existing.copy(
-              name = updates.name, description = updates.description, isActive = updates.isActive)
+          val updated =
+              existing.copy(
+                  name = updates.name,
+                  description = updates.description,
+                  isActive = updates.isActive,
+              )
 
-          shortLinksService.updateNamespace(id, updated).fold(
-              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Namespace updated", it)) },
-              onFailure = { call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, it.message ?: "Update failed", null)) })
+          shortLinksService
+              .updateNamespace(id, updated)
+              .fold(
+                  onSuccess = {
+                    call.respond(ApiResponse(Status.SUCCESS, "Namespace updated", it))
+                  },
+                  onFailure = {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiResponse(Status.ERROR, it.message ?: "Update failed", null),
+                    )
+                  },
+              )
         }
 
         delete("/short-links/namespaces/{id}/delete") {
-          val id = call.parameters["id"]?.toIntOrNull()
-              ?: return@delete call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, "Invalid namespace ID", null))
+          val id =
+              call.parameters["id"]?.toIntOrNull()
+                  ?: return@delete call.respond(
+                      HttpStatusCode.BadRequest,
+                      ApiResponse(Status.ERROR, "Invalid namespace ID", null),
+                  )
 
-          shortLinksService.deleteNamespace(id).fold(
-              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Namespace deleted", null)) },
-              onFailure = { call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, it.message ?: "Delete failed", null)) })
+          shortLinksService
+              .deleteNamespace(id)
+              .fold(
+                  onSuccess = {
+                    call.respond(ApiResponse(Status.SUCCESS, "Namespace deleted", null))
+                  },
+                  onFailure = {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiResponse(Status.ERROR, it.message ?: "Delete failed", null),
+                    )
+                  },
+              )
         }
 
         post("/short-links/namespaces/{id}/aliases/add") {
-          val id = call.parameters["id"]?.toIntOrNull()
-              ?: return@post call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, "Invalid namespace ID", null))
+          val id =
+              call.parameters["id"]?.toIntOrNull()
+                  ?: return@post call.respond(
+                      HttpStatusCode.BadRequest,
+                      ApiResponse(Status.ERROR, "Invalid namespace ID", null),
+                  )
 
           val aliasRequest = call.receive<AddAliasRequest>()
-          shortLinksService.addAlias(id, aliasRequest.alias, aliasRequest.isPrimary).fold(
-              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Alias added", it)) },
-              onFailure = { call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, it.message ?: "Failed to add alias", null)) })
+          shortLinksService
+              .addAlias(id, aliasRequest.alias, aliasRequest.isPrimary)
+              .fold(
+                  onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Alias added", it)) },
+                  onFailure = {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiResponse(Status.ERROR, it.message ?: "Failed to add alias", null),
+                    )
+                  },
+              )
         }
 
         post("/short-links/links/create") {
           val request = call.receive<CreateShortLinkRequest>()
           val username = call.request.headers["X-Username"]
-          val creatorProfileId = username?.let {
-            suspendTransaction { ProfileDAO.findById(it)?.idColumn?.value }
-          }
+          val creatorProfileId =
+              username?.let { suspendTransaction { ProfileDAO.findById(it)?.idColumn?.value } }
 
-          shortLinksService.createShortLink(
-              namespaceId = request.namespaceId,
-              slug = request.slug,
-              destinationUrl = request.destinationUrl,
-              description = request.description,
-              creatorId = creatorProfileId).fold(
-              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Short link created", it)) },
-              onFailure = { call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, it.message ?: "Failed to create link", null)) })
+          shortLinksService
+              .createShortLink(
+                  namespaceId = request.namespaceId,
+                  slug = request.slug,
+                  destinationUrl = request.destinationUrl,
+                  description = request.description,
+                  creatorId = creatorProfileId,
+              )
+              .fold(
+                  onSuccess = {
+                    call.respond(ApiResponse(Status.SUCCESS, "Short link created", it))
+                  },
+                  onFailure = {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiResponse(Status.ERROR, it.message ?: "Failed to create link", null),
+                    )
+                  },
+              )
         }
 
         patch("/short-links/links/{id}/update") {
-          val id = call.parameters["id"]?.toIntOrNull()
-              ?: return@patch call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, "Invalid link ID", null))
+          val id =
+              call.parameters["id"]?.toIntOrNull()
+                  ?: return@patch call.respond(
+                      HttpStatusCode.BadRequest,
+                      ApiResponse(Status.ERROR, "Invalid link ID", null),
+                  )
 
           val username = call.request.headers["X-Username"]
-          val updaterProfileId = username?.let {
-            suspendTransaction { ProfileDAO.findById(it)?.idColumn?.value }
-          }
+          val updaterProfileId =
+              username?.let { suspendTransaction { ProfileDAO.findById(it)?.idColumn?.value } }
 
           val updates = call.receive<UpdateShortLinkRequest>()
-          val existing = shortLinksService.getShortLink(id)
-              ?: return@patch call.respond(HttpStatusCode.NotFound,
-                  ApiResponse(Status.ERROR, "Short link not found", null))
+          val existing =
+              shortLinksService.getShortLink(id)
+                  ?: return@patch call.respond(
+                      HttpStatusCode.NotFound,
+                      ApiResponse(Status.ERROR, "Short link not found", null),
+                  )
 
-          val updated = existing.copy(
-              slug = updates.slug,
-              destinationUrl = updates.destinationUrl,
-              description = updates.description,
-              isActive = updates.isActive,
-              updatedBy = updaterProfileId)
+          val updated =
+              existing.copy(
+                  slug = updates.slug,
+                  destinationUrl = updates.destinationUrl,
+                  description = updates.description,
+                  isActive = updates.isActive,
+                  updatedBy = updaterProfileId,
+              )
 
-          shortLinksService.updateShortLink(id, updated).fold(
-              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Short link updated", it)) },
-              onFailure = { call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, it.message ?: "Update failed", null)) })
+          shortLinksService
+              .updateShortLink(id, updated)
+              .fold(
+                  onSuccess = {
+                    call.respond(ApiResponse(Status.SUCCESS, "Short link updated", it))
+                  },
+                  onFailure = {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiResponse(Status.ERROR, it.message ?: "Update failed", null),
+                    )
+                  },
+              )
         }
 
         delete("/short-links/links/{id}/delete") {
-          val id = call.parameters["id"]?.toIntOrNull()
-              ?: return@delete call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, "Invalid link ID", null))
+          val id =
+              call.parameters["id"]?.toIntOrNull()
+                  ?: return@delete call.respond(
+                      HttpStatusCode.BadRequest,
+                      ApiResponse(Status.ERROR, "Invalid link ID", null),
+                  )
 
-          shortLinksService.deleteShortLink(id).fold(
-              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Short link deleted", null)) },
-              onFailure = { call.respond(HttpStatusCode.BadRequest,
-                  ApiResponse(Status.ERROR, it.message ?: "Delete failed", null)) })
+          shortLinksService
+              .deleteShortLink(id)
+              .fold(
+                  onSuccess = {
+                    call.respond(ApiResponse(Status.SUCCESS, "Short link deleted", null))
+                  },
+                  onFailure = {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiResponse(Status.ERROR, it.message ?: "Delete failed", null),
+                    )
+                  },
+              )
         }
       }
     }
@@ -442,8 +531,7 @@ fun Application.configureRouting() {
           "Webhook request received: path=${call.request.path()}, " +
               "query params=${call.request.queryParameters.entries().map { "${it.key}:${it.value}" }
                 .joinToString { ";" }}, " +
-              "headers=${call.request.headers.entries().map{ "${it.key}:${it.value}" }.joinToString { ";" }}"
-      )
+              "headers=${call.request.headers.entries().map{ "${it.key}:${it.value}" }.joinToString { ";" }}")
 
       // Route the webhook to appropriate handler
       val result = webhookRouter.route(path, body)
@@ -464,8 +552,7 @@ fun Application.configureRouting() {
           call.respondRedirect(result.destinationUrl, permanent = false)
         }
         is RedirectResult.NotFound -> {
-          call.respond(
-              HttpStatusCode.NotFound, ApiResponse(Status.ERROR, result.message, null))
+          call.respond(HttpStatusCode.NotFound, ApiResponse(Status.ERROR, result.message, null))
         }
       }
     }

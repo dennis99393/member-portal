@@ -88,8 +88,7 @@ constructor(
                       "Member" to memberJson,
                       "Total Attendees" to (dataItem.values["Total Attendees"] ?: JsonPrimitive(0)),
                       "Event Count" to (dataItem.values["Event Count"] ?: JsonPrimitive(0)),
-                  )
-          )
+                  ))
         }
 
     return baseResponse.copy(data = enrichedData)

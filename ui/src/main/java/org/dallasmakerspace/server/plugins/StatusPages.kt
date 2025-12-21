@@ -21,11 +21,12 @@ fun Application.configureStatusPages() {
           ThymeleafContent("error404", mapOf("message" to "Sorry! Page was not found.")))
     }
     exception<Throwable> { call, cause ->
-      val session = try {
-        call.sessions.get<UserSession>()
-      } catch (e: Exception) {
-        null
-      }
+      val session =
+          try {
+            call.sessions.get<UserSession>()
+          } catch (e: Exception) {
+            null
+          }
       val sessionId: String = session?.sessionId ?: "NO_SESSION"
       val userId: String = session?.userId ?: "NO_USER"
       call.respond(

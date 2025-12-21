@@ -8,7 +8,6 @@ import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.models.DMSMember
 
 /** Adapter functions to convert API response maps to common-models domain objects */
-
 fun dmsMemberFromMap(data: Map<String, Any?>): DMSMember {
   val groups =
       (data["groups"] as List<*>?)?.filterIsInstance<Map<String, Any?>>()?.map {

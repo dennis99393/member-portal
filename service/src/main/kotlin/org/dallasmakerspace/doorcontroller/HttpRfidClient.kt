@@ -31,13 +31,14 @@ class HttpRfidClient(
     loggerFactory: LoggerFactory,
 ) : Closeable {
   private val log = loggerFactory.create(HttpRfidClient::class.java)
-  private val httpClient = HttpClient(CIO) {
-    install(HttpTimeout) {
-      requestTimeoutMillis = timeoutSeconds * 1000L
-      connectTimeoutMillis = timeoutSeconds * 1000L
-      socketTimeoutMillis = timeoutSeconds * 1000L
-    }
-  }
+  private val httpClient =
+      HttpClient(CIO) {
+        install(HttpTimeout) {
+          requestTimeoutMillis = timeoutSeconds * 1000L
+          connectTimeoutMillis = timeoutSeconds * 1000L
+          socketTimeoutMillis = timeoutSeconds * 1000L
+        }
+      }
   private val baseUrl = "http://$ip"
 
   /** Maximum number of login attempts (includes initial attempt plus retries) */
@@ -212,8 +213,7 @@ class HttpRfidClient(
         } else {
           log.error("Could not find server time in pagination! Timestamps will be inaccurate!")
           log.error(
-              "Looking for pattern: 'Page  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; YYYY-MM-DD HH:MM:SS</p>'"
-          )
+              "Looking for pattern: 'Page  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; YYYY-MM-DD HH:MM:SS</p>'")
           log.error("HTML length: ${html.length} chars")
           // Show a larger snippet to help debug
           val snippet = html.substring(0, minOf(1500, html.length))
@@ -274,14 +274,12 @@ class HttpRfidClient(
                   friendlyDoorName = "door_$doorNumber",
                   recordId = recordId.toIntOrNull(),
                   rawStatus = status,
-              )
-          )
+              ))
 
           log.debug(
               "Parsed event: recordId=$recordId, badge=$badge, door=$doorNumber, " +
                   "status=$status, rawTime=$dateTime ($rawTimestamp), " +
-                  "delta=${timeDeltaMs}ms, adjusted=$adjustedTimestamp"
-          )
+                  "delta=${timeDeltaMs}ms, adjusted=$adjustedTimestamp")
         }
       } catch (e: Exception) {
         log.warn("Failed to parse swipe event row: ${e.message}")
@@ -316,8 +314,7 @@ class HttpRfidClient(
 
           log.debug(
               "  Parsed: year=$year, month=$month, day=$day, " +
-                  "hour=$hour, minute=$minute, second=$second"
-          )
+                  "hour=$hour, minute=$minute, second=$second")
 
           // Create timestamp using java.time
           val result =

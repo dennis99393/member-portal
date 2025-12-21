@@ -1,11 +1,11 @@
 package org.dallasmakerspace.members
 
+import javax.inject.Inject
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.routing.Groups
-import javax.inject.Inject
 
 class GroupService
 @Inject

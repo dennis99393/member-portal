@@ -3,9 +3,7 @@ package org.dallasmakerspace.doorcontroller
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.javatime.datetime
 
-/**
- * Exposed table definition for AccessControl.controllers
- */
+/** Exposed table definition for AccessControl.controllers */
 @Suppress("MagicNumber")
 object ControllersTable : Table("AccessControl.controllers") {
   val id = integer("id").autoIncrement()
@@ -17,9 +15,7 @@ object ControllersTable : Table("AccessControl.controllers") {
   override val primaryKey = PrimaryKey(id)
 }
 
-/**
- * Exposed table definition for AccessControl.events
- */
+/** Exposed table definition for AccessControl.events */
 @Suppress("MagicNumber")
 object DoorEventsTable : Table("AccessControl.events") {
   val id = integer("id").autoIncrement()

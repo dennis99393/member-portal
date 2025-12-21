@@ -50,9 +50,7 @@ fun Application.configureHttp() {
         val currentUri = call.request.uri
         val encodedUri = java.net.URLEncoder.encode(currentUri, "UTF-8")
         call.respondRedirect(
-            "${RouteFactory.Paths.LOGIN.path}?redirectUrl=$encodedUri",
-            permanent = false
-        )
+            "${RouteFactory.Paths.LOGIN.path}?redirectUrl=$encodedUri", permanent = false)
       }
     }
   }

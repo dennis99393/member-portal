@@ -7,9 +7,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.select
 
-/**
- * Repository for managing door badge swipe events in the AccessControl.events table
- */
+/** Repository for managing door badge swipe events in the AccessControl.events table */
 @Singleton
 class DoorEventsRepository @Inject constructor() {
 
@@ -17,8 +15,8 @@ class DoorEventsRepository @Inject constructor() {
   private val controllerIdCache = mutableMapOf<Long, Int>()
 
   /**
-   * Get or create controller ID by serial number
-   * Results are cached to avoid repeated database lookups
+   * Get or create controller ID by serial number Results are cached to avoid repeated database
+   * lookups
    *
    * @param serialNumber Controller serial number
    * @param name Controller name
@@ -27,7 +25,9 @@ class DoorEventsRepository @Inject constructor() {
    */
   suspend fun getOrCreateControllerId(serialNumber: Long, name: String, ipAddress: String): Int {
     // Check cache first
-    controllerIdCache[serialNumber]?.let { return it }
+    controllerIdCache[serialNumber]?.let {
+      return it
+    }
 
     // Look up in database
     return suspendTransaction {
@@ -57,8 +57,8 @@ class DoorEventsRepository @Inject constructor() {
   }
 
   /**
-   * Insert a single door event into the database
-   * Uses INSERT IGNORE to skip duplicate events based on the unique constraint
+   * Insert a single door event into the database Uses INSERT IGNORE to skip duplicate events based
+   * on the unique constraint
    *
    * @param event Door event to insert
    * @return Number of rows inserted (0 if duplicate, 1 if successful)
@@ -66,27 +66,28 @@ class DoorEventsRepository @Inject constructor() {
   suspend fun insertEvent(event: DoorEvent): Int {
     return suspendTransaction {
       DoorEventsTable.insertIgnore {
-        it[controllerId] = event.controllerId
-        it[slotNumber] = event.slotNumber
-        it[dbindex] = event.dbindex
-        it[dbindextype] = event.dbindextype
-        it[accessRequest] = event.accessRequest
-        it[granted] = if (event.granted) 1 else 0
-        it[status] = event.status
-        it[options] = event.options
-        it[cardNumber] = event.cardNumber
-        it[cardCN] = event.cardCN
-        it[userId] = event.userId
-        it[date] = event.date
-        it[rawData] = event.rawData
-        it[note] = event.note
-      }.insertedCount
+            it[controllerId] = event.controllerId
+            it[slotNumber] = event.slotNumber
+            it[dbindex] = event.dbindex
+            it[dbindextype] = event.dbindextype
+            it[accessRequest] = event.accessRequest
+            it[granted] = if (event.granted) 1 else 0
+            it[status] = event.status
+            it[options] = event.options
+            it[cardNumber] = event.cardNumber
+            it[cardCN] = event.cardCN
+            it[userId] = event.userId
+            it[date] = event.date
+            it[rawData] = event.rawData
+            it[note] = event.note
+          }
+          .insertedCount
     }
   }
 
   /**
-   * Insert multiple door events in a batch operation
-   * Uses INSERT IGNORE to skip duplicate events based on the unique constraint
+   * Insert multiple door events in a batch operation Uses INSERT IGNORE to skip duplicate events
+   * based on the unique constraint
    *
    * @param events List of door events to insert
    * @return Number of rows inserted

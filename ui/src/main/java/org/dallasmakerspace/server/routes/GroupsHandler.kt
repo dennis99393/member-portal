@@ -4,8 +4,10 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
 import io.ktor.util.*
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 import kotlinx.datetime.toJavaLocalDateTime
-import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
@@ -14,9 +16,6 @@ import org.dallasmakerspace.server.models.getSlugFromName
 import org.dallasmakerspace.server.models.isGroupDN
 import org.dallasmakerspace.server.models.parseCNFromDN
 import org.dallasmakerspace.server.plugins.AuthException
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import javax.inject.Inject
 
 class GroupsHandler
 @Inject
@@ -43,16 +42,18 @@ constructor(
         )
     if (requestedGroup.members.isNotEmpty()) {
       // Create a map of username to most recent timestamp from history
-      val memberTimestamps = requestedGroup.history
-          .groupBy { it.memberUsername }
-          .mapValues { (_, events) -> events.maxOf { it.eventTimestamp } }
+      val memberTimestamps =
+          requestedGroup.history
+              .groupBy { it.memberUsername }
+              .mapValues { (_, events) -> events.maxOf { it.eventTimestamp } }
 
       // Process members to add proper avatar URLs
       val processedMembers =
           requestedGroup.members
               // Sort by most recent addition first
               .sortedByDescending { member ->
-                memberTimestamps[member.username] ?: kotlinx.datetime.LocalDateTime(1970, 1, 1, 0, 0, 0)
+                memberTimestamps[member.username]
+                    ?: kotlinx.datetime.LocalDateTime(1970, 1, 1, 0, 0, 0)
               }
               .map { member ->
                 val avatarUrl =
@@ -92,8 +93,7 @@ constructor(
                     "name" to name,
                     "isGroup" to isGroup,
                     "link" to
-                        if (isGroup) "/groups/${getSlugFromName(name)}"
-                        else "/profile/@$name",
+                        if (isGroup) "/groups/${getSlugFromName(name)}" else "/profile/@$name",
                 )
               }
       jsonMap["administrators"] = processedAdmins

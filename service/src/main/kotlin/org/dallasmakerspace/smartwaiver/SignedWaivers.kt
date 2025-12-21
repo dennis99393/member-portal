@@ -46,7 +46,8 @@ class SignedWaivers @Inject constructor(private val smartwaiverClient: ISmartwai
           (cachedResponse!!.metadata ?: emptyMap()) +
               mapOf(
                   "Cache status" to "Cached (age: ${cacheAgeMinutes} minutes)",
-                  "Cache expires in" to "${(cacheMaxAgeMillis - cacheAgeMillis) / (60 * 1000)} minutes")
+                  "Cache expires in" to
+                      "${(cacheMaxAgeMillis - cacheAgeMillis) / (60 * 1000)} minutes")
       return cachedResponse!!.copy(metadata = updatedMetadata)
     }
 
@@ -71,10 +72,11 @@ class SignedWaivers @Inject constructor(private val smartwaiverClient: ISmartwai
       val weekEnd = weekStart.plusDays(6) // Sunday to Saturday
 
       // Filter waivers for this week
-      val weekWaivers = waivers.filter {
-        val waiverDate = it.date.toLocalDate()
-        !waiverDate.isBefore(weekStart) && !waiverDate.isAfter(weekEnd)
-      }
+      val weekWaivers =
+          waivers.filter {
+            val waiverDate = it.date.toLocalDate()
+            !waiverDate.isBefore(weekStart) && !waiverDate.isAfter(weekEnd)
+          }
 
       // Count total waivers for the week
       val totalCount = weekWaivers.size
@@ -86,15 +88,16 @@ class SignedWaivers @Inject constructor(private val smartwaiverClient: ISmartwai
       val saturdayCount = weekWaivers.count { it.dayOfWeek == SATURDAY }
 
       // Format week label (e.g., "Aug 3 - 10" or "Dec 29 - Jan 4")
-      val weekLabel = if (weekStart.month == weekEnd.month) {
-        // Same month: "Aug 3 - 10"
-        val monthFormatter = DateTimeFormatter.ofPattern("MMM")
-        "${weekStart.format(monthFormatter)} ${weekStart.dayOfMonth} - ${weekEnd.dayOfMonth}"
-      } else {
-        // Different months: "Dec 29 - Jan 4"
-        val monthDayFormatter = DateTimeFormatter.ofPattern("MMM d")
-        "${weekStart.format(monthDayFormatter)} - ${weekEnd.format(monthDayFormatter)}"
-      }
+      val weekLabel =
+          if (weekStart.month == weekEnd.month) {
+            // Same month: "Aug 3 - 10"
+            val monthFormatter = DateTimeFormatter.ofPattern("MMM")
+            "${weekStart.format(monthFormatter)} ${weekStart.dayOfMonth} - ${weekEnd.dayOfMonth}"
+          } else {
+            // Different months: "Dec 29 - Jan 4"
+            val monthDayFormatter = DateTimeFormatter.ofPattern("MMM d")
+            "${weekStart.format(monthDayFormatter)} - ${weekEnd.format(monthDayFormatter)}"
+          }
 
       dataItems.add(
           DataItem(
@@ -118,14 +121,17 @@ class SignedWaivers @Inject constructor(private val smartwaiverClient: ISmartwai
                 name = "Total Waivers Signed",
                 type = DataType.NUMBER,
                 label = "Total Waivers Signed"),
-            DataField(name = "Thursday Waivers", type = DataType.NUMBER, label = "Thursday Waivers"),
-            DataField(name = "Saturday Waivers", type = DataType.NUMBER, label = "Saturday Waivers"))
+            DataField(
+                name = "Thursday Waivers", type = DataType.NUMBER, label = "Thursday Waivers"),
+            DataField(
+                name = "Saturday Waivers", type = DataType.NUMBER, label = "Saturday Waivers"))
 
-    val cacheStatus = if (bypassCache) {
-      "Freshly generated (cache bypassed)"
-    } else {
-      "Freshly generated (cached for 24 hours)"
-    }
+    val cacheStatus =
+        if (bypassCache) {
+          "Freshly generated (cache bypassed)"
+        } else {
+          "Freshly generated (cached for 24 hours)"
+        }
 
     val metadata =
         mapOf(

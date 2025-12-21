@@ -1,5 +1,8 @@
 package org.dallasmakerspace.webhook.handlers
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
@@ -8,9 +11,6 @@ import org.dallasmakerspace.members.MemberService
 import org.dallasmakerspace.webhook.WebhookHandler
 import org.dallasmakerspace.webhook.WebhookResult
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import javax.inject.Inject
 
 /**
  * Handler for group history events from Active Directory. Processes events related to users being

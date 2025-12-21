@@ -26,12 +26,10 @@ constructor(loggerFactory: LoggerFactory, private val discourseApiClient: IDisco
   @Suppress("TooGenericExceptionCaught", "NestedBlockDepth")
   override suspend fun run(params: ShowAndTellCronJobParams): String {
     log.info(
-        "**************************************************************************************"
-    )
+        "**************************************************************************************")
     log.info("Running Show and Tell Cron Job; params: $params")
     log.info(
-        "**************************************************************************************"
-    )
+        "**************************************************************************************")
     val startTime = System.currentTimeMillis()
 
     try {
@@ -64,15 +62,13 @@ constructor(loggerFactory: LoggerFactory, private val discourseApiClient: IDisco
 
     if (existingCurrentMonthPost != null) {
       log.info(
-          "Post for current month already exists (Topic ID: ${existingCurrentMonthPost.id}). Skipping creation."
-      )
+          "Post for current month already exists (Topic ID: ${existingCurrentMonthPost.id}). Skipping creation.")
       return
     }
 
     if (params.isRunningInShadowMode) {
       log.info(
-          "Shadow mode: Would create post '$currentMonthTitle' in category $SHOW_AND_TELL_CATEGORY_ID"
-      )
+          "Shadow mode: Would create post '$currentMonthTitle' in category $SHOW_AND_TELL_CATEGORY_ID")
       return
     }
 
@@ -105,8 +101,7 @@ constructor(loggerFactory: LoggerFactory, private val discourseApiClient: IDisco
 
     if (params.isRunningInShadowMode) {
       log.info(
-          "Shadow mode: Would unpin and lock previous month topic ${existingPreviousMonthPost.id}"
-      )
+          "Shadow mode: Would unpin and lock previous month topic ${existingPreviousMonthPost.id}")
       return
     }
 
@@ -194,8 +189,7 @@ constructor(loggerFactory: LoggerFactory, private val discourseApiClient: IDisco
         }
         else -> {
           log.warn(
-              "Found multiple topics with title '$title'. Using first match: ${matchingTopics[0].id}"
-          )
+              "Found multiple topics with title '$title'. Using first match: ${matchingTopics[0].id}")
           matchingTopics[0]
         }
       }

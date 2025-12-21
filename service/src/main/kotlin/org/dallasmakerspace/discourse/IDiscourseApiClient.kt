@@ -12,6 +12,7 @@ interface IDiscourseApiClient {
 
   /**
    * Create a new post/topic in Discourse.
+   *
    * @param title The title of the topic
    * @param raw The raw markdown content of the post
    * @param categoryId The category ID where the topic should be created
@@ -21,6 +22,7 @@ interface IDiscourseApiClient {
 
   /**
    * Update the status of a topic (pin, unpin, close, etc.).
+   *
    * @param topicId The ID of the topic to update
    * @param status The status type (e.g., "pinned", "pinned_globally", "closed")
    * @param enabled Whether to enable or disable the status
@@ -29,6 +31,7 @@ interface IDiscourseApiClient {
 
   /**
    * Pin or unpin a topic.
+   *
    * @param topicId The ID of the topic to pin/unpin
    * @param pinned Whether to pin or unpin the topic
    * @param pinGlobally Whether to pin globally (true) or just in category (false)
@@ -37,6 +40,7 @@ interface IDiscourseApiClient {
 
   /**
    * Search for topics in Discourse.
+   *
    * @param query The search query string
    * @param categoryId Optional category ID to filter results
    * @return DiscourseSearchResponse containing matching topics

@@ -4,6 +4,11 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
 import io.ktor.server.thymeleaf.*
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import kotlinx.datetime.format.byUnicodePattern
@@ -12,16 +17,10 @@ import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
-import org.dallasmakerspace.server.models.EventSummary
 import org.dallasmakerspace.server.models.slug
 import org.dallasmakerspace.server.plugins.AuthException
 import org.dallasmakerspace.server.plugins.UserSession
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import javax.inject.Inject
 
 class ProfileHandler
 @Inject
@@ -61,13 +60,15 @@ constructor(
             "avatar_url" to avatarUrl,
         )
     if (requestedMember.groups.isNotEmpty())
-        jsonMap["groups"] = requestedMember.groups.sortedBy { it.name }.map { group ->
-          mapOf(
-              "name" to group.name,
-              "slug" to group.slug,
-              "description" to group.description
-          )
-        }
+        jsonMap["groups"] =
+            requestedMember.groups
+                .sortedBy { it.name }
+                .map { group ->
+                  mapOf(
+                      "name" to group.name,
+                      "slug" to group.slug,
+                      "description" to group.description)
+                }
     if (requestedMember.discourseUsername.isNullOrEmpty().not()) {
       jsonMap["discourse_username"] = requestedMember.discourseUsername as Any
     }
@@ -104,17 +105,17 @@ constructor(
     try {
       val events = memberService.getEventsOrganizedByMember(requestedUsername, 5, session.sessionId)
       if (events.isNotEmpty()) {
-        val formattedEvents = events.map { event ->
-          mapOf(
-              "id" to event.id,
-              "name" to event.name,
-              "eventStart" to formatEventDate(event.eventStart),
-              "relativeTime" to getRelativeTime(event.eventStart),
-              "status" to event.status,
-              "isUpcoming" to isUpcomingEvent(event.eventStart),
-              "url" to "https://calendar.dallasmakerspace.org/events/view/${event.id}"
-          )
-        }
+        val formattedEvents =
+            events.map { event ->
+              mapOf(
+                  "id" to event.id,
+                  "name" to event.name,
+                  "eventStart" to formatEventDate(event.eventStart),
+                  "relativeTime" to getRelativeTime(event.eventStart),
+                  "status" to event.status,
+                  "isUpcoming" to isUpcomingEvent(event.eventStart),
+                  "url" to "https://calendar.dallasmakerspace.org/events/view/${event.id}")
+            }
         jsonMap["events_organized"] = formattedEvents
       }
     } catch (e: Exception) {
@@ -141,8 +142,7 @@ constructor(
       jsonMap["toast_btn_label"] = "Unlink"
     } else if (session.isVoterRegistrationSuccess) {
       log.info(
-          "Setting toast message for ${requestedMember.username} successful voter registration"
-      )
+          "Setting toast message for ${requestedMember.username} successful voter registration")
       call.sessions.set(session.copy(isVoterRegistrationSuccess = false))
       jsonMap["toast_message"] = "Successfully registered to vote."
       jsonMap["toast_btn_url"] = "@${requestedMember.username}/unregister-voting"
@@ -202,14 +202,16 @@ constructor(
   /**
    * Format an event date into a human-readable string.
    *
-   * @param eventStart The event start date string (e.g., "2024-03-15 14:30:00" or "2024-03-15 14:30:00.0")
+   * @param eventStart The event start date string (e.g., "2024-03-15 14:30:00" or "2024-03-15
+   *   14:30:00.0")
    * @return A human-readable string like "Fri, Mar 15 at 2:30 PM"
    */
   private fun formatEventDate(eventStart: String): String {
     return try {
       // Remove milliseconds if present (e.g., "2024-03-15 14:30:00.0" -> "2024-03-15 14:30:00")
       val cleanedEventStart = eventStart.substringBefore(".")
-      val dateTime = LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+      val dateTime =
+          LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
       val zonedDateTime = dateTime.atZone(ZoneId.of("America/Chicago"))
       zonedDateTime.format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"))
     } catch (e: Exception) {
@@ -227,7 +229,8 @@ constructor(
   private fun isUpcomingEvent(eventStart: String): Boolean {
     return try {
       val cleanedEventStart = eventStart.substringBefore(".")
-      val dateTime = LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+      val dateTime =
+          LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
       val zonedDateTime = dateTime.atZone(ZoneId.of("America/Chicago"))
       zonedDateTime.toInstant().isAfter(Instant.now())
     } catch (e: Exception) {
@@ -245,7 +248,8 @@ constructor(
   private fun getRelativeTime(eventStart: String): String {
     return try {
       val cleanedEventStart = eventStart.substringBefore(".")
-      val dateTime = LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+      val dateTime =
+          LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
       val zonedDateTime = dateTime.atZone(ZoneId.of("America/Chicago"))
       val nowChicago = Instant.now().atZone(ZoneId.of("America/Chicago"))
 

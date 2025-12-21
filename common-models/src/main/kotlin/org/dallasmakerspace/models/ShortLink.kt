@@ -18,8 +18,8 @@ data class Namespace(
 
 @Serializable
 enum class NamespaceOwnerType {
-    COMMITTEE,
-    SYSTEM
+  COMMITTEE,
+  SYSTEM
 }
 
 @Serializable
@@ -49,8 +49,8 @@ data class ShortLink(
 
 @Serializable
 enum class RedirectType {
-    BASIC,
-    DYNAMIC
+  BASIC,
+  DYNAMIC
 }
 
 @Serializable

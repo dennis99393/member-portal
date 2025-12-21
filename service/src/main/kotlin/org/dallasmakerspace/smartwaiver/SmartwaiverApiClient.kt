@@ -75,15 +75,13 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) :
       val totalCount = searchMetadata.count ?: 0
 
       log.info(
-          "Smartwaiver Search: GUID=${searchMetadata.guid}, Total=$totalCount waivers, Pages=$totalPages"
-      )
+          "Smartwaiver Search: GUID=${searchMetadata.guid}, Total=$totalCount waivers, Pages=$totalPages")
 
       // Apply guardrail
       val pagesToFetch = minOf(totalPages, MAX_PAGES)
       if (totalPages > MAX_PAGES) {
         log.warn(
-            "Limiting fetch to $MAX_PAGES pages (${MAX_PAGES * 100} waivers) out of $totalPages total pages"
-        )
+            "Limiting fetch to $MAX_PAGES pages (${MAX_PAGES * 100} waivers) out of $totalPages total pages")
       }
 
       // Fetch all pages in parallel for maximum speed
@@ -106,8 +104,7 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) :
 
       val overallTimeTaken = System.currentTimeMillis() - overallStartTime
       log.info(
-          "Successfully fetched ${allWaivers.size} waivers from $fromDate to $toDate - Total time: ${overallTimeTaken}ms (parallel fetch)"
-      )
+          "Successfully fetched ${allWaivers.size} waivers from $fromDate to $toDate - Total time: ${overallTimeTaken}ms (parallel fetch)")
       return allWaivers
     } catch (e: IOException) {
       throw SmartwaiverApiException("Failed to fetch waivers", e)
@@ -150,12 +147,10 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) :
         val searchMetadata =
             searchResponse.search
                 ?: throw SmartwaiverApiException(
-                    "Search response missing search metadata: $responseBody"
-                )
+                    "Search response missing search metadata: $responseBody")
 
         log.info(
-            "Search initiated - GUID: ${searchMetadata.guid}, Count: ${searchMetadata.count}, Pages: ${searchMetadata.pages}, Time: ${timeTaken}ms"
-        )
+            "Search initiated - GUID: ${searchMetadata.guid}, Count: ${searchMetadata.count}, Pages: ${searchMetadata.pages}, Time: ${timeTaken}ms")
 
         return searchMetadata
       }
@@ -167,8 +162,7 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) :
       }
       else -> {
         throw SmartwaiverApiException(
-            "Failed to initiate search: ${response.status} - ${response.bodyAsText()}"
-        )
+            "Failed to initiate search: ${response.status} - ${response.bodyAsText()}")
       }
     }
   }
@@ -207,8 +201,7 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) :
       }
       else -> {
         throw SmartwaiverApiException(
-            "Failed to fetch search results: ${response.status} - ${response.bodyAsText()}"
-        )
+            "Failed to fetch search results: ${response.status} - ${response.bodyAsText()}")
       }
     }
   }

@@ -1,6 +1,8 @@
 package org.dallasmakerspace.cron
 
 import dagger.Reusable
+import javax.inject.Inject
+import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.activedirectory.ADUser
@@ -11,8 +13,6 @@ import org.dallasmakerspace.discourse.DiscourseAvatarService
 import org.dallasmakerspace.members.MemberComparator
 import org.dallasmakerspace.members.MemberRepository
 import org.dallasmakerspace.members.MemberService
-import javax.inject.Inject
-import kotlin.random.Random
 
 /**
  * This class is responsible for refreshing the member list from Active Directory. It is intended to

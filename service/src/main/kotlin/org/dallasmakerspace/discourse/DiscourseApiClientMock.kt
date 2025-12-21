@@ -44,13 +44,16 @@ class DiscourseApiClientMock @Inject constructor(loggerFactory: LoggerFactory) :
                 trustLevel = 1))
   }
 
-  override suspend fun createPost(title: String, raw: String, categoryId: Int): DiscoursePostResponse {
+  override suspend fun createPost(
+      title: String,
+      raw: String,
+      categoryId: Int
+  ): DiscoursePostResponse {
     log.info("Mocked creating post: $title in category $categoryId")
     return DiscoursePostResponse(
         id = kotlin.random.Random.nextInt(1000, 9999),
         topicId = kotlin.random.Random.nextInt(1000, 9999),
-        topicSlug = title.lowercase().replace(" ", "-").replace(Regex("[^a-z0-9-]"), "")
-    )
+        topicSlug = title.lowercase().replace(" ", "-").replace(Regex("[^a-z0-9-]"), ""))
   }
 
   override suspend fun updateTopicStatus(topicId: Int, status: String, enabled: Boolean) {

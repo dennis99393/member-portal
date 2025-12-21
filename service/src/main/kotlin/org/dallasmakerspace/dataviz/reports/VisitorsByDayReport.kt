@@ -1,7 +1,7 @@
 package org.dallasmakerspace.dataviz.reports
 
-import org.dallasmakerspace.db.master.GenericRepository
 import javax.inject.Inject
+import org.dallasmakerspace.db.master.GenericRepository
 
 class VisitorsByDayReport @Inject constructor(genericRepository: GenericRepository) :
     SqlReport(genericRepository) {

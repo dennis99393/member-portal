@@ -9,10 +9,8 @@ import org.dallasmakerspace.server.common.logging.LoggerFactory
 
 class IndexHandler
 @Inject
-constructor(
-    loggerFactory: LoggerFactory,
-    userInfoProvider: UserInfoProvider
-) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
+constructor(loggerFactory: LoggerFactory, userInfoProvider: UserInfoProvider) :
+    AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun handleAuthenticated(call: ApplicationCall) {

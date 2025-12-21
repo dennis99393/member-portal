@@ -30,11 +30,9 @@ suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) 
   val request = call.request
   val response = call.response
   // Do not log redirect responses and static files
-  if (
-      response.status() == HttpStatusCode.TemporaryRedirect ||
-          request.uri.startsWith("/static") ||
-          request.uri.startsWith("/favicon.ico")
-  ) {
+  if (response.status() == HttpStatusCode.TemporaryRedirect ||
+      request.uri.startsWith("/static") ||
+      request.uri.startsWith("/favicon.ico")) {
     return
   }
 

@@ -29,12 +29,10 @@ constructor(
 
   override suspend fun run(params: DoorSwipesCronJobParams): String {
     log.info(
-        "**************************************************************************************"
-    )
+        "**************************************************************************************")
     log.info("Running Door Swipes Cron Job; params: $params")
     log.info(
-        "**************************************************************************************"
-    )
+        "**************************************************************************************")
     val startTime = System.currentTimeMillis()
 
     val result = doorControllerService.readRecentSwipes()
@@ -46,7 +44,8 @@ constructor(
     if (result.events.isNotEmpty()) {
       log.info("Persisting ${result.events.size} events to database...")
       insertedCount = doorControllerService.persistEvents(result.events)
-      log.info("Successfully inserted $insertedCount events (${result.events.size - insertedCount} duplicates skipped)")
+      log.info(
+          "Successfully inserted $insertedCount events (${result.events.size - insertedCount} duplicates skipped)")
     }
 
     // Print summary
@@ -55,7 +54,8 @@ constructor(
     log.info("Events retrieved:    ${result.events.size}")
     log.info("Events persisted:    $insertedCount")
     log.info("Duplicates skipped:  ${result.events.size - insertedCount}")
-    log.info("Controllers queried: ${result.errors.size + (result.events.map { it.controllerName }.distinct().size)}")
+    log.info(
+        "Controllers queried: ${result.errors.size + (result.events.map { it.controllerName }.distinct().size)}")
     log.info("Errors encountered:  ${result.errors.size}")
 
     // Event breakdown by type
@@ -98,8 +98,7 @@ constructor(
         log.info(
             "  [$timestamp] Badge ${event.badge.toString().padStart(10, '0')} - $eventTypeStr" +
                 " - ${event.friendlyDoorName} " +
-                "(${event.controllerName} door ${event.doorNumber})"
-        )
+                "(${event.controllerName} door ${event.doorNumber})")
       }
       if (result.events.size > 10) {
         log.info("  ... and ${result.events.size - 10} more events")

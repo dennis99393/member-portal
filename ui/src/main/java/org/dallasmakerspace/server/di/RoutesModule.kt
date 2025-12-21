@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
 import org.dallasmakerspace.server.auth.UserInfoProvider
+import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.routes.BackendApiHandler
@@ -18,10 +19,9 @@ import org.dallasmakerspace.server.routes.ProfileHandler
 import org.dallasmakerspace.server.routes.ProfileMeHandler
 import org.dallasmakerspace.server.routes.ReportHandler
 import org.dallasmakerspace.server.routes.SearchPreloadHandler
-import org.dallasmakerspace.server.routes.ShortLinksHandler
-import org.dallasmakerspace.server.routes.ShortLinksAdminHandler
 import org.dallasmakerspace.server.routes.ShortLinkRedirectHandler
-import org.dallasmakerspace.server.common.AppConfig
+import org.dallasmakerspace.server.routes.ShortLinksAdminHandler
+import org.dallasmakerspace.server.routes.ShortLinksHandler
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 
 @Module
@@ -128,8 +128,7 @@ class RoutesModule {
   fun providesShortLinkRedirectHandler(
       loggerFactory: LoggerFactory,
       appConfig: AppConfig
-  ): IRouteHandler = ShortLinkRedirectHandler(
-      loggerFactory,
-      appConfig.requireStringProperty("app.member-service.url")
-  )
+  ): IRouteHandler =
+      ShortLinkRedirectHandler(
+          loggerFactory, appConfig.requireStringProperty("app.member-service.url"))
 }

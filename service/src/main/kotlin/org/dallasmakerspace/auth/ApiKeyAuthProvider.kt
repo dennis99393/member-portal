@@ -59,8 +59,7 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
                 log.warn("No roles configured for client '$name' (API_CLIENT_${i}_ROLES)")
               } else {
                 log.info(
-                    "Loaded client '$name' with ${roles.size} role(s): ${roles.joinToString(", ")}"
-                )
+                    "Loaded client '$name' with ${roles.size} role(s): ${roles.joinToString(", ")}")
               }
 
               ApiClientConfig(name, key, roles)
@@ -87,8 +86,7 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
             fallbackRoles.joinToString(
               ", "
             )
-          }"
-        )
+          }")
         listOf(ApiClientConfig(fallbackName, fallbackKey, fallbackRoles))
       } catch (e: Exception) {
         log.error("Failed to load fallback client configuration: ${e.message}")
@@ -113,22 +111,19 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
           if (apiClient == null) {
             log.warn(
                 "Authentication failed: Missing client header. " +
-                    "Key prefix: ${maskApiKey(it)}, Client: <not provided>"
-            )
+                    "Key prefix: ${maskApiKey(it)}, Client: <not provided>")
             return@let null
           } else {
             if (mapClientsToApiKeys[apiClient] != apiKey) {
               log.warn(
                   "Authentication failed: Invalid credentials. " +
-                      "Key prefix: ${maskApiKey(it)}, Client: '$apiClient'"
-              )
+                      "Key prefix: ${maskApiKey(it)}, Client: '$apiClient'")
               return@let null
             }
             // Create principal with client name and roles
             val roles = mapClientsToRoles[apiClient] ?: emptySet()
             log.info(
-                "Authentication successful for client: '$apiClient' with ${roles.size} role(s)"
-            )
+                "Authentication successful for client: '$apiClient' with ${roles.size} role(s)")
             ApiKeyPrincipal(it, apiClient, roles)
           }
         }
@@ -141,8 +136,7 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
           }
           apiKey == null -> {
             log.warn(
-                "Authentication failed: Missing API key header. Client: '${apiClient ?: "<none>"}'"
-            )
+                "Authentication failed: Missing API key header. Client: '${apiClient ?: "<none>"}'")
             AuthenticationFailedCause.NoCredentials
           }
           apiClient == null -> {

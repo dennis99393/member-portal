@@ -8,9 +8,9 @@ import org.dallasmakerspace.server.plugins.AuthException
 import org.dallasmakerspace.server.plugins.UserSession
 
 /**
- * Base class for handlers that require authentication.
- * Assumes the route is wrapped in authenticate("auth_session") in Routing.kt.
- * Provides common authenticated request context (session, userInfo, authorization flags).
+ * Base class for handlers that require authentication. Assumes the route is wrapped in
+ * authenticate("auth_session") in Routing.kt. Provides common authenticated request context
+ * (session, userInfo, authorization flags).
  */
 abstract class AuthenticatedHandler(
     protected val loggerFactory: LoggerFactory,
@@ -25,8 +25,7 @@ abstract class AuthenticatedHandler(
 
   final override suspend fun handle(call: ApplicationCall) {
     // Get session (guaranteed to exist by auth_session authentication)
-    session = call.sessions.get<UserSession>()
-        ?: throw AuthException("No session found")
+    session = call.sessions.get<UserSession>() ?: throw AuthException("No session found")
 
     // Fetch user info from OAuth provider
     userInfo = userInfoProvider.getUserInfo(session.accessToken!!)
@@ -41,8 +40,6 @@ abstract class AuthenticatedHandler(
     handleAuthenticated(call)
   }
 
-  /**
-   * Handle the authenticated request. Session and userInfo are already populated.
-   */
+  /** Handle the authenticated request. Session and userInfo are already populated. */
   protected abstract suspend fun handleAuthenticated(call: ApplicationCall)
 }

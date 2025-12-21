@@ -1,5 +1,7 @@
 package org.dallasmakerspace.members
 
+import java.time.LocalDateTime
+import javax.inject.Inject
 import org.dallasmakerspace.members.db.GroupDAO
 import org.dallasmakerspace.members.db.GroupHistoryColumnAliases.actorProfileAlias
 import org.dallasmakerspace.members.db.GroupHistoryColumnAliases.groupsAlias
@@ -16,8 +18,6 @@ import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import javax.inject.Inject
 
 /** Manages the group history records. CRUD operations using GroupHistoryDAO. */
 class GroupHistoryRepository @Inject constructor() {

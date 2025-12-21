@@ -9,11 +9,11 @@ import com.unboundid.ldap.sdk.SearchRequest
 import com.unboundid.ldap.sdk.SearchRequest.ALL_USER_ATTRIBUTES
 import com.unboundid.ldap.sdk.SearchScope
 import com.unboundid.ldap.sdk.SimpleBindRequest
-import org.dallasmakerspace.core.AppConfig
-import org.dallasmakerspace.core.LoggerFactory
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
+import org.dallasmakerspace.core.AppConfig
+import org.dallasmakerspace.core.LoggerFactory
 
 private const val INITIAL_LDAP_CONNECTIONS = 3
 
@@ -47,18 +47,15 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
                     listOf(
                         Filter.createEqualityFilter("objectClass", "member"),
                         Filter.createEqualityFilter("objectClass", "user"),
-                    )
-                ),
+                    )),
                 Filter.createORFilter(
                     usernames.map {
                       Filter.createEqualityFilter(
                           "sAMAccountName",
                           it,
                       )
-                    }
-                ),
-            )
-        )
+                    }),
+            ))
     val searchResult =
         ldapPool.search(
             "DC=dms, DC=local",
@@ -92,8 +89,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
             listOf(
                 Filter.createEqualityFilter("name", groupname),
                 Filter.createEqualityFilter("objectCategory", "group"),
-            )
-        )
+            ))
 
     val searchResult =
         ldapPool.search(
@@ -221,8 +217,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
             listOf(
                 Filter.createEqualityFilter("name", "Domain Admins"),
                 Filter.createEqualityFilter("objectCategory", "group"),
-            )
-        )
+            ))
 
     val domainAdminsResult =
         ldapPool.search("DC=dms,DC=local", SearchScope.SUB, domainAdminsFilter, "distinguishedName")
@@ -245,18 +240,15 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
                     listOf(
                         Filter.createEqualityFilter("objectClass", "member"),
                         Filter.createEqualityFilter("objectClass", "user"),
-                    )
-                ),
+                    )),
                 Filter.createORFilter(
                     dnList.map {
                       Filter.createEqualityFilter(
                           "distinguishedName",
                           it,
                       )
-                    }
-                ),
-            )
-        )
+                    }),
+            ))
     val searchResult =
         ldapPool.search(
             "DC=dms, DC=local",
@@ -295,18 +287,15 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
                     listOf(
                         Filter.createEqualityFilter("objectClass", "member"),
                         Filter.createEqualityFilter("objectClass", "user"),
-                    )
-                ),
+                    )),
                 Filter.createORFilter(
                     badgeNumberList.map {
                       Filter.createEqualityFilter(
                           "employeeID",
                           it,
                       )
-                    }
-                ),
-            )
-        )
+                    }),
+            ))
     val searchResult =
         ldapPool.search(
             "DC=dms, DC=local",
@@ -357,8 +346,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
                     "lastLogonTimestamp",
                     dateNDaysAgoInLdapFormat.toString(),
                 ),
-            )
-        )
+            ))
 
     // Perform the search
     val searchResult =
@@ -395,8 +383,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
             listOf(
                 Filter.createEqualityFilter("name", group),
                 Filter.createEqualityFilter("objectCategory", "group"),
-            )
-        )
+            ))
 
     val searchResult =
         ldapPool.search(
@@ -423,10 +410,8 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
                 Filter.createEqualityFilter("objectClass", "user"),
                 Filter.createEqualityFilter("memberOf", groupDN),
                 Filter.createORFilter(
-                    dmsUsernames.map { Filter.createEqualityFilter("sAMAccountName", it) }
-                ),
-            )
-        )
+                    dmsUsernames.map { Filter.createEqualityFilter("sAMAccountName", it) }),
+            ))
 
     val searchRequest =
         SearchRequest(
@@ -457,8 +442,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
             listOf(
                 Filter.createEqualityFilter("name", group),
                 Filter.createEqualityFilter("objectCategory", "group"),
-            )
-        )
+            ))
 
     val searchResult =
         ldapPool.search(
@@ -484,10 +468,8 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
                 Filter.createEqualityFilter("objectCategory", "person"),
                 Filter.createEqualityFilter("objectClass", "user"),
                 Filter.createORFilter(
-                    dmsUsernames.map { Filter.createEqualityFilter("sAMAccountName", it) }
-                ),
-            )
-        )
+                    dmsUsernames.map { Filter.createEqualityFilter("sAMAccountName", it) }),
+            ))
 
     val searchRequest =
         SearchRequest(
@@ -544,8 +526,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
       log.warn("$TAG/getAllGroups LDAP search took ${searchDurationMs}ms for ${entryCount} entries")
     } else {
       log.debug(
-          "$TAG/getAllGroups LDAP search took ${searchDurationMs}ms for ${entryCount} entries"
-      )
+          "$TAG/getAllGroups LDAP search took ${searchDurationMs}ms for ${entryCount} entries")
     }
 
     val mapStart = System.nanoTime()
@@ -569,12 +550,10 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
     val totalDurationMs = (System.nanoTime() - methodStart) / 1_000_000
     if (mapDurationMs > slowThresholdMs) {
       log.warn(
-          "$TAG/getAllGroups mapping entries took ${mapDurationMs}ms for ${entryCount} entries"
-      )
+          "$TAG/getAllGroups mapping entries took ${mapDurationMs}ms for ${entryCount} entries")
     } else {
       log.debug(
-          "$TAG/getAllGroups mapping entries took ${mapDurationMs}ms for ${entryCount} entries"
-      )
+          "$TAG/getAllGroups mapping entries took ${mapDurationMs}ms for ${entryCount} entries")
     }
     if (totalDurationMs > slowThresholdMs) {
       log.warn("$TAG/getAllGroups total duration ${totalDurationMs}ms")

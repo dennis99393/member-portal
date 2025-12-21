@@ -1,5 +1,6 @@
 package org.dallasmakerspace.server.memberservice
 
+import javax.inject.Inject
 import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.server.common.HttpException
@@ -8,7 +9,6 @@ import org.dallasmakerspace.server.models.EventSummary
 import org.dallasmakerspace.server.models.SearchPreloadResponse
 import org.dallasmakerspace.server.models.getSlugFromName
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
-import javax.inject.Inject
 
 class MemberService
 @Inject
@@ -66,16 +66,12 @@ constructor(
 
   suspend fun registerVoting(sessionId: String?, username: String) {
     memberServiceClient.addToGroup(
-        sessionId,
-        username,
-        getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
+        sessionId, username, getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
   }
 
   suspend fun unregisterVoting(sessionId: String?, username: String) {
     memberServiceClient.removeFromGroup(
-        sessionId,
-        username,
-        getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
+        sessionId, username, getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
   }
 
   suspend fun callBackendApi(path: String, sessionId: String?) =
@@ -90,7 +86,11 @@ constructor(
   suspend fun callBackendApiDelete(path: String, sessionId: String?, username: String?) =
       memberServiceClient.callBackendApiDelete(path, sessionId, username)
 
-  suspend fun getEventsOrganizedByMember(username: String, limit: Int, sessionId: String?): List<EventSummary> {
+  suspend fun getEventsOrganizedByMember(
+      username: String,
+      limit: Int,
+      sessionId: String?
+  ): List<EventSummary> {
     return memberServiceClient.getEventsOrganizedByMember(username, limit, sessionId)
   }
 }

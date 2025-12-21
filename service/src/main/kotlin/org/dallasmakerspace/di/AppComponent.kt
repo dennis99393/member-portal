@@ -2,6 +2,7 @@ package org.dallasmakerspace.di
 
 import dagger.Component
 import io.ktor.server.application.*
+import javax.inject.Singleton
 import org.dallasmakerspace.calendar.CalendarService
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.core.DBMasterConnection
@@ -20,7 +21,6 @@ import org.dallasmakerspace.shortlinks.ShortLinksService
 import org.dallasmakerspace.smartwaiver.SmartwaiverModule
 import org.dallasmakerspace.webhook.WebhookRouter
 import org.dallasmakerspace.webhook.di.WebhookModule
-import javax.inject.Singleton
 
 @Singleton
 @Component(

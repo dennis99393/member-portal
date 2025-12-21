@@ -59,9 +59,7 @@ class RfidClient(
 
           // Create socket address
           val socketAddress = InetSocketAddress(address, port)
-          log.debug(
-              "Target address: ${socketAddress.address.hostAddress}:${socketAddress.port}"
-          )
+          log.debug("Target address: ${socketAddress.address.hostAddress}:${socketAddress.port}")
 
           // Create and connect socket
           val sock = Socket()
@@ -75,14 +73,10 @@ class RfidClient(
           log.info(
               "Successfully connected to $ip:$port " +
                   "(remote: ${sock.inetAddress.hostAddress}:${sock.port}, " +
-                  "local: ${sock.localAddress.hostAddress}:${sock.localPort})"
-          )
+                  "local: ${sock.localAddress.hostAddress}:${sock.localPort})")
           sock
         } catch (e: Exception) {
-          log.error(
-              "Failed to connect to $ip:$port: ${e.javaClass.simpleName} - ${e.message}",
-              e
-          )
+          log.error("Failed to connect to $ip:$port: ${e.javaClass.simpleName} - ${e.message}", e)
           log.error("Stack trace:", e)
           throw e
         }
@@ -177,9 +171,7 @@ class RfidClient(
     log.info("Adding user $badge to doors $doors on controller $serial")
 
     // Validate doors
-    require(doors.all { it in 1..4 }) {
-      "Door numbers must be between 1 and 4"
-    }
+    require(doors.all { it in 1..4 }) { "Door numbers must be between 1 and 4" }
 
     // Create doors list: "01" for enabled, "00" for disabled
     val doorsList = buildString {
@@ -192,10 +184,9 @@ class RfidClient(
     // Pack badge as little-endian integer
     val badgeHex =
         ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(badge).array().joinToString(
-            ""
-        ) {
-          "%02x".format(it)
-        }
+            "") {
+              "%02x".format(it)
+            }
 
     // First packet
     val addPacket1 =
@@ -212,8 +203,7 @@ class RfidClient(
     val addPacket2 =
         computeCrc16Ibm(
             "2320${sourcePort}2900000000000000${controllerSerial}00000200${badgeHex}" +
-                "00000000a04e4605871c9f3b${doorsList}00000000"
-        )
+                "00000000a04e4605871c9f3b${doorsList}00000000")
 
     val response2 = sendAndReceive(addPacket2)
     val response2Hex = response2.joinToString("") { "%02x".format(it) }
@@ -237,16 +227,14 @@ class RfidClient(
     // Pack badge as little-endian integer
     val badgeHex =
         ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(badge).array().joinToString(
-            ""
-        ) {
-          "%02x".format(it)
-        }
+            "") {
+              "%02x".format(it)
+            }
 
     val removePacket =
         computeCrc16Ibm(
             "2320${sourcePort}2200000000000000${controllerSerial}00000200${badgeHex}" +
-                "00000000204e460521149f3b0000000000000000"
-        )
+                "00000000204e460521149f3b0000000000000000")
 
     val response = sendAndReceive(removePacket)
     val responseHex = response.joinToString("") { "%02x".format(it) }
@@ -276,13 +264,9 @@ class RfidClient(
       return parseDoorsFromResponse(badge, responseHex)
     } catch (e: Exception) {
       log.error(
-          "Failed to check user access for badge $badge on controller $serial: ${e.message}",
-          e
-      )
+          "Failed to check user access for badge $badge on controller $serial: ${e.message}", e)
       throw Exception(
-          "Failed to check user access for badge $badge on controller $serial: ${e.message}",
-          e
-      )
+          "Failed to check user access for badge $badge on controller $serial: ${e.message}", e)
     }
   }
 
@@ -292,10 +276,9 @@ class RfidClient(
     // Pack badge as little-endian integer
     val badgeHex =
         ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(badge).array().joinToString(
-            ""
-        ) {
-          "%02x".format(it)
-        }
+            "") {
+              "%02x".format(it)
+            }
 
     log.debug("Badge $badge in hex (little-endian): $badgeHex")
 
@@ -322,8 +305,7 @@ class RfidClient(
       log.warn(
           "Unexpected response from controller: $responseHex (expected 2311, got ${
             responseHex.take(4)
-          })"
-      )
+          })")
       return emptyList()
     }
 
@@ -344,7 +326,8 @@ class RfidClient(
       if (doorData.substring(4, 6) == "01") doors.add(3)
       if (doorData.substring(6, 8) == "01") doors.add(4)
     } else {
-      log.warn("Response too short (${responseHex.length} chars) to parse door data, need at least 60")
+      log.warn(
+          "Response too short (${responseHex.length} chars) to parse door data, need at least 60")
     }
 
     return doors
@@ -353,12 +336,11 @@ class RfidClient(
   /**
    * Reads recent badge swipe events from the controller.
    *
-   * Note: This is an educated guess based on the protocol patterns observed.
-   * The actual command code and response format may need adjustment when tested
-   * against real controllers.
+   * Note: This is an educated guess based on the protocol patterns observed. The actual command
+   * code and response format may need adjustment when tested against real controllers.
    *
-   * Expected command pattern: 0x2340 for reading access logs
-   * Expected response: 0x2341 with log entries
+   * Expected command pattern: 0x2340 for reading access logs Expected response: 0x2341 with log
+   * entries
    *
    * @param minutes Number of minutes to look back
    * @return List of badge swipe events
@@ -387,11 +369,17 @@ class RfidClient(
 
     // Pack times as little-endian integers
     val startTimeHex =
-        ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(startTime.toInt()).array()
+        ByteBuffer.allocate(4)
+            .order(ByteOrder.LITTLE_ENDIAN)
+            .putInt(startTime.toInt())
+            .array()
             .joinToString("") { "%02x".format(it) }
 
     val endTimeHex =
-        ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(currentTime.toInt()).array()
+        ByteBuffer.allocate(4)
+            .order(ByteOrder.LITTLE_ENDIAN)
+            .putInt(currentTime.toInt())
+            .array()
             .joinToString("") { "%02x".format(it) }
 
     log.debug("Start time hex: $startTimeHex, End time hex: $endTimeHex")
@@ -421,8 +409,7 @@ class RfidClient(
       log.warn(
           "Unexpected response from controller: $responseHex (expected 2341, got ${
             responseHex.take(4)
-          })"
-      )
+          })")
       return emptyList()
     }
 
@@ -439,7 +426,8 @@ class RfidClient(
     val entrySize = 20
 
     if (responseHex.length < dataStart) {
-      log.warn("Response too short (${responseHex.length} chars) to parse events, need at least $dataStart")
+      log.warn(
+          "Response too short (${responseHex.length} chars) to parse events, need at least $dataStart")
       return emptyList()
     }
 
@@ -495,9 +483,7 @@ class RfidClient(
                 badge = badgeConverted,
                 timestamp = timestamp * 1000,
                 eventType = eventType,
-                friendlyDoorName = "door_$doorNumber"
-            )
-        )
+                friendlyDoorName = "door_$doorNumber"))
 
         offset += entrySize
       } catch (e: Exception) {

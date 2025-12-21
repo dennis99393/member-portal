@@ -11,9 +11,9 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.util.*
-import org.dallasmakerspace.server.common.logging.LoggerFactory
 import javax.inject.Inject
 import javax.inject.Singleton
+import org.dallasmakerspace.server.common.logging.LoggerFactory
 
 @Singleton
 class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {

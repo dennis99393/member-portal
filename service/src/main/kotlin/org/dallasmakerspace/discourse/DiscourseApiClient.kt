@@ -143,12 +143,17 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
     performDiscourseApiOperation(url, method, json, apiKey, onResponse)
   }
 
-  override suspend fun createPost(title: String, raw: String, categoryId: Int): DiscoursePostResponse {
+  override suspend fun createPost(
+      title: String,
+      raw: String,
+      categoryId: Int
+  ): DiscoursePostResponse {
     val baseUrl = DISCOURSE_BASE_URL
     val apiKey = appConfig.requireStringProperty("app.discourse.apiKey")
     val url = "$baseUrl/posts.json"
 
-    val jsonBody = """{"title": "${title.replace("\"", "\\\"")}", "raw": "${raw.replace("\"", "\\\"")}", "category": $categoryId}"""
+    val jsonBody =
+        """{"title": "${title.replace("\"", "\\\"")}", "raw": "${raw.replace("\"", "\\\"")}", "category": $categoryId}"""
 
     try {
       val response =

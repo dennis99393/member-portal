@@ -6,52 +6,44 @@ import kotlinx.serialization.Serializable
 @Resource("/short-links")
 class ShortLinksResource {
 
-    @Resource("namespaces")
-    class Namespaces(val parent: ShortLinksResource = ShortLinksResource()) {
+  @Resource("namespaces")
+  class Namespaces(val parent: ShortLinksResource = ShortLinksResource()) {
 
-        @Resource("create")
-        class Create(val parent: Namespaces = Namespaces())
+    @Resource("create") class Create(val parent: Namespaces = Namespaces())
 
-        @Resource("{id}")
-        class ById(val parent: Namespaces = Namespaces(), val id: Int) {
+    @Resource("{id}")
+    class ById(val parent: Namespaces = Namespaces(), val id: Int) {
 
-            @Resource("update")
-            class Update(val parent: ById)
+      @Resource("update") class Update(val parent: ById)
 
-            @Resource("delete")
-            class Delete(val parent: ById)
+      @Resource("delete") class Delete(val parent: ById)
 
-            @Resource("aliases")
-            class Aliases(val parent: ById) {
+      @Resource("aliases")
+      class Aliases(val parent: ById) {
 
-                @Resource("add")
-                class Add(val parent: Aliases)
+        @Resource("add") class Add(val parent: Aliases)
 
-                @Resource("{aliasId}/delete")
-                class DeleteAlias(val parent: Aliases, val aliasId: Int)
-            }
-        }
+        @Resource("{aliasId}/delete") class DeleteAlias(val parent: Aliases, val aliasId: Int)
+      }
+    }
+  }
+
+  @Resource("links")
+  class Links(val parent: ShortLinksResource = ShortLinksResource()) {
+
+    @Resource("create") class Create(val parent: Links = Links())
+
+    @Resource("{id}")
+    class ById(val parent: Links = Links(), val id: Int) {
+
+      @Resource("update") class Update(val parent: ById)
+
+      @Resource("delete") class Delete(val parent: ById)
     }
 
-    @Resource("links")
-    class Links(val parent: ShortLinksResource = ShortLinksResource()) {
-
-        @Resource("create")
-        class Create(val parent: Links = Links())
-
-        @Resource("{id}")
-        class ById(val parent: Links = Links(), val id: Int) {
-
-            @Resource("update")
-            class Update(val parent: ById)
-
-            @Resource("delete")
-            class Delete(val parent: ById)
-        }
-
-        @Resource("by-namespace/{namespaceId}")
-        class ByNamespace(val parent: Links = Links(), val namespaceId: Int)
-    }
+    @Resource("by-namespace/{namespaceId}")
+    class ByNamespace(val parent: Links = Links(), val namespaceId: Int)
+  }
 }
 
 // Request/Response DTOs
@@ -73,11 +65,7 @@ data class UpdateNamespaceRequest(
     val isActive: Boolean
 )
 
-@Serializable
-data class AddAliasRequest(
-    val alias: String,
-    val isPrimary: Boolean = false
-)
+@Serializable data class AddAliasRequest(val alias: String, val isPrimary: Boolean = false)
 
 @Serializable
 data class CreateShortLinkRequest(

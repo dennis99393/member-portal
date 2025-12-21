@@ -163,7 +163,12 @@ constructor(
     }
   }
 
-  suspend fun callBackendApiPost(path: String, sessionId: String?, username: String?, body: Any): Map<String, Any> {
+  suspend fun callBackendApiPost(
+      path: String,
+      sessionId: String?,
+      username: String?,
+      body: Any
+  ): Map<String, Any> {
     try {
       val apiHeaders = getApiHeaders(sessionId, username)
       var result: Map<String, Any>
@@ -175,7 +180,12 @@ constructor(
     }
   }
 
-  suspend fun callBackendApiPatch(path: String, sessionId: String?, username: String?, body: Any): Map<String, Any> {
+  suspend fun callBackendApiPatch(
+      path: String,
+      sessionId: String?,
+      username: String?,
+      body: Any
+  ): Map<String, Any> {
     try {
       val apiHeaders = getApiHeaders(sessionId, username)
       var result: Map<String, Any>
@@ -187,7 +197,11 @@ constructor(
     }
   }
 
-  suspend fun callBackendApiDelete(path: String, sessionId: String?, username: String?): Map<String, Any> {
+  suspend fun callBackendApiDelete(
+      path: String,
+      sessionId: String?,
+      username: String?
+  ): Map<String, Any> {
     try {
       val apiHeaders = getApiHeaders(sessionId, username)
       var result: Map<String, Any>

@@ -10,18 +10,18 @@ import org.dallasmakerspace.shortlinks.ShortLinksService
 @Module
 class ShortLinksModule {
 
-    @Provides
-    @Singleton
-    fun providesShortLinksRepository(loggerFactory: LoggerFactory): ShortLinksRepository {
-        return ShortLinksRepository(loggerFactory)
-    }
+  @Provides
+  @Singleton
+  fun providesShortLinksRepository(loggerFactory: LoggerFactory): ShortLinksRepository {
+    return ShortLinksRepository(loggerFactory)
+  }
 
-    @Provides
-    @Singleton
-    fun providesShortLinksService(
-        loggerFactory: LoggerFactory,
-        repository: ShortLinksRepository
-    ): ShortLinksService {
-        return ShortLinksService(loggerFactory, repository)
-    }
+  @Provides
+  @Singleton
+  fun providesShortLinksService(
+      loggerFactory: LoggerFactory,
+      repository: ShortLinksRepository
+  ): ShortLinksService {
+    return ShortLinksService(loggerFactory, repository)
+  }
 }

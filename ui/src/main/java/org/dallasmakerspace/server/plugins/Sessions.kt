@@ -6,7 +6,6 @@ import io.ktor.server.auth.Principal
 import io.ktor.server.sessions.SessionStorageMemory
 import io.ktor.server.sessions.Sessions
 import io.ktor.server.sessions.cookie
-
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 

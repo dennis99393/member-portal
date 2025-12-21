@@ -85,8 +85,7 @@ constructor(
                   mapOf(
                       "Member" to memberJson,
                       "Events Attended" to (dataItem.values["Events Attended"] ?: JsonPrimitive(0)),
-                  )
-          )
+                  ))
         }
 
     return baseResponse.copy(data = enrichedData)

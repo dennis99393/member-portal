@@ -130,8 +130,7 @@ constructor(
                 "url",
                 JsonPrimitive(
                     "https://calendar.dallasmakerspace.org/events/view/" +
-                        "${dataItem.values["id"]?.toString()}"
-                ),
+                        "${dataItem.values["id"]?.toString()}"),
             )
           }
 
@@ -141,16 +140,14 @@ constructor(
                       "Event" to eventLinkJson,
                       "Date" to (dataItem.values["event_start"] ?: JsonPrimitive("")),
                       "Organizer" to organizerJson,
-                  )
-          )
+                  ))
         }
 
     val metadata: Map<String, String> =
         mapOf(
             "Generated at" to
                 DateTimeFormatter.ISO_DATE_TIME.format(
-                    Instant.now().atZone(java.time.ZoneId.of("America/Chicago"))
-                ),
+                    Instant.now().atZone(java.time.ZoneId.of("America/Chicago"))),
             "Time taken" to "$timeTakenInSec sec",
             "SQL Query" to query,
         )

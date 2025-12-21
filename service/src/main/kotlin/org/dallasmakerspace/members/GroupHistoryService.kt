@@ -1,5 +1,8 @@
 package org.dallasmakerspace.members
 
+import java.time.LocalDateTime
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.datetime.toJavaLocalDateTime
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.members.db.GroupDAO
@@ -18,9 +21,6 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /** Service for managing group history operations. */
 @Singleton

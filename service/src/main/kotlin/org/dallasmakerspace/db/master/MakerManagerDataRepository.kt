@@ -84,8 +84,8 @@ class MakerManagerDataRepository @Inject constructor() {
   }
 
   /**
-   * Get user IDs for multiple badge numbers at a specific date/time
-   * Checks badge_histories for historical assignment, falls back to current badges
+   * Get user IDs for multiple badge numbers at a specific date/time Checks badge_histories for
+   * historical assignment, falls back to current badges
    *
    * @param badgeNumbersWithDates Map of badge numbers to their swipe dates
    * @return Map of badge numbers to their user IDs (null if not found)

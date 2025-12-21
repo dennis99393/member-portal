@@ -19,17 +19,20 @@ class ThymeleafServerIntegrationTest {
 
   companion object {
 
-    private lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
+    private lateinit var server:
+        EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
 
     @BeforeClass
     @JvmStatic
     fun setup() {
-      server = embeddedServer(Netty, host = "127.0.0.1", port = 8080) {
-        configureHttp()
-        configureRouting()
-        configureTemplating()
-        configureStatusPages()
-      }.start(false)
+      server =
+          embeddedServer(Netty, host = "127.0.0.1", port = 8080) {
+                configureHttp()
+                configureRouting()
+                configureTemplating()
+                configureStatusPages()
+              }
+              .start(false)
     }
 
     @AfterClass

@@ -19,19 +19,22 @@ class BackendApiHandler(
     val fullPath = if (queryString.isNotEmpty()) "$path?$queryString" else path
     val username = userInfo["preferred_username"] as? String
 
-    val result = when (call.request.httpMethod) {
-      HttpMethod.Get -> memberService.callBackendApi(fullPath, session.sessionId)
-      HttpMethod.Post -> {
-        val body = call.receive<Map<String, Any?>>()
-        memberService.callBackendApiPost(fullPath, session.sessionId, username, body)
-      }
-      HttpMethod.Patch -> {
-        val body = call.receive<Map<String, Any?>>()
-        memberService.callBackendApiPatch(fullPath, session.sessionId, username, body)
-      }
-      HttpMethod.Delete -> memberService.callBackendApiDelete(fullPath, session.sessionId, username)
-      else -> throw IllegalArgumentException("Unsupported HTTP method: ${call.request.httpMethod}")
-    }
+    val result =
+        when (call.request.httpMethod) {
+          HttpMethod.Get -> memberService.callBackendApi(fullPath, session.sessionId)
+          HttpMethod.Post -> {
+            val body = call.receive<Map<String, Any?>>()
+            memberService.callBackendApiPost(fullPath, session.sessionId, username, body)
+          }
+          HttpMethod.Patch -> {
+            val body = call.receive<Map<String, Any?>>()
+            memberService.callBackendApiPatch(fullPath, session.sessionId, username, body)
+          }
+          HttpMethod.Delete ->
+              memberService.callBackendApiDelete(fullPath, session.sessionId, username)
+          else ->
+              throw IllegalArgumentException("Unsupported HTTP method: ${call.request.httpMethod}")
+        }
     call.respond(result)
   }
 }
