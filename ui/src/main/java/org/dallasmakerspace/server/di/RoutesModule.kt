@@ -18,6 +18,10 @@ import org.dallasmakerspace.server.routes.ProfileHandler
 import org.dallasmakerspace.server.routes.ProfileMeHandler
 import org.dallasmakerspace.server.routes.ReportHandler
 import org.dallasmakerspace.server.routes.SearchPreloadHandler
+import org.dallasmakerspace.server.routes.ShortLinksHandler
+import org.dallasmakerspace.server.routes.ShortLinksAdminHandler
+import org.dallasmakerspace.server.routes.ShortLinkRedirectHandler
+import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 
 @Module
@@ -85,7 +89,7 @@ class RoutesModule {
 
   @IntoMap
   @Provides
-  @StringKey("/reports/{...}")
+  @StringKey("/reports/{path...}")
   fun providesReportHandler(
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
@@ -93,10 +97,39 @@ class RoutesModule {
 
   @IntoMap
   @Provides
-  @StringKey("/backend-api/{...}")
+  @StringKey("/backend-api/{path...}")
   fun providesBackendApiHandler(
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
       memberService: MemberService
   ): IRouteHandler = BackendApiHandler(loggerFactory, userInfoProvider, memberService)
+
+  @IntoMap
+  @Provides
+  @StringKey("/short-links")
+  fun providesShortLinksHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService
+  ): IRouteHandler = ShortLinksHandler(loggerFactory, userInfoProvider, memberService)
+
+  @IntoMap
+  @Provides
+  @StringKey("/short-links/admin")
+  fun providesShortLinksAdminHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService
+  ): IRouteHandler = ShortLinksAdminHandler(loggerFactory, userInfoProvider, memberService)
+
+  @IntoMap
+  @Provides
+  @StringKey("/go/{path...}")
+  fun providesShortLinkRedirectHandler(
+      loggerFactory: LoggerFactory,
+      appConfig: AppConfig
+  ): IRouteHandler = ShortLinkRedirectHandler(
+      loggerFactory,
+      appConfig.requireStringProperty("app.member-service.url")
+  )
 }

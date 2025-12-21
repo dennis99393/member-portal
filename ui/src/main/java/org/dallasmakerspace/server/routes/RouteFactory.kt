@@ -21,8 +21,9 @@ object RouteFactory {
     return path
         .replace("@[a-zA-Z0-9_-]*".toRegex(), "@{preferred_username}")
         .replace("/groups/.*".toRegex(), "/groups/{group_slug}")
-        .replace("/reports.*".toRegex(), "/reports/{...}")
-        .replace("/backend-api/.*".toRegex(), "/backend-api/{...}")
+        .replace("/reports.*".toRegex(), "/reports/{path...}")
+        .replace("/backend-api/.*".toRegex(), "/backend-api/{path...}")
+        .replace("/go/.*".toRegex(), "/go/{path...}")
   }
 
   fun getHandler(path: String): IRouteHandler? {
@@ -45,8 +46,11 @@ object RouteFactory {
     SEARCH_PRELOAD("/search-preload"),
     REGISTER_VOTING("/profile/@{preferred_username}/register-voting"),
     UNREGISTER_VOTING("/profile/@{preferred_username}/unregister-voting"),
-    REPORT("/reports/{...}"),
-    BACKEND_API("/backend-api/{...}"),
+    REPORT("/reports/{path...}"),
+    BACKEND_API("/backend-api/{path...}"),
+    SHORT_LINKS("/short-links"),
+    SHORT_LINKS_ADMIN("/short-links/admin"),
+    SHORT_LINK_REDIRECT("/go/{path...}"),
   }
 }
 

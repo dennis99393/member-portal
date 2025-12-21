@@ -16,6 +16,7 @@ import org.dallasmakerspace.doorcontroller.DoorControllerService
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.GroupService
 import org.dallasmakerspace.members.MemberService
+import org.dallasmakerspace.shortlinks.ShortLinksService
 import org.dallasmakerspace.smartwaiver.SmartwaiverModule
 import org.dallasmakerspace.webhook.WebhookRouter
 import org.dallasmakerspace.webhook.di.WebhookModule
@@ -32,6 +33,7 @@ import javax.inject.Singleton
             DoorControllerModule::class,
             MembersModule::class,
             DataVizModule::class,
+            ShortLinksModule::class,
             SmartwaiverModule::class,
             WebhookModule::class])
 @Suppress("TooManyFunctions")
@@ -65,4 +67,6 @@ interface AppComponent {
   fun getDoorSwipesCronJob(): DoorSwipesCronJob
 
   fun getCalendarService(): CalendarService
+
+  fun getShortLinksService(): ShortLinksService
 }

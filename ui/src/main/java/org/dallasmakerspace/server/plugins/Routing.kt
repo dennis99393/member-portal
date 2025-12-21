@@ -28,18 +28,36 @@ fun Application.configureRouting() {
       get(RouteFactory.Paths.PROFILE.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       get(RouteFactory.Paths.PROFILEME.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       get(RouteFactory.Paths.GROUPS.path) { RouteFactory.getHandler(call)?.handleBase(call) }
-      get(RouteFactory.Paths.SEARCH_PRELOAD.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.SEARCH_PRELOAD.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
       get(RouteFactory.Paths.REPORT.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.SHORT_LINKS.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.SHORT_LINKS_ADMIN.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
       get(RouteFactory.Paths.BACKEND_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
-      get(RouteFactory.Paths.DISCOURSE_LINK.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      post(RouteFactory.Paths.BACKEND_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      patch(RouteFactory.Paths.BACKEND_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      delete(RouteFactory.Paths.BACKEND_API.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
+      get(RouteFactory.Paths.DISCOURSE_LINK.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
       get(RouteFactory.Paths.DISCOURSE_UNLINK.path) {
         RouteFactory.getHandler(call)?.handleBase(call)
       }
       get(RouteFactory.Paths.DISCOURSE_CALLBACK.path) {
         RouteFactory.getHandler(RouteFactory.Paths.DISCOURSE_CALLBACK.path)?.handleBase(call)
       }
-      get(RouteFactory.Paths.REGISTER_VOTING.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.REGISTER_VOTING.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
       get(RouteFactory.Paths.UNREGISTER_VOTING.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
+      get(RouteFactory.Paths.SHORT_LINK_REDIRECT.path) {
         RouteFactory.getHandler(call)?.handleBase(call)
       }
     }

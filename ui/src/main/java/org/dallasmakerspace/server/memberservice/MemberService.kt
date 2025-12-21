@@ -81,6 +81,15 @@ constructor(
   suspend fun callBackendApi(path: String, sessionId: String?) =
       memberServiceClient.callBackendApi(path, sessionId)
 
+  suspend fun callBackendApiPost(path: String, sessionId: String?, username: String?, body: Any) =
+      memberServiceClient.callBackendApiPost(path, sessionId, username, body)
+
+  suspend fun callBackendApiPatch(path: String, sessionId: String?, username: String?, body: Any) =
+      memberServiceClient.callBackendApiPatch(path, sessionId, username, body)
+
+  suspend fun callBackendApiDelete(path: String, sessionId: String?, username: String?) =
+      memberServiceClient.callBackendApiDelete(path, sessionId, username)
+
   suspend fun getEventsOrganizedByMember(username: String, limit: Int, sessionId: String?): List<EventSummary> {
     return memberServiceClient.getEventsOrganizedByMember(username, limit, sessionId)
   }

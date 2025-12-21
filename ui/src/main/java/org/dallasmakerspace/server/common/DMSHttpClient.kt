@@ -63,7 +63,26 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
     }
   }
 
-  suspend fun patch(url: String, authHeaders: StringValues, payload: Any) {
+  suspend fun post(url: String, authHeaders: StringValues, payload: Any): Map<String, Any> {
+    val resp =
+        getClient().use {
+          it.post {
+            url(url)
+            headers { appendAll(authHeaders) }
+            contentType(ContentType.Application.Json)
+            setBody(payload)
+          }
+        }
+    if (resp.status.isSuccess()) {
+      return resp.body<Map<String, Any>>()
+    } else {
+      val body = resp.body<String>()
+      log.error("post: HTTP request failed: $body")
+      throw HttpException("Failed to post $url; Status: ${resp.status} Response: $body")
+    }
+  }
+
+  suspend fun patch(url: String, authHeaders: StringValues, payload: Any): Map<String, Any> {
     val resp =
         getClient().use {
           it.patch {
@@ -73,9 +92,29 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
             setBody(payload)
           }
         }
-    if (!resp.status.isSuccess()) {
-      log.error("patch: HTTP request failed: $resp")
-      throw HttpException("Failed to patch $url; Status: ${resp.status} FullResponse: $resp")
+    if (resp.status.isSuccess()) {
+      return resp.body<Map<String, Any>>()
+    } else {
+      val body = resp.body<String>()
+      log.error("patch: HTTP request failed: $body")
+      throw HttpException("Failed to patch $url; Status: ${resp.status} Response: $body")
+    }
+  }
+
+  suspend fun delete(url: String, authHeaders: StringValues): Map<String, Any> {
+    val resp =
+        getClient().use {
+          it.delete {
+            url(url)
+            headers { appendAll(authHeaders) }
+          }
+        }
+    if (resp.status.isSuccess()) {
+      return resp.body<Map<String, Any>>()
+    } else {
+      val body = resp.body<String>()
+      log.error("delete: HTTP request failed: $body")
+      throw HttpException("Failed to delete $url; Status: ${resp.status} Response: $body")
     }
   }
 

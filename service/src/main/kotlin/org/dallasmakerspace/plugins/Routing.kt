@@ -30,7 +30,14 @@ import org.dallasmakerspace.members.MemberService
 import org.dallasmakerspace.routing.BadgeLookup
 import org.dallasmakerspace.routing.Groups
 import org.dallasmakerspace.routing.Members
+import org.dallasmakerspace.routing.ShortLinksResource
+import org.dallasmakerspace.routing.*
+import org.dallasmakerspace.shortlinks.RedirectResult
+import org.dallasmakerspace.shortlinks.ShortLinksService
 import org.dallasmakerspace.webhook.WebhookRouter
+import org.dallasmakerspace.models.NamespaceOwnerType
+import org.dallasmakerspace.members.db.ProfileDAO
+import org.dallasmakerspace.members.db.suspendTransaction
 
 @Suppress("LongMethod")
 fun Application.configureRouting() {
@@ -71,6 +78,9 @@ fun Application.configureRouting() {
     }
     val dataVizRouter: DataVizRouter by lazy { DaggerAppComponent.create().getDataVizRouter() }
     val webhookRouter: WebhookRouter by lazy { DaggerAppComponent.create().getWebhookRouter() }
+    val shortLinksService: ShortLinksService by lazy {
+      DaggerAppComponent.create().getShortLinksService()
+    }
 
     get("/") {
       call.respondText(
@@ -222,6 +232,7 @@ fun Application.configureRouting() {
         }
       }
 
+
       /** Data visualization reports * */
       requireRole("dataviz:read") {
         get("/data-viz/*") {
@@ -245,7 +256,183 @@ fun Application.configureRouting() {
           call.respond(ApiResponse(Status.SUCCESS, "Backend API $method", respone))
         }
       }
+
+      /** Short Links Routes - requires authentication * */
+      requireRole("shortlinks:read") {
+        get<ShortLinksResource.Namespaces> {
+          val namespaces = shortLinksService.getAllNamespaces()
+          call.respond(ApiResponse(Status.SUCCESS, "Namespaces retrieved", namespaces))
+        }
+
+        get<ShortLinksResource.Namespaces.ById> { request ->
+          val namespace = shortLinksService.getNamespace(request.id)
+          if (namespace != null) {
+            call.respond(ApiResponse(Status.SUCCESS, "Namespace found", namespace))
+          } else {
+            call.respond(
+                HttpStatusCode.NotFound, ApiResponse(Status.ERROR, "Namespace not found", null))
+          }
+        }
+
+        get<ShortLinksResource.Links> {
+          val links = shortLinksService.getAllShortLinks()
+          call.respond(ApiResponse(Status.SUCCESS, "Short links retrieved", links))
+        }
+
+        get<ShortLinksResource.Links.ById> { request ->
+          val link = shortLinksService.getShortLink(request.id)
+          if (link != null) {
+            call.respond(ApiResponse(Status.SUCCESS, "Short link found", link))
+          } else {
+            call.respond(
+                HttpStatusCode.NotFound, ApiResponse(Status.ERROR, "Short link not found", null))
+          }
+        }
+
+        get<ShortLinksResource.Links.ByNamespace> { request ->
+          val links = shortLinksService.getAllShortLinks(namespaceId = request.namespaceId)
+          call.respond(ApiResponse(Status.SUCCESS, "Namespace links retrieved", links))
+        }
+
+        get("/short-links/links/popular") {
+          val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
+          val popularLinks = shortLinksService.getPopularShortLinks(limit)
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS,
+                  "Popular short links retrieved",
+                  popularLinks.map { (link, clicks) -> PopularShortLinkResponse(link, clicks) }))
+        }
+      }
+
+      requireRole("shortlinks:write") {
+        post("/short-links/namespaces/create") {
+          val request = call.receive<CreateNamespaceRequest>()
+          val username = call.request.headers["X-Username"]
+          val creatorProfileId = username?.let {
+            suspendTransaction { ProfileDAO.findById(it)?.idColumn?.value }
+          }
+
+          val result = shortLinksService.createNamespace(
+              name = request.name,
+              ownerType = when (request.ownerType) {
+                "committee" -> NamespaceOwnerType.COMMITTEE
+                "system" -> NamespaceOwnerType.SYSTEM
+                else -> throw IllegalArgumentException("Invalid owner type")
+              },
+              ownerGroupId = request.ownerGroupId,
+              description = request.description,
+              primaryAlias = request.primaryAlias,
+              additionalAliases = request.additionalAliases,
+              createdBy = creatorProfileId)
+
+          result.fold(
+              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Namespace created", it)) },
+              onFailure = { call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, it.message ?: "Failed to create namespace", null)) })
+        }
+
+        patch("/short-links/namespaces/{id}/update") {
+          val id = call.parameters["id"]?.toIntOrNull()
+              ?: return@patch call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, "Invalid namespace ID", null))
+
+          val updates = call.receive<UpdateNamespaceRequest>()
+          val existing = shortLinksService.getNamespace(id)
+              ?: return@patch call.respond(HttpStatusCode.NotFound,
+                  ApiResponse(Status.ERROR, "Namespace not found", null))
+
+          val updated = existing.copy(
+              name = updates.name, description = updates.description, isActive = updates.isActive)
+
+          shortLinksService.updateNamespace(id, updated).fold(
+              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Namespace updated", it)) },
+              onFailure = { call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, it.message ?: "Update failed", null)) })
+        }
+
+        delete("/short-links/namespaces/{id}/delete") {
+          val id = call.parameters["id"]?.toIntOrNull()
+              ?: return@delete call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, "Invalid namespace ID", null))
+
+          shortLinksService.deleteNamespace(id).fold(
+              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Namespace deleted", null)) },
+              onFailure = { call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, it.message ?: "Delete failed", null)) })
+        }
+
+        post("/short-links/namespaces/{id}/aliases/add") {
+          val id = call.parameters["id"]?.toIntOrNull()
+              ?: return@post call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, "Invalid namespace ID", null))
+
+          val aliasRequest = call.receive<AddAliasRequest>()
+          shortLinksService.addAlias(id, aliasRequest.alias, aliasRequest.isPrimary).fold(
+              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Alias added", it)) },
+              onFailure = { call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, it.message ?: "Failed to add alias", null)) })
+        }
+
+        post("/short-links/links/create") {
+          val request = call.receive<CreateShortLinkRequest>()
+          val username = call.request.headers["X-Username"]
+          val creatorProfileId = username?.let {
+            suspendTransaction { ProfileDAO.findById(it)?.idColumn?.value }
+          }
+
+          shortLinksService.createShortLink(
+              namespaceId = request.namespaceId,
+              slug = request.slug,
+              destinationUrl = request.destinationUrl,
+              description = request.description,
+              creatorId = creatorProfileId).fold(
+              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Short link created", it)) },
+              onFailure = { call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, it.message ?: "Failed to create link", null)) })
+        }
+
+        patch("/short-links/links/{id}/update") {
+          val id = call.parameters["id"]?.toIntOrNull()
+              ?: return@patch call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, "Invalid link ID", null))
+
+          val username = call.request.headers["X-Username"]
+          val updaterProfileId = username?.let {
+            suspendTransaction { ProfileDAO.findById(it)?.idColumn?.value }
+          }
+
+          val updates = call.receive<UpdateShortLinkRequest>()
+          val existing = shortLinksService.getShortLink(id)
+              ?: return@patch call.respond(HttpStatusCode.NotFound,
+                  ApiResponse(Status.ERROR, "Short link not found", null))
+
+          val updated = existing.copy(
+              slug = updates.slug,
+              destinationUrl = updates.destinationUrl,
+              description = updates.description,
+              isActive = updates.isActive,
+              updatedBy = updaterProfileId)
+
+          shortLinksService.updateShortLink(id, updated).fold(
+              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Short link updated", it)) },
+              onFailure = { call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, it.message ?: "Update failed", null)) })
+        }
+
+        delete("/short-links/links/{id}/delete") {
+          val id = call.parameters["id"]?.toIntOrNull()
+              ?: return@delete call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, "Invalid link ID", null))
+
+          shortLinksService.deleteShortLink(id).fold(
+              onSuccess = { call.respond(ApiResponse(Status.SUCCESS, "Short link deleted", null)) },
+              onFailure = { call.respond(HttpStatusCode.BadRequest,
+                  ApiResponse(Status.ERROR, it.message ?: "Delete failed", null)) })
+        }
+      }
     }
+
     post("/webhook/*") {
       val path = call.request.path().substringAfter("/webhook/")
       val body = call.receiveText()
@@ -267,6 +454,21 @@ fun Application.configureRouting() {
         call.respond(HttpStatusCode.BadRequest, ApiResponse(Status.ERROR, result.message, null))
       }
     }
+
+    /** Short Links - Public Redirect Handler * */
+    get("/go/{path...}") {
+      val path = call.parameters.getAll("path")?.joinToString("/") ?: ""
+
+      when (val result = shortLinksService.resolveRedirect(path)) {
+        is RedirectResult.Success -> {
+          call.respondRedirect(result.destinationUrl, permanent = false)
+        }
+        is RedirectResult.NotFound -> {
+          call.respond(
+              HttpStatusCode.NotFound, ApiResponse(Status.ERROR, result.message, null))
+        }
+      }
+    }
   }
 }
 
@@ -283,6 +485,7 @@ fun routeObjectToModel(it: Members.DMSMember): org.dallasmakerspace.models.DMSMe
 
 @Serializable data class ApiResponse<T>(val status: Status, val message: String, val data: T?)
 
+@Serializable
 enum class Status {
   SUCCESS,
   ERROR,

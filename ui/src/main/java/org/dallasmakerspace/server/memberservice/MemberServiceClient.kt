@@ -56,9 +56,10 @@ constructor(
     dmsHttpClient.patch("$baseUrl/members/$username/update", apiHeaders, userMap)
   }
 
-  private fun getApiHeaders(sessionId: String?) =
+  private fun getApiHeaders(sessionId: String?, username: String? = null) =
       StringValues.build {
         sessionId?.apply { append("X-Request-Id", sessionId) }
+        username?.apply { append("X-Username", username) }
         authHeaders.forEach(this::append)
       }
 
@@ -159,6 +160,42 @@ constructor(
     } catch (ex: Exception) {
       log.error("Failed to call backend API: $path ", ex)
       throw MemberServiceException("Failed to call backend API: $path", ex)
+    }
+  }
+
+  suspend fun callBackendApiPost(path: String, sessionId: String?, username: String?, body: Any): Map<String, Any> {
+    try {
+      val apiHeaders = getApiHeaders(sessionId, username)
+      var result: Map<String, Any>
+      withTimeout(120_000L) { result = dmsHttpClient.post("$baseUrl/$path", apiHeaders, body) }
+      return result
+    } catch (ex: Exception) {
+      log.error("Failed to call backend API POST: $path ", ex)
+      throw MemberServiceException("Failed to call backend API POST: $path", ex)
+    }
+  }
+
+  suspend fun callBackendApiPatch(path: String, sessionId: String?, username: String?, body: Any): Map<String, Any> {
+    try {
+      val apiHeaders = getApiHeaders(sessionId, username)
+      var result: Map<String, Any>
+      withTimeout(120_000L) { result = dmsHttpClient.patch("$baseUrl/$path", apiHeaders, body) }
+      return result
+    } catch (ex: Exception) {
+      log.error("Failed to call backend API PATCH: $path ", ex)
+      throw MemberServiceException("Failed to call backend API PATCH: $path", ex)
+    }
+  }
+
+  suspend fun callBackendApiDelete(path: String, sessionId: String?, username: String?): Map<String, Any> {
+    try {
+      val apiHeaders = getApiHeaders(sessionId, username)
+      var result: Map<String, Any>
+      withTimeout(120_000L) { result = dmsHttpClient.delete("$baseUrl/$path", apiHeaders) }
+      return result
+    } catch (ex: Exception) {
+      log.error("Failed to call backend API DELETE: $path ", ex)
+      throw MemberServiceException("Failed to call backend API DELETE: $path", ex)
     }
   }
 
