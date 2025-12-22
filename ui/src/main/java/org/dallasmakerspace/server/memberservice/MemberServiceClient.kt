@@ -1,5 +1,9 @@
 package org.dallasmakerspace.server.memberservice
 
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import io.ktor.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,6 +21,14 @@ import org.dallasmakerspace.server.models.SearchPreloadResponse
 import org.dallasmakerspace.server.models.dmsGroupFromMap
 import org.dallasmakerspace.server.models.dmsMemberFromMap
 import org.dallasmakerspace.server.models.dmsMemberToMap
+
+sealed class ShortLinkResult {
+  data class Redirect(val location: String) : ShortLinkResult()
+
+  data object NotFound : ShortLinkResult()
+
+  data class Error(val message: String) : ShortLinkResult()
+}
 
 @Suppress("TooGenericExceptionCaught")
 @Singleton
@@ -236,6 +248,41 @@ constructor(
     } catch (ex: Exception) {
       log.error("Failed to get events for member: $username", ex)
       throw MemberServiceException("Failed to get events for member: $username", ex)
+    }
+  }
+
+  suspend fun resolveShortLink(
+      path: String,
+      sessionId: String?,
+      username: String?
+  ): ShortLinkResult {
+    val client = HttpClient(CIO) { followRedirects = false }
+    val apiHeaders = getApiHeaders(sessionId, username)
+    return try {
+      val response = client.get("$baseUrl/go/$path") { headers { appendAll(apiHeaders) } }
+      when (response.status) {
+        HttpStatusCode.Found,
+        HttpStatusCode.MovedPermanently,
+        HttpStatusCode.TemporaryRedirect -> {
+          val location = response.headers[HttpHeaders.Location]
+          if (location != null) {
+            ShortLinkResult.Redirect(location)
+          } else {
+            log.error("Redirect response missing Location header for path: $path")
+            ShortLinkResult.Error("Redirect location not found")
+          }
+        }
+        HttpStatusCode.NotFound -> ShortLinkResult.NotFound
+        else -> {
+          log.error("Unexpected response from service: ${response.status} for path: $path")
+          ShortLinkResult.Error("Unexpected response: ${response.status}")
+        }
+      }
+    } catch (ex: Exception) {
+      log.error("Error resolving short link: $path", ex)
+      ShortLinkResult.Error("Error resolving short link: ${ex.message}")
+    } finally {
+      client.close()
     }
   }
 }

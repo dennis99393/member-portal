@@ -547,7 +547,11 @@ fun Application.configureRouting() {
     get("/go/{path...}") {
       val path = call.parameters.getAll("path")?.joinToString("/") ?: ""
 
-      when (val result = shortLinksService.resolveRedirect(path)) {
+      val username = call.request.headers["X-Username"]
+      val updaterProfileId =
+          username?.let { suspendTransaction { ProfileDAO.findById(it)?.idColumn?.value } }
+
+      when (val result = shortLinksService.resolveRedirect(path, updaterProfileId)) {
         is RedirectResult.Success -> {
           call.respondRedirect(result.destinationUrl, permanent = false)
         }

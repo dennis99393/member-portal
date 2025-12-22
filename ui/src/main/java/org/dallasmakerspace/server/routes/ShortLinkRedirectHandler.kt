@@ -1,61 +1,38 @@
 package org.dallasmakerspace.server.routes
 
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
+import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
+import org.dallasmakerspace.server.memberservice.MemberServiceClient
+import org.dallasmakerspace.server.memberservice.ShortLinkResult
 
 class ShortLinkRedirectHandler(
     loggerFactory: LoggerFactory,
-    private val serviceBaseUrl: String,
-) : IRouteHandler {
+    userInfoProvider: UserInfoProvider,
+    private val memberServiceClient: MemberServiceClient,
+) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
-  override suspend fun handle(call: ApplicationCall) {
+  override suspend fun handleAuthenticated(call: ApplicationCall) {
     val path = call.parameters.getAll("path")?.joinToString("/") ?: ""
+    val username = userInfo["preferred_username"] as? String
     log.info("Resolving short link: $path")
 
-    val client = HttpClient(CIO) { followRedirects = false }
-
-    try {
-      val response = client.get("$serviceBaseUrl/go/$path")
-
-      when (response.status) {
-        HttpStatusCode.Found,
-        HttpStatusCode.MovedPermanently,
-        HttpStatusCode.TemporaryRedirect -> {
-          val location = response.headers[HttpHeaders.Location]
-          if (location != null) {
-            log.info("Redirecting to: $location")
-            call.respondRedirect(location, permanent = false)
-          } else {
-            log.error("Redirect response missing Location header")
-            call.respondText(
-                "Redirect location not found",
-                status = HttpStatusCode.InternalServerError,
-            )
-          }
-        }
-        HttpStatusCode.NotFound -> {
-          log.warn("Short link not found: $path")
-          call.respondText("Short link not found: $path", status = HttpStatusCode.NotFound)
-        }
-        else -> {
-          log.error("Unexpected response from service: ${response.status}")
-          call.respondText("Unexpected response: ${response.status}", status = response.status)
-        }
+    when (val result = memberServiceClient.resolveShortLink(path, session.sessionId, username)) {
+      is ShortLinkResult.Redirect -> {
+        log.info("Redirecting to: ${result.location}")
+        call.respondRedirect(result.location, permanent = false)
       }
-    } catch (e: Exception) {
-      log.error("Error resolving short link: $path", e)
-      call.respondText(
-          "Error resolving short link: ${e.message}",
-          status = HttpStatusCode.InternalServerError,
-      )
-    } finally {
-      client.close()
+      is ShortLinkResult.NotFound -> {
+        log.warn("Short link not found: $path")
+        call.respondText("Short link not found: $path", status = HttpStatusCode.NotFound)
+      }
+      is ShortLinkResult.Error -> {
+        log.error("Error resolving short link: ${result.message}")
+        call.respondText(result.message, status = HttpStatusCode.InternalServerError)
+      }
     }
   }
 }
