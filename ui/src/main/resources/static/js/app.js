@@ -1,10 +1,17 @@
 document.addEventListener("DOMContentLoaded", (event) => {
     printDMSItBanner();
+    loadSnowflakeEffect();
     // Hide toast after 20 seconds
     setTimeout(() => {
         hideToast();
     }, 20000);
 });
+
+function loadSnowflakeEffect() {
+    const script = document.createElement('script');
+    script.src = '/static/js/snowflake-effect.js';
+    document.head.appendChild(script);
+}
 
 function printDMSItBanner() {
     var titleCss = "font-size: 40px;color: red;font-weight: bold;";
