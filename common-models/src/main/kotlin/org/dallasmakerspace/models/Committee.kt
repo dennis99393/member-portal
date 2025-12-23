@@ -128,6 +128,48 @@ object Committees {
               groupPrefixes = listOf("Woodshop", "WS"),
               isActive = true,
           ),
+          Committee(
+              id = 14,
+              name = "VECTOR",
+              chairGroupName = "VECTOR Committee Chair",
+              isActive = true,
+          ),
+          Committee(
+              id = 15,
+              name = "Public Relations",
+              chairGroupName = "Public Relations Committee Chair",
+              isActive = true,
+          ),
+          Committee(
+              id = 16,
+              name = "Printmaking",
+              chairGroupName = "Printmaking Committee Chair",
+              isActive = true,
+          ),
+          Committee(
+              id = 16,
+              name = "MotorSports",
+              chairGroupName = "MotorSports Committee Chair",
+              isActive = true,
+          ),
+          Committee(
+              id = 16,
+              name = "Logistics",
+              chairGroupName = "Logistics Committee Chair",
+              isActive = true,
+          ),
+          Committee(
+              id = 16,
+              name = "Infrastructure",
+              chairGroupName = "Infrastructure Committee Chair",
+              isActive = true,
+          ),
+          Committee(
+              id = 16,
+              name = "Financial",
+              chairGroupName = "Financial Committee Chair",
+              isActive = true,
+          ),
       )
 
   fun findById(id: Int): Committee? = ALL.find { it.id == id }

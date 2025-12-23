@@ -60,6 +60,7 @@ fun Application.configureRouting() {
       get(RouteFactory.Paths.SHORT_LINK_REDIRECT.path) {
         RouteFactory.getHandler(call)?.handleBase(call)
       }
+      get(RouteFactory.Paths.COMMITTEES.path) { RouteFactory.getHandler(call)?.handleBase(call) }
     }
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handleBase(call) }

@@ -9,6 +9,7 @@ import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.memberservice.MemberServiceClient
 import org.dallasmakerspace.server.routes.BackendApiHandler
+import org.dallasmakerspace.server.routes.CommitteesHandler
 import org.dallasmakerspace.server.routes.GroupsHandler
 import org.dallasmakerspace.server.routes.IRouteHandler
 import org.dallasmakerspace.server.routes.IndexHandler
@@ -130,4 +131,13 @@ class RoutesModule {
       userInfoProvider: UserInfoProvider,
       memberServiceClient: MemberServiceClient
   ): IRouteHandler = ShortLinkRedirectHandler(loggerFactory, userInfoProvider, memberServiceClient)
+
+  @IntoMap
+  @Provides
+  @StringKey("/committees")
+  fun providesCommitteesHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService
+  ): IRouteHandler = CommitteesHandler(loggerFactory, userInfoProvider, memberService)
 }
