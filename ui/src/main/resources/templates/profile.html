@@ -393,11 +393,10 @@
             <div class="dms-card shadow-sm mt-4">
                 <div class="card-body pt-0 pb-4">
                     <h4 class="card-title mt-3 mb-4 dms-card-title">Assigned Groups</h4>
-                    <div th:if="${groups}">
-                        <span th:each="group : ${groups}">
-                            <a style="margin:4px;" type="button" class="btn btn-outline-primary btn-sm"
-                               th:href="|/groups/${group.slug}|" th:text="${group.name}"></a>
-                        </span>
+                    <div th:if="${groups}" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <dms-group-pill th:each="group : ${groups}"
+                                        th:attr="name=${group.name},slug=${group.slug}">
+                        </dms-group-pill>
                     </div>
                     <div th:unless="${groups}">
                         <span th:if="${is_self}">You are not assigned to any groups 🙁. Groups are used to grant access to
@@ -472,6 +471,7 @@
 <!-- App JS -->
 <script src="../static/js/app.js"></script>
 <script src="../static/js/dms-page-loader.js" defer></script>
+<script type="module" src="../static/js/dms-group-pill.js"></script>
 
 </body>
 </html>
