@@ -69,15 +69,6 @@
     color: var(--color-black);
     font-family: var(--link);
 }
-.search-wrapper {
-    display: flex;
-    align-self: stretch;
-    flex-direction: row;
-    justify-content: center;
-    padding: 0 var(--padding-xl);
-    max-width: 100%;
-    text-align: left;
-}
 .main {
     width: 100%;
     position: relative;

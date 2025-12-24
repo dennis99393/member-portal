@@ -44,22 +44,22 @@ class DMSSearch extends HTMLElement {
           display: flex;
           align-items: center;
           border: 1px solid #dfe1e5;
-          border-radius: 24px;
-          padding: 5px 15px;
-          box-shadow: 0 1px 6px rgba(32,33,36,0.28);
+          border-radius: 18px;
+          padding: 2px 12px;
+          box-shadow: 0 1px 4px rgba(32,33,36,0.2);
           background-color: var(--dms-search-bg-color);
           transition: border-radius 0.3s ease;
         }
         .search-input-container.results-visible {
-          border-radius: 24px 24px 0 0;
+          border-radius: 18px 18px 0 0;
           border-bottom: none;
         }
         input {
           flex-grow: 1;
           border: none;
           outline: none;
-          font-size: 16px;
-          padding: 10px 0;
+          font-size: 14px;
+          padding: 6px 0;
           background-color: transparent;
         }
         .spinner {
@@ -93,11 +93,15 @@ class DMSSearch extends HTMLElement {
           background-color: #fef7f0;
         }
         .results-container {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
           width: 100%;
           box-sizing: border-box;
           border: 1px solid #dfe1e5;
           border-top: none;
-          border-radius: 0 0 24px 24px;
+          border-radius: 0 0 18px 18px;
           box-shadow: 0 4px 6px rgba(32,33,36,0.28);
           background-color: var(--dms-search-bg-color);
           display: none;
@@ -118,7 +122,7 @@ class DMSSearch extends HTMLElement {
           background-color: var(--dms-search-highlight-color);
         }
         .results-list li:last-child {
-          border-radius: 0 0 24px 24px;
+          border-radius: 0 0 18px 18px;
         }
         .loading-indicator {
           font-style: italic;
@@ -129,7 +133,7 @@ class DMSSearch extends HTMLElement {
       <div class="dms-search-container">
       <div class="search-input-container">
         <div class="spinner"></div>
-        <input type="text" placeholder="Search members + groups ...">
+        <input type="text" placeholder="Search (Ctrl+K) members + groups">
         <button class="clear-button">✕</button>
       </div>
       <div class="error-message"></div>
