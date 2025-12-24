@@ -4,8 +4,10 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
 import io.ktor.util.*
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import kotlinx.datetime.toJavaLocalDateTime
 import org.dallasmakerspace.server.auth.UserInfoProvider
@@ -89,11 +91,12 @@ constructor(
               .map { dn ->
                 val name = parseCNFromDN(dn)
                 val isGroup = isGroupDN(dn)
+                val slug = getSlugFromName(name)
                 mutableMapOf<String, Any?>(
                     "name" to name,
                     "isGroup" to isGroup,
-                    "link" to
-                        if (isGroup) "/groups/${getSlugFromName(name)}" else "/profile/@$name",
+                    "slug" to slug,
+                    "link" to if (isGroup) "/groups/$slug" else "/profile/@$name",
                 )
               }
       jsonMap["administrators"] = processedAdmins
@@ -102,11 +105,13 @@ constructor(
     // Process history - limit to last 5 events and convert to Central Time
     if (requestedGroup.history.isNotEmpty()) {
       val centralZone = ZoneId.of("America/Chicago")
-      val dateTimeFormatter = DateTimeFormatter.ofPattern("MMM dd, yyyy hh:mm a")
+      val today = LocalDate.now(centralZone)
 
       val processedHistory =
           requestedGroup.history.take(5).map { event ->
             val centralTime = event.eventTimestamp.toJavaLocalDateTime().atZone(centralZone)
+            val eventDate = centralTime.toLocalDate()
+            val daysAgo = ChronoUnit.DAYS.between(eventDate, today)
 
             // Find member details from the group members list
             val memberMember = requestedGroup.members.find { it.username == event.memberUsername }
@@ -145,13 +150,23 @@ constructor(
                   }
                 }
 
+            // Format timestamp as relative time
+            val formattedTimestamp =
+                when {
+                  daysAgo == 0L -> "Today"
+                  daysAgo == 1L -> "Yesterday"
+                  daysAgo < 7L -> "$daysAgo days ago"
+                  daysAgo < 30L -> "${daysAgo / 7} week${if (daysAgo / 7 > 1) "s" else ""} ago"
+                  else -> centralTime.format(DateTimeFormatter.ofPattern("MMM d"))
+                }
+
             mutableMapOf<String, Any?>(
                 "actorDisplayName" to actorData["displayName"],
                 "actorLink" to actorData["link"],
                 "actorIsExternal" to actorData["isExternal"],
                 "memberUsername" to event.memberUsername,
                 "memberDisplayName" to (memberMember?.displayName ?: event.memberUsername),
-                "formattedTimestamp" to centralTime.format(dateTimeFormatter),
+                "formattedTimestamp" to formattedTimestamp,
                 "timestamp" to event.eventTimestamp.toString(),
             )
           }
