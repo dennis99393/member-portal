@@ -9,6 +9,8 @@ class DMSSearch extends HTMLElement {
         this.abortController = null;
         this.spinnerTimeout = null;
         this.hadError = false;
+        this.selectedIndex = -1;
+        this.currentResults = [];
     }
 
     static get observedAttributes() {
@@ -118,7 +120,8 @@ class DMSSearch extends HTMLElement {
           padding: 10px 15px;
           cursor: pointer;
         }
-        .results-list li:hover {
+        .results-list li:hover,
+        .results-list li.selected {
           background-color: var(--dms-search-highlight-color);
         }
         .results-list li:last-child {
@@ -153,7 +156,59 @@ class DMSSearch extends HTMLElement {
         input.addEventListener('input', this.debounce(() => this.handleSearch(), 300));
         clearButton.addEventListener('click', () => this.clearSearch());
         input.addEventListener('input', () => this.toggleClearButton());
+        input.addEventListener('keydown', (e) => this.handleKeydown(e));
         document.addEventListener('click', (e) => this.handleOutsideClick(e));
+    }
+
+    handleKeydown(event) {
+        const resultsContainer = this.shadowRoot.querySelector('.results-container');
+        const isResultsVisible = resultsContainer.style.display === 'block';
+
+        if (!isResultsVisible || this.currentResults.length === 0) {
+            return;
+        }
+
+        switch (event.key) {
+            case 'ArrowDown':
+                event.preventDefault();
+                this.selectedIndex = Math.min(this.selectedIndex + 1, this.currentResults.length - 1);
+                this.updateSelectedItem();
+                break;
+            case 'ArrowUp':
+                event.preventDefault();
+                this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                this.updateSelectedItem();
+                break;
+            case 'Enter':
+                event.preventDefault();
+                if (this.selectedIndex >= 0 && this.selectedIndex < this.currentResults.length) {
+                    const selectedItem = this.currentResults[this.selectedIndex];
+                    if (selectedItem.type === 'member') {
+                        this.handleMemberClick(selectedItem);
+                    } else if (selectedItem.type === 'group') {
+                        this.handleGroupClick(selectedItem);
+                    }
+                }
+                break;
+            case 'Escape':
+                event.preventDefault();
+                this.displayResults([]);
+                break;
+        }
+    }
+
+    updateSelectedItem() {
+        const resultsList = this.shadowRoot.querySelector('.results-list');
+        const items = resultsList.querySelectorAll('li');
+
+        items.forEach((item, index) => {
+            if (index === this.selectedIndex) {
+                item.classList.add('selected');
+                item.scrollIntoView({ block: 'nearest' });
+            } else {
+                item.classList.remove('selected');
+            }
+        });
     }
 
     async handleFocus() {
@@ -313,9 +368,11 @@ class DMSSearch extends HTMLElement {
         const searchInputContainer = this.shadowRoot.querySelector('.search-input-container');
 
         resultsList.innerHTML = '';
+        this.selectedIndex = -1;
+        this.currentResults = results.slice(0, this.maxResults);
 
-        if (results.length > 0) {
-            results.slice(0, this.maxResults).forEach(item => {
+        if (this.currentResults.length > 0) {
+            this.currentResults.forEach(item => {
                 const li = document.createElement('li');
                 if (item.type === 'member') {
                     li.textContent = `${item.displayName} @${item.username}`;
