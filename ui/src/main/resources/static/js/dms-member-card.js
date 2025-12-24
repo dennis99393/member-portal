@@ -31,7 +31,9 @@ class DmsMemberCard extends LitElement {
 
     static styles = css`
         :host {
-            display: inline-block;
+            display: block;
+            width: 100%;
+            max-width: 100%;
         }
 
         /* Inline state styles */
@@ -52,11 +54,12 @@ class DmsMemberCard extends LitElement {
 
         /* Mini state styles - no card/border styling */
         .mini-card {
-            display: inline-flex;
+            display: flex;
             align-items: center;
             text-decoration: none;
             color: inherit;
             transition: opacity 0.2s ease;
+            width: 100%;
         }
 
         .mini-card:hover {

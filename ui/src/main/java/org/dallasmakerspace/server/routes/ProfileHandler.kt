@@ -111,7 +111,7 @@ constructor(
                   "id" to event.id,
                   "name" to event.name,
                   "eventStart" to formatEventDate(event.eventStart),
-                  "relativeTime" to getRelativeTime(event.eventStart),
+                  "eventStartRaw" to event.eventStart,
                   "status" to event.status,
                   "isUpcoming" to isUpcomingEvent(event.eventStart),
                   "url" to "https://calendar.dallasmakerspace.org/events/view/${event.id}")
@@ -235,40 +235,6 @@ constructor(
       zonedDateTime.toInstant().isAfter(Instant.now())
     } catch (e: Exception) {
       false
-    }
-  }
-
-  /**
-   * Get relative time description for an event.
-   *
-   * @param eventStart The event start date string
-   * @return A relative time string like "(2 days ago)" or "(tomorrow)"
-   */
-  @Suppress("MagicNumber")
-  private fun getRelativeTime(eventStart: String): String {
-    return try {
-      val cleanedEventStart = eventStart.substringBefore(".")
-      val dateTime =
-          LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-      val zonedDateTime = dateTime.atZone(ZoneId.of("America/Chicago"))
-      val nowChicago = Instant.now().atZone(ZoneId.of("America/Chicago"))
-
-      // Compare calendar dates in Chicago timezone
-      val eventDate = zonedDateTime.toLocalDate()
-      val todayDate = nowChicago.toLocalDate()
-      val daysDiff = java.time.temporal.ChronoUnit.DAYS.between(todayDate, eventDate)
-
-      when {
-        daysDiff > 1 -> "(in $daysDiff days)"
-        daysDiff == 1L -> "(tomorrow)"
-        daysDiff == 0L -> "(today)"
-        daysDiff == -1L -> "(yesterday)"
-        daysDiff < -1 -> "(${-daysDiff} days ago)"
-        else -> ""
-      }
-    } catch (e: Exception) {
-      log.error("Failed to calculate relative time for: $eventStart", e)
-      ""
     }
   }
 }

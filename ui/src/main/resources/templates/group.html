@@ -80,7 +80,7 @@
                                    th:target="${event.actorIsExternal ? '_blank' : '_self'}"
                                    class="text-decoration-none"></a>
                             </div>
-                            <small class="text-muted" th:text="${event.formattedTimestamp}"></small>
+                            <small><dms-relative-date th:attr="timestamp=${event.timestamp}"></dms-relative-date></small>
                         </div>
                     </div>
                 </div>
@@ -126,6 +126,7 @@
 <script src="/static/js/app.js"></script>
 <script src="/static/js/dms-member-card.js" type="module"></script>
 <script src="/static/js/dms-group-pill.js" type="module"></script>
+<script src="/static/js/dms-relative-date.js" type="module"></script>
 <script src="/static/js/dms-page-loader.js" defer></script>
 </body>
 </html>

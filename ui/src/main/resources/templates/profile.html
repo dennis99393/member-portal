@@ -423,7 +423,7 @@
                                     <div class="fw-medium event-name" th:text="${event.name}"></div>
                                     <small class="text-muted">
                                         <span th:text="${event.eventStart}"></span>
-                                        <span th:if="${event.relativeTime}" class="ms-1 fw-semibold" th:text="${event.relativeTime}"></span>
+                                        <span class="ms-1 fw-semibold"><dms-relative-date th:attr="timestamp=${event.eventStartRaw}" prefix="(" suffix=")" relativeOnly="true"></dms-relative-date></span>
                                     </small>
                                 </div>
                                 <span class="material-symbols-outlined text-muted ms-2 me-md-3 align-self-center" style="font-size: 18px;">open_in_new</span>
@@ -472,6 +472,7 @@
 <script src="../static/js/app.js"></script>
 <script src="../static/js/dms-page-loader.js" defer></script>
 <script type="module" src="../static/js/dms-group-pill.js"></script>
+<script type="module" src="../static/js/dms-relative-date.js"></script>
 
 </body>
 </html>
