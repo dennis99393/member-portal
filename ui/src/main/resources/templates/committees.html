@@ -35,25 +35,11 @@
             font-size: 16px;
             line-height: 1;
         }
-        /* Teacher groups container */
-        .badges-container {
+        /* Group pills container */
+        .group-pills-container {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
-        }
-        .teacher-group-badge {
-            background-color: #e1f2f7;
-            border-radius: 15px;
-            padding: 4px 12px;
-            font-size: 0.85rem;
-            text-decoration: none;
-            color: #0a7ca0;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-        .teacher-group-badge:hover {
-            background-color: #0b9cc9;
-            color: white;
         }
         .committees-table td {
             vertical-align: middle;
@@ -107,11 +93,10 @@
                                   class="text-muted small" aria-label="No chairperson assigned">—</span>
                         </td>
                         <td>
-                            <div th:if="${committee.teacherGroups != null and !committee.teacherGroups.empty}" class="badges-container">
-                                <a th:each="group : ${committee.teacherGroups}"
-                                   th:href="'/groups/' + ${group.slug}"
-                                   th:text="${group.name}"
-                                   class="teacher-group-badge"></a>
+                            <div th:if="${committee.teacherGroups != null and !committee.teacherGroups.empty}" class="group-pills-container">
+                                <dms-group-pill th:each="group : ${committee.teacherGroups}"
+                                                th:attr="name=${group.name},slug=${group.slug}">
+                                </dms-group-pill>
                             </div>
                             <span th:if="${committee.teacherGroups == null or committee.teacherGroups.empty}"
                                   class="text-muted small" aria-label="No teacher groups">—</span>
@@ -160,11 +145,10 @@
                                 <span class="material-symbols-outlined" aria-hidden="true">school</span>
                                 <span>Teacher Groups</span>
                             </div>
-                            <div th:if="${committee.teacherGroups != null and !committee.teacherGroups.empty}" class="badges-container">
-                                <a th:each="group : ${committee.teacherGroups}"
-                                   th:href="'/groups/' + ${group.slug}"
-                                   th:text="${group.name}"
-                                   class="teacher-group-badge"></a>
+                            <div th:if="${committee.teacherGroups != null and !committee.teacherGroups.empty}" class="group-pills-container">
+                                <dms-group-pill th:each="group : ${committee.teacherGroups}"
+                                                th:attr="name=${group.name},slug=${group.slug}">
+                                </dms-group-pill>
                             </div>
                             <span th:if="${committee.teacherGroups == null or committee.teacherGroups.empty}"
                                   class="empty-state">No teacher groups</span>
@@ -184,5 +168,6 @@
 <script src="/static/js/app.js"></script>
 <script src="/static/js/dms-page-loader.js" defer></script>
 <script type="module" src="/static/js/dms-member-card.js"></script>
+<script type="module" src="/static/js/dms-group-pill.js"></script>
 </body>
 </html>
