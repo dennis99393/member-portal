@@ -22,22 +22,6 @@
             transform: translateY(-3px);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
         }
-        .chair-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
-        .chair-avatar-sm {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .chair-link:hover {
-            text-decoration: underline !important;
-        }
         /* Section label with proper icon-text alignment */
         .section-label {
             display: flex;
@@ -50,19 +34,6 @@
         .section-label .material-symbols-outlined {
             font-size: 16px;
             line-height: 1;
-        }
-        /* Chair item with proper avatar-text alignment */
-        .chair-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-        .chair-item .material-symbols-outlined {
-            font-size: 40px;
-            color: #6c757d;
-            line-height: 1;
-            flex-shrink: 0;
         }
         /* Teacher groups container */
         .badges-container {
@@ -86,6 +57,9 @@
         }
         .committees-table td {
             vertical-align: middle;
+        }
+        .committees-table dms-member-card {
+            padding-top: 5px;
         }
         .committees-table tr:hover {
             background-color: rgba(0, 0, 0, 0.04);
@@ -122,18 +96,11 @@
                         <td th:text="${committee.name}"></td>
                         <td>
                             <div th:if="${committee.chairpersons != null and !committee.chairpersons.empty}">
-                                <div th:each="chair : ${committee.chairpersons}" class="d-flex align-items-center mb-1">
-                                    <img th:if="${chair.avatarUrl != ''}"
-                                         th:src="${chair.avatarUrl}"
-                                         class="chair-avatar-sm me-2"
-                                         alt=""/>
-                                    <span th:if="${chair.avatarUrl == ''}"
-                                          class="material-symbols-outlined me-2"
-                                          style="font-size: 32px; color: #6c757d;"
-                                          aria-hidden="true">account_circle</span>
-                                    <a th:href="'/profile/@' + ${chair.username}"
-                                       th:text="${chair.displayName != null ? chair.displayName : chair.username}"
-                                       class="text-decoration-none chair-link"></a>
+                                <div th:each="chair : ${committee.chairpersons}" class="mb-1">
+                                    <dms-member-card
+                                        th:attr="username=${chair.username},displayName=${chair.displayName},avatarUrl=${chair.avatarUrl}"
+                                        state="mini">
+                                    </dms-member-card>
                                 </div>
                             </div>
                             <span th:if="${committee.chairpersons == null or committee.chairpersons.empty}"
@@ -176,17 +143,11 @@
                                 <span>Chair<span th:if="${committee.chairpersons != null and #lists.size(committee.chairpersons) > 1}">s</span></span>
                             </div>
                             <div th:if="${committee.chairpersons != null and !committee.chairpersons.empty}">
-                                <div th:each="chair : ${committee.chairpersons}" class="chair-item">
-                                    <img th:if="${chair.avatarUrl != ''}"
-                                         th:src="${chair.avatarUrl}"
-                                         class="chair-avatar"
-                                         alt=""/>
-                                    <span th:if="${chair.avatarUrl == ''}"
-                                          class="material-symbols-outlined"
-                                          aria-hidden="true">account_circle</span>
-                                    <a th:href="'/profile/@' + ${chair.username}"
-                                       th:text="${chair.displayName != null ? chair.displayName : chair.username}"
-                                       class="text-decoration-none chair-link"></a>
+                                <div th:each="chair : ${committee.chairpersons}" class="mb-2">
+                                    <dms-member-card
+                                        th:attr="username=${chair.username},displayName=${chair.displayName},avatarUrl=${chair.avatarUrl}"
+                                        state="mini">
+                                    </dms-member-card>
                                 </div>
                             </div>
                             <span th:if="${committee.chairpersons == null or committee.chairpersons.empty}"
@@ -222,5 +183,6 @@
 <!-- App JS -->
 <script src="/static/js/app.js"></script>
 <script src="/static/js/dms-page-loader.js" defer></script>
+<script type="module" src="/static/js/dms-member-card.js"></script>
 </body>
 </html>
