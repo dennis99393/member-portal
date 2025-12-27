@@ -392,12 +392,16 @@ class DMSSearch extends HTMLElement {
     }
 
     handleMemberClick(member) {
-        console.log(`Clicked on member: ${member.username}`);
+        const input = this.shadowRoot.querySelector('input');
+        input.value = `${member.displayName} @${member.username}`;
+        this.displayResults([]);
         window.location.href = `/profile/@${member.username}`;
     }
 
     handleGroupClick(group) {
-        console.log(`Clicked on group: ${group.username}`);
+        const input = this.shadowRoot.querySelector('input');
+        input.value = `${group.displayName} (Group)`;
+        this.displayResults([]);
         window.location.href = `/groups/${group.username}`;
     }
 
