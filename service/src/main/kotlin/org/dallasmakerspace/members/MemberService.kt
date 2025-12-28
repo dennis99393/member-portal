@@ -201,11 +201,13 @@ constructor(
               memberRepository.updateDiscourseAvatarUrl(member.username, refreshedAvatarUrl)
           if (updateSuccess) {
             log.debug(
-                "Successfully updated discourse avatar URL for ${member.username}: $refreshedAvatarUrl")
+                "Successfully updated discourse avatar URL for ${member.username}: $refreshedAvatarUrl"
+            )
             return refreshedAvatarUrl
           } else {
             log.warn(
-                "Failed to update discourse avatar URL in database for ${member.username}, using existing URL")
+                "Failed to update discourse avatar URL in database for ${member.username}, using existing URL"
+            )
             return member.discourseAvatarUrl // Fallback to existing URL
           }
         } else {
@@ -274,7 +276,8 @@ constructor(
 
   /** Calculates the memberSince date from the whenCreated string. */
   @Deprecated(
-      "Use org.dallasmakerspace.members.MemberService.calculateMemberSince(java.time.LocalDate) instead")
+      "Use org.dallasmakerspace.members.MemberService.calculateMemberSince(java.time.LocalDate) instead"
+  )
   @Suppress("MagicNumber")
   private fun calculateMemberSince(whenCreated: String?): Instant? {
     if (whenCreated == null) {
@@ -295,7 +298,8 @@ constructor(
                 whenCreated.substring(10, 12) +
                 ":" +
                 whenCreated.substring(12, 14) +
-                "Z")
+                "Z"
+        )
     return instant
   }
 
@@ -320,13 +324,15 @@ constructor(
     // Figure out which properties have been updated by comparing dbMember and memberFromApi.
     if (dbMember.avatarUrl != memberFromApi.avatarUrl) {
       log.info(
-          "Avatar URL updated for $username; Old URL: ${dbMember.avatarUrl}; New URL: ${memberFromApi.avatarUrl}")
+          "Avatar URL updated for $username; Old URL: ${dbMember.avatarUrl}; New URL: ${memberFromApi.avatarUrl}"
+      )
       propertiesUpdated = true
     }
     if (dbMember.discourseUsername != memberFromApi.discourseUsername) {
       log.info(
           "Discourse username updated for $username; Old username: ${dbMember.discourseUsername}; " +
-              "New username: ${memberFromApi.discourseUsername}")
+              "New username: ${memberFromApi.discourseUsername}"
+      )
       propertiesUpdated = true
       if (memberFromApi.discourseUsername == null) {
         unlinkDiscourse(dbMember)
@@ -337,7 +343,8 @@ constructor(
     if (dbMember.discordUserId != memberFromApi.discordUserId) {
       log.info(
           "Discord user ID updated for $username; Old ID: ${dbMember.discordUserId}; " +
-              "New ID: ${memberFromApi.discordUserId}")
+              "New ID: ${memberFromApi.discordUserId}"
+      )
       propertiesUpdated = true
     }
     if (propertiesUpdated) {
@@ -350,7 +357,8 @@ constructor(
   private suspend fun linkDiscourse(memberFromApi: DMSMember) {
     // Add the member to the discourse group.
     discourseService.addUserToDmsMembersV2Group(
-        listOf(requireNotNull(memberFromApi.discourseUsername)))
+        listOf(requireNotNull(memberFromApi.discourseUsername))
+    )
     activityLogService.insertActivityLogEntry(
         subjectUsername = memberFromApi.username,
         event = ActivityLogEvent.LINK_DISCOURSE,
@@ -360,7 +368,8 @@ constructor(
   private suspend fun unlinkDiscourse(dbMember: DMSMember) {
     // Remove the member from the discourse group.
     discourseService.removeUserFromDmsMembersV2Group(
-        listOf(requireNotNull(dbMember.discourseUsername)))
+        listOf(requireNotNull(dbMember.discourseUsername))
+    )
     activityLogService.insertActivityLogEntry(
         subjectUsername = dbMember.username,
         event = ActivityLogEvent.UNLINK_DISCOURSE,
@@ -383,6 +392,10 @@ constructor(
     val dbStartNs = System.nanoTime()
     val dbMembers = memberRepository.getAllMembers()
     val dbMs = (System.nanoTime() - dbStartNs) / 1_000_000
+    val usernameAvatarMap =
+        dbMembers
+            .filter { it.discourseAvatarUrl?.isNotEmpty() == true }
+            .associateBy({ it.username }, { it.discourseAvatarUrl?.replace("{size}", "144") })
 
     // Create a map of usernames to discourse usernames for quick lookup and combine data
     val combineStartNs = System.nanoTime()
@@ -403,6 +416,7 @@ constructor(
               badgeNumber = mmUser.badgeNumber,
               enabled = mmUser.adActive,
               discourseUsername = discourseUsernameMap[mmUser.username],
+              discourseAvatarUrl = usernameAvatarMap[mmUser.username],
               memberSince = null, // Not available in MakerManager query
               groups = emptyList(),
               accountInfo = null,
@@ -413,7 +427,8 @@ constructor(
     val totalMs = (System.nanoTime() - totalStartNs) / 1_000_000
     log.info(
         "getAllMembers timings: total=${totalMs}ms, makerManager=${mmMs}ms, " +
-            "memberRepository=${dbMs}ms, combine=${combineMs}ms")
+            "memberRepository=${dbMs}ms, combine=${combineMs}ms"
+    )
     return result
   }
 

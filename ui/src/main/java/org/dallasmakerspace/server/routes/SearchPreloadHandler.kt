@@ -41,11 +41,21 @@ constructor(
       // Process members
       val memberData =
           preloadResponse.members.map {
+            val avatarUrl =
+                it.discourseAvatarUrl
+                    ?.takeIf { url -> url.isNotEmpty() }
+                    ?.let { url ->
+                      when {
+                        url.startsWith("http") -> url
+                        else -> "https://talk.dallasmakerspace.org$url"
+                      }
+                    }
             val record =
                 mutableMapOf(
                     "displayName" to it.displayName,
                     "username" to it.username,
                     "discourseUsername" to it.discourseUsername,
+                    "avatarUrl" to avatarUrl,
                     "type" to "member")
             if (isInfra) {
               record["badgeNumber"] = it.badgeNumber

@@ -1,3 +1,6 @@
+import './dms-member-card.js';
+import './dms-group-pill.js';
+
 class DMSSearch extends HTMLElement {
     constructor() {
         super();
@@ -117,7 +120,7 @@ class DMSSearch extends HTMLElement {
           overflow-y: auto;
         }
         .results-list li {
-          padding: 10px 15px;
+          padding: 8px 15px;
           cursor: pointer;
         }
         .results-list li:hover,
@@ -126,6 +129,11 @@ class DMSSearch extends HTMLElement {
         }
         .results-list li:last-child {
           border-radius: 0 0 18px 18px;
+        }
+        .results-list li a,
+        .results-list dms-member-card,
+        .results-list dms-group-pill {
+          pointer-events: none;
         }
         .loading-indicator {
           font-style: italic;
@@ -375,10 +383,18 @@ class DMSSearch extends HTMLElement {
             this.currentResults.forEach(item => {
                 const li = document.createElement('li');
                 if (item.type === 'member') {
-                    li.textContent = `${item.displayName} @${item.username}`;
+                    const memberCard = document.createElement('dms-member-card');
+                    memberCard.setAttribute('username', item.username);
+                    memberCard.setAttribute('displayName', item.displayName);
+                    memberCard.setAttribute('avatarUrl', item.avatarUrl || '');
+                    memberCard.setAttribute('state', 'mini');
+                    li.appendChild(memberCard);
                     li.addEventListener('click', () => this.handleMemberClick(item));
                 } else if (item.type === 'group') {
-                    li.textContent = `${item.displayName} (Group)`;
+                    const groupPill = document.createElement('dms-group-pill');
+                    groupPill.setAttribute('name', item.displayName);
+                    groupPill.setAttribute('slug', item.username);
+                    li.appendChild(groupPill);
                     li.addEventListener('click', () => this.handleGroupClick(item));
                 }
                 resultsList.appendChild(li);
