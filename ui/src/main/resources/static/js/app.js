@@ -1,15 +1,54 @@
+// Seasonal effect date ranges (modify dates here)
+// Hash overrides: #snow, #hearts, #fireworks
+window.SEASONAL_DATE_RANGES = {
+    winter: [
+        { startMonth: 12, startDay: 24, endMonth: 12, endDay: 31 },
+        { startMonth: 1, startDay: 1, endMonth: 1, endDay: 1 }
+    ],
+    valentines: [
+        { startMonth: 2, startDay: 13, endMonth: 2, endDay: 14 }
+    ],
+    independence: [
+        { startMonth: 7, startDay: 3, endMonth: 7, endDay: 4 }
+    ]
+};
+
+function shouldLoadSeasonalEffect() {
+    // Check hash overrides
+    if (['#snow', '#hearts', '#fireworks'].includes(window.location.hash)) {
+        return true;
+    }
+    // Check date ranges
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const day = now.getDate();
+    for (const ranges of Object.values(window.SEASONAL_DATE_RANGES)) {
+        for (const r of ranges) {
+            if (r.startMonth === r.endMonth) {
+                if (month === r.startMonth && day >= r.startDay && day <= r.endDay) return true;
+            } else {
+                if ((month === r.startMonth && day >= r.startDay) ||
+                (month === r.endMonth && day <= r.endDay)) return true;
+            }
+        }
+    }
+    return false;
+}
+
 document.addEventListener("DOMContentLoaded", (event) => {
     printDMSItBanner();
-    loadSnowflakeEffect();
     // Hide toast after 20 seconds
     setTimeout(() => {
         hideToast();
     }, 20000);
+    if (shouldLoadSeasonalEffect()) {
+        loadScript('/static/js/falling-effect.js');
+    }
 });
 
-function loadSnowflakeEffect() {
+function loadScript(src) {
     const script = document.createElement('script');
-    script.src = '/static/js/snowflake-effect.js';
+    script.src = src;
     document.head.appendChild(script);
 }
 
