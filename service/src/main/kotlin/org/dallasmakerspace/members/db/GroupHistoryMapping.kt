@@ -2,6 +2,7 @@ package org.dallasmakerspace.members.db
 
 import java.time.ZoneId
 import kotlinx.datetime.toKotlinLocalDateTime
+import org.dallasmakerspace.models.ActionType
 import org.dallasmakerspace.models.GroupHistory
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
@@ -21,6 +22,7 @@ object GroupHistoryTable : IdTable<Int>("group_history") {
   val actorId = integer("actor_id").references(ProfileTable.idColumn)
   val memberId = integer("member_id").references(ProfileTable.idColumn)
   val groupId = integer("group_id").references(GroupsTable.idColumn)
+  val actionType = integer("action_type")
   val eventTimestamp = datetime("event_timestamp")
   val created = datetime("created")
 
@@ -34,6 +36,7 @@ class GroupHistoryDAO(id: EntityID<Int>) : Entity<Int>(id) {
   var actorId by GroupHistoryTable.actorId
   var memberId by GroupHistoryTable.memberId
   var groupId by GroupHistoryTable.groupId
+  var actionType by GroupHistoryTable.actionType
   var eventTimestamp by GroupHistoryTable.eventTimestamp
   var created by GroupHistoryTable.created
 }
@@ -54,6 +57,7 @@ fun daoToGroupHistoryModel(resultRow: ResultRow): GroupHistory {
   return GroupHistory(
       resultRow[GroupHistoryColumnAliases.actorProfileAlias[ProfileTable.username]].toString(),
       resultRow[GroupHistoryColumnAliases.memberProfileAlias[ProfileTable.username]].toString(),
+      ActionType.fromValue(resultRow[GroupHistoryTable.actionType]),
       chicagoTimestamp.toKotlinLocalDateTime(),
   )
 }

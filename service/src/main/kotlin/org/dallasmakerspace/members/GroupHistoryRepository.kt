@@ -12,6 +12,7 @@ import org.dallasmakerspace.members.db.GroupsTable
 import org.dallasmakerspace.members.db.ProfileTable
 import org.dallasmakerspace.members.db.daoToGroupHistoryModel
 import org.dallasmakerspace.members.db.suspendTransaction
+import org.dallasmakerspace.models.ActionType
 import org.dallasmakerspace.models.GroupHistory
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.SortOrder
@@ -155,6 +156,7 @@ class GroupHistoryRepository @Inject constructor() {
    * @param actorId The ID of the user who performed the action.
    * @param memberId The ID of the member affected by the action.
    * @param groupId The ID of the group that was modified.
+   * @param actionType The type of action (ADD or REMOVE).
    * @param eventTimestamp The timestamp when the event occurred.
    * @return The inserted group history record.
    */
@@ -162,6 +164,7 @@ class GroupHistoryRepository @Inject constructor() {
       actorId: Int,
       memberId: Int,
       groupId: Int,
+      actionType: ActionType,
       eventTimestamp: java.time.LocalDateTime,
   ): GroupHistory = suspendTransaction {
     val historyDao =
@@ -169,6 +172,7 @@ class GroupHistoryRepository @Inject constructor() {
           this.actorId = actorId
           this.memberId = memberId
           this.groupId = groupId
+          this.actionType = actionType.value
           this.eventTimestamp = eventTimestamp
           this.created = LocalDateTime.now()
         }

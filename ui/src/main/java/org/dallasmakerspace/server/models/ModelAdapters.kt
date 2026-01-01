@@ -71,9 +71,23 @@ fun groupHistoryEventFromMap(data: Map<String, Any?>): org.dallasmakerspace.mode
         timestampStr
       }
 
+  // Parse actionType from API response, defaulting to ADD_USER for backwards compatibility
+  val actionType =
+      when (val actionTypeValue = data["actionType"]) {
+        is String -> org.dallasmakerspace.models.ActionType.valueOf(actionTypeValue)
+        is Map<*, *> -> {
+          // Handle serialized enum format {"name": "ADD_USER", "value": 0}
+          val name = actionTypeValue["name"] as? String
+          if (name != null) org.dallasmakerspace.models.ActionType.valueOf(name)
+          else org.dallasmakerspace.models.ActionType.ADD_USER
+        }
+        else -> org.dallasmakerspace.models.ActionType.ADD_USER
+      }
+
   return org.dallasmakerspace.models.GroupHistory(
       actorUsername = data["actorUsername"] as String,
       memberUsername = data["memberUsername"] as String,
+      actionType = actionType,
       eventTimestamp = kotlinx.datetime.LocalDateTime.parse(normalizedTimestamp),
   )
 }

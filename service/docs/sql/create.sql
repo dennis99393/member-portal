@@ -48,6 +48,7 @@ CREATE TABLE `group_history` (
   `actor_id` int(10) unsigned NOT NULL COMMENT 'The ID of the user who performed the group action',
   `member_id` int(10) unsigned NOT NULL COMMENT 'The ID of the member affected by the group action',
   `group_id` int(10) unsigned NOT NULL COMMENT 'The ID of the group that was modified',
+  `action_type` tinyint(3) unsigned NOT NULL DEFAULT 0 COMMENT 'The type of action: 0=ADD_USER, 1=REMOVE_USER',
   `event_timestamp` timestamp NOT NULL COMMENT 'The timestamp when the event occurred in Active Directory',
   `created` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'The timestamp when the record was created in our database',
   PRIMARY KEY (`id`),
@@ -55,6 +56,7 @@ CREATE TABLE `group_history` (
   KEY `group_history_member_id_IDX` (`member_id`) USING BTREE,
   KEY `group_history_group_id_IDX` (`group_id`) USING BTREE,
   KEY `group_history_event_timestamp_IDX` (`event_timestamp`) USING BTREE,
+  KEY `group_history_action_type_IDX` (`action_type`) USING BTREE,
   CONSTRAINT `group_history_actor_FK` FOREIGN KEY (`actor_id`) REFERENCES `profile` (`id`),
   CONSTRAINT `group_history_group_FK` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`),
   CONSTRAINT `group_history_member_FK` FOREIGN KEY (`member_id`) REFERENCES `profile` (`id`)

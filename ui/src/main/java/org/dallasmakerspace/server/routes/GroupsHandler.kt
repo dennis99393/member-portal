@@ -145,6 +145,7 @@ constructor(
                 "memberUsername" to event.memberUsername,
                 "memberDisplayName" to (memberMember?.displayName ?: event.memberUsername),
                 "timestamp" to event.eventTimestamp.toString(),
+                "actionType" to event.actionType.name,
             )
           }
       jsonMap["history"] = processedHistory

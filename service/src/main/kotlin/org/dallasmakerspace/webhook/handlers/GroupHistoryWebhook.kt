@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.members.GroupHistoryRepository
 import org.dallasmakerspace.members.MemberService
+import org.dallasmakerspace.models.ActionType
 import org.dallasmakerspace.webhook.WebhookHandler
 import org.dallasmakerspace.webhook.WebhookResult
 import org.slf4j.LoggerFactory
@@ -46,6 +47,7 @@ constructor(
       val memberUsername = adUsers[0].sAMAccountName
       val actorUsername = event.Subject.UserName
       val groupName = event.TargetGroup.Name
+      val actionType = ActionType.fromEventId(event.EventId)
 
       // Get actor and member IDs from the memberService
       val actorProfile =
@@ -75,7 +77,7 @@ constructor(
 
       // Save to database with IDs instead of usernames
       groupHistoryRepository.insertGroupHistory(
-          actorProfile.id, memberProfile.id, groupId, eventTime)
+          actorProfile.id, memberProfile.id, groupId, actionType, eventTime)
 
       WebhookResult(true, "Successfully processed group history event")
     } catch (e: Exception) {

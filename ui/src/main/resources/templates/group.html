@@ -71,7 +71,8 @@
                                 <a th:href="'/profile/@' + ${event.memberUsername}"
                                    th:text="${event.memberDisplayName}"
                                    class="text-decoration-none"></a>
-                                <span class="text-muted"> added by </span>
+                                <span th:if="${event.actionType == 'REMOVE_USER'}" class="text-muted"> removed by </span>
+                                <span th:unless="${event.actionType == 'REMOVE_USER'}" class="text-muted"> added by </span>
                                 <span th:if="${event.actorDisplayName == 'self'}"
                                       th:text="${event.actorDisplayName}"></span>
                                 <a th:unless="${event.actorDisplayName == 'self'}"
