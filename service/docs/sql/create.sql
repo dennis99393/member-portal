@@ -1,5 +1,89 @@
--- member_profile.profile definition
+-- MySQL dump 10.13  Distrib 8.0.19, for Win64 (x86_64)
+--
+-- Host: localhost    Database: member_profile
+-- ------------------------------------------------------
+-- Server version	11.1.2-MariaDB-1:11.1.2+maria~ubu2204
 
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `activity_log`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `activity_log` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '_id is auto increment primary key.',
+  `source` tinyint(3) unsigned NOT NULL COMMENT 'the source system that generated the activity log',
+  `actor_profile_row_id` int(10) unsigned DEFAULT NULL COMMENT 'the actor that tiggered the log, foreign_key to profile table',
+  `subject_profile_row_id` int(10) unsigned DEFAULT NULL COMMENT 'the actor that tiggered the log, foreign_key to profile table',
+  `event` tinyint(3) unsigned NOT NULL COMMENT 'the event being logged, this has a different meaning for each source',
+  `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Event attributes' CHECK (json_valid(`attributes`)),
+  `created` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `activity_log_actor_profile_FK` (`actor_profile_row_id`),
+  KEY `activity_log_subject_profile_FK` (`subject_profile_row_id`),
+  CONSTRAINT `activity_log_actor_profile_FK` FOREIGN KEY (`actor_profile_row_id`) REFERENCES `profile` (`id`),
+  CONSTRAINT `activity_log_subject_profile_FK` FOREIGN KEY (`subject_profile_row_id`) REFERENCES `profile` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1669 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store activity log of various events for members, usually write ops performed on a member profile';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `group_history`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `group_history` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id is auto increment primary key.',
+  `actor_id` int(10) unsigned NOT NULL COMMENT 'The ID of the user who performed the group action',
+  `member_id` int(10) unsigned NOT NULL COMMENT 'The ID of the member affected by the group action',
+  `group_id` int(10) unsigned NOT NULL COMMENT 'The ID of the group that was modified',
+  `event_timestamp` timestamp NOT NULL COMMENT 'The timestamp when the event occurred in Active Directory',
+  `created` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'The timestamp when the record was created in our database',
+  PRIMARY KEY (`id`),
+  KEY `group_history_actor_id_IDX` (`actor_id`) USING BTREE,
+  KEY `group_history_member_id_IDX` (`member_id`) USING BTREE,
+  KEY `group_history_group_id_IDX` (`group_id`) USING BTREE,
+  KEY `group_history_event_timestamp_IDX` (`event_timestamp`) USING BTREE,
+  CONSTRAINT `group_history_actor_FK` FOREIGN KEY (`actor_id`) REFERENCES `profile` (`id`),
+  CONSTRAINT `group_history_group_FK` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`),
+  CONSTRAINT `group_history_member_FK` FOREIGN KEY (`member_id`) REFERENCES `profile` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2206 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store history of group membership changes from Active Directory';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `groups`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `groups` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id is auto increment primary key.',
+  `name` varchar(255) NOT NULL COMMENT 'The name of the group',
+  `dn` varchar(512) NOT NULL COMMENT 'The distinguished name (DN) of the group in Active Directory',
+  `created` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'The timestamp when the record was created in our database',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `groups_name_UNQ` (`name`),
+  UNIQUE KEY `groups_dn_UNQ` (`dn`)
+) ENGINE=InnoDB AUTO_INCREMENT=100 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Reference table for groups in Active Directory';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `profile`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `profile` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '_id is autoincrement id assigned to a profile, this column is used as Foreign Key in other tables. First 100 are reserved for system profiles. primary key',
   `username` varchar(100) NOT NULL COMMENT 'DMS member username, unique',
@@ -16,55 +100,134 @@ CREATE TABLE `profile` (
   UNIQUE KEY `profile_discourse_username_unique` (`discourse_username`),
   UNIQUE KEY `profile_discord_userid_unique` (`discord_userid`),
   KEY `profile_isEnabled_IDX` (`is_enabled`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=110 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store basic profile level data for DMS members';
+) ENGINE=InnoDB AUTO_INCREMENT=1694 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store basic profile level data for DMS members';
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- member_profile.activity_log definition
+--
+-- Table structure for table `short_links`
+--
 
-DROP TABLE IF EXISTS `activity_log`;
-CREATE TABLE `activity_log` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id is auto increment primary key.',
-  `source` tinyint(3) unsigned NOT NULL COMMENT 'the source system that generated the activity log',
-  `actor_profile_row_id` int(10) unsigned DEFAULT NULL COMMENT 'the actor that tiggered the log, foreign_key to profile table',
-  `subject_profile_row_id` int(10) unsigned DEFAULT NULL COMMENT 'the actor that tiggered the log, foreign_key to profile table',
-  `event` tinyint(3) unsigned NOT NULL COMMENT 'the event being logged, this has a different meaning for each source',
-  `attributes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Event attributes' CHECK (json_valid(`attributes`)),
-  `created` timestamp NOT NULL DEFAULT current_timestamp(),
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `short_links` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `namespace_id` int(10) unsigned DEFAULT NULL,
+  `slug` varchar(100) NOT NULL,
+  `redirect_type` varchar(20) NOT NULL,
+  `destination_url` varchar(2048) NOT NULL,
+  `description` text DEFAULT NULL,
+  `creator_id` int(10) unsigned DEFAULT NULL,
+  `updated_by` int(10) unsigned DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `activity_log_actor_profile_FK` (`actor_profile_row_id`),
-  KEY `activity_log_subject_profile_FK` (`subject_profile_row_id`),
-  CONSTRAINT `activity_log_actor_profile_FK` FOREIGN KEY (`actor_profile_row_id`) REFERENCES `profile` (`id`),
-  CONSTRAINT `activity_log_subject_profile_FK` FOREIGN KEY (`subject_profile_row_id`) REFERENCES `profile` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store activity log of various events for members, usually write ops performed on a member profile';
+  UNIQUE KEY `namespace_id` (`namespace_id`,`slug`),
+  KEY `namespace_id_2` (`namespace_id`,`is_active`,`slug`),
+  KEY `creator_id` (`creator_id`),
+  KEY `updated_by` (`updated_by`),
+  KEY `is_active` (`is_active`),
+  KEY `redirect_type` (`redirect_type`),
+  CONSTRAINT `short_links_ibfk_1` FOREIGN KEY (`namespace_id`) REFERENCES `short_links_namespaces` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `short_links_ibfk_2` FOREIGN KEY (`creator_id`) REFERENCES `profile` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `short_links_ibfk_3` FOREIGN KEY (`updated_by`) REFERENCES `profile` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- member_profile.groups definition
+--
+-- Table structure for table `short_links_clicks`
+--
 
-DROP TABLE IF EXISTS `groups`;
-CREATE TABLE `groups` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id is auto increment primary key.',
-  `name` varchar(255) NOT NULL COMMENT 'The name of the group',
-  `dn` varchar(512) NOT NULL COMMENT 'The distinguished name (DN) of the group in Active Directory',
-  `created` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'The timestamp when the record was created in our database',
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `short_links_clicks` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `short_link_id` int(10) unsigned NOT NULL,
+  `member_id` int(10) unsigned DEFAULT NULL,
+  `resolved_path` varchar(255) DEFAULT NULL,
+  `variable_values` text DEFAULT NULL,
+  `clicked_at` timestamp NULL DEFAULT current_timestamp(),
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `referrer` varchar(2048) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `groups_name_UNQ` (`name`),
-  UNIQUE KEY `groups_dn_UNQ` (`dn`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Reference table for groups in Active Directory';
+  KEY `short_link_id` (`short_link_id`,`clicked_at`),
+  KEY `clicked_at` (`clicked_at`),
+  KEY `member_id` (`member_id`),
+  CONSTRAINT `short_links_clicks_ibfk_1` FOREIGN KEY (`short_link_id`) REFERENCES `short_links` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `short_links_clicks_ibfk_2` FOREIGN KEY (`member_id`) REFERENCES `profile` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- member_profile.group_history definition
+--
+-- Table structure for table `short_links_namespace_aliases`
+--
 
-DROP TABLE IF EXISTS `group_history`;
-CREATE TABLE `group_history` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id is auto increment primary key.',
-  `actor_id` int(10) unsigned NOT NULL COMMENT 'The ID of the user who performed the group action',
-  `member_id` int(10) unsigned NOT NULL COMMENT 'The ID of the member affected by the group action',
-  `group_id` int(10) unsigned NOT NULL COMMENT 'The ID of the group that was modified',
-  `event_timestamp` timestamp NOT NULL COMMENT 'The timestamp when the event occurred in Active Directory',
-  `created` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'The timestamp when the record was created in our database',
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `short_links_namespace_aliases` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `namespace_id` int(10) unsigned NOT NULL,
+  `alias` varchar(20) NOT NULL,
+  `is_primary` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
-  KEY `group_history_actor_id_IDX` (`actor_id`) USING BTREE,
-  KEY `group_history_member_id_IDX` (`member_id`) USING BTREE,
-  KEY `group_history_group_id_IDX` (`group_id`) USING BTREE,
-  KEY `group_history_event_timestamp_IDX` (`event_timestamp`) USING BTREE,
-  CONSTRAINT `group_history_actor_FK` FOREIGN KEY (`actor_id`) REFERENCES `profile` (`id`),
-  CONSTRAINT `group_history_member_FK` FOREIGN KEY (`member_id`) REFERENCES `profile` (`id`),
-  CONSTRAINT `group_history_group_FK` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Table to store history of group membership changes from Active Directory';
+  UNIQUE KEY `alias` (`alias`),
+  KEY `namespace_id` (`namespace_id`),
+  CONSTRAINT `short_links_namespace_aliases_ibfk_1` FOREIGN KEY (`namespace_id`) REFERENCES `short_links_namespaces` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `short_links_namespaces`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `short_links_namespaces` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `owner_type` varchar(20) NOT NULL,
+  `owner_group_id` int(10) unsigned DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `created_by` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `owner_group_id` (`owner_group_id`),
+  KEY `created_by` (`created_by`),
+  KEY `is_active` (`is_active`),
+  CONSTRAINT `short_links_namespaces_ibfk_1` FOREIGN KEY (`owner_group_id`) REFERENCES `groups` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `short_links_namespaces_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `profile` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `short_links_reserved_aliases`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `short_links_reserved_aliases` (
+  `alias` varchar(20) NOT NULL,
+  `reason` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`alias`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping routines for database 'member_profile'
+--
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2025-12-31 21:13:59
