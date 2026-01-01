@@ -33,6 +33,9 @@ class DmsRelativeDate extends LitElement {
         .relative-date {
             color: #6c757d;
             font-size: inherit;
+            text-decoration: underline dotted;
+            text-underline-offset: 2px;
+            cursor: help;
         }
     `;
 
@@ -45,11 +48,13 @@ class DmsRelativeDate extends LitElement {
     }
 
     /**
-     * Parse the timestamp and return a Date object in Chicago timezone
+     * Parse the timestamp and return a Date object.
+     * Timestamps WITHOUT timezone info are interpreted as Chicago time.
      * Handles multiple formats:
      * - ISO 8601: "2025-12-18T00:11:00"
      * - SQL format: "2025-12-18 00:11:00"
      * - Date only: "2025-12-18"
+     * - With timezone: "2025-12-18T00:11:00Z" or "2025-12-18T00:11:00-06:00"
      */
     _parseTimestamp() {
         if (!this.timestamp) return null;
@@ -61,9 +66,51 @@ class DmsRelativeDate extends LitElement {
                 normalizedTimestamp = normalizedTimestamp.replace(' ', 'T');
             }
 
-            const date = new Date(normalizedTimestamp);
-            if (isNaN(date.getTime())) return null;
-            return date;
+            // If timestamp has explicit timezone, parse directly
+            const hasTimezone = normalizedTimestamp.endsWith('Z') ||
+                /[+-]\d{2}:?\d{2}$/.test(normalizedTimestamp);
+
+            if (hasTimezone) {
+                const date = new Date(normalizedTimestamp);
+                return isNaN(date.getTime()) ? null : date;
+            }
+
+            // No timezone specified - interpret as Chicago time
+            const match = normalizedTimestamp.match(
+                /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?)?$/
+            );
+
+            if (!match) {
+                const date = new Date(normalizedTimestamp);
+                return isNaN(date.getTime()) ? null : date;
+            }
+
+            const [, year, month, day, hour = '12', minute = '0', second = '0'] = match;
+
+            // Create initial UTC timestamp with these component values
+            const utcGuess = Date.UTC(+year, +month - 1, +day, +hour, +minute, +second);
+
+            // Determine Chicago's offset by seeing how this UTC time displays in Chicago
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/Chicago',
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: false
+            });
+
+            const chicagoParts = formatter.formatToParts(new Date(utcGuess));
+            const getPart = (type) => parseInt(chicagoParts.find(p => p.type === type)?.value || '0');
+
+            // Calculate offset: difference between intended Chicago time and what UTC shows as in Chicago
+            const intendedUtc = Date.UTC(+year, +month - 1, +day, +hour, +minute, +second);
+            const actualChicagoUtc = Date.UTC(
+                getPart('year'), getPart('month') - 1, getPart('day'),
+                getPart('hour'), getPart('minute'), getPart('second')
+            );
+            const offsetMs = intendedUtc - actualChicagoUtc;
+
+            // Adjust to get the UTC time that represents the intended Chicago time
+            return new Date(utcGuess + offsetMs);
         } catch {
             return null;
         }
@@ -92,6 +139,53 @@ class DmsRelativeDate extends LitElement {
     _daysBetween(date1, date2) {
         const msPerDay = 24 * 60 * 60 * 1000;
         return Math.floor((date2 - date1) / msPerDay);
+    }
+
+    /**
+     * Format the full human-readable timestamp in Chicago timezone
+     * e.g., "December 31, 2025 at 11:30 PM"
+     */
+    _formatFullTimestamp() {
+        const eventDate = this._parseTimestamp();
+        if (!eventDate) return 'Invalid date';
+
+        const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/Chicago',
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+
+        return formatter.format(eventDate);
+    }
+
+    /**
+     * Initialize Bootstrap tooltip after first render
+     */
+    firstUpdated() {
+        const span = this.shadowRoot?.querySelector('.relative-date');
+        if (span && typeof bootstrap !== 'undefined') {
+            new bootstrap.Tooltip(span, {
+                container: 'body',  // Render outside shadow DOM
+                trigger: 'hover focus'
+            });
+        }
+    }
+
+    /**
+     * Cleanup Bootstrap tooltip on disconnect
+     */
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        const span = this.shadowRoot?.querySelector('.relative-date');
+        if (span) {
+            const tooltip = bootstrap.Tooltip.getInstance(span);
+            tooltip?.dispose();
+        }
     }
 
     /**
@@ -148,8 +242,15 @@ class DmsRelativeDate extends LitElement {
             return html``;
         }
 
+        const fullTimestamp = this._formatFullTimestamp();
+
         return html`
-            <span class="relative-date">${this.prefix}${text}${this.suffix}</span>
+            <span class="relative-date"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="auto"
+                  title="${fullTimestamp}">
+                ${this.prefix}${text}${this.suffix}
+            </span>
         `;
     }
 }

@@ -1,5 +1,6 @@
 package org.dallasmakerspace.members.db
 
+import java.time.ZoneId
 import kotlinx.datetime.toKotlinLocalDateTime
 import org.dallasmakerspace.models.GroupHistory
 import org.jetbrains.exposed.dao.Entity
@@ -10,6 +11,9 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.javatime.datetime
+
+private val UTC_ZONE = ZoneId.of("UTC")
+private val CHICAGO_ZONE = ZoneId.of("America/Chicago")
 
 /** Exposed table for the mariaDB table - group_history. */
 object GroupHistoryTable : IdTable<Int>("group_history") {
@@ -41,9 +45,15 @@ object GroupHistoryColumnAliases {
   val groupsAlias = GroupsTable.alias("group")
 }
 
-fun daoToGroupHistoryModel(resultRow: ResultRow) =
-    GroupHistory(
-        resultRow[GroupHistoryColumnAliases.actorProfileAlias[ProfileTable.username]].toString(),
-        resultRow[GroupHistoryColumnAliases.memberProfileAlias[ProfileTable.username]].toString(),
-        resultRow[GroupHistoryTable.eventTimestamp].toKotlinLocalDateTime(),
-    )
+fun daoToGroupHistoryModel(resultRow: ResultRow): GroupHistory {
+  // Convert UTC timestamp to Chicago timezone
+  val utcTimestamp = resultRow[GroupHistoryTable.eventTimestamp]
+  val chicagoTimestamp =
+      utcTimestamp.atZone(UTC_ZONE).withZoneSameInstant(CHICAGO_ZONE).toLocalDateTime()
+
+  return GroupHistory(
+      resultRow[GroupHistoryColumnAliases.actorProfileAlias[ProfileTable.username]].toString(),
+      resultRow[GroupHistoryColumnAliases.memberProfileAlias[ProfileTable.username]].toString(),
+      chicagoTimestamp.toKotlinLocalDateTime(),
+  )
+}

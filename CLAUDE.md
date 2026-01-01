@@ -144,6 +144,33 @@ Both projects use:
 **Service runs on port 8081 by default**
 **UI runs on port 8000 by default**
 
+## Timestamp Handling
+
+**Important:** All timestamps in the database are stored in UTC. When reading timestamps from the database, always convert to Central Time (America/Chicago) before returning to the client or performing date comparisons.
+
+**In Kotlin (Exposed ORM):**
+```kotlin
+import java.time.ZoneId
+
+val UTC_ZONE = ZoneId.of("UTC")
+val CHICAGO_ZONE = ZoneId.of("America/Chicago")
+
+// Convert UTC to Chicago time
+val chicagoTimestamp = utcTimestamp
+    .atZone(UTC_ZONE)
+    .withZoneSameInstant(CHICAGO_ZONE)
+    .toLocalDateTime()
+```
+
+**In Raw SQL:**
+```sql
+CONVERT_TZ(timestamp_column, 'UTC', 'America/Chicago')
+-- or
+CONVERT_TZ(timestamp_column, '+00:00', 'America/Chicago')
+```
+
+See `GroupHistoryMapping.kt` for Kotlin example and `CalendarRepository.kt` for raw SQL example.
+
 ## External Integrations
 
 - **Active Directory/LDAP** - User authentication and group management
