@@ -61,7 +61,7 @@ constructor(
         SELECT
             e.id as event_id,
             e.name as event_name,
-            DATE_FORMAT(CONVERT_TZ(e.event_start, 'GMT', 'America/Chicago'), '%b %e, %Y %l:%i %p') as event_start,
+            DATE_FORMAT(CONVERT_TZ(e.event_start, 'GMT', 'America/Chicago'), '%Y-%m-%dT%H:%i:%s') as event_start,
             c.ad_username as organizer_username,
             COUNT(r.ad_username) as attendee_count
         FROM `dms-calendar`.events e
@@ -158,7 +158,7 @@ constructor(
   override fun getDataFields(dbData: GenericRepository.QueryResult?): List<DataField> {
     return listOf(
         DataField(name = "Event", type = DataType.LINK, label = "Event"),
-        DataField(name = "Date", type = DataType.DATE, label = "Date"),
+        DataField(name = "Date", type = DataType.RELATIVE_DATE, label = "Date"),
         DataField(name = "Organizer", type = DataType.MEMBER, label = "Organizer"),
     )
   }
