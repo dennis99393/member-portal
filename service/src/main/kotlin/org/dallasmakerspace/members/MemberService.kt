@@ -133,8 +133,8 @@ constructor(
     // Batch fetch from Active Directory
     val adMembers = activeDirectoryService.getMembersByUsernameList(usernames)
 
-    // Batch fetch from local DB
-    val dbMembers = memberRepository.getAllMembers().associateBy { it.username }
+    // Batch fetch from local DB - only fetch the specific usernames we need
+    val dbMembers = memberRepository.getMembersByUsernames(usernames)
 
     // Build enriched member objects - filter out null AD members
     return adMembers

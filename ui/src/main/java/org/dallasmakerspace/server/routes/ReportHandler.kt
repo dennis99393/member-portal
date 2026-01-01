@@ -36,14 +36,39 @@ constructor(
       return
     }
 
-    // Handle parent node page
+    // Handle parent node page or top-level report
     if (pathComponents.size == 2 && pathComponents[0] == "reports") {
-      val parentSlug = pathComponents[1]
-      val parentNode =
-          rootNode.children?.find { it.urlSlug == parentSlug }
-              ?: throw AuthException("Parent node not found: $parentSlug")
+      val nodeSlug = pathComponents[1]
+      val node =
+          rootNode.children?.find { it.urlSlug == nodeSlug }
+              ?: throw AuthException("Node not found: $nodeSlug")
 
-      renderReportsList(call, rootNode, parentNode, null)
+      // If this node has no children, it's a top-level report - render it directly
+      if (node.children.isNullOrEmpty()) {
+        log.info("Rendering top-level report template for ${node.name}")
+
+        // Extract query parameters to pass to template
+        val queryParams =
+            call.request.queryParameters.names().associateWith { paramName ->
+              call.request.queryParameters[paramName] ?: ""
+            }
+
+        val templateData =
+            mutableMapOf(
+                "is_infra" to isInfra,
+                "fragmentList" to setOf("fragments/reports/$nodeSlug"),
+                "childNode" to node,
+                "reportTitle" to "${node.name} - Reports",
+                "showChildren" to false,
+                "queryParams" to queryParams,
+            )
+
+        call.respond(ThymeleafContent("report", templateData))
+        return
+      }
+
+      // Otherwise, it's a parent node - render its children list
+      renderReportsList(call, rootNode, node, null)
       return
     }
 

@@ -179,4 +179,20 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
       ProfileDAO.find { ProfileTable.discourseUsername.isNotNull() }.map { daoToProfileModel(it) }
     }
   }
+
+  /**
+   * Fetches member data for a specific list of usernames. This is more efficient than getAllMembers
+   * when you only need a subset of members.
+   *
+   * @param usernames The list of usernames to fetch.
+   * @return A map of username to DMSMember for found members.
+   */
+  suspend fun getMembersByUsernames(usernames: List<String>): Map<String, DMSMember> {
+    if (usernames.isEmpty()) return emptyMap()
+    return suspendTransaction {
+      ProfileDAO.find { ProfileTable.username inList usernames }
+          .map { daoToProfileModel(it) }
+          .associateBy { it.username }
+    }
+  }
 }

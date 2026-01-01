@@ -34,7 +34,9 @@ enum class DataType {
   DATE,
   BOOLEAN,
   MEMBER, // Member card with username, displayName, avatarUrl
-  LINK // Link with text and url
+  LINK, // Link with text and url
+  BADGE, // Badge with variant (success, danger, etc.) and text, renders with icon
+  RELATIVE_DATE // Date rendered as relative time using dms-relative-date component
 }
 
 // Extension functions for easy conversion.

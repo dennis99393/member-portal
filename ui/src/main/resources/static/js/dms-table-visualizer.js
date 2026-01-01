@@ -65,6 +65,12 @@ class DmsTableVisualizer extends LitElement {
                 } else if (field.type === 'MEMBER') {
                     // For MEMBER type, pass the raw object with username, displayName, avatarUrl
                     rowData.push(value);
+                } else if (field.type === 'BADGE') {
+                    // For BADGE type, pass the raw object with variant and text
+                    rowData.push(value);
+                } else if (field.type === 'RELATIVE_DATE') {
+                    // For RELATIVE_DATE type, pass an object with timestamp
+                    rowData.push({ _type: 'RELATIVE_DATE', timestamp: value });
                 } else if (typeof value === 'number' || typeof value === 'boolean') {
                     rowData.push(value);
                 } else {

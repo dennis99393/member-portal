@@ -73,6 +73,12 @@ object ReportGraph {
                             ),
                         ),
                 ),
+                ReportNode(
+                    name = "Group History",
+                    description = "History of group membership changes",
+                    urlSlug = "group-history",
+                    visibleInNav = false,
+                ),
             ),
         urlSlug = "reports",
     )

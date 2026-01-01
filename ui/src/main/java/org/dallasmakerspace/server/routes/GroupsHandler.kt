@@ -3,8 +3,8 @@ package org.dallasmakerspace.server.routes
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
-import io.ktor.util.*
 import javax.inject.Inject
+import org.dallasmakerspace.models.ActorDisplayResolver
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
@@ -105,43 +105,18 @@ constructor(
             val memberMember = requestedGroup.members.find { it.username == event.memberUsername }
 
             // Handle special service accounts for actor
-            val actorData =
-                when {
-                  // Special case: svc_makermanager3 in "Voting Members" group should show "self"
-                  requestedGroupName.equals("Voting Members", ignoreCase = true) &&
-                      event.actorUsername.equals("svc_makermanager3", ignoreCase = true) ->
-                      mapOf(
-                          "displayName" to "self",
-                          "link" to "#",
-                          "isExternal" to false,
-                      )
-                  event.actorUsername.toLowerCasePreservingASCIIRules() == "svc_moodle" ->
-                      mapOf(
-                          "displayName" to "DMS Learn",
-                          "link" to "https://learn.dallasmakerspace.org",
-                          "isExternal" to true,
-                      )
-                  event.actorUsername.toLowerCasePreservingASCIIRules() == "svc_makermanager3" ->
-                      mapOf(
-                          "displayName" to "DMS Calendar",
-                          "link" to "https://calendar.dallasmakerspace.org",
-                          "isExternal" to true,
-                      )
-                  else -> {
-                    val actorMember =
-                        requestedGroup.members.find { it.username == event.actorUsername }
-                    mapOf(
-                        "displayName" to (actorMember?.displayName ?: event.actorUsername),
-                        "link" to "/profile/@${event.actorUsername}",
-                        "isExternal" to false,
-                    )
-                  }
-                }
+            val actorMember = requestedGroup.members.find { it.username == event.actorUsername }
+            val actorInfo =
+                ActorDisplayResolver.resolve(
+                    actorUsername = event.actorUsername,
+                    groupName = requestedGroupName,
+                    fallbackDisplayName = actorMember?.displayName,
+                )
 
             mutableMapOf<String, Any?>(
-                "actorDisplayName" to actorData["displayName"],
-                "actorLink" to actorData["link"],
-                "actorIsExternal" to actorData["isExternal"],
+                "actorDisplayName" to actorInfo.displayName,
+                "actorLink" to actorInfo.link,
+                "actorIsExternal" to actorInfo.isExternal,
                 "memberUsername" to event.memberUsername,
                 "memberDisplayName" to (memberMember?.displayName ?: event.memberUsername),
                 "timestamp" to event.eventTimestamp.toString(),

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Group History</title>
+</head>
+<body>
+<div th:fragment="report">
+    <dms-data-visualizer
+            th:attr="title=${'Group History - ' + queryParams.get('group')},description=${'History of membership changes for the group - ' + queryParams.get('group') + '. Shows the last 6 months of add/remove actions.'},dataUrl=${'/backend-api/data-viz/group-history?group=' + queryParams.get('group')}"
+            renderAs="table"
+    ></dms-data-visualizer>
+    <div th:unless="${queryParams.get('group')}" class="alert alert-warning">
+        <p>Group parameter is required. Please access this report from a group page.</p>
+    </div>
+</div>
+</body>
+</html>

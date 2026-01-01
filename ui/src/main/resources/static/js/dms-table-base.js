@@ -133,6 +133,42 @@ class DmsTableBase extends LitElement {
             font-size: 14px;
             color: #666;
         }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .badge-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .badge-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .badge-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .badge .material-symbols-outlined {
+            font-size: 16px;
+        }
+        .cell-link {
+            color: #4a90e2;
+            text-decoration: none;
+        }
+        .cell-link:hover {
+            color: #357abd;
+            text-decoration: underline;
+        }
         @media (max-width: 768px) {
             .filter-container {
                 max-width: 100%;
@@ -374,8 +410,8 @@ class DmsTableBase extends LitElement {
             const text = cell.text || cell.url;
             const url = cell.url || '';
 
-            // Return an anchor tag
-            return html`<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+            // Return an anchor tag with consistent styling
+            return html`<a href="${url}" target="_blank" rel="noopener noreferrer" class="cell-link">${text}</a>`;
         }
 
         // Check if cell is a MEMBER object (has username, displayName, avatarUrl properties)
@@ -391,6 +427,25 @@ class DmsTableBase extends LitElement {
                 avatarUrl="${avatarUrl}"
                 state="mini">
             </dms-member-card>`;
+        }
+
+        // Check if cell is a BADGE object (has variant and text properties)
+        if (cell !== null && typeof cell === 'object' && 'variant' in cell) {
+            const variant = cell.variant || 'info';
+            const text = cell.text || '';
+            const icon = cell.icon || '';
+
+            // Return a badge span with icon
+            return html`<span class="badge badge-${variant}">
+                ${icon ? html`<span class="material-symbols-outlined">${icon}</span>` : ''}
+                ${text}
+            </span>`;
+        }
+
+        // Check if cell is a RELATIVE_DATE object
+        if (cell !== null && typeof cell === 'object' && cell._type === 'RELATIVE_DATE') {
+            const timestamp = cell.timestamp || '';
+            return html`<dms-relative-date timestamp="${timestamp}"></dms-relative-date>`;
         }
 
         // Default rendering for other types

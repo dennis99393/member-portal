@@ -11,6 +11,7 @@ import org.dallasmakerspace.dataviz.reports.calendar.FirstEvents
 import org.dallasmakerspace.dataviz.reports.calendar.GroupCalendarReport
 import org.dallasmakerspace.dataviz.reports.calendar.TopAttendees
 import org.dallasmakerspace.dataviz.reports.calendar.TopOrganizers
+import org.dallasmakerspace.dataviz.reports.groups.GroupHistoryReport
 import org.dallasmakerspace.dataviz.reports.membership.ActiveMembers
 import org.dallasmakerspace.dataviz.reports.membership.DistributionDistance
 import org.dallasmakerspace.dataviz.reports.membership.DistributionRate
@@ -33,6 +34,7 @@ class DataVizModule {
       distributionDistance: DistributionDistance,
       distributionRate: DistributionRate,
       signedWaivers: SignedWaivers,
+      groupHistoryReport: GroupHistoryReport,
   ): Set<DataVizReport> {
     return setOf(
         visitorsByDayReport,
@@ -46,6 +48,7 @@ class DataVizModule {
         distributionDistance,
         distributionRate,
         signedWaivers,
+        groupHistoryReport,
     )
   }
 }
