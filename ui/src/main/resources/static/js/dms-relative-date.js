@@ -22,7 +22,8 @@ class DmsRelativeDate extends LitElement {
         timestamp: { type: String },
         prefix: { type: String },
         suffix: { type: String },
-        relativeOnly: { type: Boolean }
+        relativeOnly: { type: Boolean },
+        _showFull: { type: Boolean, state: true }
     };
 
     static styles = css`
@@ -35,7 +36,12 @@ class DmsRelativeDate extends LitElement {
             font-size: inherit;
             text-decoration: underline dotted;
             text-underline-offset: 2px;
-            cursor: help;
+            cursor: pointer;
+        }
+
+        .full-date {
+            color: #6c757d;
+            font-size: inherit;
         }
     `;
 
@@ -45,6 +51,11 @@ class DmsRelativeDate extends LitElement {
         this.prefix = '';
         this.suffix = '';
         this.relativeOnly = false;
+        this._showFull = false;
+    }
+
+    _toggleDisplay() {
+        this._showFull = !this._showFull;
     }
 
     /**
@@ -163,30 +174,6 @@ class DmsRelativeDate extends LitElement {
         return formatter.format(eventDate);
     }
 
-    /**
-     * Initialize Bootstrap tooltip after first render
-     */
-    firstUpdated() {
-        const span = this.shadowRoot?.querySelector('.relative-date');
-        if (span && typeof bootstrap !== 'undefined') {
-            new bootstrap.Tooltip(span, {
-                container: 'body',  // Render outside shadow DOM
-                trigger: 'hover focus'
-            });
-        }
-    }
-
-    /**
-     * Cleanup Bootstrap tooltip on disconnect
-     */
-    disconnectedCallback() {
-        super.disconnectedCallback();
-        const span = this.shadowRoot?.querySelector('.relative-date');
-        if (span) {
-            const tooltip = bootstrap.Tooltip.getInstance(span);
-            tooltip?.dispose();
-        }
-    }
 
     /**
      * Format the relative date string
@@ -244,11 +231,18 @@ class DmsRelativeDate extends LitElement {
 
         const fullTimestamp = this._formatFullTimestamp();
 
+        if (this._showFull) {
+            return html`
+                <span class="full-date" @click="${this._toggleDisplay}">
+                    ${this.prefix}${fullTimestamp}${this.suffix}
+                </span>
+            `;
+        }
+
         return html`
             <span class="relative-date"
-                  data-bs-toggle="tooltip"
-                  data-bs-placement="auto"
-                  title="${fullTimestamp}">
+                  title="${fullTimestamp}"
+                  @click="${this._toggleDisplay}">
                 ${this.prefix}${text}${this.suffix}
             </span>
         `;
