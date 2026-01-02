@@ -54,6 +54,33 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
       EventSummary(id = id, name = name, eventStart = eventStart, status = status)
     } ?: emptyList()
   }
+
+  /**
+   * Checks if there are any prerequisite events for a given AD group within the last 90 days.
+   *
+   * @param groupName The AD group name to check for prerequisite events.
+   * @return true if any prerequisite events exist, false otherwise.
+   */
+  suspend fun hasPrerequisiteEvents(groupName: String): Boolean {
+    val query =
+        """
+      SELECT EXISTS(
+        SELECT 1
+        FROM `dms-calendar`.events e
+        JOIN `dms-calendar`.prerequisites p ON e.fulfills_prerequisite_id = p.id
+        WHERE
+            e.event_start >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
+            AND e.event_start < DATE_ADD(CURDATE(), INTERVAL 30 DAY)
+            AND p.ad_group = '${groupName.replace("'", "''")}'
+      ) AS has_events
+    """
+
+    log.debug("Checking prerequisite events for group: $groupName")
+
+    val result = genericRepository.getReportData(query)
+    val hasEvents = result?.data?.firstOrNull()?.get("has_events")
+    return hasEvents == 1L || hasEvents == 1 || hasEvents == true
+  }
 }
 
 /** Represents a summary of a calendar event. */

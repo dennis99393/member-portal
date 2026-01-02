@@ -21,4 +21,15 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
     log.info("Getting events organized by member: $username")
     return calendarRepository.getEventsOrganizedByMember(username, limit)
   }
+
+  /**
+   * Checks if there are any prerequisite events for a given AD group.
+   *
+   * @param groupName The AD group name to check.
+   * @return true if prerequisite events exist within the time range, false otherwise.
+   */
+  suspend fun hasPrerequisiteEvents(groupName: String): Boolean {
+    log.info("Checking prerequisite events for group: $groupName")
+    return calendarRepository.hasPrerequisiteEvents(groupName)
+  }
 }

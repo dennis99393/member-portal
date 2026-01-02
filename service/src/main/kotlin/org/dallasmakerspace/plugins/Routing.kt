@@ -166,6 +166,13 @@ fun Application.configureRouting() {
           val group = memberService.getGroup(groupRequested.groupslug)
           call.respond(ApiResponse(Status.SUCCESS, "Group ${group.name}", group))
         }
+
+        get<Groups.DMSGroup.HasPrerequisiteClasses> { request ->
+          val groupSlug = request.parent.groupslug
+          val group = groupsService.getGroup(groupSlug)
+          val hasClasses = calendarService.hasPrerequisiteEvents(group.name)
+          call.respond(ApiResponse(Status.SUCCESS, "Has prerequisite classes", hasClasses))
+        }
       }
 
       /** Group operations - WRITE * */

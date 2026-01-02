@@ -4,6 +4,8 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
 import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import org.dallasmakerspace.models.ActorDisplayResolver
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
@@ -23,19 +25,27 @@ constructor(
 ) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
-  override suspend fun handleAuthenticated(call: ApplicationCall) {
-
+  override suspend fun handleAuthenticated(call: ApplicationCall) = coroutineScope {
     // Get group slug requested from path /groups/{group_slug}
     val requestedGroupSlug =
         call.parameters["group_slug"] ?: throw AuthException("No group slug found in url path")
     val requestedGroupName = getNameFromSlug(requestedGroupSlug)
-    val requestedGroup = memberService.getGroup(requestedGroupSlug, session.sessionId)
+
+    // Fetch group data and prerequisite classes check in parallel
+    val groupDeferred = async { memberService.getGroup(requestedGroupSlug, session.sessionId) }
+    val hasPrerequisiteClassesDeferred = async {
+      memberService.hasPrerequisiteClasses(requestedGroupSlug, session.sessionId)
+    }
+
+    val requestedGroup = groupDeferred.await()
+    val hasPrerequisiteClasses = hasPrerequisiteClassesDeferred.await()
 
     log.debug("Group: {}", requestedGroup)
     val jsonMap: MutableMap<String, Any> =
         mutableMapOf(
             "name" to requestedGroupName,
             "slug" to requestedGroupSlug,
+            "hasPrerequisiteClasses" to hasPrerequisiteClasses,
         )
     if (requestedGroup.members.isNotEmpty()) {
       // Create a map of username to most recent timestamp from history

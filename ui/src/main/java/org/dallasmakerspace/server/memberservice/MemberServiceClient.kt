@@ -251,6 +251,18 @@ constructor(
     }
   }
 
+  suspend fun hasPrerequisiteClasses(groupSlug: String, sessionId: String?): Boolean {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result =
+          dmsHttpClient.get("$baseUrl/groups/$groupSlug/has-prerequisite-classes", apiHeaders)
+      result["data"] as? Boolean ?: false
+    } catch (ex: Exception) {
+      log.warn("Failed to check prerequisite classes for group: $groupSlug", ex)
+      false
+    }
+  }
+
   suspend fun resolveShortLink(
       path: String,
       sessionId: String?,

@@ -129,4 +129,8 @@ constructor(
   ): List<EventSummary> {
     return memberServiceClient.getEventsOrganizedByMember(username, limit, sessionId)
   }
+
+  suspend fun hasPrerequisiteClasses(groupSlug: String, sessionId: String?): Boolean {
+    return memberServiceClient.hasPrerequisiteClasses(groupSlug, sessionId)
+  }
 }
