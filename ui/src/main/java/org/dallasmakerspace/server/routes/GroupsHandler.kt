@@ -111,16 +111,12 @@ constructor(
     if (requestedGroup.history.isNotEmpty()) {
       val processedHistory =
           requestedGroup.history.take(5).map { event ->
-            // Find member details from the group members list
-            val memberMember = requestedGroup.members.find { it.username == event.memberUsername }
-
             // Handle special service accounts for actor
-            val actorMember = requestedGroup.members.find { it.username == event.actorUsername }
             val actorInfo =
                 ActorDisplayResolver.resolve(
                     actorUsername = event.actorUsername,
                     groupName = requestedGroupName,
-                    fallbackDisplayName = actorMember?.displayName,
+                    fallbackDisplayName = event.actorDisplayName,
                 )
 
             mutableMapOf<String, Any?>(
@@ -128,7 +124,7 @@ constructor(
                 "actorLink" to actorInfo.link,
                 "actorIsExternal" to actorInfo.isExternal,
                 "memberUsername" to event.memberUsername,
-                "memberDisplayName" to (memberMember?.displayName ?: event.memberUsername),
+                "memberDisplayName" to (event.memberDisplayName ?: event.memberUsername),
                 "timestamp" to event.eventTimestamp.toString(),
                 "actionType" to event.actionType.name,
             )

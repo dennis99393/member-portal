@@ -41,4 +41,6 @@ data class GroupHistory(
     val memberUsername: String,
     val actionType: ActionType,
     val eventTimestamp: LocalDateTime,
+    val actorDisplayName: String? = null,
+    val memberDisplayName: String? = null,
 )

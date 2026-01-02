@@ -443,8 +443,12 @@ constructor(
     val adGroup = activeDirectoryService.getGroup(groupname)
     // Get the members from DB so we can include their discourse usernames and other details.
     val dbMembers = memberRepository.getAllMembers()
-    // Get group history
+    // Get group history and enrich with display names
     val groupHistory = groupHistoryRepository.getGroupHistoryByName(groupname)
+    val currentMemberDisplayNames =
+        adGroup.members.associate { it.sAMAccountName to it.displayName }
+    val enrichedHistory = enrichHistoryWithDisplayNames(groupHistory, currentMemberDisplayNames)
+
     return DMSGroup(
         name = adGroup.cn,
         description = adGroup.description,
@@ -482,7 +486,7 @@ constructor(
             },
         membersListIncomplete = adGroup.membersListIncomplete,
         administrators = adGroup.administrators,
-        history = groupHistory,
+        history = enrichedHistory,
     )
   }
 
@@ -509,6 +513,38 @@ constructor(
             event = ActivityLogEvent.REMOVE_FROM_VOTING_MEMBERS_GROUP,
         )
       }
+    }
+  }
+
+  /** Enriches group history records with display names for actors and members. */
+  private suspend fun enrichHistoryWithDisplayNames(
+      history: List<org.dallasmakerspace.models.GroupHistory>,
+      currentMemberDisplayNames: Map<String, String?>,
+  ): List<org.dallasmakerspace.models.GroupHistory> {
+    if (history.isEmpty()) return history
+
+    // Find usernames in history that are NOT in current group members
+    val historyUsernames =
+        (history.map { it.actorUsername } + history.map { it.memberUsername })
+            .filter { it.isNotBlank() && !currentMemberDisplayNames.containsKey(it) }
+            .toSet()
+
+    // Batch fetch display names for users not in current members
+    val additionalMembers =
+        if (historyUsernames.isNotEmpty()) {
+          getMembersByUsernameList(historyUsernames.toList())
+        } else {
+          emptyMap()
+        }
+
+    return history.map { record ->
+      val actorDisplayName =
+          currentMemberDisplayNames[record.actorUsername]
+              ?: additionalMembers[record.actorUsername]?.displayName
+      val memberDisplayName =
+          currentMemberDisplayNames[record.memberUsername]
+              ?: additionalMembers[record.memberUsername]?.displayName
+      record.copy(actorDisplayName = actorDisplayName, memberDisplayName = memberDisplayName)
     }
   }
 }

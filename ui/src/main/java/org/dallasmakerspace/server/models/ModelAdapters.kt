@@ -92,6 +92,8 @@ fun groupHistoryEventFromMap(data: Map<String, Any?>): org.dallasmakerspace.mode
       memberUsername = data["memberUsername"] as String,
       actionType = actionType,
       eventTimestamp = kotlinx.datetime.LocalDateTime.parse(normalizedTimestamp),
+      actorDisplayName = data["actorDisplayName"] as? String,
+      memberDisplayName = data["memberDisplayName"] as? String,
   )
 }
 
