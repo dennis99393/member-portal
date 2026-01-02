@@ -190,6 +190,7 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
         .chunked(100)
         .flatMap { subChunk -> getMembersByDnList(subChunk) }
         .filter { it.enabled }
+        .distinctBy { it.sAMAccountName }
   }
 
   /**

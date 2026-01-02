@@ -143,20 +143,20 @@ constructor(
       call.sessions.set(session.copy(isDiscourseLinkSuccess = false))
       jsonMap["toast_message"] =
           "Successfully linked @${requestedMember.discourseUsername} to your profile."
-      jsonMap["toast_btn_url"] = "/unlink-discourse"
-      jsonMap["toast_btn_label"] = "Unlink"
+      // jsonMap["toast_btn_url"] = "/unlink-discourse"
+      // jsonMap["toast_btn_label"] = "Unlink"
     } else if (session.isDiscordLinkSuccess) {
       log.info("Setting toast message for ${requestedMember.username} successful discord link")
       call.sessions.set(session.copy(isDiscordLinkSuccess = false))
       jsonMap["toast_message"] =
           "Successfully linked Discord @${requestedMember.discordUsername} to your profile."
-      jsonMap["toast_btn_url"] = "/unlink-discord"
-      jsonMap["toast_btn_label"] = "Unlink"
+      // jsonMap["toast_btn_url"] = "/unlink-discord"
+      // jsonMap["toast_btn_label"] = "Unlink"
     } else if (session.isVoterRegistrationSuccess) {
       log.info(
           "Setting toast message for ${requestedMember.username} successful voter registration")
       call.sessions.set(session.copy(isVoterRegistrationSuccess = false))
-      jsonMap["toast_message"] = "Successfully registered to vote."
+      jsonMap["toast_message"] = "Successfully registered to vote. May take few min to take effect."
       jsonMap["toast_btn_url"] = "@${requestedMember.username}/unregister-voting"
       jsonMap["toast_btn_label"] = "Unregister"
     }
