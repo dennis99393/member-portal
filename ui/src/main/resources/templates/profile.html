@@ -219,6 +219,12 @@
                                                      th:href="|https://talk.dallasmakerspace.org/new-message?username=${discourse_username}&title=Hey%20👋|">Talk</a></span>
                         </div>
 
+                        <div th:if="${discord_userid}" class="d-flex align-items-center mb-3">
+                            <img class="card-item-icon" alt="" src="../static/images/discord.svg"/>
+                            <span>Send message on <a target="_blank"
+                                                     th:href="|https://discord.com/users/${discord_userid}|">Discord</a></span>
+                        </div>
+
                         <div class="d-flex align-items-center mb-3">
                             <span class="material-symbols-outlined card-item-icon">mail</span>
                             <span>Send email:
@@ -322,7 +328,16 @@
                                 <img src="../static/images/discord.svg" alt="Discord icon" class="w-100">
                             </div>
                             <div class="account-details">
-                                <p class="account-platform-disabled">Discord: Coming Soon</p>
+                                <div class="d-flex align-items-center">
+                                    <p class="account-platform me-2">Discord:</p>
+                                    <span th:if="${discord_username}" class="account-name text-primary"
+                                          th:text="|${discord_username}|"></span>
+                                    <span th:unless="${discord_userid}">Not Linked</span>
+                                </div>
+                                <a href="/unlink-discord" th:if="${discord_userid}" class="unlink">Unlink
+                                    Account</a>
+                                <a href="/link-discord" th:unless="${discord_userid}" class="unlink">Link
+                                    Account</a>
                             </div>
                         </div>
                     </div>

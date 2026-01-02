@@ -571,6 +571,9 @@ fun routeObjectToModel(it: Members.DMSMember): org.dallasmakerspace.models.DMSMe
       discourseUsername = it.discourseUsername,
       discourseAvatarUrl = it.discourseAvatarUrl,
       discordUserId = it.discordUserId,
+      discordUsername = it.discordUsername,
+      discordAvatarUrl = it.discordAvatarUrl,
+      discordWebhookId = it.discordWebhookId,
   )
 }
 

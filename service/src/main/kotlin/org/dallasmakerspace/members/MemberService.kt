@@ -340,6 +340,22 @@ constructor(
               "New ID: ${memberFromApi.discordUserId}")
       propertiesUpdated = true
     }
+    if (dbMember.discordUsername != memberFromApi.discordUsername) {
+      log.info(
+          "Discord username updated for $username; Old: ${dbMember.discordUsername}; " +
+              "New: ${memberFromApi.discordUsername}")
+      propertiesUpdated = true
+    }
+    if (dbMember.discordAvatarUrl != memberFromApi.discordAvatarUrl) {
+      log.info("Discord avatar URL updated for $username")
+      propertiesUpdated = true
+    }
+    if (dbMember.discordWebhookId != memberFromApi.discordWebhookId) {
+      log.info(
+          "Discord webhook ID updated for $username; Old: ${dbMember.discordWebhookId}; " +
+              "New: ${memberFromApi.discordWebhookId}")
+      propertiesUpdated = true
+    }
     if (propertiesUpdated) {
       // Update the member in the database.
       log.info("Updating member in the database: $username")

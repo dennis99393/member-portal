@@ -72,6 +72,11 @@ constructor(
     if (requestedMember.discourseUsername.isNullOrEmpty().not()) {
       jsonMap["discourse_username"] = requestedMember.discourseUsername as Any
     }
+    if (requestedMember.discordUserId.isNullOrEmpty().not()) {
+      jsonMap["discord_userid"] = requestedMember.discordUserId as Any
+      requestedMember.discordUsername?.let { jsonMap["discord_username"] = it }
+      requestedMember.discordAvatarUrl?.let { jsonMap["discord_avatar_url"] = it }
+    }
     requestedMember.groups
         .firstOrNull { group -> group.name == voterRegistrationManager.getVotingMembersGroupName() }
         ?.apply { jsonMap["is_voting_member"] = "true" }
@@ -139,6 +144,13 @@ constructor(
       jsonMap["toast_message"] =
           "Successfully linked @${requestedMember.discourseUsername} to your profile."
       jsonMap["toast_btn_url"] = "/unlink-discourse"
+      jsonMap["toast_btn_label"] = "Unlink"
+    } else if (session.isDiscordLinkSuccess) {
+      log.info("Setting toast message for ${requestedMember.username} successful discord link")
+      call.sessions.set(session.copy(isDiscordLinkSuccess = false))
+      jsonMap["toast_message"] =
+          "Successfully linked Discord @${requestedMember.discordUsername} to your profile."
+      jsonMap["toast_btn_url"] = "/unlink-discord"
       jsonMap["toast_btn_label"] = "Unlink"
     } else if (session.isVoterRegistrationSuccess) {
       log.info(

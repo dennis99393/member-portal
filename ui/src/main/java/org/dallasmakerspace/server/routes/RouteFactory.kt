@@ -4,6 +4,7 @@ import dagger.Component
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import javax.inject.Singleton
+import org.dallasmakerspace.server.di.DiscordModule
 import org.dallasmakerspace.server.di.DiscourseModule
 import org.dallasmakerspace.server.di.RoutesModule
 import org.dallasmakerspace.server.di.VoterRegistrationModule
@@ -41,6 +42,9 @@ object RouteFactory {
     DISCOURSE_LINK("/link-discourse"),
     DISCOURSE_UNLINK("/unlink-discourse"),
     DISCOURSE_CALLBACK("/discourse-callback"),
+    DISCORD_LINK("/link-discord"),
+    DISCORD_UNLINK("/unlink-discord"),
+    DISCORD_CALLBACK("/discord-callback"),
     STATIC("/static"),
     GROUPS("/groups/{group_slug}"),
     SEARCH_PRELOAD("/search-preload"),
@@ -56,7 +60,13 @@ object RouteFactory {
 }
 
 @Singleton
-@Component(modules = [RoutesModule::class, DiscourseModule::class, VoterRegistrationModule::class])
+@Component(
+    modules =
+        [
+            RoutesModule::class,
+            DiscordModule::class,
+            DiscourseModule::class,
+            VoterRegistrationModule::class])
 interface RoutesComponent {
   fun getRoutesMap(): Map<String, IRouteHandler>
 }

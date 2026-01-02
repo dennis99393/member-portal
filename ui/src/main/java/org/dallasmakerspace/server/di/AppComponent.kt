@@ -11,6 +11,7 @@ import org.dallasmakerspace.server.common.logging.LoggerFactory
 @Component(
     modules =
         [
+            DiscordModule::class,
             DiscourseModule::class,
             RoutesModule::class,
             ServerModule::class,

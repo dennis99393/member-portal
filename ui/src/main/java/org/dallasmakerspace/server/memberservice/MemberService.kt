@@ -56,6 +56,42 @@ constructor(
     }
   }
 
+  suspend fun linkDiscordAccount(
+      username: String,
+      discordUserId: String,
+      discordUsername: String,
+      discordAvatarUrl: String?,
+      sessionId: String?
+  ) {
+    // Get member object
+    val member = memberServiceClient.getMember(username, sessionId)
+    // Update Discord fields
+    member.discordUserId = discordUserId
+    member.discordUsername = discordUsername
+    member.discordAvatarUrl = discordAvatarUrl
+    try { // Patch object
+      memberServiceClient.patchMember(username, member, sessionId)
+    } catch (e: HttpException) {
+      log.error("Failed to patch member: $username; member object: $member", e)
+      throw MemberServiceException("Failed to patch member: $username; member object: $member", e)
+    }
+  }
+
+  suspend fun unlinkDiscordAccount(username: String, sessionId: String?) {
+    // Get member object
+    val member = memberServiceClient.getMember(username, sessionId)
+    // Clear Discord fields
+    member.discordUserId = null
+    member.discordUsername = null
+    member.discordAvatarUrl = null
+    try { // Patch object
+      memberServiceClient.patchMember(username, member, sessionId)
+    } catch (e: HttpException) {
+      log.error("Failed to patch member: $username; member object: $member", e)
+      throw MemberServiceException("Failed to patch member: $username; member object: $member", e)
+    }
+  }
+
   suspend fun getGroup(groupName: String, sessionId: String?): DMSGroup {
     return memberServiceClient.getGroup(groupName, sessionId)
   }
