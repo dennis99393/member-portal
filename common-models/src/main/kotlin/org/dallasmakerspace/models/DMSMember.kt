@@ -20,6 +20,7 @@ data class DMSMember(
     var discordUsername: String? = null,
     var discordAvatarUrl: String? = null,
     var discordWebhookId: String? = null,
+    var linkedinUsername: String? = null,
     var memberSince: Instant? = null,
     var enabled: Boolean = false,
     var groups: List<DMSGroup> = emptyList(),

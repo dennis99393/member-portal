@@ -92,6 +92,32 @@ constructor(
     }
   }
 
+  suspend fun linkLinkedInAccount(username: String, linkedinUsername: String, sessionId: String?) {
+    // Get member object
+    val member = memberServiceClient.getMember(username, sessionId)
+    // Update LinkedIn field
+    member.linkedinUsername = linkedinUsername
+    try { // Patch object
+      memberServiceClient.patchMember(username, member, sessionId)
+    } catch (e: HttpException) {
+      log.error("Failed to patch member: $username; member object: $member", e)
+      throw MemberServiceException("Failed to patch member: $username; member object: $member", e)
+    }
+  }
+
+  suspend fun unlinkLinkedInAccount(username: String, sessionId: String?) {
+    // Get member object
+    val member = memberServiceClient.getMember(username, sessionId)
+    // Clear LinkedIn field
+    member.linkedinUsername = null
+    try { // Patch object
+      memberServiceClient.patchMember(username, member, sessionId)
+    } catch (e: HttpException) {
+      log.error("Failed to patch member: $username; member object: $member", e)
+      throw MemberServiceException("Failed to patch member: $username; member object: $member", e)
+    }
+  }
+
   suspend fun getGroup(groupName: String, sessionId: String?): DMSGroup {
     return memberServiceClient.getGroup(groupName, sessionId)
   }

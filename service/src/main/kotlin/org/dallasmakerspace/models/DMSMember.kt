@@ -14,4 +14,5 @@ fun daoToProfileModel(dao: ProfileDAO) =
         discordUserId = dao.discordUserId,
         discordUsername = dao.discordUsername,
         discordAvatarUrl = dao.discordAvatarUrl,
-        discordWebhookId = dao.discordWebhookId)
+        discordWebhookId = dao.discordWebhookId,
+        linkedinUsername = dao.linkedinUsername)

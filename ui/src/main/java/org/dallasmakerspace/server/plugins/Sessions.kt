@@ -20,6 +20,7 @@ data class UserSession(
     var adPrincipalUser: JsonObject = JsonObject(mapOf()),
     var isDiscourseLinkSuccess: Boolean = false,
     var isDiscordLinkSuccess: Boolean = false,
+    var isLinkedInLinkSuccess: Boolean = false,
     var isVoterRegistrationSuccess: Boolean = false,
     var sessionId: String? = null,
     var userId: String? = null,

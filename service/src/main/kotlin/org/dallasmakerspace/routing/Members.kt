@@ -16,6 +16,7 @@ class Members(val loggedInDays: Int = 90) {
       val discordUsername: String? = null,
       val discordAvatarUrl: String? = null,
       val discordWebhookId: String? = null,
+      val linkedinUsername: String? = null,
   ) {
     @Resource("update") class Update(val parent: DMSMember)
 

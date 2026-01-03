@@ -77,6 +77,9 @@ constructor(
       requestedMember.discordUsername?.let { jsonMap["discord_username"] = it }
       requestedMember.discordAvatarUrl?.let { jsonMap["discord_avatar_url"] = it }
     }
+    if (requestedMember.linkedinUsername.isNullOrEmpty().not()) {
+      jsonMap["linkedin_username"] = requestedMember.linkedinUsername as Any
+    }
     requestedMember.groups
         .firstOrNull { group -> group.name == voterRegistrationManager.getVotingMembersGroupName() }
         ?.apply { jsonMap["is_voting_member"] = "true" }
@@ -152,6 +155,11 @@ constructor(
           "Successfully linked Discord @${requestedMember.discordUsername} to your profile."
       // jsonMap["toast_btn_url"] = "/unlink-discord"
       // jsonMap["toast_btn_label"] = "Unlink"
+    } else if (session.isLinkedInLinkSuccess) {
+      log.info("Setting toast message for ${requestedMember.username} successful linkedin link")
+      call.sessions.set(session.copy(isLinkedInLinkSuccess = false))
+      jsonMap["toast_message"] =
+          "Successfully linked LinkedIn ${requestedMember.linkedinUsername} to your profile."
     } else if (session.isVoterRegistrationSuccess) {
       log.info(
           "Setting toast message for ${requestedMember.username} successful voter registration")

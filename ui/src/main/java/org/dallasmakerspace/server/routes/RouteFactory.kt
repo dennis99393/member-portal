@@ -6,6 +6,7 @@ import io.ktor.server.request.*
 import javax.inject.Singleton
 import org.dallasmakerspace.server.di.DiscordModule
 import org.dallasmakerspace.server.di.DiscourseModule
+import org.dallasmakerspace.server.di.LinkedInModule
 import org.dallasmakerspace.server.di.RoutesModule
 import org.dallasmakerspace.server.di.VoterRegistrationModule
 
@@ -45,6 +46,9 @@ object RouteFactory {
     DISCORD_LINK("/link-discord"),
     DISCORD_UNLINK("/unlink-discord"),
     DISCORD_CALLBACK("/discord-callback"),
+    LINKEDIN_LINK("/link-linkedin"),
+    LINKEDIN_UNLINK("/unlink-linkedin"),
+    LINKEDIN_CALLBACK("/linkedin-callback"),
     STATIC("/static"),
     GROUPS("/groups/{group_slug}"),
     SEARCH_PRELOAD("/search-preload"),
@@ -66,6 +70,7 @@ object RouteFactory {
             RoutesModule::class,
             DiscordModule::class,
             DiscourseModule::class,
+            LinkedInModule::class,
             VoterRegistrationModule::class])
 interface RoutesComponent {
   fun getRoutesMap(): Map<String, IRouteHandler>

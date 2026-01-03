@@ -58,6 +58,13 @@ fun Application.configureRouting() {
       get(RouteFactory.Paths.DISCORD_CALLBACK.path) {
         RouteFactory.getHandler(RouteFactory.Paths.DISCORD_CALLBACK.path)?.handleBase(call)
       }
+      get(RouteFactory.Paths.LINKEDIN_LINK.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.LINKEDIN_UNLINK.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
+      get(RouteFactory.Paths.LINKEDIN_CALLBACK.path) {
+        RouteFactory.getHandler(RouteFactory.Paths.LINKEDIN_CALLBACK.path)?.handleBase(call)
+      }
       get(RouteFactory.Paths.REGISTER_VOTING.path) {
         RouteFactory.getHandler(call)?.handleBase(call)
       }

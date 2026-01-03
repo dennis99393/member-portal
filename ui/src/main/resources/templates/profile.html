@@ -59,6 +59,7 @@
         }
         .account-details {
             margin-left: 15px;
+            white-space: nowrap;
         }
         .account-platform {
             margin-bottom: 0;
@@ -84,13 +85,16 @@
             flex-direction: column;
             padding: 0;
         }
-        @media (min-width: 768px) {
+        @media (min-width: 992px) {
             .accounts-container {
                 flex-direction: row;
-                padding: 0 75px 0 75px;
+                flex-wrap: wrap;
+                padding: 0 10px;
+                justify-content: center;
             }
             .account-item {
-                flex: 1;
+                flex: 0 1 auto;
+                min-width: 180px;
             }
             .account-divider {
                 display: none;
@@ -234,6 +238,15 @@
                                 </span>
                         </div>
 
+                        <div th:if="${linkedin_username}" class="d-flex align-items-center mb-3">
+                            <span class="material-symbols-outlined card-item-icon">share</span>
+                            <span>Socials:
+                                <img src="../static/images/linkedin.svg" alt="LinkedIn"
+                                     style="height: 20px; width: 20px; margin-left: 4px; vertical-align: middle;"
+                                     th:title="|LinkedIn: ${linkedin_username}|">
+                            </span>
+                        </div>
+
                         <div th:unless="${enabled}" class="d-flex align-items-center mb-3">
                             <span class="material-symbols-outlined text-dander card-item-icon">encrypted_off</span>
                             <span class="text-danger">Disabled Profile</span>
@@ -337,6 +350,27 @@
                                 <a href="/unlink-discord" th:if="${discord_userid}" class="unlink">Unlink
                                     Account</a>
                                 <a href="/link-discord" th:unless="${discord_userid}" class="unlink">Link
+                                    Account</a>
+                            </div>
+                        </div>
+
+                        <hr class="account-divider my-2">
+
+                        <div class="account-item">
+                            <div class="account-icon bg-light">
+                                <img src="../static/images/linkedin.svg" alt="LinkedIn icon" class="w-100">
+                            </div>
+                            <div class="account-details">
+                                <div class="d-flex align-items-center">
+                                    <p class="account-platform me-2">LinkedIn:</p>
+                                    <span th:if="${linkedin_username}"
+                                          class="account-name"
+                                          th:text="${linkedin_username}"></span>
+                                    <span th:unless="${linkedin_username}">Not Linked</span>
+                                </div>
+                                <a href="/unlink-linkedin" th:if="${linkedin_username}" class="unlink">Unlink
+                                    Account</a>
+                                <a href="/link-linkedin" th:unless="${linkedin_username}" class="unlink">Link
                                     Account</a>
                             </div>
                         </div>

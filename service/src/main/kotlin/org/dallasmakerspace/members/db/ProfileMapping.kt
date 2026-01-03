@@ -24,6 +24,7 @@ object ProfileTable : IdTable<String>("profile") {
   val discordUsername: Column<String?> = varchar("discord_username", 100).nullable()
   val discordAvatarUrl: Column<String?> = varchar("discord_avatar_url", 2083).nullable()
   val discordWebhookId: Column<String?> = varchar("discord_webhook_id", 100).nullable()
+  val linkedinUsername: Column<String?> = varchar("linkedin_username", 100).nullable()
   val attributes: Column<String?> = text("attributes").nullable()
   override val id: Column<EntityID<String>>
     get() = username
@@ -47,6 +48,7 @@ class ProfileDAO(username: EntityID<String>) : Entity<String>(username) {
   var discordUsername by ProfileTable.discordUsername
   var discordAvatarUrl by ProfileTable.discordAvatarUrl
   var discordWebhookId by ProfileTable.discordWebhookId
+  var linkedinUsername by ProfileTable.linkedinUsername
   var attributes by ProfileTable.attributes
 }
 

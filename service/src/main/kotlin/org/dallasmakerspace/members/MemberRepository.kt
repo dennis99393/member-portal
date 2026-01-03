@@ -64,6 +64,7 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
         discordUsername = member.discordUsername
         discordAvatarUrl = member.discordAvatarUrl
         discordWebhookId = member.discordWebhookId
+        linkedinUsername = member.linkedinUsername
       }
     }
   }
@@ -92,6 +93,7 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
           discordUsername = member.discordUsername
           discordAvatarUrl = member.discordAvatarUrl
           discordWebhookId = member.discordWebhookId
+          linkedinUsername = member.linkedinUsername
         }
       }
     }
