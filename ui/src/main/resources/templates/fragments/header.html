@@ -40,7 +40,8 @@
                                     th:if="${reportNode.children != null && !reportNode.getVisibleChildren().empty}">
                                     <a class="dropdown-item dropdown-toggle" href="javascript:void(0)"
                                        data-bs-toggle="dropdown"
-                                       data-bs-auto-close="outside" aria-expanded="false" th:text="${reportNode.name}"></a>
+                                       data-bs-auto-close="outside" aria-expanded="false"
+                                       th:text="${reportNode.name}"></a>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li th:each="childNode : ${reportNode.getVisibleChildren()}">
                                             <a class="dropdown-item"
@@ -87,31 +88,31 @@
     </div>
 
     <!-- Search component script -->
-    <script type="module" src="/static/js/dms-search-v5.js"></script>
+    <script type="module" src="/static/js/dms-search-v6.js"></script>
     <script>
-    function toggleMobileSearch() {
-        const overlay = document.querySelector('.navbar-search-mobile');
-        overlay.classList.toggle('d-none');
-        if (!overlay.classList.contains('d-none')) {
-            const search = overlay.querySelector('dms-search');
-            if (search && search.shadowRoot) {
-                const input = search.shadowRoot.querySelector('input');
-                if (input) input.focus();
+        function toggleMobileSearch() {
+            const overlay = document.querySelector('.navbar-search-mobile');
+            overlay.classList.toggle('d-none');
+            if (!overlay.classList.contains('d-none')) {
+                const search = overlay.querySelector('dms-search');
+                if (search && search.shadowRoot) {
+                    const input = search.shadowRoot.querySelector('input');
+                    if (input) input.focus();
+                }
             }
         }
-    }
 
-    // Keyboard shortcut: Ctrl/Cmd + K to focus search
-    document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-            e.preventDefault();
-            const search = document.querySelector('dms-search');
-            if (search && search.shadowRoot) {
-                const input = search.shadowRoot.querySelector('input');
-                if (input) input.focus();
+        // Keyboard shortcut: Ctrl/Cmd + K to focus search
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                const search = document.querySelector('dms-search');
+                if (search && search.shadowRoot) {
+                    const input = search.shadowRoot.querySelector('input');
+                    if (input) input.focus();
+                }
             }
-        }
-    });
+        });
     </script>
 </header>
 </body>

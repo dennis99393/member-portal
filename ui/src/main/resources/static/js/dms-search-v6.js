@@ -14,6 +14,7 @@ class DMSSearch extends HTMLElement {
         this.hadError = false;
         this.selectedIndex = -1;
         this.currentResults = [];
+        this.pendingSearchQuery = null;
     }
 
     static get observedAttributes() {
@@ -262,6 +263,13 @@ class DMSSearch extends HTMLElement {
             const json = await response.json();
             this.members = json["data"];
             this.dataFetched = true;
+
+            // If user typed while fetch was in progress, perform the pending search
+            if (this.pendingSearchQuery !== null) {
+                const query = this.pendingSearchQuery;
+                this.pendingSearchQuery = null;
+                this.performSearch(query);
+            }
         } catch (error) {
             if (error.name === 'AbortError') {
                 console.log('Request was aborted');
@@ -295,8 +303,14 @@ class DMSSearch extends HTMLElement {
             return;
         }
 
-        // If we don't have data and no request is in flight, start a new request
-        if (!this.dataFetched && !this.isRequestInFlight) {
+        // If we don't have data yet
+        if (!this.dataFetched) {
+            if (this.isRequestInFlight) {
+                // Request already in flight, store query for when it completes
+                this.pendingSearchQuery = query;
+                return;
+            }
+            // No request in flight, start a new one
             this.fetchMembers().then(() => {
                 this.performSearch(query);
             });
