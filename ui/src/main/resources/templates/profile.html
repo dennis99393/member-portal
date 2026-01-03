@@ -361,17 +361,7 @@
                                 <img src="../static/images/linkedin.svg" alt="LinkedIn icon" class="w-100">
                             </div>
                             <div class="account-details">
-                                <div class="d-flex align-items-center">
-                                    <p class="account-platform me-2">LinkedIn:</p>
-                                    <span th:if="${linkedin_username}"
-                                          class="account-name"
-                                          th:text="${linkedin_username}"></span>
-                                    <span th:unless="${linkedin_username}">Not Linked</span>
-                                </div>
-                                <a href="/unlink-linkedin" th:if="${linkedin_username}" class="unlink">Unlink
-                                    Account</a>
-                                <a href="/link-linkedin" th:unless="${linkedin_username}" class="unlink">Link
-                                    Account</a>
+                                <p class="account-platform-disabled">LinkedIn: Coming Soon</p>
                             </div>
                         </div>
                     </div>
@@ -472,10 +462,13 @@
                                     <div class="fw-medium event-name" th:text="${event.name}"></div>
                                     <small class="text-muted">
                                         <span th:text="${event.eventStart}"></span>
-                                        <span class="ms-1 fw-semibold"><dms-relative-date th:attr="timestamp=${event.eventStartRaw}" prefix="(" suffix=")" relativeOnly="true"></dms-relative-date></span>
+                                        <span class="ms-1 fw-semibold"><dms-relative-date
+                                                th:attr="timestamp=${event.eventStartRaw}" prefix="(" suffix=")"
+                                                relativeOnly="true"></dms-relative-date></span>
                                     </small>
                                 </div>
-                                <span class="material-symbols-outlined text-muted ms-2 me-md-3 align-self-center" style="font-size: 18px;">open_in_new</span>
+                                <span class="material-symbols-outlined text-muted ms-2 me-md-3 align-self-center"
+                                      style="font-size: 18px;">open_in_new</span>
                             </div>
                         </a>
                     </div>
