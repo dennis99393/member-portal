@@ -67,29 +67,24 @@ constructor(
         }
 
     // Validate state parameter for CSRF protection
-    val originalState =
+    val oauthState =
         linkedInStateCache.getState(username)
             ?: throw LinkedInException("No state found in cache - session may have expired")
 
-    if (state != originalState) {
+    if (state != oauthState.csrfState) {
       throw LinkedInException("State mismatch - possible CSRF attack")
     }
 
     // Delete the state from cache
     linkedInStateCache.deleteState(username)
 
-    // Exchange code for access token
-    val linkedInAccessToken = linkedInOAuthProvider.exchangeCodeForToken(code)
+    // Exchange code for access token (proves user owns the LinkedIn account)
+    linkedInOAuthProvider.exchangeCodeForToken(code)
 
-    // Fetch LinkedIn user info
-    val linkedInUserInfo = linkedInOAuthProvider.fetchUserInfo(linkedInAccessToken)
+    log.info("Linking LinkedIn account ${oauthState.linkedinUsername} to DMS user $username")
 
-    log.info(
-        "Linking LinkedIn account ${linkedInUserInfo.name} (${linkedInUserInfo.userId}) to DMS user $username")
-
-    // Link the LinkedIn account
-    // Use the name as the display username since LinkedIn doesn't expose vanity URLs via OIDC
-    memberService.linkLinkedInAccount(username, linkedInUserInfo.name, session.sessionId)
+    // Link the LinkedIn account using the user-provided username from the modal
+    memberService.linkLinkedInAccount(username, oauthState.linkedinUsername, session.sessionId)
 
     // Set success flag in session
     session.isLinkedInLinkSuccess = true

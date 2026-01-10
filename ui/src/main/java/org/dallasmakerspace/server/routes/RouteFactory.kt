@@ -14,7 +14,7 @@ object RouteFactory {
   val redirects = mutableMapOf<String, String>()
 
   fun getHandler(call: ApplicationCall): IRouteHandler? {
-    val path = sanitizePathInternal(call.request.uri)
+    val path = sanitizePathInternal(call.request.path())
     return getHandler(path)
   }
 

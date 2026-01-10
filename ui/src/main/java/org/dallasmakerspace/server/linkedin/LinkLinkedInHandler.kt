@@ -30,9 +30,17 @@ constructor(
         userInfo["preferred_username"] as? String
             ?: throw AuthException("No username found in user info")
 
+    // Get LinkedIn username from query parameter
+    val linkedinUsername = call.request.queryParameters["linkedinUsername"]
+    if (linkedinUsername.isNullOrBlank()) {
+      throw LinkedInException("LinkedIn username is required")
+    }
+
     // Generate random state for CSRF protection
     val randomState = Random.nextInt(STATE_RANGE_START, STATE_RANGE_END).toString()
-    linkedInStateCache.setState(username, randomState)
+
+    // Store both CSRF state and LinkedIn username
+    linkedInStateCache.setState(username, LinkedInOAuthState(randomState, linkedinUsername))
 
     // Redirect to LinkedIn authorization URL
     val linkedInAuthUrl = linkedInOAuthProvider.getLinkedInAuthorizationUrl(randomState)

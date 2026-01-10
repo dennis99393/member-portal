@@ -11,11 +11,11 @@ import javax.inject.Singleton
 @Singleton
 class LinkedInStateCache @Inject constructor() {
 
-  fun getState(key: String): String? {
+  fun getState(key: String): LinkedInOAuthState? {
     return stateCache[key]
   }
 
-  fun setState(key: String, state: String) {
+  fun setState(key: String, state: LinkedInOAuthState) {
     stateCache[key] = state
   }
 
@@ -24,6 +24,6 @@ class LinkedInStateCache @Inject constructor() {
   }
 
   companion object {
-    private val stateCache = mutableMapOf<String, String>()
+    private val stateCache = mutableMapOf<String, LinkedInOAuthState>()
   }
 }
