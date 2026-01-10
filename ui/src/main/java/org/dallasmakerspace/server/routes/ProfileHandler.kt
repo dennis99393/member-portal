@@ -233,7 +233,7 @@ constructor(
       val dateTime =
           LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
       val zonedDateTime = dateTime.atZone(ZoneId.of("America/Chicago"))
-      zonedDateTime.format(DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a"))
+      zonedDateTime.format(DateTimeFormatter.ofPattern("EEE, MMM d, yyyy 'at' h:mm a"))
     } catch (e: Exception) {
       log.error("Failed to parse event date: $eventStart", e)
       eventStart
