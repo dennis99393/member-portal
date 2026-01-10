@@ -4,6 +4,10 @@ import com.google.i18n.phonenumbers.NumberParseException
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import com.google.i18n.phonenumbers.Phonenumber
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atStartOfDayIn
@@ -115,7 +119,7 @@ constructor(
     dbMember.accountInfo = relatedAccounts[username]
 
     // Refresh discourse avatar URL if member has a discourse username
-    dbMember.discourseAvatarUrl = refreshDiscourseAvatar(dbMember)
+    // dbMember.discourseAvatarUrl = refreshDiscourseAvatar(dbMember)
 
     return dbMember
   }
@@ -165,9 +169,6 @@ constructor(
                     members = emptyList(),
                 )
               }
-
-          // Refresh discourse avatar URL
-          dbMember.discourseAvatarUrl = refreshDiscourseAvatar(dbMember)
 
           dbMember
         }
@@ -444,18 +445,27 @@ constructor(
     return result
   }
 
-  suspend fun getGroup(groupslug: String): DMSGroup {
+  suspend fun getGroup(groupslug: String): DMSGroup = coroutineScope {
     val groupname = Groups.getNameFromSlug(groupslug)
-    val adGroup = activeDirectoryService.getGroup(groupname)
-    // Get the members from DB so we can include their discourse usernames and other details.
-    val dbMembers = memberRepository.getAllMembers()
-    // Get group history and enrich with display names
-    val groupHistory = groupHistoryRepository.getGroupHistoryByName(groupname)
+
+    // Run AD query, DB members query, and group history query in parallel
+    // AD call is blocking, so run on IO dispatcher to avoid blocking coroutine threads
+    val adGroupDeferred = async {
+      withContext(Dispatchers.IO) { activeDirectoryService.getGroup(groupname) }
+    }
+    val dbMembersDeferred = async { memberRepository.getAllMembers() }
+    val groupHistoryDeferred = async { groupHistoryRepository.getGroupHistoryByName(groupname) }
+
+    // Await all results
+    val adGroup = adGroupDeferred.await()
+    val dbMembers = dbMembersDeferred.await()
+    val groupHistory = groupHistoryDeferred.await()
+
     val currentMemberDisplayNames =
         adGroup.members.associate { it.sAMAccountName to it.displayName }
     val enrichedHistory = enrichHistoryWithDisplayNames(groupHistory, currentMemberDisplayNames)
 
-    return DMSGroup(
+    DMSGroup(
         name = adGroup.cn,
         description = adGroup.description,
         distinguishedName = adGroup.distinguishedName,
