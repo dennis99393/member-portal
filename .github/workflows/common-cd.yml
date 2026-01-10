@@ -216,3 +216,20 @@ jobs:
             echo "✗ Container is not running!"
             exit 1
           fi
+
+      - name: Cleanup old Docker images
+        shell: bash
+        continue-on-error: true
+        run: |
+          echo "Cleaning up old Docker images..."
+          # Remove old images for this specific image, keeping only the latest
+          docker images "${{ env.REGISTRY }}/${{ inputs.image_name }}" --format "{{.ID}} {{.Tag}}" | \
+            grep -v "latest" | \
+            awk '{print $1}' | \
+            xargs -r docker rmi || true
+
+          # Remove dangling images (untagged)
+          docker image prune -f
+
+          echo "Cleanup complete. Current images:"
+          docker images "${{ env.REGISTRY }}/${{ inputs.image_name }}" --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
