@@ -62,7 +62,7 @@ constructor(
     }
   }
 
-  suspend fun getMemberByUsername(username: String): DMSMember {
+  suspend fun getMemberByUsername(username: String, refreshAvatar: Boolean = false): DMSMember {
     // Fetch member from active directory.
     val adMember = activeDirectoryService.getMemberByUsername(username)
 
@@ -118,8 +118,11 @@ constructor(
         }
     dbMember.accountInfo = relatedAccounts[username]
 
-    // Refresh discourse avatar URL if member has a discourse username
-    // dbMember.discourseAvatarUrl = refreshDiscourseAvatar(dbMember)
+    // Refresh discourse avatar URL if needed
+    if (refreshAvatar) {
+      log.debug("Discourse avatar URL missing for ${dbMember.username}, refreshing...")
+      dbMember.discourseAvatarUrl = refreshDiscourseAvatar(dbMember)
+    }
 
     return dbMember
   }

@@ -109,7 +109,8 @@ fun Application.configureRouting() {
         }
 
         get<Members.DMSMember> { memberRequested ->
-          val member = memberService.getMemberByUsername(memberRequested.username)
+          val member =
+              memberService.getMemberByUsername(memberRequested.username, refreshAvatar = true)
           call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
         }
 
