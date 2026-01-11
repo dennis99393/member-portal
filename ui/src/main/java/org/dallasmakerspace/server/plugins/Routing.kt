@@ -36,6 +36,9 @@ fun Application.configureRouting() {
       get(RouteFactory.Paths.SHORT_LINKS_ADMIN.path) {
         RouteFactory.getHandler(call)?.handleBase(call)
       }
+      get(RouteFactory.Paths.SHORT_LINK_DETAILS.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
       get(RouteFactory.Paths.BACKEND_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       post(RouteFactory.Paths.BACKEND_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       patch(RouteFactory.Paths.BACKEND_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }

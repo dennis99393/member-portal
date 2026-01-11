@@ -25,6 +25,9 @@ object RouteFactory {
         .replace("/groups/.*".toRegex(), "/groups/{group_slug}")
         .replace("/reports.*".toRegex(), "/reports/{path...}")
         .replace("/backend-api/.*".toRegex(), "/backend-api/{path...}")
+        .replace(
+            "/short-links/admin".toRegex(), "/short-links/admin") // Admin must come before details
+        .replace("/short-links/[0-9]+".toRegex(), "/short-links/{id}")
         .replace("/go/.*".toRegex(), "/go/{path...}")
   }
 
@@ -58,6 +61,7 @@ object RouteFactory {
     BACKEND_API("/backend-api/{path...}"),
     SHORT_LINKS("/short-links"),
     SHORT_LINKS_ADMIN("/short-links/admin"),
+    SHORT_LINK_DETAILS("/short-links/{id}"),
     SHORT_LINK_REDIRECT("/go/{path...}"),
     COMMITTEES("/committees"),
     ACTION_TRACK("/api/track"),

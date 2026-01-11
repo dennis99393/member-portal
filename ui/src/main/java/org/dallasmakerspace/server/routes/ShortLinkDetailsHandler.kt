@@ -1,45 +1,49 @@
 package org.dallasmakerspace.server.routes
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
 import javax.inject.Inject
 import org.dallasmakerspace.server.auth.UserInfoProvider
-import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 
 /**
- * Handler for the short links public page. Shows popular short links and provides access to the
- * admin panel for authorized users.
+ * Handler for the short link details page. Shows QR code, click statistics, and recent activity.
  */
-class ShortLinksHandler
+class ShortLinkDetailsHandler
 @Inject
 constructor(
     loggerFactory: LoggerFactory,
     userInfoProvider: UserInfoProvider,
     private val memberService: MemberService,
-    private val appConfig: AppConfig,
 ) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun handleAuthenticated(call: ApplicationCall) {
+    // Get link ID from path parameter
+    val linkId = call.parameters["id"]?.toIntOrNull()
+
+    if (linkId == null) {
+      log.warn("Invalid link ID in path")
+      call.respondText("Invalid link ID", status = HttpStatusCode.BadRequest)
+      return
+    }
+
     val username = userInfo["preferred_username"] as String?
     val displayName = userInfo["name"] as String?
-    val isDevelopmentMode = appConfig.isDevelopmentMode()
-    val canAccessAdmin = isInfra && isDevelopmentMode
 
     // Build context for template
     val jsonMap =
         mutableMapOf<String, Any>(
             "username" to (username ?: ""),
             "display_name" to (displayName ?: ""),
-            "can_access_admin" to canAccessAdmin,
-            "is_development_mode" to isDevelopmentMode,
+            "link_id" to linkId,
             "is_infra" to isInfra,
             "is_officer" to isOfficer)
 
     // Respond with Thymeleaf template
-    call.respond(ThymeleafContent("short-links", jsonMap))
+    call.respond(ThymeleafContent("short-link-details", jsonMap))
   }
 }

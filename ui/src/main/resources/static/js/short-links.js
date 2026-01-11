@@ -303,6 +303,15 @@
                 document.getElementById('linkId').value = '';
                 document.getElementById('createLinkModalLabel').textContent = 'Create Short Link';
                 document.getElementById('saveLinkBtn').textContent = 'Create';
+
+                // Re-enable slug field (it gets disabled during edit)
+                const linkSlug = document.getElementById('linkSlug');
+                if (linkSlug) {
+                    linkSlug.disabled = false;
+                }
+
+                // Reset preview to show [auto-generated]
+                updateLinkPreview();
             });
         }
     }
@@ -311,19 +320,12 @@
      * Handle namespace change in link modal
      */
     function handleNamespaceChange() {
-        const namespaceSelect = document.getElementById('linkNamespace');
+        // MVP: Always root-level, slug always visible and optional
         const slugField = document.getElementById('slugField');
         const linkSlug = document.getElementById('linkSlug');
 
-        if (namespaceSelect.value) {
-            // Namespace selected - slug required
-            slugField.style.display = 'block';
-            linkSlug.required = true;
-        } else {
-            // Root level - slug optional (auto-generated)
-            slugField.style.display = 'block';
-            linkSlug.required = false;
-        }
+        slugField.style.display = 'block';
+        linkSlug.required = false;
 
         updateLinkPreview();
     }
@@ -332,21 +334,14 @@
      * Update link preview
      */
     function updateLinkPreview() {
-        const namespaceSelect = document.getElementById('linkNamespace');
         const linkSlug = document.getElementById('linkSlug');
         const previewPath = document.getElementById('previewPath');
 
         if (!previewPath) return;
 
-        const namespace = namespaces.find(ns => ns.id == namespaceSelect.value);
-        const slug = linkSlug.value || (namespace ? '...' : '[auto-generated]');
-
-        if (namespace) {
-            const primaryAlias = namespace.aliases.find(a => a.isPrimary)?.alias || namespace.aliases[0]?.alias;
-            previewPath.textContent = `${primaryAlias}/${slug}`;
-        } else {
-            previewPath.textContent = slug;
-        }
+        // MVP: Always root-level, no namespace
+        const slug = linkSlug.value || '[auto-generated]';
+        previewPath.textContent = slug;
     }
 
     /**
@@ -403,7 +398,7 @@
      */
     async function handleCreateOrUpdateLink() {
         const linkId = document.getElementById('linkId').value;
-        const namespaceId = document.getElementById('linkNamespace').value || null;
+        const namespaceId = null; // MVP: Always use root-level (null namespace)
         const slug = document.getElementById('linkSlug').value || null;
         const destinationUrl = document.getElementById('linkDestination').value;
         const description = document.getElementById('linkDescription').value || null;
@@ -562,14 +557,37 @@
      * Show success message
      */
     function showSuccess(message) {
-        alert(message); // TODO: Replace with better toast notification
+        showToast(message, 'success');
     }
 
     /**
      * Show error message
      */
     function showError(message) {
-        alert('Error: ' + message); // TODO: Replace with better toast notification
+        showToast(message, 'danger');
+    }
+
+    /**
+     * Show Bootstrap toast notification
+     */
+    function showToast(message, type = 'success') {
+        const toastEl = document.getElementById('toastNotification');
+        const toastMessage = document.getElementById('toastMessage');
+
+        if (!toastEl || !toastMessage) return;
+
+        // Set message
+        toastMessage.textContent = message;
+
+        // Set color based on type (success = green, danger = red)
+        toastEl.className = 'toast align-items-center border-0 text-bg-' + type;
+
+        // Show toast
+        const toast = new bootstrap.Toast(toastEl, {
+            autohide: true,
+            delay: 3000
+        });
+        toast.show();
     }
 
     /**

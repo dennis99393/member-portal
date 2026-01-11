@@ -38,6 +38,10 @@ class AppConfig @Inject constructor() {
     return config.propertyOrNull(name)?.getString()?.toLong() ?: defaultValue
   }
 
+  fun isDevelopmentMode(): Boolean {
+    return config.propertyOrNull("ktor.development")?.getString()?.toBoolean() ?: false
+  }
+
   companion object {
     private const val TAG = "AppConfig"
   }

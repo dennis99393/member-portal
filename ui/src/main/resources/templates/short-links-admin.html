@@ -26,7 +26,8 @@
     </div>
 
     <!-- Namespace Management (Infrastructure Only) -->
-    <div class="row" th:if="${can_manage_namespaces}">
+    <!-- MVP: Namespace management hidden - change th:if="false" to th:if="${can_manage_namespaces}" to re-enable -->
+    <div class="row" th:if="false">
         <div class="col-12">
             <div class="card shadow-sm mt-4">
                 <div class="card-body">
@@ -62,7 +63,8 @@
 
                     <!-- Filters -->
                     <div class="row mb-3">
-                        <div class="col-md-4">
+                        <!-- MVP: Namespace filter hidden - remove style="display:none" to re-enable -->
+                        <div class="col-md-4" style="display:none">
                             <label for="namespaceFilter" class="form-label">Namespace</label>
                             <select id="namespaceFilter" class="form-select">
                                 <option value="">All Namespaces</option>
@@ -157,7 +159,8 @@
             <div class="modal-body">
                 <form id="createLinkForm">
                     <input type="hidden" id="linkId" value="">
-                    <div class="mb-3">
+                    <!-- MVP: Namespace selection hidden - remove style="display:none" to re-enable -->
+                    <div class="mb-3" style="display:none">
                         <label for="linkNamespace" class="form-label">Namespace</label>
                         <select class="form-select" id="linkNamespace">
                             <option value="">Root Level (Auto-generated)</option>
@@ -165,9 +168,9 @@
                         <small class="text-muted">Leave empty for auto-generated root-level link</small>
                     </div>
                     <div class="mb-3" id="slugField">
-                        <label for="linkSlug" class="form-label">Slug</label>
-                        <input type="text" class="form-control" id="linkSlug" pattern="[a-z0-9-]{1,50}">
-                        <small class="text-muted">1-50 chars: lowercase letters, numbers, hyphens</small>
+                        <label for="linkSlug" class="form-label">Slug (optional)</label>
+                        <input type="text" class="form-control" id="linkSlug" pattern="[a-z0-9-]{1,50}" placeholder="Leave empty for auto-generated">
+                        <small class="text-muted">1-50 chars: lowercase letters, numbers, hyphens. Auto-generated if empty.</small>
                     </div>
                     <div class="mb-3">
                         <label for="linkDestination" class="form-label">Destination URL</label>
@@ -181,7 +184,7 @@
                     <div class="mb-3" id="linkPreview">
                         <label class="form-label">Preview</label>
                         <div class="alert alert-info mb-0">
-                            <strong>dallas.ms/</strong><span id="previewPath">...</span>
+                            <strong>dallas.ms/</strong><span id="previewPath">[auto-generated]</span>
                         </div>
                     </div>
                 </form>
@@ -189,6 +192,16 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" id="saveLinkBtn">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Toast for success/error messages -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="toastNotification" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toastMessage"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     </div>

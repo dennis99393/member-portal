@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
 import org.dallasmakerspace.server.auth.UserInfoProvider
+import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.memberservice.MemberServiceClient
@@ -21,6 +22,7 @@ import org.dallasmakerspace.server.routes.ProfileHandler
 import org.dallasmakerspace.server.routes.ProfileMeHandler
 import org.dallasmakerspace.server.routes.ReportHandler
 import org.dallasmakerspace.server.routes.SearchPreloadHandler
+import org.dallasmakerspace.server.routes.ShortLinkDetailsHandler
 import org.dallasmakerspace.server.routes.ShortLinkRedirectHandler
 import org.dallasmakerspace.server.routes.ShortLinksAdminHandler
 import org.dallasmakerspace.server.routes.ShortLinksHandler
@@ -112,8 +114,9 @@ class RoutesModule {
   fun providesShortLinksHandler(
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
-      memberService: MemberService
-  ): IRouteHandler = ShortLinksHandler(loggerFactory, userInfoProvider, memberService)
+      memberService: MemberService,
+      appConfig: AppConfig
+  ): IRouteHandler = ShortLinksHandler(loggerFactory, userInfoProvider, memberService, appConfig)
 
   @IntoMap
   @Provides
@@ -121,8 +124,19 @@ class RoutesModule {
   fun providesShortLinksAdminHandler(
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
+      memberService: MemberService,
+      appConfig: AppConfig
+  ): IRouteHandler =
+      ShortLinksAdminHandler(loggerFactory, userInfoProvider, memberService, appConfig)
+
+  @IntoMap
+  @Provides
+  @StringKey("/short-links/{id}")
+  fun providesShortLinkDetailsHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
       memberService: MemberService
-  ): IRouteHandler = ShortLinksAdminHandler(loggerFactory, userInfoProvider, memberService)
+  ): IRouteHandler = ShortLinkDetailsHandler(loggerFactory, userInfoProvider, memberService)
 
   @IntoMap
   @Provides

@@ -6,6 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
 import javax.inject.Inject
 import org.dallasmakerspace.server.auth.UserInfoProvider
+import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 
@@ -19,12 +20,23 @@ constructor(
     loggerFactory: LoggerFactory,
     userInfoProvider: UserInfoProvider,
     private val memberService: MemberService,
+    private val appConfig: AppConfig,
 ) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun handleAuthenticated(call: ApplicationCall) {
-    // Only Infrastructure team and Officers can access admin page
-    if (!isInfra && !isOfficer) {
+    // Check if development mode is enabled
+    if (!appConfig.isDevelopmentMode()) {
+      log.warn(
+          "Short-links admin access denied - not in development mode. User: ${userInfo["preferred_username"]}")
+      call.respondText(
+          "Short Links Management is currently in development and only available in development mode.",
+          status = HttpStatusCode.Forbidden)
+      return
+    }
+
+    // MVP: Only Infrastructure team can access admin page
+    if (!isInfra) {
       log.warn("Access denied to short-links admin for user: ${userInfo["preferred_username"]}")
       call.respondText("Access denied", status = HttpStatusCode.Forbidden)
       return
@@ -32,7 +44,7 @@ constructor(
 
     // Determine user permissions based on groups
     val canManageNamespaces = isInfra
-    val canManageAnyLink = isInfra || isOfficer
+    val canManageAnyLink = isInfra
 
     val username = userInfo["preferred_username"] as String?
     val displayName = userInfo["name"] as String?

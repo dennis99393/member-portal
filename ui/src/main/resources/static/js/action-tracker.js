@@ -6,7 +6,7 @@
     'use strict';
 
     const TRACK_ENDPOINT = '/api/track';
-    const EXCLUDED_PATHS = ['/short-links', '/go/'];
+    const EXCLUDED_PATHS = ['/go/'];
 
     /**
      * Check if current page should be excluded from tracking
@@ -60,11 +60,18 @@
                         (element.textContent || '').trim().substring(0, 50) ||
                         'unknown';
         var actionCategory = element.getAttribute('data-track-category') || 'button';
+        var actionLabel = element.getAttribute('data-track-label') || '';
 
-        track('button_action', {
+        var actionDetails = {
             actionName: actionName,
             actionCategory: actionCategory
-        });
+        };
+
+        if (actionLabel) {
+            actionDetails.actionLabel = actionLabel;
+        }
+
+        track('button_action', actionDetails);
     }
 
     /**
