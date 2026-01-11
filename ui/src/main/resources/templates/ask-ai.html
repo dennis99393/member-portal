@@ -437,6 +437,20 @@
                 submitBtn.disabled = true;
             });
         }
+
+        // Handle back/forward navigation - reload the page to show correct state
+        window.addEventListener('popstate', function() {
+            // When user navigates back/forward, reload the page at the new URL
+            window.location.reload();
+        });
+
+        // Also reset form state on page show (handles browser back/forward cache)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted && submitBtn) {
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+            }
+        });
     });
 
     // Click a popular question to ask it

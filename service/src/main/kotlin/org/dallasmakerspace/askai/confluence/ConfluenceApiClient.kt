@@ -67,9 +67,7 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : IC
     val encodedCql = java.net.URLEncoder.encode(cql, "UTF-8")
     val url = "$baseUrl/rest/api/content/search?cql=$encodedCql&limit=$limit&excerpt=highlight"
 
-    log.info("[Confluence] Searching with query: '$query', filter: $contentType")
-    log.info("[Confluence] CQL: $cql")
-    log.info("[Confluence] Request URL: $url")
+    log.debug("[Confluence] Query: '$query', CQL: $cql")
 
     try {
       val response =
@@ -81,25 +79,19 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : IC
             }
           }
 
-      log.info("[Confluence] Response status: ${response.status}")
+      log.debug("[Confluence] Response status: ${response.status}")
 
       when (response.status) {
         HttpStatusCode.OK -> {
           val responseBody = response.bodyAsText()
-          log.info("[Confluence] Response body length: ${responseBody.length} chars")
+          log.debug("[Confluence] Response body length: ${responseBody.length} chars")
           log.debug("[Confluence] Full response: $responseBody")
 
           val parsed = json.decodeFromString<ConfluenceSearchResponse>(responseBody)
-          log.info(
-              "[Confluence] Parsed ${parsed.results.size} results, totalSize=${parsed.totalSize}")
+          log.debug("[Confluence] Parsed ${parsed.results.size} results")
 
           if (parsed.results.isEmpty()) {
             log.warn("[Confluence] No results returned for query: '$query'")
-          } else {
-            parsed.results.forEachIndexed { idx, result ->
-              log.info(
-                  "[Confluence] Result $idx: title='${result.content?.title}', url='${result.url}'")
-            }
           }
 
           return parsed

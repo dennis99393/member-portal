@@ -67,7 +67,7 @@ constructor(
    */
   suspend fun searchAll(query: String, limitPerSource: Int = 10): List<SearchResult> =
       coroutineScope {
-        log.info("Searching all sources for: $query")
+        log.debug("Searching all sources for: $query")
 
         val results =
             sourceMap.values
@@ -85,7 +85,7 @@ constructor(
                 .flatten()
                 .sortedBy { sourcePriorities[it.source] ?: Int.MAX_VALUE }
 
-        log.info("Found ${results.size} total results across ${sourceMap.size} sources")
+        log.debug("Found ${results.size} total results across ${sourceMap.size} sources")
         results
       }
 

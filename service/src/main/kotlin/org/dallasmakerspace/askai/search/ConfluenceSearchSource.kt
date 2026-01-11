@@ -36,8 +36,7 @@ constructor(
   override fun getPriority(): Int = 1 // Official documentation has the highest priority
 
   override suspend fun search(query: String, limit: Int): List<SearchResult> {
-    log.info("[ConfluenceSearch] Starting parallel search for: '$query' (limit=$limit)")
-    log.info("[ConfluenceSearch] Using base URL: $baseUrl")
+    log.debug("[ConfluenceSearch] Searching for: '$query' (limit=$limit)")
 
     return try {
       // Run two parallel queries: pages and attachments
@@ -45,7 +44,6 @@ constructor(
           coroutineScope {
             val pagesDeferred = async {
               try {
-                log.info("[ConfluenceSearch] Querying for pages...")
                 confluenceClient.search(query, limit, ContentTypeFilter.PAGES_ONLY)
               } catch (e: Exception) {
                 log.error("[ConfluenceSearch] Pages query failed: ${e.message}")
@@ -55,7 +53,6 @@ constructor(
 
             val attachmentsDeferred = async {
               try {
-                log.info("[ConfluenceSearch] Querying for attachments...")
                 confluenceClient.search(query, limit, ContentTypeFilter.ATTACHMENTS_ONLY)
               } catch (e: Exception) {
                 log.error("[ConfluenceSearch] Attachments query failed: ${e.message}")
@@ -66,9 +63,8 @@ constructor(
             Pair(pagesDeferred.await(), attachmentsDeferred.await())
           }
 
-      log.info("[ConfluenceSearch] Pages query returned ${pageResults?.results?.size ?: 0} results")
-      log.info(
-          "[ConfluenceSearch] Attachments query returned ${attachmentResults?.results?.size ?: 0} results")
+      log.debug(
+          "[ConfluenceSearch] Found ${pageResults?.results?.size ?: 0} pages, ${attachmentResults?.results?.size ?: 0} attachments")
 
       // Process results, fetching content for pages with empty excerpts
       val processedResults = coroutineScope {
@@ -86,8 +82,7 @@ constructor(
         (pageSearchResults + attachmentSearchResults).awaitAll().filterNotNull()
       }
 
-      log.info(
-          "[ConfluenceSearch] Returning ${processedResults.size} processed results for: '$query'")
+      log.debug("[ConfluenceSearch] Returning ${processedResults.size} results")
       processedResults
     } catch (e: Exception) {
       log.error("[ConfluenceSearch] Failed to search for: '$query'", e)
@@ -120,15 +115,14 @@ constructor(
         if (result.excerpt.isNotBlank()) {
           cleanSnippet(result.excerpt)
         } else if (!contentId.isNullOrBlank()) {
-          log.info(
-              "[ConfluenceSearch] Page '$title' has no excerpt, fetching content (id=$contentId)")
+          log.debug("[ConfluenceSearch] Fetching content for page '$title' (id=$contentId)")
           fetchContentSnippet(contentId)
         } else {
           log.warn("[ConfluenceSearch] Page '$title' has no excerpt and no content ID")
           "[No content available]"
         }
 
-    log.info("[ConfluenceSearch] Page result $idx: title='$title', snippetLength=${snippet.length}")
+    log.debug("[ConfluenceSearch] Page: '$title', snippet length: ${snippet.length}")
 
     return SearchResult(
         title = title,
@@ -162,7 +156,7 @@ constructor(
           else -> "[Attachment]"
         }
 
-    log.info("[ConfluenceSearch] Attachment result $idx: title='$title'")
+    log.debug("[ConfluenceSearch] Attachment: '$title'")
 
     return SearchResult(
         title = title,

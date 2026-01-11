@@ -30,7 +30,7 @@ constructor(private val discourseClient: IDiscourseApiClient, loggerFactory: Log
     val dateFilter = "after:${afterDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}"
     val queryWithDateFilter = "$query $dateFilter"
 
-    log.info("Searching Discourse for: $queryWithDateFilter")
+    log.debug("Searching Discourse for: $queryWithDateFilter")
 
     return try {
       val response = discourseClient.searchTopics(queryWithDateFilter)
@@ -52,7 +52,7 @@ constructor(private val discourseClient: IDiscourseApiClient, loggerFactory: Log
             ))
       }
 
-      log.info("Found ${results.size} Discourse results for: $query")
+      log.debug("Found ${results.size} Discourse results")
       results
     } catch (e: Exception) {
       log.error("Failed to search Discourse for: $query", e)

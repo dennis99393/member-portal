@@ -79,9 +79,6 @@ constructor(
     // Step 2: LLM #1 - Classify question and generate search queries
     // Mask PII in the question before sending to LLM
     val maskedQuestion = piiMasker.mask(question)
-    if (maskedQuestion != question) {
-      log.info("PII masked in question before LLM classification")
-    }
 
     val topCachedQuestions = cacheRepository.getTopQuestions(limit = 20)
     // Mask PII in cached questions before sending to LLM
@@ -122,14 +119,13 @@ constructor(
             .distinctBy { it.url } // Deduplicate by URL
             .take(15) // Limit total results
 
-    log.info("Found ${allSearchResults.size} unique search results")
+    log.debug("Found ${allSearchResults.size} unique search results")
 
     // Separate extractable content (for LLM) from non-extractable (PDFs, attachments)
     val (extractableResults, additionalResources) =
         allSearchResults.partition { it.hasExtractableContent }
-    log.info(
-        "Extractable content: ${extractableResults.size}, " +
-            "Additional resources (PDFs/attachments): ${additionalResources.size}")
+    log.debug(
+        "Extractable: ${extractableResults.size}, Additional resources: ${additionalResources.size}")
 
     // Step 4: LLM #2 - Generate answer from search results
     // Only send extractable content to the LLM, with PII masked
@@ -171,7 +167,7 @@ constructor(
     // Build metadata with search queries, token usage, and cost estimate
     val estimatedCost = calculateEstimatedCost(classificationLlmResult.usage, answerLlmResult.usage)
     val sourceBreakdown = allSearchResults.groupingBy { it.source }.eachCount()
-    log.info("Search result breakdown by source: $sourceBreakdown")
+    log.debug("Source breakdown: $sourceBreakdown")
 
     val metadata =
         AskAiMetadata(
@@ -274,9 +270,6 @@ constructor(
       answer: String,
       sources: List<SourceLink>
   ): List<SourceLink> {
-    // Log first 200 chars of answer to debug citation extraction
-    log.info("Answer text (first 200 chars): ${answer.take(200)}")
-
     // Support multiple citation formats due to LLM variance
     val citationPatterns =
         listOf(
@@ -290,8 +283,6 @@ constructor(
             .flatMap { pattern -> pattern.findAll(answer).toList() }
             .sortedBy { it.range.first }
 
-    log.info("Regex found ${allMatches.size} matches: ${allMatches.map { it.value }}")
-
     val citedIndices =
         allMatches
             .map { it.groupValues[1].toInt() - 1 } // Convert 1-indexed citations to 0-indexed
@@ -299,22 +290,14 @@ constructor(
             .distinct() // Remove duplicates, keeping first occurrence order
             .toList()
 
-    log.info(
-        "Reordering sources: Found ${citedIndices.size} cited indices: $citedIndices out of ${sources.size} total sources")
-
     if (citedIndices.isEmpty()) {
       // No citations found, return sources as-is
-      log.info("No citations found in answer, returning sources in original order")
       return sources
     }
 
     // Split into cited and uncited sources
     val citedSources = citedIndices.map { sources[it] }
     val uncitedSources = sources.filterIndexed { index, _ -> index !in citedIndices }
-
-    log.info(
-        "Reordered sources: ${citedIndices.size} cited sources first, then ${uncitedSources.size} uncited")
-    log.info("First cited source: ${citedSources.firstOrNull()?.title}")
 
     return citedSources + uncitedSources
   }
