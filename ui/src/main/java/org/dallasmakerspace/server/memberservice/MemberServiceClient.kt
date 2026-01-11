@@ -263,6 +263,60 @@ constructor(
     }
   }
 
+  suspend fun askAi(sessionId: String?, question: String, username: String?): Map<String, Any?> {
+    try {
+      val apiHeaders = getApiHeaders(sessionId, username)
+      val body = mapOf("question" to question)
+      var result: Map<String, Any>
+      withTimeout(120_000L) { result = dmsHttpClient.post("$baseUrl/ask-ai", apiHeaders, body) }
+      val data =
+          result["data"] as? Map<*, *> ?: throw MemberServiceException("data attribute missing")
+      @Suppress("UNCHECKED_CAST")
+      return data as Map<String, Any?>
+    } catch (ex: Exception) {
+      log.error("Failed to call Ask AI", ex)
+      throw MemberServiceException("Failed to call Ask AI", ex)
+    }
+  }
+
+  suspend fun getAskAiTopQuestions(sessionId: String?, limit: Int = 10): List<Map<String, Any?>> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/ask-ai/top-questions?limit=$limit", apiHeaders)
+      val data = result["data"] as? List<*> ?: emptyList<Map<String, Any?>>()
+      @Suppress("UNCHECKED_CAST")
+      data as List<Map<String, Any?>>
+    } catch (ex: Exception) {
+      log.warn("Failed to get Ask AI top questions", ex)
+      emptyList()
+    }
+  }
+
+  suspend fun getAskAiBySlug(sessionId: String?, slug: String): Map<String, Any?>? {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/ask-ai/q/$slug", apiHeaders)
+      val data = result["data"] as? Map<*, *>
+      @Suppress("UNCHECKED_CAST")
+      data as? Map<String, Any?>
+    } catch (ex: Exception) {
+      log.warn("Failed to get Ask AI by slug: $slug", ex)
+      null
+    }
+  }
+
+  suspend fun submitAskAiFeedback(sessionId: String?, cacheId: Int, isHelpful: Boolean): Boolean {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val body = mapOf("cacheId" to cacheId, "isHelpful" to isHelpful)
+      dmsHttpClient.post("$baseUrl/ask-ai/feedback", apiHeaders, body)
+      true
+    } catch (ex: Exception) {
+      log.warn("Failed to submit Ask AI feedback", ex)
+      false
+    }
+  }
+
   suspend fun resolveShortLink(
       path: String,
       sessionId: String?,

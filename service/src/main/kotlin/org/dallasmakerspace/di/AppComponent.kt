@@ -3,6 +3,8 @@ package org.dallasmakerspace.di
 import dagger.Component
 import io.ktor.server.application.*
 import javax.inject.Singleton
+import org.dallasmakerspace.askai.AskAiService
+import org.dallasmakerspace.askai.di.AskAiModule
 import org.dallasmakerspace.calendar.CalendarService
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.core.DBMasterConnection
@@ -28,6 +30,7 @@ import org.dallasmakerspace.webhook.di.WebhookModule
         [
             AppModule::class,
             ActiveDirectoryModule::class,
+            AskAiModule::class,
             CalendarModule::class,
             DiscourseModule::class,
             DoorControllerModule::class,
@@ -69,4 +72,6 @@ interface AppComponent {
   fun getCalendarService(): CalendarService
 
   fun getShortLinksService(): ShortLinksService
+
+  fun getAskAiService(): AskAiService
 }

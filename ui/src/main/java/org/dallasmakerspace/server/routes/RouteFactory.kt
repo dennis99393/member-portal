@@ -65,6 +65,7 @@ object RouteFactory {
     SHORT_LINK_REDIRECT("/go/{path...}"),
     COMMITTEES("/committees"),
     ACTION_TRACK("/api/track"),
+    ASK_AI("/ask-ai"),
   }
 }
 

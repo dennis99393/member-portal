@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en-US" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="initial-scale=1, width=device-width"/>
+    <title>Ask DMS AI - Dallas Makerspace</title>
+
+    <link rel="stylesheet" href="./static/styles/global.css"/>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&display=swap"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .ask-ai-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .question-form {
+            margin-bottom: 2rem;
+        }
+        .question-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            resize: vertical;
+            min-height: 100px;
+        }
+        .question-input:focus {
+            border-color: #0d6efd;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+        .submit-btn {
+            margin-top: 1rem;
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+        }
+        .answer-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .answer-content {
+            line-height: 1.7;
+        }
+        .answer-content p {
+            margin-bottom: 1rem;
+        }
+        .answer-content ul, .answer-content ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        .answer-content code {
+            background: #e9ecef;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+        }
+        .sources-section {
+            margin-top: 1.5rem;
+        }
+        .source-link {
+            display: block;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .source-link:last-child {
+            border-bottom: none;
+        }
+        .source-badge {
+            font-size: 0.75rem;
+            margin-right: 0.5rem;
+        }
+        .source-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            background: #6c757d;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-right: 0.75rem;
+        }
+        .answer-content .source-ref {
+            color: #0d6efd;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .answer-content .source-ref:hover {
+            text-decoration: underline;
+        }
+        .source-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+        }
+        .source-link:target {
+            background-color: #fff3cd;
+        }
+        .source-title {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cache-indicator {
+            font-size: 0.75rem;
+            color: #6c757d;
+            font-style: italic;
+        }
+        .asked-by {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        .asked-by dms-member-card {
+            display: inline;
+        }
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .loading-spinner {
+            display: none;
+        }
+        .loading .loading-spinner {
+            display: inline-block;
+        }
+        .loading .submit-text {
+            display: none;
+        }
+        .popular-questions-chips {
+            margin-top: 1.5rem;
+        }
+        .chips-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .question-chip {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #495057;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .question-chip:hover {
+            background: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+        .disclaimer-subtle {
+            font-size: 0.8rem;
+            color: #6c757d;
+            text-align: center;
+            padding: 1rem;
+            border-top: 1px solid #e9ecef;
+        }
+        .metadata-section {
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+        .metadata-content {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 0.5rem;
+        }
+        .metadata-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .metadata-row:last-child {
+            border-bottom: none;
+        }
+        .metadata-label {
+            font-weight: 500;
+            color: #6c757d;
+        }
+        .feedback-section {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+        .feedback-btn {
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+            border-radius: 20px;
+        }
+        .feedback-btn svg {
+            width: 18px;
+            height: 18px;
+            margin-right: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+<header class="top-nav" th:replace="~{fragments/header :: header}"></header>
+<div class="main">
+    <section class="main-inner">
+        <div class="ask-ai-container">
+            <h1 class="mb-4">Ask DMS AI</h1>
+
+            <!-- Error Message -->
+            <div th:if="${error}" class="error-message" th:text="${error}"></div>
+
+            <!-- Question Form - Hero Element -->
+            <form method="post" action="/ask-ai" class="question-form" id="askForm">
+                <textarea name="question"
+                          class="question-input"
+                          placeholder="What would you like to know about DMS?"
+                          required
+                          th:text="${question}"></textarea>
+                <button type="submit" class="btn btn-primary submit-btn" id="submitBtn">
+                    <span class="submit-text">Ask Question</span>
+                    <span class="loading-spinner spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </span>
+                </button>
+            </form>
+
+            <!-- Popular Questions as subtle chips (shown when no answer displayed) -->
+            <div th:if="${answer == null and topQuestions != null and !#lists.isEmpty(topQuestions)}"
+                 class="popular-questions-chips">
+                <div class="chips-label">Try popular questions:</div>
+                <div class="chips-container">
+                    <span th:each="q : ${topQuestions}" class="question-chip"
+                          th:data-question="${q.question}"
+                          th:title="${q.question}"
+                          th:text="${#strings.abbreviate(q.question, 50)}"
+                          onclick="askQuestion(this.dataset.question)"></span>
+                </div>
+            </div>
+
+            <!-- Answer Section -->
+            <div th:if="${answer}" class="answer-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0">Answer</h3>
+                    <div class="d-flex align-items-center gap-2">
+                        <span th:if="${askedByUsername}" class="asked-by">
+                            Asked by <dms-member-card th:attr="username=${askedByUsername}" state="inline"></dms-member-card>
+                        </span>
+                        <span th:if="${fromCache}" class="cache-indicator">(cached)</span>
+                    </div>
+                </div>
+                <div class="answer-content" id="answerContent" th:attr="data-markdown=${answer}">
+                    <!-- Markdown will be rendered here by JavaScript -->
+                </div>
+
+                <!-- Feedback Section -->
+                <div class="feedback-section">
+                    <span class="text-muted me-2">Was this helpful?</span>
+                    <button type="button" class="btn btn-outline-success feedback-btn" onclick="sendFeedback(true)">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2.144 2.144 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a9.84 9.84 0 0 0-.443.05 9.365 9.365 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111L8.864.046z"/>
+                        </svg>
+                        Yes
+                    </button>
+                    <button type="button" class="btn btn-outline-danger feedback-btn" onclick="sendFeedback(false)">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8.864 15.674c-.956.24-1.843-.484-1.908-1.42-.072-1.05-.23-2.015-.428-2.59-.125-.36-.479-1.012-1.04-1.638-.557-.624-1.282-1.179-2.131-1.41C2.685 8.432 2 7.85 2 7V3c0-.845.682-1.464 1.448-1.546 1.07-.113 1.564-.415 2.068-.723l.048-.029c.272-.166.578-.349.97-.484C6.931.08 7.395 0 8 0h3.5c.937 0 1.599.478 1.934 1.064.164.287.254.607.254.913 0 .152-.023.312-.077.464.201.262.38.577.488.9.11.33.172.762.004 1.15.069.13.12.268.159.403.077.27.113.567.113.856 0 .289-.036.586-.113.856-.035.12-.076.237-.138.362.133.358.197.714.197 1.04 0 .613-.168 1.153-.458 1.563.134.182.252.372.352.559.165.311.197.64.197.91 0 .37-.098.773-.342 1.09-.29.38-.702.606-1.088.657-.358.044-.663.048-.848.048H8z"/>
+                        </svg>
+                        No
+                    </button>
+                    <span id="feedbackStatus" class="ms-2 text-muted" style="display: none;"></span>
+                </div>
+
+                <!-- Metadata Section (collapsible) -->
+                <div class="metadata-section">
+                    <button class="btn btn-sm btn-outline-secondary" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#metadataCollapse">
+                        Show Metadata
+                    </button>
+                    <div class="collapse" id="metadataCollapse">
+                        <div class="metadata-content">
+                            <div class="metadata-row">
+                                <span class="metadata-label">Response Time</span>
+                                <span th:text="${responseTimeMs != null ? responseTimeMs + ' ms' : 'N/A'}"></span>
+                            </div>
+                            <div class="metadata-row">
+                                <span class="metadata-label">From Cache</span>
+                                <span th:text="${fromCache ? 'Yes' : 'No'}"></span>
+                            </div>
+                            <div class="metadata-row">
+                                <span class="metadata-label">Sources Found</span>
+                                <span th:text="${sourceCount != null ? sourceCount : 'N/A'}"></span>
+                            </div>
+                            <div class="metadata-row" th:if="${sourceBreakdown != null and !sourceBreakdown.isEmpty()}">
+                                <span class="metadata-label">Source Breakdown</span>
+                                <span>
+                                    <span th:each="entry, stat : ${sourceBreakdown}">
+                                        <span th:text="${entry.key + ': ' + entry.value}"></span>
+                                        <span th:if="${!stat.last}">, </span>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="metadata-row" th:if="${searchQueries != null and !#lists.isEmpty(searchQueries)}">
+                                <span class="metadata-label">Search Queries</span>
+                                <span th:text="${#strings.listJoin(searchQueries, ', ')}"></span>
+                            </div>
+                            <div th:if="${classificationTokens != null}" class="metadata-row">
+                                <span class="metadata-label">Classification Tokens</span>
+                                <span th:text="${classificationTokens.totalTokens} + ' (prompt: ' + ${classificationTokens.promptTokens} + ', completion: ' + ${classificationTokens.completionTokens} + ')'"></span>
+                            </div>
+                            <div th:if="${answerTokens != null}" class="metadata-row">
+                                <span class="metadata-label">Answer Tokens</span>
+                                <span th:text="${answerTokens.totalTokens} + ' (prompt: ' + ${answerTokens.promptTokens} + ', completion: ' + ${answerTokens.completionTokens} + ')'"></span>
+                            </div>
+                            <div th:if="${estimatedCostUsd != null}" class="metadata-row">
+                                <span class="metadata-label">Estimated Cost</span>
+                                <span th:text="'$' + ${#numbers.formatDecimal(estimatedCostUsd, 1, 6)}"></span>
+                            </div>
+                            <div class="metadata-row" th:if="${slug != null and slug != ''}">
+                                <span class="metadata-label">Shareable URL</span>
+                                <span>
+                                    <a th:href="'/ask-ai/q/' + ${slug}" id="shareableUrl"
+                                       th:text="'/ask-ai/q/' + ${slug}"></a>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary ms-2"
+                                            onclick="copyShareableUrl()">Copy</button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden fields for slug and cacheId to use in JavaScript -->
+            <input type="hidden" id="answerSlug" th:if="${slug != null}" th:value="${slug}" />
+            <input type="hidden" id="answerCacheId" th:if="${cacheId != null}" th:value="${cacheId}" />
+
+            <!-- Sources Section -->
+            <div th:if="${sources != null and !#lists.isEmpty(sources)}" class="sources-section" id="sources-section">
+                <h4>Sources</h4>
+                <div class="list-group">
+                    <a th:each="source, iterStat : ${sources}"
+                       th:id="${'source-' + (iterStat.index + 1)}"
+                       th:href="${source.url}"
+                       target="_blank"
+                       class="list-group-item list-group-item-action source-link">
+                        <span class="source-number" th:text="${iterStat.index + 1}"></span>
+                        <span th:class="${'badge source-badge ' + (source.source == 'wiki' ? 'bg-success' : 'bg-info')}"
+                              th:text="${source.source}"></span>
+                        <span class="source-title" th:text="${source.title}"></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Additional Info Section (PDFs, attachments not used in answer generation) -->
+            <div th:if="${additionalResources != null and !#lists.isEmpty(additionalResources)}" class="sources-section mt-3" id="additional-info-section">
+                <h5 class="text-muted">Additional Info</h5>
+                <p class="small text-muted mb-2">Related documents not used in generating the answer above.</p>
+                <div class="list-group">
+                    <a th:each="resource : ${additionalResources}"
+                       th:href="${resource.url}"
+                       target="_blank"
+                       class="list-group-item list-group-item-action source-link">
+                        <span th:if="${#strings.endsWith(resource.title.toLowerCase(), '.pdf')}" class="badge source-badge bg-secondary me-2">PDF</span>
+                        <span th:unless="${#strings.endsWith(resource.title.toLowerCase(), '.pdf')}" class="badge source-badge bg-secondary me-2">File</span>
+                        <span th:class="${'badge source-badge ' + (resource.source == 'wiki' ? 'bg-success' : 'bg-info')}"
+                              th:text="${resource.source}"></span>
+                        <span class="source-title" th:text="${resource.title}"></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- AI Disclaimer (subtle, at bottom) -->
+            <div class="disclaimer-subtle mt-4">
+                Answers are generated using AI and may not always be accurate. Please verify important information.
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+<!-- App JS -->
+<script src="/static/js/app.js"></script>
+<script src="/static/js/dms-member-card.js" type="module"></script>
+<script src="/static/js/dms-page-loader.js" defer></script>
+<script>
+    // Render markdown content and update URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const answerContent = document.getElementById('answerContent');
+        if (answerContent && answerContent.dataset.markdown) {
+            // Parse markdown
+            let html = marked.parse(answerContent.dataset.markdown);
+            // Convert «N» references to clickable spans
+            html = html.replace(/«(\d+)»/g, function(match, num) {
+                return '<span class="source-ref" title="Jump to source ' + num + '" onclick="scrollToSource(' + num + ')">[' + num + ']</span>';
+            });
+            answerContent.innerHTML = html;
+        }
+
+        // Update browser URL to shareable slug URL (without reload)
+        // Use pushState so back button works properly
+        const slugInput = document.getElementById('answerSlug');
+        if (slugInput && slugInput.value) {
+            const newUrl = '/ask-ai/q/' + slugInput.value;
+            if (window.location.pathname !== newUrl) {
+                window.history.pushState({ slug: slugInput.value }, '', newUrl);
+            }
+        }
+
+        // Add loading state to form
+        const form = document.getElementById('askForm');
+        const submitBtn = document.getElementById('submitBtn');
+        if (form && submitBtn) {
+            form.addEventListener('submit', function() {
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+            });
+        }
+    });
+
+    // Click a popular question to ask it
+    function askQuestion(question) {
+        const textarea = document.querySelector('.question-input');
+        const form = document.getElementById('askForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (textarea && form) {
+            textarea.value = question;
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+            form.submit();
+        }
+    }
+
+    // Send feedback
+    function sendFeedback(isHelpful) {
+        const statusEl = document.getElementById('feedbackStatus');
+        const cacheIdEl = document.getElementById('answerCacheId');
+        const cacheId = cacheIdEl ? parseInt(cacheIdEl.value, 10) : null;
+
+        if (!cacheId) {
+            console.warn('No cacheId available for feedback');
+            statusEl.textContent = 'Unable to submit feedback';
+            statusEl.style.display = 'inline';
+            return;
+        }
+
+        // Disable feedback buttons immediately
+        document.querySelectorAll('.feedback-btn').forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add('disabled');
+        });
+
+        statusEl.textContent = 'Submitting...';
+        statusEl.style.display = 'inline';
+
+        // Send feedback to backend
+        fetch('/ask-ai/feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ cacheId: cacheId, isHelpful: isHelpful })
+        })
+        .then(response => {
+            if (response.ok) {
+                statusEl.textContent = 'Thanks for your feedback!';
+            } else {
+                statusEl.textContent = 'Failed to submit feedback';
+                // Re-enable buttons on error
+                document.querySelectorAll('.feedback-btn').forEach(btn => {
+                    btn.disabled = false;
+                    btn.classList.remove('disabled');
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting feedback:', error);
+            statusEl.textContent = 'Failed to submit feedback';
+            // Re-enable buttons on error
+            document.querySelectorAll('.feedback-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('disabled');
+            });
+        });
+    }
+
+    // Copy shareable URL to clipboard
+    function copyShareableUrl() {
+        const urlEl = document.getElementById('shareableUrl');
+        if (urlEl) {
+            const fullUrl = window.location.origin + urlEl.getAttribute('href');
+            navigator.clipboard.writeText(fullUrl).then(() => {
+                // Show brief feedback
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = originalText; }, 1500);
+            });
+        }
+    }
+
+    // Scroll to source when clicking numbered reference
+    function scrollToSource(sourceNum) {
+        const targetEl = document.getElementById('source-' + sourceNum);
+        if (targetEl) {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Briefly highlight
+            targetEl.style.backgroundColor = '#fff3cd';
+            setTimeout(() => { targetEl.style.backgroundColor = ''; }, 2000);
+        }
+    }
+</script>
+</body>
+</html>

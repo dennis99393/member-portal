@@ -235,4 +235,48 @@ CREATE TABLE `short_links_reserved_aliases` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+--
+-- Table structure for table `ask_ai_cache`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ask_ai_cache` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id is auto increment primary key.',
+  `slug` varchar(100) NOT NULL COMMENT 'URL-friendly slug generated from question text for shareable URLs',
+  `question_hash` varchar(64) NOT NULL COMMENT 'SHA-256 hash of the normalized (lowercase, trimmed) question text for fast exact-match lookups',
+  `question_text` text NOT NULL COMMENT 'The original question text as submitted by the user',
+  `answer_text` text NOT NULL COMMENT 'The AI-generated answer text in markdown format',
+  `source_links` text NOT NULL COMMENT 'JSON array of source links used to generate the answer, format: [{title, url, source}]',
+  `asked_by_profile_id` int(10) unsigned NOT NULL COMMENT 'Profile ID of the member who originally asked this question (FK to profile.id)',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'The timestamp when this cache entry was created',
+  `hit_count` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Number of times this cached answer was returned (for popularity tracking)',
+  `last_hit_at` timestamp NULL DEFAULT NULL COMMENT 'The timestamp when this cached answer was last returned',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ask_ai_cache_slug_UNQ` (`slug`),
+  KEY `ask_ai_cache_question_hash_IDX` (`question_hash`) USING BTREE,
+  KEY `ask_ai_cache_asked_by_profile_id_IDX` (`asked_by_profile_id`) USING BTREE,
+  CONSTRAINT `ask_ai_cache_profile_FK` FOREIGN KEY (`asked_by_profile_id`) REFERENCES `profile` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Cache table for Ask DMS AI question-answer pairs to reduce LLM API calls';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ask_ai_feedback`
+--
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ask_ai_feedback` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'id is auto increment primary key.',
+  `cache_id` int(10) unsigned NOT NULL COMMENT 'Foreign key to the ask_ai_cache entry being rated',
+  `member_id` int(10) unsigned NOT NULL COMMENT 'The member ID who provided the feedback',
+  `is_helpful` tinyint(1) NOT NULL COMMENT 'Whether the member found the answer helpful (1=yes, 0=no)',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'The timestamp when the feedback was submitted',
+  PRIMARY KEY (`id`),
+  KEY `ask_ai_feedback_cache_id_IDX` (`cache_id`) USING BTREE,
+  KEY `ask_ai_feedback_member_id_IDX` (`member_id`) USING BTREE,
+  CONSTRAINT `ask_ai_feedback_cache_FK` FOREIGN KEY (`cache_id`) REFERENCES `ask_ai_cache` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Feedback table for tracking member ratings of Ask DMS AI answers';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 -- Dump completed on 2025-12-31 21:13:59

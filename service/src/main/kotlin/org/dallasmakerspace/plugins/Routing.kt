@@ -12,6 +12,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
 import kotlinx.serialization.Serializable
+import org.dallasmakerspace.askai.AskAiService
 import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.apiKey
 import org.dallasmakerspace.auth.requireRole
@@ -29,6 +30,8 @@ import org.dallasmakerspace.members.GroupService
 import org.dallasmakerspace.members.MemberService
 import org.dallasmakerspace.members.db.ProfileDAO
 import org.dallasmakerspace.members.db.suspendTransaction
+import org.dallasmakerspace.models.AskAiFeedbackRequest
+import org.dallasmakerspace.models.AskAiRequest
 import org.dallasmakerspace.models.NamespaceOwnerType
 import org.dallasmakerspace.routing.*
 import org.dallasmakerspace.routing.BadgeLookup
@@ -81,6 +84,7 @@ fun Application.configureRouting() {
     val shortLinksService: ShortLinksService by lazy {
       DaggerAppComponent.create().getShortLinksService()
     }
+    val askAiService: AskAiService by lazy { DaggerAppComponent.create().getAskAiService() }
 
     get("/") {
       call.respondText(
@@ -526,6 +530,52 @@ fun Application.configureRouting() {
                     )
                   },
               )
+        }
+      }
+
+      /** Ask AI - Question Answering */
+      requireRole("askai:read") {
+        post("/ask-ai") {
+          val request = call.receive<AskAiRequest>()
+          val username = call.request.headers["X-Username"]
+          val response = askAiService.ask(request.question, username = username)
+          call.respond(ApiResponse(Status.SUCCESS, "Question answered", response))
+        }
+
+        get("/ask-ai/sources") {
+          val sources = askAiService.getRegisteredSources()
+          call.respond(ApiResponse(Status.SUCCESS, "Registered search sources", sources))
+        }
+
+        get("/ask-ai/top-questions") {
+          val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 10
+          val topQuestions = askAiService.getTopQuestions(limit)
+          call.respond(ApiResponse(Status.SUCCESS, "Top cached questions", topQuestions))
+        }
+
+        get("/ask-ai/q/{slug}") {
+          val slug =
+              call.parameters["slug"]
+                  ?: return@get call.respond(
+                      HttpStatusCode.BadRequest,
+                      ApiResponse(Status.ERROR, "Slug is required", null))
+          val response = askAiService.getBySlug(slug)
+          if (response != null) {
+            call.respond(ApiResponse(Status.SUCCESS, "Cached answer retrieved", response))
+          } else {
+            call.respond(
+                HttpStatusCode.NotFound,
+                ApiResponse(Status.ERROR, "Answer not found for slug: $slug", null))
+          }
+        }
+
+        post("/ask-ai/feedback") {
+          val request = call.receive<AskAiFeedbackRequest>()
+          askAiService.recordFeedback(
+              cacheId = request.cacheId,
+              memberId = request.memberId ?: 0,
+              isHelpful = request.isHelpful)
+          call.respond(ApiResponse(Status.SUCCESS, "Feedback recorded", null))
         }
       }
     }

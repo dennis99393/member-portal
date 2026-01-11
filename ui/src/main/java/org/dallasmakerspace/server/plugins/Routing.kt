@@ -79,6 +79,14 @@ fun Application.configureRouting() {
       }
       get(RouteFactory.Paths.COMMITTEES.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       post(RouteFactory.Paths.ACTION_TRACK.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.ASK_AI.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      post(RouteFactory.Paths.ASK_AI.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get("/ask-ai/q/{slug}") {
+        RouteFactory.getHandler(RouteFactory.Paths.ASK_AI.path)?.handleBase(call)
+      }
+      post("/ask-ai/feedback") {
+        RouteFactory.getHandler(RouteFactory.Paths.ASK_AI.path)?.handleBase(call)
+      }
     }
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handleBase(call) }

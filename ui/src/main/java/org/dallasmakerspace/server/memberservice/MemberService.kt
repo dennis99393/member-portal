@@ -159,4 +159,20 @@ constructor(
   suspend fun hasPrerequisiteClasses(groupSlug: String, sessionId: String?): Boolean {
     return memberServiceClient.hasPrerequisiteClasses(groupSlug, sessionId)
   }
+
+  suspend fun askAi(sessionId: String?, question: String, username: String?): Map<String, Any?> {
+    return memberServiceClient.askAi(sessionId, question, username)
+  }
+
+  suspend fun getAskAiTopQuestions(sessionId: String?, limit: Int = 10): List<Map<String, Any?>> {
+    return memberServiceClient.getAskAiTopQuestions(sessionId, limit)
+  }
+
+  suspend fun getAskAiBySlug(sessionId: String?, slug: String): Map<String, Any?>? {
+    return memberServiceClient.getAskAiBySlug(sessionId, slug)
+  }
+
+  suspend fun submitAskAiFeedback(sessionId: String?, cacheId: Int, isHelpful: Boolean): Boolean {
+    return memberServiceClient.submitAskAiFeedback(sessionId, cacheId, isHelpful)
+  }
 }

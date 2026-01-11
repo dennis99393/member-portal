@@ -10,6 +10,7 @@ import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.memberservice.MemberServiceClient
 import org.dallasmakerspace.server.routes.ActionTrackingHandler
+import org.dallasmakerspace.server.routes.AskAiHandler
 import org.dallasmakerspace.server.routes.BackendApiHandler
 import org.dallasmakerspace.server.routes.CommitteesHandler
 import org.dallasmakerspace.server.routes.GroupsHandler
@@ -162,4 +163,13 @@ class RoutesModule {
   fun providesActionTrackingHandler(
       loggerFactory: LoggerFactory,
   ): IRouteHandler = ActionTrackingHandler(loggerFactory)
+
+  @IntoMap
+  @Provides
+  @StringKey("/ask-ai")
+  fun providesAskAiHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService
+  ): IRouteHandler = AskAiHandler(loggerFactory, userInfoProvider, memberService)
 }
