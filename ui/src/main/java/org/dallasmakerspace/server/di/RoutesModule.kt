@@ -8,6 +8,7 @@ import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.memberservice.MemberServiceClient
+import org.dallasmakerspace.server.routes.ActionTrackingHandler
 import org.dallasmakerspace.server.routes.BackendApiHandler
 import org.dallasmakerspace.server.routes.CommitteesHandler
 import org.dallasmakerspace.server.routes.GroupsHandler
@@ -140,4 +141,11 @@ class RoutesModule {
       userInfoProvider: UserInfoProvider,
       memberService: MemberService
   ): IRouteHandler = CommitteesHandler(loggerFactory, userInfoProvider, memberService)
+
+  @IntoMap
+  @Provides
+  @StringKey("/api/track")
+  fun providesActionTrackingHandler(
+      loggerFactory: LoggerFactory,
+  ): IRouteHandler = ActionTrackingHandler(loggerFactory)
 }

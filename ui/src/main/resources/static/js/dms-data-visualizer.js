@@ -106,6 +106,18 @@ class DmsDataVisualizer extends LitElement {
         this._showMetadata = false;
     }
 
+    _trackAction(actionName) {
+        const payload = JSON.stringify({
+            actionType: 'button_action',
+            actionName: actionName,
+            actionCategory: 'reports',
+            uri: window.location.pathname
+        });
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon('/api/track', new Blob([payload], { type: 'application/json' }));
+        }
+    }
+
     connectedCallback() {
         super.connectedCallback();
         this._fetchData();
@@ -173,6 +185,7 @@ class DmsDataVisualizer extends LitElement {
         } else if (this.renderAs === 'line') {
             const toggleTable = () => {
                 this._showTable = !this._showTable;
+                this._trackAction(this._showTable ? 'Show Raw Data' : 'Hide Raw Data');
                 this.requestUpdate();
             };
 
@@ -211,6 +224,7 @@ class DmsDataVisualizer extends LitElement {
         } else if (this.renderAs === 'bar') {
             const toggleTable = () => {
                 this._showTable = !this._showTable;
+                this._trackAction(this._showTable ? 'Show Raw Data' : 'Hide Raw Data');
                 this.requestUpdate();
             };
 
@@ -256,6 +270,7 @@ class DmsDataVisualizer extends LitElement {
 
         const toggleMetadata = () => {
             this._showMetadata = !this._showMetadata;
+            this._trackAction(this._showMetadata ? 'Show Metadata' : 'Hide Metadata');
             this.requestUpdate();
         };
 
@@ -306,6 +321,7 @@ class DmsDataVisualizer extends LitElement {
                     button.innerText = chartComponent.showAnnotations ? 'Hide Annotations' : 'Show Annotations';
                     button.addEventListener('click', () => {
                         chartComponent.toggleAnnotations();
+                        this._trackAction(chartComponent.showAnnotations ? 'Show Annotations' : 'Hide Annotations');
                         button.innerText = chartComponent.showAnnotations ? 'Hide Annotations' : 'Show Annotations';
                     });
 

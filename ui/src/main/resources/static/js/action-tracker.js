@@ -1,0 +1,97 @@
+/**
+ * User Action Tracker
+ * Logs external link clicks and button actions to Elasticsearch
+ */
+(function() {
+    'use strict';
+
+    const TRACK_ENDPOINT = '/api/track';
+    const EXCLUDED_PATHS = ['/short-links', '/go/'];
+
+    /**
+     * Check if current page should be excluded from tracking
+     */
+    function isExcludedPage() {
+        const path = window.location.pathname;
+        return EXCLUDED_PATHS.some(excluded => path.startsWith(excluded));
+    }
+
+    /**
+     * Send tracking data to server (non-blocking)
+     */
+    function track(actionType, actionDetails) {
+        const payload = JSON.stringify({
+            actionType: actionType,
+            ...actionDetails,
+            uri: window.location.pathname
+        });
+
+        if (navigator.sendBeacon) {
+            const blob = new Blob([payload], { type: 'application/json' });
+            navigator.sendBeacon(TRACK_ENDPOINT, blob);
+        } else {
+            fetch(TRACK_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: payload,
+                keepalive: true
+            }).catch(function() {});
+        }
+    }
+
+    /**
+     * Track external link click
+     */
+    function trackExternalLink(element) {
+        var href = element.getAttribute('href') || '';
+        var linkText = (element.textContent || '').trim().substring(0, 100);
+
+        track('external_link_click', {
+            destinationUrl: href,
+            linkText: linkText
+        });
+    }
+
+    /**
+     * Track button action
+     */
+    function trackButtonAction(element) {
+        var actionName = element.getAttribute('data-track-action') ||
+                        (element.textContent || '').trim().substring(0, 50) ||
+                        'unknown';
+        var actionCategory = element.getAttribute('data-track-category') || 'button';
+
+        track('button_action', {
+            actionName: actionName,
+            actionCategory: actionCategory
+        });
+    }
+
+    /**
+     * Initialize click tracking
+     */
+    function init() {
+        if (isExcludedPage()) {
+            return;
+        }
+
+        document.addEventListener('click', function(event) {
+            var target = event.target.closest('a[target="_blank"], [data-track-action]');
+            if (!target) return;
+
+            if (target.tagName === 'A' && target.getAttribute('target') === '_blank') {
+                trackExternalLink(target);
+            }
+
+            if (target.hasAttribute('data-track-action')) {
+                trackButtonAction(target);
+            }
+        }, { capture: true });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();

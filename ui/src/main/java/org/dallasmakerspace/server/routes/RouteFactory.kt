@@ -60,6 +60,7 @@ object RouteFactory {
     SHORT_LINKS_ADMIN("/short-links/admin"),
     SHORT_LINK_REDIRECT("/go/{path...}"),
     COMMITTEES("/committees"),
+    ACTION_TRACK("/api/track"),
   }
 }
 

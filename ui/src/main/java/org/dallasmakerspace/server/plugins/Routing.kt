@@ -75,6 +75,7 @@ fun Application.configureRouting() {
         RouteFactory.getHandler(call)?.handleBase(call)
       }
       get(RouteFactory.Paths.COMMITTEES.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      post(RouteFactory.Paths.ACTION_TRACK.path) { RouteFactory.getHandler(call)?.handleBase(call) }
     }
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handleBase(call) }
