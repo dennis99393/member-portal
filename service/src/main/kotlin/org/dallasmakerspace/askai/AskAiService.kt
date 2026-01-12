@@ -127,6 +127,41 @@ constructor(
     log.debug(
         "Extractable: ${extractableResults.size}, Additional resources: ${additionalResources.size}")
 
+    // If no search results found, return canned response directing user to Talk forum
+    if (extractableResults.isEmpty() && additionalResources.isEmpty()) {
+      log.info("No search results found, returning canned response")
+      val cannedAnswer =
+          """
+          I couldn't find any relevant information in our documentation or forum discussions to answer your question.
+
+          I recommend posting your question in the [Ask Dallas Makerspace](https://talk.dallasmakerspace.org/c/ask-dallas-makerspace/82) category on our Talk forum, where community members and staff can help you directly.
+
+          When posting, please include:
+          * Any specific details about your question
+          * What you've already tried (if applicable)
+          * Any relevant photos or links
+
+          Our community is very helpful and you'll usually get a response within a few hours!
+          """
+              .trimIndent()
+
+      return AskAiResponse(
+          answer = cannedAnswer,
+          sources = emptyList(),
+          fromCache = false,
+          slug = null,
+          cacheId = null,
+          askedByUsername = username,
+          metadata =
+              AskAiMetadata(
+                  searchQueries = searchQueries,
+                  sourceBreakdown = emptyMap(),
+                  classificationTokens = classificationLlmResult.usage,
+                  answerTokens = null,
+                  estimatedCostUsd = calculateEstimatedCost(classificationLlmResult.usage, null)),
+          additionalResources = emptyList())
+    }
+
     // Step 4: LLM #2 - Generate answer from search results
     // Only send extractable content to the LLM, with PII masked
     val maskedSearchResults =
