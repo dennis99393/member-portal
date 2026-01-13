@@ -39,13 +39,15 @@ constructor(
    * @param question The user's question
    * @param memberId Optional member ID for tracking (currently unused)
    * @param username Username of the member asking the question (required)
+   * @param forceRefresh If true, bypass cache and generate a fresh answer (dev mode only)
    * @return AskAiResponse containing the answer, sources, and cache status
    * @throws IllegalArgumentException if username is not provided
    */
   suspend fun ask(
       question: String,
       memberId: Int? = null,
-      username: String? = null
+      username: String? = null,
+      forceRefresh: Boolean = false
   ): AskAiResponse {
     log.info("Processing question: $question")
 
@@ -60,20 +62,25 @@ constructor(
           throw IllegalArgumentException("Could not find profile for username: $username", e)
         }
 
-    // Step 1: Check cache for exact match (fast path)
-    val exactMatch = cacheRepository.findByExactQuestion(question)
-    if (exactMatch != null) {
-      log.info("Found exact cache match for question (id=${exactMatch.id})")
-      cacheRepository.incrementHitCount(exactMatch.id)
-      // Reorder sources so cited ones appear first
-      val orderedSources = reorderSourcesByCitation(exactMatch.answerText, exactMatch.sources)
-      return AskAiResponse(
-          answer = exactMatch.answerText,
-          sources = orderedSources,
-          fromCache = true,
-          slug = exactMatch.slug,
-          cacheId = exactMatch.id,
-          askedByUsername = exactMatch.askedByUsername)
+    // Step 1: Check cache for exact match (fast path) - skip if forceRefresh is true
+    if (!forceRefresh) {
+      val exactMatch = cacheRepository.findByExactQuestion(question)
+      if (exactMatch != null) {
+        log.info("Found exact cache match for question (id=${exactMatch.id})")
+        cacheRepository.incrementHitCount(exactMatch.id)
+        // Reorder sources so cited ones appear first
+        val orderedSources = reorderSourcesByCitation(exactMatch.answerText, exactMatch.sources)
+        return AskAiResponse(
+            answer = exactMatch.answerText,
+            sources = orderedSources,
+            fromCache = true,
+            slug = exactMatch.slug,
+            cacheId = exactMatch.id,
+            askedByUsername = exactMatch.askedByUsername,
+            metadata = exactMatch.metadata)
+      }
+    } else {
+      log.info("Force refresh requested - bypassing cache lookup")
     }
 
     // Step 2: LLM #1 - Classify question and generate search queries
@@ -90,22 +97,25 @@ constructor(
     val classificationLlmResult = openRouterClient.classify(maskedQuestion, maskedCachedQuestions)
     val classificationResult = classificationLlmResult.result
 
-    // Check if LLM found a semantic match in cached questions
-    val matchedCacheId = classificationResult.matchedCacheId
-    if (matchedCacheId != null) {
-      val cachedEntry = cacheRepository.getById(matchedCacheId)
-      if (cachedEntry != null) {
-        log.info("LLM found semantic cache match (id=${cachedEntry.id})")
-        cacheRepository.incrementHitCount(cachedEntry.id)
-        // Reorder sources so cited ones appear first
-        val orderedSources = reorderSourcesByCitation(cachedEntry.answerText, cachedEntry.sources)
-        return AskAiResponse(
-            answer = cachedEntry.answerText,
-            sources = orderedSources,
-            fromCache = true,
-            slug = cachedEntry.slug,
-            cacheId = cachedEntry.id,
-            askedByUsername = cachedEntry.askedByUsername)
+    // Check if LLM found a semantic match in cached questions - skip if forceRefresh is true
+    if (!forceRefresh) {
+      val matchedCacheId = classificationResult.matchedCacheId
+      if (matchedCacheId != null) {
+        val cachedEntry = cacheRepository.getById(matchedCacheId)
+        if (cachedEntry != null) {
+          log.info("LLM found semantic cache match (id=${cachedEntry.id})")
+          cacheRepository.incrementHitCount(cachedEntry.id)
+          // Reorder sources so cited ones appear first
+          val orderedSources = reorderSourcesByCitation(cachedEntry.answerText, cachedEntry.sources)
+          return AskAiResponse(
+              answer = cachedEntry.answerText,
+              sources = orderedSources,
+              fromCache = true,
+              slug = cachedEntry.slug,
+              cacheId = cachedEntry.id,
+              askedByUsername = cachedEntry.askedByUsername,
+              metadata = cachedEntry.metadata)
+        }
       }
     }
 
@@ -158,7 +168,8 @@ constructor(
                   sourceBreakdown = emptyMap(),
                   classificationTokens = classificationLlmResult.usage,
                   answerTokens = null,
-                  estimatedCostUsd = calculateEstimatedCost(classificationLlmResult.usage, null)),
+                  estimatedCostUsd = calculateEstimatedCost(classificationLlmResult.usage, null),
+                  modelName = classificationLlmResult.modelName),
           additionalResources = emptyList())
     }
 
@@ -184,21 +195,6 @@ constructor(
     val additionalResourceLinks =
         additionalResources.map { SourceLink(it.title, it.url, it.source) }
 
-    var slug: String? = null
-    var cacheId: Int? = null
-
-    try {
-      // Cache all sources together for future reference
-      val allSources = orderedSources + additionalResourceLinks
-      val cached = cacheRepository.save(question, answer, allSources, profileId)
-      slug = cached.slug
-      cacheId = cached.id
-      log.info(
-          "Cached new answer for question (slug=$slug, cacheId=$cacheId, profileId=$profileId)")
-    } catch (e: Exception) {
-      log.warn("Failed to cache answer", e)
-    }
-
     // Build metadata with search queries, token usage, and cost estimate
     val estimatedCost = calculateEstimatedCost(classificationLlmResult.usage, answerLlmResult.usage)
     val sourceBreakdown = allSearchResults.groupingBy { it.source }.eachCount()
@@ -210,7 +206,23 @@ constructor(
             sourceBreakdown = sourceBreakdown,
             classificationTokens = classificationLlmResult.usage,
             answerTokens = answerLlmResult.usage,
-            estimatedCostUsd = estimatedCost)
+            estimatedCostUsd = estimatedCost,
+            modelName = answerLlmResult.modelName)
+
+    var slug: String? = null
+    var cacheId: Int? = null
+
+    try {
+      // Cache all sources together for future reference
+      val allSources = orderedSources + additionalResourceLinks
+      val cached = cacheRepository.save(question, answer, allSources, profileId, metadata)
+      slug = cached.slug
+      cacheId = cached.id
+      log.info(
+          "Cached new answer for question (slug=$slug, cacheId=$cacheId, profileId=$profileId)")
+    } catch (e: Exception) {
+      log.warn("Failed to cache answer", e)
+    }
 
     return AskAiResponse(
         answer = answer,
@@ -272,7 +284,8 @@ constructor(
         fromCache = true,
         slug = entry.slug,
         cacheId = entry.id,
-        askedByUsername = entry.askedByUsername)
+        askedByUsername = entry.askedByUsername,
+        metadata = entry.metadata)
   }
 
   /**

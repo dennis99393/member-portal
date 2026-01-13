@@ -538,7 +538,9 @@ fun Application.configureRouting() {
         post("/ask-ai") {
           val request = call.receive<AskAiRequest>()
           val username = call.request.headers["X-Username"]
-          val response = askAiService.ask(request.question, username = username)
+          val forceRefresh = call.request.queryParameters["refresh"]?.toBoolean() ?: false
+          val response =
+              askAiService.ask(request.question, username = username, forceRefresh = forceRefresh)
           call.respond(ApiResponse(Status.SUCCESS, "Question answered", response))
         }
 

@@ -263,12 +263,18 @@ constructor(
     }
   }
 
-  suspend fun askAi(sessionId: String?, question: String, username: String?): Map<String, Any?> {
+  suspend fun askAi(
+      sessionId: String?,
+      question: String,
+      username: String?,
+      forceRefresh: Boolean = false
+  ): Map<String, Any?> {
     try {
       val apiHeaders = getApiHeaders(sessionId, username)
       val body = mapOf("question" to question)
+      val url = if (forceRefresh) "$baseUrl/ask-ai?refresh=true" else "$baseUrl/ask-ai"
       var result: Map<String, Any>
-      withTimeout(120_000L) { result = dmsHttpClient.post("$baseUrl/ask-ai", apiHeaders, body) }
+      withTimeout(120_000L) { result = dmsHttpClient.post(url, apiHeaders, body) }
       val data =
           result["data"] as? Map<*, *> ?: throw MemberServiceException("data attribute missing")
       @Suppress("UNCHECKED_CAST")

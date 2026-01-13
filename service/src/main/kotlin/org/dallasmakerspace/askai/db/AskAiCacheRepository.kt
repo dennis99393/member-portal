@@ -31,17 +31,21 @@ class AskAiCacheRepository @Inject constructor(loggerFactory: LoggerFactory) {
    * @param answer The generated answer
    * @param sources List of source links used to generate the answer
    * @param profileId The profile ID of the member who asked the question
+   * @param metadata Optional metadata about the AI response generation process
    * @return The created cache entry
    */
   suspend fun save(
       question: String,
       answer: String,
       sources: List<SourceLink>,
-      profileId: Int
+      profileId: Int,
+      metadata: org.dallasmakerspace.models.AskAiMetadata? = null
   ): AskAiCacheEntry = suspendTransaction {
     val hash = hashQuestion(question)
     val sourcesJson = json.encodeToString(sources)
     val generatedSlug = generateUniqueSlug(question)
+    val metadataJson = metadata?.let { json.encodeToString(it) }
+    val totalCost = metadata?.estimatedCostUsd?.let { java.math.BigDecimal.valueOf(it) }
 
     val dao =
         AskAiCacheDAO.new {
@@ -52,6 +56,8 @@ class AskAiCacheRepository @Inject constructor(loggerFactory: LoggerFactory) {
           sourceLinks = sourcesJson
           askedByProfileId = profileId
           hitCount = 0
+          this.metadata = metadataJson
+          totalCostUsd = totalCost
         }
 
     daoToModel(dao)
@@ -269,6 +275,16 @@ class AskAiCacheRepository @Inject constructor(loggerFactory: LoggerFactory) {
           emptyList()
         }
 
+    val metadata: org.dallasmakerspace.models.AskAiMetadata? =
+        dao.metadata?.let { metadataJson ->
+          try {
+            json.decodeFromString(metadataJson)
+          } catch (e: Exception) {
+            log.warn("Failed to parse metadata JSON for cache entry ${dao.id.value}", e)
+            null
+          }
+        }
+
     // Resolve profile_id to username
     val username =
         ProfileDAO.find { ProfileTable.idColumn eq dao.askedByProfileId }.firstOrNull()?.id?.value
@@ -283,7 +299,8 @@ class AskAiCacheRepository @Inject constructor(loggerFactory: LoggerFactory) {
         askedByUsername = username,
         createdAt = toKotlinInstant(dao.createdAt),
         hitCount = dao.hitCount,
-        lastHitAt = dao.lastHitAt?.let { toKotlinInstant(it) })
+        lastHitAt = dao.lastHitAt?.let { toKotlinInstant(it) },
+        metadata = metadata)
   }
 
   companion object {

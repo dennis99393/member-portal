@@ -252,6 +252,8 @@ CREATE TABLE `ask_ai_cache` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'The timestamp when this cache entry was created',
   `hit_count` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Number of times this cached answer was returned (for popularity tracking)',
   `last_hit_at` timestamp NULL DEFAULT NULL COMMENT 'The timestamp when this cached answer was last returned',
+  `metadata` text DEFAULT NULL COMMENT 'JSON serialized metadata about the AI response generation (token usage, cost, model name, etc.)',
+  `total_cost_usd` decimal(10,6) DEFAULT NULL COMMENT 'Total estimated cost in USD for generating this response (sum of classification + answer generation)',
   PRIMARY KEY (`id`),
   UNIQUE KEY `ask_ai_cache_slug_UNQ` (`slug`),
   KEY `ask_ai_cache_question_hash_IDX` (`question_hash`) USING BTREE,

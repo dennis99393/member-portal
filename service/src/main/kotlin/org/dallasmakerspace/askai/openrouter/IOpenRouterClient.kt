@@ -9,6 +9,7 @@ import org.dallasmakerspace.models.TokenUsage
 data class LlmResult<T>(
     val result: T,
     val usage: TokenUsage?,
+    val modelName: String? = null,
 )
 
 /**

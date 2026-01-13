@@ -182,7 +182,7 @@ $searchResultsText"""
                     completionTokens = it.completionTokens,
                     totalTokens = it.totalTokens)
               }
-          return LlmResult(result = content, usage = usage)
+          return LlmResult(result = content, usage = usage, modelName = chatResponse.model)
         }
         HttpStatusCode.TooManyRequests -> {
           throw OpenRouterApiException("Rate limited by OpenRouter API")

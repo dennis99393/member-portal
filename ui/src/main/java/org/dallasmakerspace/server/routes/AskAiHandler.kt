@@ -11,6 +11,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.dallasmakerspace.server.auth.UserInfoProvider
+import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 
@@ -20,7 +21,8 @@ class AskAiHandler
 constructor(
     loggerFactory: LoggerFactory,
     userInfoProvider: UserInfoProvider,
-    private val memberService: MemberService
+    private val memberService: MemberService,
+    private val appConfig: AppConfig
 ) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
@@ -76,6 +78,7 @@ constructor(
 
     val jsonMap: MutableMap<String, Any> = userInfo.toMutableMap()
     jsonMap["profile_url"] = "./profile/@${jsonMap["preferred_username"]}"
+    jsonMap["isDevelopmentMode"] = appConfig.isDevelopmentMode()
 
     // Always fetch top questions for the initial page
     try {
@@ -92,11 +95,12 @@ constructor(
       try {
         val formParams = call.receiveParameters()
         val question = formParams["question"] ?: ""
+        val refresh = formParams["refresh"]?.toBoolean() ?: false
         val username = userInfo["preferred_username"] as? String
 
         if (question.isNotBlank()) {
-          log.info("Processing question: $question")
-          val response = memberService.askAi(session.sessionId, question, username)
+          log.info("Processing question: $question (refresh=$refresh)")
+          val response = memberService.askAi(session.sessionId, question, username, refresh)
           val elapsedMs = System.currentTimeMillis() - startTime
 
           jsonMap["question"] = question
@@ -143,6 +147,7 @@ constructor(
 
     val jsonMap: MutableMap<String, Any> = userInfo.toMutableMap()
     jsonMap["profile_url"] = "./profile/@${jsonMap["preferred_username"]}"
+    jsonMap["isDevelopmentMode"] = appConfig.isDevelopmentMode()
 
     // Fetch the cached answer by slug
     val startTime = System.currentTimeMillis()

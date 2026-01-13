@@ -39,6 +39,7 @@ data class AskAiMetadata(
     val classificationTokens: TokenUsage? = null,
     val answerTokens: TokenUsage? = null,
     val estimatedCostUsd: Double? = null,
+    val modelName: String? = null,
 )
 
 /** Token usage for an LLM call. */
@@ -70,6 +71,7 @@ data class AskAiCacheEntry(
     val createdAt: Instant,
     val hitCount: Int,
     val lastHitAt: Instant?,
+    val metadata: AskAiMetadata? = null,
 )
 
 /** Result from the classification LLM call. */

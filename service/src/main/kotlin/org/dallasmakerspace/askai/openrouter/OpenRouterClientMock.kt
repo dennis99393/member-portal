@@ -40,7 +40,8 @@ class OpenRouterClientMock @Inject constructor(loggerFactory: LoggerFactory) : I
 
     return LlmResult(
         result = result,
-        usage = TokenUsage(promptTokens = 100, completionTokens = 50, totalTokens = 150))
+        usage = TokenUsage(promptTokens = 100, completionTokens = 50, totalTokens = 150),
+        modelName = "mock-model")
   }
 
   override suspend fun generateAnswer(
@@ -76,7 +77,8 @@ ${searchResults.take(3).mapIndexed { idx, it -> "- According to «${idx + 1}», 
 
     return LlmResult(
         result = answer,
-        usage = TokenUsage(promptTokens = 500, completionTokens = 200, totalTokens = 700))
+        usage = TokenUsage(promptTokens = 500, completionTokens = 200, totalTokens = 700),
+        modelName = "mock-model")
   }
 
   override suspend fun chatCompletion(
@@ -94,7 +96,8 @@ ${searchResults.take(3).mapIndexed { idx, it -> "- According to «${idx + 1}», 
 
     return LlmResult(
         result = result,
-        usage = TokenUsage(promptTokens = 50, completionTokens = 25, totalTokens = 75))
+        usage = TokenUsage(promptTokens = 50, completionTokens = 25, totalTokens = 75),
+        modelName = "mock-model")
   }
 
   private fun generateMockSearchQueries(question: String): List<String> {
