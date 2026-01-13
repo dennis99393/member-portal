@@ -15,7 +15,7 @@ class MemberService
 constructor(
     loggerFactory: LoggerFactory,
     private val memberServiceClient: MemberServiceClient,
-    private val votingRegistrationManager: VoterRegistrationManager
+    private val votingRegistrationManager: VoterRegistrationManager,
 ) {
   private val log = loggerFactory.create(javaClass)
 
@@ -23,7 +23,7 @@ constructor(
       username: String,
       discourseUsername: String,
       discourseAvatarUrl: String?,
-      sessionId: String?
+      sessionId: String?,
   ) {
     // Get member object
     val member = memberServiceClient.getMember(username, sessionId)
@@ -61,7 +61,7 @@ constructor(
       discordUserId: String,
       discordUsername: String,
       discordAvatarUrl: String?,
-      sessionId: String?
+      sessionId: String?,
   ) {
     // Get member object
     val member = memberServiceClient.getMember(username, sessionId)
@@ -128,12 +128,18 @@ constructor(
 
   suspend fun registerVoting(sessionId: String?, username: String) {
     memberServiceClient.addToGroup(
-        sessionId, username, getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
+        sessionId,
+        username,
+        getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()),
+    )
   }
 
   suspend fun unregisterVoting(sessionId: String?, username: String) {
     memberServiceClient.removeFromGroup(
-        sessionId, username, getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()))
+        sessionId,
+        username,
+        getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()),
+    )
   }
 
   suspend fun callBackendApi(path: String, sessionId: String?) =
@@ -151,7 +157,7 @@ constructor(
   suspend fun getEventsOrganizedByMember(
       username: String,
       limit: Int,
-      sessionId: String?
+      sessionId: String?,
   ): List<EventSummary> {
     return memberServiceClient.getEventsOrganizedByMember(username, limit, sessionId)
   }
@@ -160,8 +166,13 @@ constructor(
     return memberServiceClient.hasPrerequisiteClasses(groupSlug, sessionId)
   }
 
-  suspend fun askAi(sessionId: String?, question: String, username: String?): Map<String, Any?> {
-    return memberServiceClient.askAi(sessionId, question, username)
+  suspend fun askAi(
+      sessionId: String?,
+      question: String,
+      username: String?,
+      forceRefresh: Boolean = false,
+  ): Map<String, Any?> {
+    return memberServiceClient.askAi(sessionId, question, username, forceRefresh)
   }
 
   suspend fun getAskAiTopQuestions(sessionId: String?, limit: Int = 10): List<Map<String, Any?>> {

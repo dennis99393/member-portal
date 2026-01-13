@@ -170,6 +170,7 @@ class RoutesModule {
   fun providesAskAiHandler(
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
-      memberService: MemberService
-  ): IRouteHandler = AskAiHandler(loggerFactory, userInfoProvider, memberService)
+      memberService: MemberService,
+      appConfig: AppConfig
+  ): IRouteHandler = AskAiHandler(loggerFactory, userInfoProvider, memberService, appConfig)
 }

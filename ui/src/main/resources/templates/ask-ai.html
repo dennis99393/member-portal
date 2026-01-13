@@ -217,6 +217,19 @@
             height: 18px;
             margin-right: 0.25rem;
         }
+        .refresh-btn {
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
+        }
+        .refresh-btn:hover {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+        .refresh-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
     </style>
 </head>
 <body>
@@ -266,6 +279,14 @@
                             Asked by <dms-member-card th:attr="username=${askedByUsername}" state="inline"></dms-member-card>
                         </span>
                         <span th:if="${fromCache}" class="cache-indicator">(cached)</span>
+                        <button th:if="${fromCache and isDevelopmentMode}"
+                                id="refresh-button"
+                                class="btn btn-sm btn-outline-secondary refresh-btn"
+                                onclick="refreshAnswer()"
+                                type="button"
+                                title="Force a fresh answer (dev mode only)">
+                            🔄 Refresh
+                        </button>
                     </div>
                 </div>
                 <div class="answer-content" id="answerContent" th:attr="data-markdown=${answer}">
@@ -544,6 +565,43 @@
             targetEl.style.backgroundColor = '#fff3cd';
             setTimeout(() => { targetEl.style.backgroundColor = ''; }, 2000);
         }
+    }
+
+    // Refresh answer by forcing a live API call (dev mode only)
+    function refreshAnswer() {
+        const button = document.getElementById('refresh-button');
+        const questionInput = document.querySelector('.question-input');
+
+        if (!questionInput || !questionInput.value) {
+            console.warn('No question available to refresh');
+            return;
+        }
+
+        // Disable button and show loading state
+        button.disabled = true;
+        button.textContent = '⏳ Refreshing...';
+
+        // Create a form and submit with refresh flag
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/ask-ai';
+
+        // Add question input
+        const questionField = document.createElement('input');
+        questionField.type = 'hidden';
+        questionField.name = 'question';
+        questionField.value = questionInput.value;
+
+        // Add refresh flag
+        const refreshField = document.createElement('input');
+        refreshField.type = 'hidden';
+        refreshField.name = 'refresh';
+        refreshField.value = 'true';
+
+        form.appendChild(questionField);
+        form.appendChild(refreshField);
+        document.body.appendChild(form);
+        form.submit();
     }
 </script>
 </body>
