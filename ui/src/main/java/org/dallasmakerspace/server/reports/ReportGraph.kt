@@ -71,6 +71,11 @@ object ReportGraph {
                                 description = "Average activity by time of day",
                                 urlSlug = "time-of-day",
                             ),
+                            ReportNode(
+                                name = "Recent Badge Swipes",
+                                description = "Recent badge swipe activity (Infra/Officers only)",
+                                urlSlug = "badge-swipes",
+                            ),
                         ),
                 ),
                 ReportNode(

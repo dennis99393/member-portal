@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Recent Badge Swipes</title>
+</head>
+<body>
+<div th:fragment="report">
+    <!-- Restriction note - ALWAYS shown to all users -->
+    <div class="alert alert-info" role="alert">
+        <strong>Note:</strong> This report is restricted to Officers and IT Infrastructure team.
+    </div>
+
+    <!-- Report content - ONLY shown to authorized users -->
+    <div th:if="${is_infra or is_officer}">
+        <!-- Data visualizer component -->
+        <dms-data-visualizer
+                id="badge-swipes-visualizer"
+                dataUrl="/backend-api/data-viz/badge-swipes"
+                renderAs="table"
+                title="Recent Badge Swipes"
+                description=""
+                filterable="true"
+                alwaysShowRawData="true"
+        ></dms-data-visualizer>
+    </div>
+</div>
+</body>
+</html>

@@ -6,6 +6,7 @@ import dagger.multibindings.ElementsIntoSet
 import org.dallasmakerspace.dataviz.DataVizReport
 import org.dallasmakerspace.dataviz.reports.TimeOfDayReport
 import org.dallasmakerspace.dataviz.reports.VisitorsByDayReport
+import org.dallasmakerspace.dataviz.reports.accesscontrol.BadgeSwipesReport
 import org.dallasmakerspace.dataviz.reports.calendar.CalTrendsEvents
 import org.dallasmakerspace.dataviz.reports.calendar.FirstEvents
 import org.dallasmakerspace.dataviz.reports.calendar.GroupCalendarReport
@@ -35,6 +36,7 @@ class DataVizModule {
       distributionRate: DistributionRate,
       signedWaivers: SignedWaivers,
       groupHistoryReport: GroupHistoryReport,
+      badgeSwipesReport: BadgeSwipesReport,
   ): Set<DataVizReport> {
     return setOf(
         visitorsByDayReport,
@@ -49,6 +51,7 @@ class DataVizModule {
         distributionRate,
         signedWaivers,
         groupHistoryReport,
+        badgeSwipesReport,
     )
   }
 }

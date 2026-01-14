@@ -56,6 +56,7 @@ constructor(
         val templateData =
             mutableMapOf(
                 "is_infra" to isInfra,
+                "is_officer" to isOfficer,
                 "fragmentList" to setOf("fragments/reports/$nodeSlug"),
                 "childNode" to node,
                 "reportTitle" to "${node.name} - Reports",
@@ -102,6 +103,7 @@ constructor(
     val templateData =
         mutableMapOf(
             "is_infra" to isInfra,
+            "is_officer" to isOfficer,
             "fragmentList" to setOf("fragments/reports/$parentSlug/$childSlug"),
             "parentNode" to parentNode,
             "childNode" to childNode,
@@ -134,6 +136,7 @@ constructor(
     val templateData =
         mutableMapOf(
             "is_infra" to isInfra,
+            "is_officer" to isOfficer,
             "childrenNodes" to visibleNodes,
             "showChildren" to true,
             "reportTitle" to "$currentNodeName - Reports",
