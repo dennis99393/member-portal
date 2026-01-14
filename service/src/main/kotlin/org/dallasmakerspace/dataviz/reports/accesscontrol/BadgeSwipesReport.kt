@@ -116,7 +116,7 @@ constructor(
     LEFT JOIN `dms-makermanager`.users u ON e.userId = u.id
     WHERE e.date >= DATE_SUB(NOW(), INTERVAL 72 HOUR)
     ORDER BY e.date DESC
-    LIMIT 1000
+    LIMIT 5000
     """
         .trimIndent()
   }
