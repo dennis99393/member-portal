@@ -47,6 +47,7 @@ constructor(
     val dataItems =
         rows.map { row ->
           val username = row["username"] as? String
+          val cardNumber = row["cardNumber"] as? String ?: ""
           val member = username?.let { members[it] }
 
           // Build member JSON object for dms-member-card component
@@ -58,7 +59,8 @@ constructor(
                   put("avatarUrl", JsonPrimitive(getAvatarUrl(member?.discourseAvatarUrl)))
                 }
               } else {
-                JsonPrimitive("Unknown") // For badge swipes with no associated member
+                // For badge swipes with no associated member, show card number
+                JsonPrimitive("Unknown: $cardNumber")
               }
 
           // Get door name from query (from slots table)
@@ -108,6 +110,7 @@ constructor(
     SELECT
         DATE_FORMAT(CONVERT_TZ(e.date, 'UTC', 'America/Chicago'), '%a, %b %e, %Y at %l:%i %p') as swipe_time,
         e.userId as user_id,
+        e.cardNumber as card_number,
         u.username as username,
         CONCAT(u.first_name, ' ', u.last_name) as display_name,
         s.name as door_name
