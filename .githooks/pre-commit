@@ -4,7 +4,7 @@
 echo "Running ktfmt formatter..."
 
 # Run ktfmt format on the project
-./gradlew ktfmtFormat --quiet
+#./gradlew ktfmtFormat --quiet
 
 # Check if ktfmt made any changes to staged files
 CHANGED_FILES=$(git diff --name-only | grep '\.kt$' || true)

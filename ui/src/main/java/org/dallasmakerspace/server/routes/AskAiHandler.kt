@@ -127,6 +127,7 @@ constructor(
               jsonMap["answerTokens"] = tokens
             }
             metadata["estimatedCostUsd"]?.let { cost -> jsonMap["estimatedCostUsd"] = cost }
+            metadata["modelName"]?.let { model -> jsonMap["modelName"] = model }
           }
 
           // Debug metadata
@@ -162,6 +163,23 @@ constructor(
         jsonMap["slug"] = slug
         response["cacheId"]?.let { jsonMap["cacheId"] = it }
         response["askedByUsername"]?.let { jsonMap["askedByUsername"] = it }
+
+        // Extract metadata for display
+        val metadata = response["metadata"] as? Map<*, *>
+        if (metadata != null) {
+          jsonMap["searchQueries"] = metadata["searchQueries"] ?: emptyList<String>()
+          (metadata["sourceBreakdown"] as? Map<*, *>)?.let { breakdown ->
+            jsonMap["sourceBreakdown"] = breakdown
+          }
+          (metadata["classificationTokens"] as? Map<*, *>)?.let { tokens ->
+            jsonMap["classificationTokens"] = tokens
+          }
+          (metadata["answerTokens"] as? Map<*, *>)?.let { tokens ->
+            jsonMap["answerTokens"] = tokens
+          }
+          metadata["estimatedCostUsd"]?.let { cost -> jsonMap["estimatedCostUsd"] = cost }
+          metadata["modelName"]?.let { model -> jsonMap["modelName"] = model }
+        }
 
         // Debug metadata
         jsonMap["responseTimeMs"] = elapsedMs
