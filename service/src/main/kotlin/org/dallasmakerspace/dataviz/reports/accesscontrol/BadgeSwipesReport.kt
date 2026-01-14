@@ -107,7 +107,7 @@ constructor(
 
   private fun buildQuery(): String {
     return """
-    SELECT
+    SELECT DISTINCT
         DATE_FORMAT(CONVERT_TZ(e.date, 'UTC', 'America/Chicago'), '%a, %b %e, %Y at %l:%i %p') as swipe_time,
         e.userId as user_id,
         e.cardNumber as card_number,
