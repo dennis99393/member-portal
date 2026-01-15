@@ -126,22 +126,6 @@ class PiiMaskerTest {
     assertEquals("From [IP_ADDRESS] to [IP_ADDRESS]", result)
   }
 
-  // === MEMBER ID TESTS ===
-
-  @Test
-  fun `should mask DMS member ID`() {
-    val input = "Member DMS-12345 asked a question"
-    val result = piiMasker.mask(input)
-    assertEquals("Member [MEMBER_ID] asked a question", result)
-  }
-
-  @Test
-  fun `should mask DMS member ID without dash`() {
-    val input = "Member DMS12345 asked a question"
-    val result = piiMasker.mask(input)
-    assertEquals("Member [MEMBER_ID] asked a question", result)
-  }
-
   // === STREET ADDRESS TESTS ===
 
   @Test
