@@ -251,13 +251,13 @@ constructor(
   fun getRegisteredSources(): List<String> = searchSourceRouter.getRegisteredSources()
 
   /**
-   * Get the top cached questions for display on the initial page.
+   * Get recent cached questions without negative feedback for display on the initial page.
    *
    * @param limit Maximum number of questions to return
-   * @return List of top questions with their metadata
+   * @return List of recent questions without negative feedback
    */
   suspend fun getTopQuestions(limit: Int = 10): List<TopQuestion> {
-    return cacheRepository.getTopQuestions(limit).map { entry ->
+    return cacheRepository.getRecentQuestionsWithoutNegativeFeedback(limit).map { entry ->
       TopQuestion(
           id = entry.id,
           slug = entry.slug,

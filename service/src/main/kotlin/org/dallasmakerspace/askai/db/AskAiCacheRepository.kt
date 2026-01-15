@@ -121,6 +121,32 @@ class AskAiCacheRepository @Inject constructor(loggerFactory: LoggerFactory) {
   }
 
   /**
+   * Get recent cached questions without negative feedback, ordered by creation time (newest first).
+   * Excludes questions that have any feedback where is_helpful = false.
+   *
+   * @param limit Maximum number of entries to return
+   * @return List of cached entries without negative feedback
+   */
+  suspend fun getRecentQuestionsWithoutNegativeFeedback(limit: Int = 20): List<AskAiCacheEntry> =
+      suspendTransaction {
+        // Get all cache entries with their feedback
+        val cacheEntriesWithoutNegativeFeedback =
+            AskAiCacheDAO.all()
+                .orderBy(AskAiCacheTable.createdAt to SortOrder.DESC)
+                .filter { cacheDao ->
+                  // Get all feedback for this cache entry
+                  val feedbacks =
+                      AskAiFeedbackDAO.find { AskAiFeedbackTable.cacheId eq cacheDao.id }
+                  // Include only if there is no negative feedback
+                  feedbacks.none { !it.isHelpful }
+                }
+                .take(limit)
+                .map { daoToModel(it) }
+
+        cacheEntriesWithoutNegativeFeedback
+      }
+
+  /**
    * Increment the hit count for a cached entry and update last hit timestamp.
    *
    * @param id The cache entry ID

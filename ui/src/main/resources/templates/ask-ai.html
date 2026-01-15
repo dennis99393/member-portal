@@ -257,10 +257,10 @@
                 </button>
             </form>
 
-            <!-- Popular Questions as subtle chips (shown when no answer displayed) -->
+            <!-- Recent Questions as subtle chips (shown when no answer displayed) -->
             <div th:if="${answer == null and topQuestions != null and !#lists.isEmpty(topQuestions)}"
                  class="popular-questions-chips">
-                <div class="chips-label">Try popular questions:</div>
+                <div class="chips-label">Try recent questions:</div>
                 <div class="chips-container">
                     <span th:each="q : ${topQuestions}" class="question-chip"
                           th:data-question="${q.question}"

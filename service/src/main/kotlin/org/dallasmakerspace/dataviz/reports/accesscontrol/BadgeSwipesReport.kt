@@ -75,8 +75,7 @@ constructor(
                       "Timestamp" to JsonPrimitive(timestamp),
                       "Member" to memberJson,
                       "Door" to JsonPrimitive(doorName),
-                  )
-          )
+                  ))
         }
 
     val dataFields =
@@ -93,8 +92,7 @@ constructor(
         mapOf(
             "Generated at" to
                 DateTimeFormatter.ISO_DATE_TIME.format(
-                    Instant.now().atZone(java.time.ZoneId.of("America/Chicago"))
-                ),
+                    Instant.now().atZone(java.time.ZoneId.of("America/Chicago"))),
             "Time taken" to "$timeTakenInSec sec",
             "Query time" to "${queryTimeTaken}ms",
             "Members fetch time" to "${membersTimeTaken}ms",
