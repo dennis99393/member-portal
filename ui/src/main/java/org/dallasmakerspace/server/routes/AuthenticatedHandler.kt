@@ -17,7 +17,7 @@ import org.dallasmakerspace.server.plugins.UserSession
  */
 abstract class AuthenticatedHandler(
     protected val loggerFactory: LoggerFactory,
-    private val userInfoProvider: UserInfoProvider
+    private val userInfoProvider: UserInfoProvider,
 ) : IRouteHandler {
 
   protected lateinit var session: UserSession
@@ -52,7 +52,12 @@ abstract class AuthenticatedHandler(
     val userGroups = (userInfo["groups"] as? List<*>) ?: emptyList<String>()
     isInfra = userGroups.contains("/Infrastructure")
     isBoard = userGroups.contains("/Board")
-    isOfficer = userGroups.contains("/Officers")
+    isOfficer =
+        userGroups.contains("/Logistics Committee Chair") ||
+            userGroups.contains("/President") ||
+            userGroups.contains("/Treasurer") ||
+            userGroups.contains("/Secretary") ||
+            userGroups.contains("/Infrastructure Committee Chair")
 
     // Delegate to subclass
     handleAuthenticated(call)
