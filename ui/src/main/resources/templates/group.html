@@ -60,6 +60,22 @@
                 </div>
             </div>
 
+            <!-- Nested Groups card -->
+            <div class="card shadow-sm overflow-hidden mt-4" th:if="${nestedGroups}">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Nested Groups</h5>
+                    <div class="card-text">
+                        <ul class="list-unstyled mb-0">
+                            <li th:each="nestedGroup : ${nestedGroups}" class="mb-2">
+                                <dms-group-pill
+                                        th:attr="name=${nestedGroup.name},slug=${nestedGroup.slug}">
+                                </dms-group-pill>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
             <!-- Recent Changes card -->
             <div class="card shadow-sm overflow-hidden mt-4" th:if="${history}">
                 <div class="card-body">

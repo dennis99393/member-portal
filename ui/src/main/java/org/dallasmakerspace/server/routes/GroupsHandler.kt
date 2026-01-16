@@ -107,6 +107,26 @@ constructor(
       jsonMap["administrators"] = processedAdmins
     }
 
+    // Process nested groups
+    log.debug("Nested groups from service: {}", requestedGroup.nestedGroups)
+    if (requestedGroup.nestedGroups.isNotEmpty()) {
+      val processedNestedGroups =
+          requestedGroup.nestedGroups
+              .filter { it.contains("Domain Admins").not() }
+              .map { dn ->
+                val name = parseCNFromDN(dn)
+                val slug = getSlugFromName(name)
+                mutableMapOf<String, Any?>(
+                    "name" to name,
+                    "slug" to slug,
+                )
+              }
+      log.debug("Processed nested groups: {}", processedNestedGroups)
+      if (processedNestedGroups.isNotEmpty()) {
+        jsonMap["nestedGroups"] = processedNestedGroups
+      }
+    }
+
     // Process history - limit to last 5 events
     if (requestedGroup.history.isNotEmpty()) {
       val processedHistory =

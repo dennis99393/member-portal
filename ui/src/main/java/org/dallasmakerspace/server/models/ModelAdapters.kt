@@ -49,6 +49,8 @@ fun dmsGroupFromMap(data: Map<String, Any?>): DMSGroup {
       } ?: emptyList()
   val administrators =
       (data["administrators"] as List<*>?)?.filterIsInstance<String>() ?: emptyList()
+  val nestedGroups =
+      (data["nestedGroups"] as List<*>?)?.filterIsInstance<String>() ?: emptyList()
   val history =
       (data["history"] as List<*>?)?.filterIsInstance<Map<String, Any?>>()?.map {
         groupHistoryEventFromMap(it)
@@ -62,6 +64,7 @@ fun dmsGroupFromMap(data: Map<String, Any?>): DMSGroup {
       members = members,
       administrators = administrators,
       history = history,
+      nestedGroups = nestedGroups,
   )
 }
 

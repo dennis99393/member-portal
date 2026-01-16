@@ -122,14 +122,18 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
     val administrators =
         (adResult["administrators"] as? Array<*>)?.map { it.toString() } ?: emptyList()
 
+    // Parse members and nested groups
+    val (members, nestedGroups) = parseMembersAndGroups(adResult)
+
     return ADGroup(
         cn = adResult["cn"].toString(),
         description = adResult["description"]?.toString(),
         distinguishedName = adResult["distinguishedName"].toString(),
         objectGuid = adResult["objectGUID"]?.toString(), // Convert bytes to GUID String
-        members = parseMembers(adResult),
+        members = members,
         membersListIncomplete = (adResult["member"] as Array<*>).size > MAX_GROUP_MEMBERS,
         administrators = administrators,
+        nestedGroups = nestedGroups,
     )
   }
 
@@ -171,26 +175,47 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
   }
 
   /**
-   * Parses the list of members into a list of ADUser objects.
+   * Parses the list of members and separates them into users and nested groups.
    *
-   * @param attributeMap The map of attributes for the group. The members of the group are in either
-   *   "member" or "member;range=0-1499" attribute. Each member is in distinguishedName format
-   *   e.g. - "CN=John Doe1337,OU=Members,DC=dms,DC=local".
-   *     @return The list of ADUser objects. Empty list if the input list is null.
+   * @param attributeMap The map of attributes for the group
+   * @return Pair of (List of ADUser objects, List of group DNs)
    */
-  private fun parseMembers(attributeMap: Map<String, Any?>?): List<ADUser> {
-    if (attributeMap.isNullOrEmpty()) return emptyList()
-    // Get the list of members from the attribute map "member" or "member;range=0-1499" attribute.
+  private fun parseMembersAndGroups(
+      attributeMap: Map<String, Any?>?
+  ): Pair<List<ADUser>, List<String>> {
+    if (attributeMap.isNullOrEmpty()) return Pair(emptyList(), emptyList())
+
+    // Get the list of members from the attribute map
     val allMembers = (attributeMap["member"] as? Array<*>) ?: emptyList<String>()
-    // Take first [MAX_GROUP_MEMBERS] members from the list.
-    val members = (allMembers as Array<*>).take(MAX_GROUP_MEMBERS)
-    // Fetch the ADUser object for each member.
-    return members
-        .map { it.toString() }
-        .chunked(100)
-        .flatMap { subChunk -> getMembersByDnList(subChunk) }
-        .filter { it.enabled }
-        .distinctBy { it.sAMAccountName }
+    val members = (allMembers as Array<*>).take(MAX_GROUP_MEMBERS).map { it.toString() }
+
+    // Separate user DNs and group DNs
+    val (groupDNs, userDNs) = members.partition { isGroupDN(it) }
+
+    // Fetch ADUser objects for user DNs only
+    val users =
+        userDNs
+            .chunked(100)
+            .flatMap { subChunk -> getMembersByDnList(subChunk) }
+            .filter { it.enabled }
+            .distinctBy { it.sAMAccountName }
+
+    return Pair(users, groupDNs)
+  }
+
+  /**
+   * Determine if a DN represents a group (vs. a user). Groups typically have OU=Security,
+   * OU=Organizational, or OU=Groups in their DN. Users typically have OU=Users or OU=People in
+   * their DN.
+   *
+   * @param dn The distinguished name to check
+   * @return true if the DN represents a group, false otherwise
+   */
+  private fun isGroupDN(dn: String): Boolean {
+    val lowerDN = dn.lowercase()
+    return lowerDN.contains("ou=security") ||
+        lowerDN.contains("ou=organizational") ||
+        lowerDN.contains("ou=groups")
   }
 
   /**

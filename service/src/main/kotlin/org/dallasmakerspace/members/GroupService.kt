@@ -27,7 +27,8 @@ constructor(
           objectGuid = adGroup.objectGuid,
           members = emptyList(), // Don't load members for performance
           membersListIncomplete = adGroup.membersListIncomplete,
-          administrators = adGroup.administrators)
+          administrators = adGroup.administrators,
+          nestedGroups = adGroup.nestedGroups)
     }
   }
 
@@ -64,7 +65,8 @@ constructor(
                       })
             },
         membersListIncomplete = adGroup.membersListIncomplete,
-        administrators = adGroup.administrators)
+        administrators = adGroup.administrators,
+        nestedGroups = adGroup.nestedGroups)
   }
 
   private fun getNormalizedPhoneNumber(

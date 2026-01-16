@@ -506,6 +506,7 @@ constructor(
         membersListIncomplete = adGroup.membersListIncomplete,
         administrators = adGroup.administrators,
         history = enrichedHistory,
+        nestedGroups = adGroup.nestedGroups,
     )
   }
 

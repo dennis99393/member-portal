@@ -12,4 +12,5 @@ data class DMSGroup(
     val members: List<DMSMember> = emptyList(),
     val administrators: List<String> = emptyList(),
     val history: List<GroupHistory> = emptyList(),
+    val nestedGroups: List<String> = emptyList(),
 )

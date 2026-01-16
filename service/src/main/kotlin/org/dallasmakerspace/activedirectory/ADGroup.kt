@@ -7,5 +7,6 @@ data class ADGroup(
     val objectGuid: String?,
     val members: List<ADUser>,
     val membersListIncomplete: Boolean,
-    val administrators: List<String> = emptyList()
+    val administrators: List<String> = emptyList(),
+    val nestedGroups: List<String> = emptyList()
 )
