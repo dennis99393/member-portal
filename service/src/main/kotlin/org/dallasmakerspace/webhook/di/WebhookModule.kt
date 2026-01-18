@@ -4,6 +4,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.multibindings.ElementsIntoSet
 import org.dallasmakerspace.webhook.WebhookHandler
+import org.dallasmakerspace.webhook.handlers.ActivityLogWebhook
 import org.dallasmakerspace.webhook.handlers.GroupHistoryWebhook
 
 @Module
@@ -12,7 +13,8 @@ class WebhookModule {
   @ElementsIntoSet
   fun provideWebhookHandlers(
       groupHistoryWebhook: GroupHistoryWebhook,
+      activityLogWebhook: ActivityLogWebhook,
   ): Set<WebhookHandler> {
-    return setOf(groupHistoryWebhook)
+    return setOf(groupHistoryWebhook, activityLogWebhook)
   }
 }

@@ -28,6 +28,11 @@ enum class ActivityLogEvent(val value: Int) {
   ADD_TO_DISCOURSE_MEMBERS_GROUP(6),
   REMOVE_FROM_VOTING_MEMBERS_GROUP(7),
   ADD_TO_VOTING_MEMBERS_GROUP(8),
+
+  /** Label printing events * */
+  LABEL_PRINT_CERAMICS(9),
+  LABEL_PRINT_CA(10),
+  LABEL_PRINT_3DFAB(11),
 }
 
 @Suppress("MagicNumber")
@@ -36,4 +41,5 @@ enum class ActivityLogSource(val value: Int) {
   UNKNOWN(0),
   PROFILE(1),
   CALENDAR(2),
+  MEMBER_ACTIVITY_WEBHOOK(3),
 }

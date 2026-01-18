@@ -580,6 +580,21 @@ fun Application.configureRouting() {
           call.respond(ApiResponse(Status.SUCCESS, "Feedback recorded", null))
         }
       }
+
+      /** Activity Log Webhook - Authenticated * */
+      requireRole("activity:write") {
+        post("/webhook-auth/activity-log") {
+          val body = call.receiveText()
+
+          val result = webhookRouter.route("activity-log", body)
+
+          if (result.success) {
+            call.respond(ApiResponse(Status.SUCCESS, result.message, null))
+          } else {
+            call.respond(HttpStatusCode.BadRequest, ApiResponse(Status.ERROR, result.message, null))
+          }
+        }
+      }
     }
 
     post("/webhook/*") {

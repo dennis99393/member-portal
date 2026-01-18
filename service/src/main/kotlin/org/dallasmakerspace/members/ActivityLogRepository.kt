@@ -9,6 +9,8 @@ import org.dallasmakerspace.members.db.ProfileTable
 import org.dallasmakerspace.members.db.daoToActivityLogModel
 import org.dallasmakerspace.members.db.suspendTransaction
 import org.dallasmakerspace.models.ActivityLog
+import org.dallasmakerspace.models.ActivityLogEvent
+import org.dallasmakerspace.models.ActivityLogSource
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.select
 
@@ -57,5 +59,22 @@ class ActivityLogRepository @Inject constructor() {
   suspend fun insertBulkActivityLogEntry(list: List<ActivityLog>) {
     // TODO: Implement batch insert
     list.forEach { insertActivityLogEntry(it) }
+  }
+
+  /** Inserts a new activity log entry with explicit profile row IDs and source. */
+  suspend fun insertActivityLogEntry(
+      source: ActivityLogSource,
+      subjectProfileRowId: Int,
+      actorProfileRowId: Int?,
+      event: ActivityLogEvent,
+      attributes: String?
+  ) = suspendTransaction {
+    ActivityLogDAO.new(null) {
+      this.source = source.value
+      this.actorProfileRowId = actorProfileRowId
+      this.subjectProfileRowId = subjectProfileRowId
+      this.event = event.value
+      this.attributes = attributes
+    }
   }
 }
