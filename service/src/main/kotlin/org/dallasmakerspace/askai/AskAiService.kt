@@ -118,8 +118,7 @@ constructor(
         metrics.cacheType = "exact"
         metrics.responseTimeMs = Duration.between(metrics.startTime, Instant.now()).toMillis()
         log.info(
-            "Found exact cache match for question (id=${exactMatch.id}, requestId=${metrics.requestId}, responseTime=${metrics.responseTimeMs}ms)"
-        )
+            "Found exact cache match for question (id=${exactMatch.id}, requestId=${metrics.requestId}, responseTime=${metrics.responseTimeMs}ms)")
         cacheRepository.incrementHitCount(exactMatch.id)
         // Reorder sources so cited ones appear first
         val orderedSources = reorderSourcesByCitation(exactMatch.answerText, exactMatch.sources)
@@ -165,8 +164,7 @@ constructor(
           metrics.totalCost = calculateEstimatedCost(classificationLlmResult.usage, null)
           metrics.responseTimeMs = Duration.between(metrics.startTime, Instant.now()).toMillis()
           log.info(
-              "LLM found semantic cache match (id=${cachedEntry.id}, requestId=${metrics.requestId}, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)"
-          )
+              "LLM found semantic cache match (id=${cachedEntry.id}, requestId=${metrics.requestId}, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)")
           cacheRepository.incrementHitCount(cachedEntry.id)
           // Reorder sources so cited ones appear first
           val orderedSources = reorderSourcesByCitation(cachedEntry.answerText, cachedEntry.sources)
@@ -214,16 +212,14 @@ constructor(
     val (extractableResults, additionalResources) =
         deduplicatedResults.partition { it.hasExtractableContent }
     log.debug(
-        "Extractable: ${extractableResults.size}, Additional resources: ${additionalResources.size}"
-    )
+        "Extractable: ${extractableResults.size}, Additional resources: ${additionalResources.size}")
 
     // If no search results found, return canned response directing user to Talk forum
     if (extractableResults.isEmpty() && additionalResources.isEmpty()) {
       metrics.totalCost = calculateEstimatedCost(classificationLlmResult.usage, null)
       metrics.responseTimeMs = Duration.between(metrics.startTime, Instant.now()).toMillis()
       log.info(
-          "No search results found, returning canned response (requestId=${metrics.requestId}, searchQueries=$searchQueries, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)"
-      )
+          "No search results found, returning canned response (requestId=${metrics.requestId}, searchQueries=$searchQueries, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)")
 
       val searchedSourcesList =
           deduplicatedResults.map { it.source }.distinct().sorted().joinToString(", ")
@@ -326,15 +322,13 @@ constructor(
       slug = cached.slug
       cacheId = cached.id
       log.info(
-          "Cached new answer for question (slug=$slug, cacheId=$cacheId, profileId=$profileId)"
-      )
+          "Cached new answer for question (slug=$slug, cacheId=$cacheId, profileId=$profileId)")
     } catch (e: Exception) {
       log.warn("Failed to cache answer", e)
     }
 
     log.info(
-        "Generated fresh answer (requestId=${metrics.requestId}, searchQueries=${metrics.searchCount}, sources=${sourceBreakdown.size}, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)"
-    )
+        "Generated fresh answer (requestId=${metrics.requestId}, searchQueries=${metrics.searchCount}, sources=${sourceBreakdown.size}, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)")
 
     return AskAiResponse(
         answer = answer,

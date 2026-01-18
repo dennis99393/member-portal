@@ -37,18 +37,19 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : IO
 
   private val model: String by lazy { appConfig.requireStringProperty("app.openrouter.model") }
 
-  private fun getClient() =
-      HttpClient(CIO) {
-        install(HttpTimeout) {
-          requestTimeoutMillis = REQUEST_TIMEOUT_MS
-          connectTimeoutMillis = REQUEST_TIMEOUT_MS
-          socketTimeoutMillis = REQUEST_TIMEOUT_MS
-        }
-        install(Logging) {
-          logger = Logger.DEFAULT
-          level = LogLevel.INFO
-        }
+  private val client: HttpClient by lazy {
+    HttpClient(CIO) {
+      install(HttpTimeout) {
+        requestTimeoutMillis = REQUEST_TIMEOUT_MS
+        connectTimeoutMillis = REQUEST_TIMEOUT_MS
+        socketTimeoutMillis = REQUEST_TIMEOUT_MS
       }
+      install(Logging) {
+        logger = Logger.DEFAULT
+        level = LogLevel.INFO
+      }
+    }
+  }
 
   override suspend fun classify(
       question: String,
@@ -157,15 +158,13 @@ $searchResultsText"""
 
     try {
       val response =
-          getClient().use {
-            it.request("$baseUrl/chat/completions") {
-              method = HttpMethod.Post
-              header("Authorization", "Bearer $apiKey")
-              header("HTTP-Referer", "https://portal.dallasmakerspace.org")
-              header("X-Title", "Dallas Makerspace Member Portal")
-              contentType(ContentType.Application.Json)
-              setBody(requestBody)
-            }
+          client.request("$baseUrl/chat/completions") {
+            method = HttpMethod.Post
+            header("Authorization", "Bearer $apiKey")
+            header("HTTP-Referer", "https://portal.dallasmakerspace.org")
+            header("X-Title", "Dallas Makerspace Member Portal")
+            contentType(ContentType.Application.Json)
+            setBody(requestBody)
           }
 
       when (response.status) {

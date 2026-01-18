@@ -2,6 +2,7 @@ package org.dallasmakerspace.discourse
 
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -28,6 +29,11 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
 
   private fun getClient() =
       HttpClient(CIO) {
+        install(HttpTimeout) {
+          requestTimeoutMillis = 10_000
+          connectTimeoutMillis = 5_000
+          socketTimeoutMillis = 10_000
+        }
         install(Logging) {
           logger = Logger.DEFAULT
           level = LogLevel.BODY

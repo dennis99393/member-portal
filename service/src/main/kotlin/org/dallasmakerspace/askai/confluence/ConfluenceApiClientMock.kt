@@ -62,10 +62,8 @@ class ConfluenceApiClientMock @Inject constructor(loggerFactory: LoggerFactory) 
                 excerpt = "",
                 links =
                     ConfluenceContentLinks(
-                        webui = "/wiki/download/attachments/12347/Equipment-Manual.pdf"
-                    ),
-            )
-        )
+                        webui = "/wiki/download/attachments/12347/Equipment-Manual.pdf"),
+            ))
 
     val mockResults =
         when (contentType) {
@@ -96,9 +94,7 @@ class ConfluenceApiClientMock @Inject constructor(loggerFactory: LoggerFactory) 
                 view =
                     ConfluenceBodyContent(
                         value =
-                            "<p>This is mock content for page $contentId.</p><p>In production, this would contain the actual Confluence page content.</p>"
-                    )
-            ),
+                            "<p>This is mock content for page $contentId.</p><p>In production, this would contain the actual Confluence page content.</p>")),
         links = ConfluenceContentLinks(webui = "/wiki/spaces/DMS/pages/$contentId"),
     )
   }
