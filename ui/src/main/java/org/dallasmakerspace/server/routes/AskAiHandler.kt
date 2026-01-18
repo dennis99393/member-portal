@@ -22,7 +22,7 @@ constructor(
     loggerFactory: LoggerFactory,
     userInfoProvider: UserInfoProvider,
     private val memberService: MemberService,
-    private val appConfig: AppConfig
+    private val appConfig: AppConfig,
 ) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
@@ -65,7 +65,9 @@ constructor(
         call.respond(HttpStatusCode.OK, mapOf("status" to "success"))
       } else {
         call.respond(
-            HttpStatusCode.InternalServerError, mapOf("error" to "Failed to submit feedback"))
+            HttpStatusCode.InternalServerError,
+            mapOf("error" to "Failed to submit feedback"),
+        )
       }
     } catch (e: Exception) {
       log.error("Error processing feedback request", e)
@@ -136,7 +138,8 @@ constructor(
         }
       } catch (e: Exception) {
         log.error("Error processing AI question", e)
-        jsonMap["error"] = "An error occurred while processing your question. Please try again."
+        jsonMap["error"] =
+            "An error occurred while processing your question. Please try again later."
       }
     }
 

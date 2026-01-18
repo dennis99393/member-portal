@@ -3,6 +3,8 @@ package org.dallasmakerspace.askai.di
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.ElementsIntoSet
+import javax.inject.Singleton
+import org.dallasmakerspace.askai.AskAiConfig
 import org.dallasmakerspace.askai.confluence.ConfluenceApiClient
 import org.dallasmakerspace.askai.confluence.ConfluenceApiClientMock
 import org.dallasmakerspace.askai.confluence.IConfluenceApiClient
@@ -42,6 +44,16 @@ class AskAiModule {
       } else {
         ConfluenceApiClient(appConfig, loggerFactory)
       }
+
+  /**
+   * Provides AskAI service configuration. Uses default values but could be extended to read from
+   * AppConfig.
+   */
+  @Provides
+  @Singleton
+  fun provideAskAiConfig(): AskAiConfig {
+    return AskAiConfig()
+  }
 
   /**
    * Provides the set of search sources. To add a new search source:

@@ -894,7 +894,7 @@ Type: Dynamic
 Namespace: Root
 Pattern: wiki/{page}
 Short Link: dallas.ms/wiki/3d-printing-guide
-Destination: https://wiki.dallasmakerspace.org/{page}
+Destination: https://source.dallasmakerspace.org/{page}
 Use: Shareable wiki links
 ```
 
@@ -926,7 +926,8 @@ Use: Member networking, signature links
 
 ### Phase 1 - Completed
 
-- [x] Database schema (`short_links_namespaces`, `short_links_namespace_aliases`, `short_links`, `short_links_clicks`, `short_links_reserved_aliases`)
+- [x] Database schema (`short_links_namespaces`, `short_links_namespace_aliases`, `short_links`, `short_links_clicks`,
+  `short_links_reserved_aliases`)
 - [x] Domain models in `common-models` (`Namespace`, `NamespaceAlias`, `ShortLink`, `ShortLinkClick`)
 - [x] Repository layer (`ShortLinksRepository`)
 - [x] Service layer with validation (`ShortLinksService`)

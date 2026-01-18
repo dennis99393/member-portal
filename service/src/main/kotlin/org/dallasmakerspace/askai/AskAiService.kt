@@ -1,7 +1,13 @@
 package org.dallasmakerspace.askai
 
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeout
 import org.dallasmakerspace.askai.db.AskAiCacheRepository
 import org.dallasmakerspace.askai.openrouter.IOpenRouterClient
 import org.dallasmakerspace.askai.search.SearchSourceRouter
@@ -11,6 +17,46 @@ import org.dallasmakerspace.models.AskAiMetadata
 import org.dallasmakerspace.models.AskAiResponse
 import org.dallasmakerspace.models.SourceLink
 import org.dallasmakerspace.models.TokenUsage
+
+/**
+ * Configuration for AskAI service parameters.
+ *
+ * @param topQuestionsLimit Number of recent questions to use for semantic matching
+ * @param resultsPerSource Maximum search results to fetch per source
+ * @param maxTotalResults Maximum total search results across all sources
+ * @param searchTimeoutSeconds Timeout for search operations
+ * @param llmRetryAttempts Number of retry attempts for LLM calls
+ * @param earlyStopThreshold Stop searching if we have this many quality results
+ */
+data class AskAiConfig(
+    val topQuestionsLimit: Int = 20,
+    val resultsPerSource: Int = 5,
+    val maxTotalResults: Int = 15,
+    val searchTimeoutSeconds: Long = 5,
+    val llmRetryAttempts: Int = 3,
+    val earlyStopThreshold: Int = 10,
+)
+
+/**
+ * Metrics tracked for each AskAI request.
+ *
+ * @param requestId Unique identifier for this request
+ * @param startTime When the request started
+ * @param cacheHit Whether the request was served from cache
+ * @param cacheType Type of cache hit ("exact" or "semantic")
+ * @param searchCount Number of search queries executed
+ * @param totalCost Estimated cost in USD
+ * @param responseTimeMs Total response time in milliseconds
+ */
+data class RequestMetrics(
+    val requestId: String = UUID.randomUUID().toString(),
+    val startTime: Instant = Instant.now(),
+    var cacheHit: Boolean = false,
+    var cacheType: String? = null,
+    var searchCount: Int = 0,
+    var totalCost: Double = 0.0,
+    var responseTimeMs: Long = 0,
+)
 
 /**
  * Main service for the Ask DMS AI feature. Orchestrates the two-LLM-call flow:
@@ -29,7 +75,8 @@ constructor(
     private val cacheRepository: AskAiCacheRepository,
     private val memberRepository: MemberRepository,
     private val piiMasker: PiiMasker,
-    loggerFactory: LoggerFactory
+    private val config: AskAiConfig,
+    loggerFactory: LoggerFactory,
 ) {
   private val log = loggerFactory.create(javaClass)
 
@@ -47,9 +94,10 @@ constructor(
       question: String,
       memberId: Int? = null,
       username: String? = null,
-      forceRefresh: Boolean = false
+      forceRefresh: Boolean = false,
   ): AskAiResponse {
-    log.info("Processing question: $question")
+    val metrics = RequestMetrics()
+    log.info("Processing question (requestId=${metrics.requestId}): $question")
 
     requireNotNull(username) { "Username is required to ask a question" }
 
@@ -66,7 +114,12 @@ constructor(
     if (!forceRefresh) {
       val exactMatch = cacheRepository.findByExactQuestion(question)
       if (exactMatch != null) {
-        log.info("Found exact cache match for question (id=${exactMatch.id})")
+        metrics.cacheHit = true
+        metrics.cacheType = "exact"
+        metrics.responseTimeMs = Duration.between(metrics.startTime, Instant.now()).toMillis()
+        log.info(
+            "Found exact cache match for question (id=${exactMatch.id}, requestId=${metrics.requestId}, responseTime=${metrics.responseTimeMs}ms)"
+        )
         cacheRepository.incrementHitCount(exactMatch.id)
         // Reorder sources so cited ones appear first
         val orderedSources = reorderSourcesByCitation(exactMatch.answerText, exactMatch.sources)
@@ -77,7 +130,8 @@ constructor(
             slug = exactMatch.slug,
             cacheId = exactMatch.id,
             askedByUsername = exactMatch.askedByUsername,
-            metadata = exactMatch.metadata)
+            metadata = exactMatch.metadata,
+        )
       }
     } else {
       log.info("Force refresh requested - bypassing cache lookup")
@@ -87,14 +141,17 @@ constructor(
     // Mask PII in the question before sending to LLM
     val maskedQuestion = piiMasker.mask(question)
 
-    val topCachedQuestions = cacheRepository.getTopQuestions(limit = 20)
+    val topCachedQuestions = cacheRepository.getTopQuestions(limit = config.topQuestionsLimit)
     // Mask PII in cached questions before sending to LLM
     val maskedCachedQuestions =
         topCachedQuestions.map { entry ->
           entry.copy(questionText = piiMasker.mask(entry.questionText))
         }
 
-    val classificationLlmResult = openRouterClient.classify(maskedQuestion, maskedCachedQuestions)
+    val classificationLlmResult =
+        retryWithBackoff(config.llmRetryAttempts) {
+          openRouterClient.classify(maskedQuestion, maskedCachedQuestions)
+        }
     val classificationResult = classificationLlmResult.result
 
     // Check if LLM found a semantic match in cached questions - skip if forceRefresh is true
@@ -103,7 +160,13 @@ constructor(
       if (matchedCacheId != null) {
         val cachedEntry = cacheRepository.getById(matchedCacheId)
         if (cachedEntry != null) {
-          log.info("LLM found semantic cache match (id=${cachedEntry.id})")
+          metrics.cacheHit = true
+          metrics.cacheType = "semantic"
+          metrics.totalCost = calculateEstimatedCost(classificationLlmResult.usage, null)
+          metrics.responseTimeMs = Duration.between(metrics.startTime, Instant.now()).toMillis()
+          log.info(
+              "LLM found semantic cache match (id=${cachedEntry.id}, requestId=${metrics.requestId}, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)"
+          )
           cacheRepository.incrementHitCount(cachedEntry.id)
           // Reorder sources so cited ones appear first
           val orderedSources = reorderSourcesByCitation(cachedEntry.answerText, cachedEntry.sources)
@@ -114,35 +177,69 @@ constructor(
               slug = cachedEntry.slug,
               cacheId = cachedEntry.id,
               askedByUsername = cachedEntry.askedByUsername,
-              metadata = cachedEntry.metadata)
+              metadata = cachedEntry.metadata,
+          )
         }
       }
     }
 
     // Step 3: Execute search queries across all sources
     val searchQueries = classificationResult.searchQueries.ifEmpty { listOf(question) }
+    metrics.searchCount = searchQueries.size
     log.info("Executing ${searchQueries.size} search queries: $searchQueries")
 
+    // Circuit breaker: execute searches with timeout and graceful degradation
     val allSearchResults =
         searchQueries
-            .flatMap { query -> searchSourceRouter.searchAll(query, limitPerSource = 5) }
+            .flatMap { query ->
+              try {
+                withTimeout(config.searchTimeoutSeconds * 1000L) {
+                  searchSourceRouter.searchAll(query, limitPerSource = config.resultsPerSource)
+                }
+              } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                log.warn("Search failed for query: $query", e)
+                // Continue with remaining queries - graceful degradation
+                emptyList()
+              }
+            }
             .distinctBy { it.url } // Deduplicate by URL
-            .take(15) // Limit total results
 
-    log.debug("Found ${allSearchResults.size} unique search results")
+    // Early stopping: limit to configured threshold
+    val deduplicatedResults = allSearchResults.take(config.maxTotalResults)
+
+    log.debug("Found ${deduplicatedResults.size} unique search results")
 
     // Separate extractable content (for LLM) from non-extractable (PDFs, attachments)
     val (extractableResults, additionalResources) =
-        allSearchResults.partition { it.hasExtractableContent }
+        deduplicatedResults.partition { it.hasExtractableContent }
     log.debug(
-        "Extractable: ${extractableResults.size}, Additional resources: ${additionalResources.size}")
+        "Extractable: ${extractableResults.size}, Additional resources: ${additionalResources.size}"
+    )
 
     // If no search results found, return canned response directing user to Talk forum
     if (extractableResults.isEmpty() && additionalResources.isEmpty()) {
-      log.info("No search results found, returning canned response")
+      metrics.totalCost = calculateEstimatedCost(classificationLlmResult.usage, null)
+      metrics.responseTimeMs = Duration.between(metrics.startTime, Instant.now()).toMillis()
+      log.info(
+          "No search results found, returning canned response (requestId=${metrics.requestId}, searchQueries=$searchQueries, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)"
+      )
+
+      val searchedSourcesList =
+          deduplicatedResults.map { it.source }.distinct().sorted().joinToString(", ")
+      val searchedSources =
+          if (searchedSourcesList.isNotEmpty()) "I searched: $searchedSourcesList"
+          else "No search sources were available"
+
       val cannedAnswer =
           """
-          I couldn't find any relevant information in our documentation or forum discussions to answer your question.
+          I couldn't find any relevant information to answer your question.
+
+          **What I searched for:**
+          ${searchQueries.joinToString("\n") { "* \"$it\"" }}
+
+          **Where I looked:**
+          $searchedSources
 
           I recommend posting your question in the [Ask Dallas Makerspace](https://talk.dallasmakerspace.org/c/ask-dallas-makerspace/82) category on our Talk forum, where community members and staff can help you directly.
 
@@ -168,9 +265,11 @@ constructor(
                   sourceBreakdown = emptyMap(),
                   classificationTokens = classificationLlmResult.usage,
                   answerTokens = null,
-                  estimatedCostUsd = calculateEstimatedCost(classificationLlmResult.usage, null),
-                  modelName = classificationLlmResult.modelName),
-          additionalResources = emptyList())
+                  estimatedCostUsd = metrics.totalCost,
+                  modelName = classificationLlmResult.modelName,
+              ),
+          additionalResources = emptyList(),
+      )
     }
 
     // Step 4: LLM #2 - Generate answer from search results
@@ -183,7 +282,10 @@ constructor(
           )
         }
 
-    val answerLlmResult = openRouterClient.generateAnswer(maskedQuestion, maskedSearchResults)
+    val answerLlmResult =
+        retryWithBackoff(config.llmRetryAttempts) {
+          openRouterClient.generateAnswer(maskedQuestion, maskedSearchResults)
+        }
     val answer = answerLlmResult.result
 
     // Step 5: Cache the result
@@ -197,8 +299,12 @@ constructor(
 
     // Build metadata with search queries, token usage, and cost estimate
     val estimatedCost = calculateEstimatedCost(classificationLlmResult.usage, answerLlmResult.usage)
-    val sourceBreakdown = allSearchResults.groupingBy { it.source }.eachCount()
+    val sourceBreakdown = deduplicatedResults.groupingBy { it.source }.eachCount()
     log.debug("Source breakdown: $sourceBreakdown")
+
+    // Update metrics
+    metrics.totalCost = estimatedCost
+    metrics.responseTimeMs = Duration.between(metrics.startTime, Instant.now()).toMillis()
 
     val metadata =
         AskAiMetadata(
@@ -207,7 +313,8 @@ constructor(
             classificationTokens = classificationLlmResult.usage,
             answerTokens = answerLlmResult.usage,
             estimatedCostUsd = estimatedCost,
-            modelName = answerLlmResult.modelName)
+            modelName = answerLlmResult.modelName,
+        )
 
     var slug: String? = null
     var cacheId: Int? = null
@@ -219,10 +326,15 @@ constructor(
       slug = cached.slug
       cacheId = cached.id
       log.info(
-          "Cached new answer for question (slug=$slug, cacheId=$cacheId, profileId=$profileId)")
+          "Cached new answer for question (slug=$slug, cacheId=$cacheId, profileId=$profileId)"
+      )
     } catch (e: Exception) {
       log.warn("Failed to cache answer", e)
     }
+
+    log.info(
+        "Generated fresh answer (requestId=${metrics.requestId}, searchQueries=${metrics.searchCount}, sources=${sourceBreakdown.size}, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)"
+    )
 
     return AskAiResponse(
         answer = answer,
@@ -232,7 +344,8 @@ constructor(
         cacheId = cacheId,
         askedByUsername = username,
         metadata = metadata,
-        additionalResources = additionalResourceLinks)
+        additionalResources = additionalResourceLinks,
+    )
   }
 
   /**
@@ -285,16 +398,17 @@ constructor(
         slug = entry.slug,
         cacheId = entry.id,
         askedByUsername = entry.askedByUsername,
-        metadata = entry.metadata)
+        metadata = entry.metadata,
+    )
   }
 
   /**
-   * Calculate estimated cost based on token usage. Pricing: $0.1 per million input tokens, $0.3 per
-   * million output tokens.
+   * Calculate estimated cost based on token usage. Pricing: $0.1 per million input tokens, $0.4 per
+   * million output tokens (based on google/gemini-2.5-flash-lite-preview-09-2025 pricing).
    */
   private fun calculateEstimatedCost(
       classificationUsage: TokenUsage?,
-      answerUsage: TokenUsage?
+      answerUsage: TokenUsage?,
   ): Double {
     val inputTokens = (classificationUsage?.promptTokens ?: 0) + (answerUsage?.promptTokens ?: 0)
     val outputTokens =
@@ -316,7 +430,7 @@ constructor(
    */
   private fun reorderSourcesByCitation(
       answer: String,
-      sources: List<SourceLink>
+      sources: List<SourceLink>,
   ): List<SourceLink> {
     // Support multiple citation formats due to LLM variance
     val citationPatterns =
@@ -350,11 +464,33 @@ constructor(
     return citedSources + uncitedSources
   }
 
+  /**
+   * Retry a suspending block with exponential backoff.
+   *
+   * @param maxAttempts Maximum number of retry attempts
+   * @param block The suspending function to retry
+   * @return Result of the block
+   * @throws Exception if all attempts fail
+   */
+  private suspend fun <T> retryWithBackoff(maxAttempts: Int = 3, block: suspend () -> T): T {
+    repeat(maxAttempts - 1) { attempt ->
+      try {
+        return block()
+      } catch (e: Exception) {
+        if (e is CancellationException) throw e
+        val delayMs = 100L * (1 shl attempt) // Exponential backoff: 100ms, 200ms, 400ms...
+        log.warn("Attempt ${attempt + 1} failed, retrying in ${delayMs}ms", e)
+        delay(delayMs)
+      }
+    }
+    return block() // Last attempt without catch
+  }
+
   companion object {
     // Pricing: $0.1 per million input tokens = $0.0000001 per token
     private const val COST_PER_INPUT_TOKEN = 0.0000001
-    // Pricing: $0.3 per million output tokens = $0.0000003 per token
-    private const val COST_PER_OUTPUT_TOKEN = 0.0000003
+    // Pricing: $0.4 per million output tokens = $0.0000004 per token
+    private const val COST_PER_OUTPUT_TOKEN = 0.0000004
   }
 }
 

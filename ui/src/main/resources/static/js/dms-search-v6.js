@@ -277,7 +277,7 @@ class DMSSearch extends HTMLElement {
             }
 
             console.error('Error fetching search preload:', error);
-            this.showErrorMessage('Failed to load search data. Please try again.');
+            this.showErrorMessage('Failed to load search data. Please refresh the page and try again.');
         } finally {
             this.isRequestInFlight = false;
             this.hideSpinner();

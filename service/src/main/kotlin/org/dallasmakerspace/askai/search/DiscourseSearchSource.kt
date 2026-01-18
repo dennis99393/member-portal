@@ -8,7 +8,7 @@ import org.dallasmakerspace.discourse.IDiscourseApiClient
 import org.dallasmakerspace.models.SearchResult
 
 private const val DISCOURSE_BASE_URL = "https://talk.dallasmakerspace.org"
-private const val SEARCH_MONTHS_BACK = 6L
+private const val SEARCH_MONTHS_BACK = 18L
 
 /**
  * Search source implementation for Discourse forum. Searches the DMS Talk forum for relevant topics
@@ -49,7 +49,8 @@ constructor(private val discourseClient: IDiscourseApiClient, loggerFactory: Log
                 url = "$DISCOURSE_BASE_URL/t/${topic.slug}/${topic.id}",
                 source = getName(),
                 relevanceScore = null,
-            ))
+            )
+        )
       }
 
       log.debug("Found ${results.size} Discourse results")

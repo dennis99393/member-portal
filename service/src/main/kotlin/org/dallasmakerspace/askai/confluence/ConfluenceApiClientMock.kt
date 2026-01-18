@@ -14,7 +14,7 @@ class ConfluenceApiClientMock @Inject constructor(loggerFactory: LoggerFactory) 
   override suspend fun search(
       query: String,
       limit: Int,
-      contentType: ContentTypeFilter
+      contentType: ContentTypeFilter,
   ): ConfluenceSearchResponse {
     log.info("[MOCK] Searching Confluence for: $query (limit: $limit, filter: $contentType)")
 
@@ -29,11 +29,13 @@ class ConfluenceApiClientMock @Inject constructor(loggerFactory: LoggerFactory) 
                         id = "12345",
                         type = "page",
                         title = "Safety Guidelines for Makerspace",
-                        links = ConfluenceContentLinks(webui = "/wiki/spaces/DMS/pages/12345")),
+                        links = ConfluenceContentLinks(webui = "/wiki/spaces/DMS/pages/12345"),
+                    ),
                 title = "Safety Guidelines for Makerspace",
                 excerpt =
                     "...safety rules and guidelines for using the <b>$query</b> equipment at Dallas Makerspace...",
-                url = "/wiki/spaces/DMS/pages/12345"),
+                url = "/wiki/spaces/DMS/pages/12345",
+            ),
             ConfluenceSearchResult(
                 id = "12346",
                 type = "page",
@@ -42,11 +44,14 @@ class ConfluenceApiClientMock @Inject constructor(loggerFactory: LoggerFactory) 
                         id = "12346",
                         type = "page",
                         title = "Equipment Booking and Reservations",
-                        links = ConfluenceContentLinks(webui = "/wiki/spaces/DMS/pages/12346")),
+                        links = ConfluenceContentLinks(webui = "/wiki/spaces/DMS/pages/12346"),
+                    ),
                 title = "Equipment Booking and Reservations",
                 excerpt =
                     "...how to book and reserve equipment including <b>$query</b> related tools...",
-                url = "/wiki/spaces/DMS/pages/12346"))
+                url = "/wiki/spaces/DMS/pages/12346",
+            ),
+        )
 
     val attachmentResults =
         listOf(
@@ -57,7 +62,10 @@ class ConfluenceApiClientMock @Inject constructor(loggerFactory: LoggerFactory) 
                 excerpt = "",
                 links =
                     ConfluenceContentLinks(
-                        webui = "/wiki/download/attachments/12347/Equipment-Manual.pdf")))
+                        webui = "/wiki/download/attachments/12347/Equipment-Manual.pdf"
+                    ),
+            )
+        )
 
     val mockResults =
         when (contentType) {
@@ -72,7 +80,8 @@ class ConfluenceApiClientMock @Inject constructor(loggerFactory: LoggerFactory) 
         limit = limit,
         size = mockResults.size.coerceAtMost(limit),
         totalSize = mockResults.size,
-        links = ConfluenceLinks(base = "https://wiki.dallasmakerspace.org", context = "/wiki"))
+        links = ConfluenceLinks(base = "https://source.dallasmakerspace.org", context = "/"),
+    )
   }
 
   override suspend fun getContent(contentId: String): ConfluenceContentResponse {
@@ -87,7 +96,10 @@ class ConfluenceApiClientMock @Inject constructor(loggerFactory: LoggerFactory) 
                 view =
                     ConfluenceBodyContent(
                         value =
-                            "<p>This is mock content for page $contentId.</p><p>In production, this would contain the actual Confluence page content.</p>")),
-        links = ConfluenceContentLinks(webui = "/wiki/spaces/DMS/pages/$contentId"))
+                            "<p>This is mock content for page $contentId.</p><p>In production, this would contain the actual Confluence page content.</p>"
+                    )
+            ),
+        links = ConfluenceContentLinks(webui = "/wiki/spaces/DMS/pages/$contentId"),
+    )
   }
 }
