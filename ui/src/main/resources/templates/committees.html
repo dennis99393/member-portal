@@ -71,37 +71,38 @@
         <div class="card shadow-sm">
             <table class="table table-hover committees-table mb-0">
                 <thead class="table-light">
-                    <tr>
-                        <th style="width: 20%">Committee</th>
-                        <th style="width: 25%">Chair</th>
-                        <th>Teacher Groups</th>
-                    </tr>
+                <tr>
+                    <th style="width: 20%">Committee</th>
+                    <th style="width: 25%">Chair</th>
+                    <th>Teachers</th>
+                </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="committee : ${committees}">
-                        <td th:text="${committee.name}"></td>
-                        <td>
-                            <div th:if="${committee.chairpersons != null and !committee.chairpersons.empty}">
-                                <div th:each="chair : ${committee.chairpersons}" class="mb-1">
-                                    <dms-member-card
+                <tr th:each="committee : ${committees}">
+                    <td th:text="${committee.name}"></td>
+                    <td>
+                        <div th:if="${committee.chairpersons != null and !committee.chairpersons.empty}">
+                            <div th:each="chair : ${committee.chairpersons}" class="mb-1">
+                                <dms-member-card
                                         th:attr="username=${chair.username},displayName=${chair.displayName},avatarUrl=${chair.avatarUrl}"
                                         state="mini">
-                                    </dms-member-card>
-                                </div>
+                                </dms-member-card>
                             </div>
-                            <span th:if="${committee.chairpersons == null or committee.chairpersons.empty}"
-                                  class="text-muted small" aria-label="No chairperson assigned">—</span>
-                        </td>
-                        <td>
-                            <div th:if="${committee.teacherGroups != null and !committee.teacherGroups.empty}" class="group-pills-container">
-                                <dms-group-pill th:each="group : ${committee.teacherGroups}"
-                                                th:attr="name=${group.name},slug=${group.slug}">
-                                </dms-group-pill>
-                            </div>
-                            <span th:if="${committee.teacherGroups == null or committee.teacherGroups.empty}"
-                                  class="text-muted small" aria-label="No teacher groups">—</span>
-                        </td>
-                    </tr>
+                        </div>
+                        <span th:if="${committee.chairpersons == null or committee.chairpersons.empty}"
+                              class="text-muted small" aria-label="No chairperson assigned">—</span>
+                    </td>
+                    <td>
+                        <div th:if="${committee.teacherGroups != null and !committee.teacherGroups.empty}"
+                             class="group-pills-container">
+                            <dms-group-pill th:each="group : ${committee.teacherGroups}"
+                                            th:attr="name=${group.name},slug=${group.slug}">
+                            </dms-group-pill>
+                        </div>
+                        <span th:if="${committee.teacherGroups == null or committee.teacherGroups.empty}"
+                              class="text-muted small" aria-label="No teacher groups">—</span>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>
@@ -125,13 +126,14 @@
                         <div class="mb-3">
                             <div class="section-label">
                                 <span class="material-symbols-outlined" aria-hidden="true">person</span>
-                                <span>Chair<span th:if="${committee.chairpersons != null and #lists.size(committee.chairpersons) > 1}">s</span></span>
+                                <span>Chair<span
+                                        th:if="${committee.chairpersons != null and #lists.size(committee.chairpersons) > 1}">s</span></span>
                             </div>
                             <div th:if="${committee.chairpersons != null and !committee.chairpersons.empty}">
                                 <div th:each="chair : ${committee.chairpersons}" class="mb-2">
                                     <dms-member-card
-                                        th:attr="username=${chair.username},displayName=${chair.displayName},avatarUrl=${chair.avatarUrl}"
-                                        state="mini">
+                                            th:attr="username=${chair.username},displayName=${chair.displayName},avatarUrl=${chair.avatarUrl}"
+                                            state="mini">
                                     </dms-member-card>
                                 </div>
                             </div>
@@ -145,7 +147,8 @@
                                 <span class="material-symbols-outlined" aria-hidden="true">school</span>
                                 <span>Teacher Groups</span>
                             </div>
-                            <div th:if="${committee.teacherGroups != null and !committee.teacherGroups.empty}" class="group-pills-container">
+                            <div th:if="${committee.teacherGroups != null and !committee.teacherGroups.empty}"
+                                 class="group-pills-container">
                                 <dms-group-pill th:each="group : ${committee.teacherGroups}"
                                                 th:attr="name=${group.name},slug=${group.slug}">
                                 </dms-group-pill>
