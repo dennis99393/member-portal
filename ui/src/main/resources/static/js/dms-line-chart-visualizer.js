@@ -162,20 +162,6 @@ class DmsLineChartVisualizer extends LitElement {
                                 }
                             }
                         }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            // Custom tooltips for annotations
-                            label: (context) => {
-                                const annotationIndex = context.dataIndex;
-                                const annotation = this.annotations ? this.annotations[annotationIndex] : null;
-
-                                if (annotation && annotation.label && annotation.label.content) {
-                                    return annotation.label.content;
-                                }
-                                return context.formattedValue;
-                            }
-                        }
                     }
                 },
                 scales: {
