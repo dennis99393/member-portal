@@ -45,6 +45,100 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
   }
 
   /**
+   * Gets the actual connected server information from an LDAP connection. Returns a string with the
+   * resolved hostname/IP and port, or DNS-resolved IPs if the actual socket can't be determined.
+   */
+  private fun getConnectedServerInfo(connection: com.unboundid.ldap.sdk.LDAPConnection): String {
+    val connectedAddress = connection.connectedAddress
+    val connectedPort = connection.connectedPort
+
+    return try {
+      // Try multiple approaches to get the underlying socket
+      var socket: java.net.Socket? = null
+
+      // Approach 1: Try direct socket field
+      try {
+        val socketField = connection.javaClass.getDeclaredField("socket")
+        socketField.isAccessible = true
+        socket = socketField.get(connection) as? java.net.Socket
+      } catch (e: NoSuchFieldException) {
+        // Field doesn't exist, try next approach
+      }
+
+      // Approach 2: Try connectionInternals -> socket
+      if (socket == null) {
+        try {
+          val internalsField = connection.javaClass.getDeclaredField("connectionInternals")
+          internalsField.isAccessible = true
+          val internals = internalsField.get(connection)
+          if (internals != null) {
+            val socketField = internals.javaClass.getDeclaredField("socket")
+            socketField.isAccessible = true
+            socket = socketField.get(internals) as? java.net.Socket
+          }
+        } catch (e: NoSuchFieldException) {
+          // Field doesn't exist, try next approach
+        }
+      }
+
+      // Approach 3: Try connectionReader -> inputStream
+      if (socket == null) {
+        try {
+          val readerField = connection.javaClass.getDeclaredField("connectionReader")
+          readerField.isAccessible = true
+          val reader = readerField.get(connection)
+          if (reader != null) {
+            val inputStreamField = reader.javaClass.getDeclaredField("inputStream")
+            inputStreamField.isAccessible = true
+            val inputStream = inputStreamField.get(reader)
+            if (inputStream != null) {
+              try {
+                val socketField = inputStream.javaClass.getDeclaredField("socket")
+                socketField.isAccessible = true
+                socket = socketField.get(inputStream) as? java.net.Socket
+              } catch (e: NoSuchFieldException) {
+                // No socket field in input stream
+              }
+            }
+          }
+        } catch (e: Exception) {
+          // Failed to get socket through reader
+        }
+      }
+
+      if (socket != null && socket.isConnected) {
+        val remoteAddress = socket.inetAddress
+        val hostname = remoteAddress.hostName
+        val ip = remoteAddress.hostAddress
+        // If hostname is different from IP, show both
+        if (hostname != ip) {
+          "$hostname ($ip):$connectedPort"
+        } else {
+          "$ip:$connectedPort"
+        }
+      } else {
+        // Fallback: manually resolve DNS to show all possible IPs
+        try {
+          val addresses = java.net.InetAddress.getAllByName(connectedAddress)
+          val ips = addresses.map { it.hostAddress }.joinToString(", ")
+          "$connectedAddress:$connectedPort (DNS: $ips)"
+        } catch (e: Exception) {
+          "$connectedAddress:$connectedPort"
+        }
+      }
+    } catch (e: Exception) {
+      // Fallback: manually resolve DNS to show all possible IPs
+      try {
+        val addresses = java.net.InetAddress.getAllByName(connectedAddress)
+        val ips = addresses.map { it.hostAddress }.joinToString(", ")
+        "$connectedAddress:$connectedPort (DNS: $ips)"
+      } catch (e2: Exception) {
+        "$connectedAddress:$connectedPort"
+      }
+    }
+  }
+
+  /**
    * Logs the actual connected AD server for a connection from the pool. Useful for debugging issues
    * with specific domain controllers.
    */
@@ -52,33 +146,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
     try {
       val connection = ldapPool.connection
       try {
-        val connectedAddress = connection.connectedAddress
-        val connectedPort = connection.connectedPort
-
-        // Try to get the actual resolved IP address by accessing the socket
-        val actualServer =
-            try {
-              val socketField = connection.javaClass.getDeclaredField("socket")
-              socketField.isAccessible = true
-              val socket = socketField.get(connection) as? java.net.Socket
-              if (socket != null && socket.isConnected) {
-                val remoteAddress = socket.inetAddress
-                val hostname = remoteAddress.hostName
-                val ip = remoteAddress.hostAddress
-                // If hostname is different from IP, show both
-                if (hostname != ip) {
-                  "$hostname ($ip):$connectedPort"
-                } else {
-                  "$ip:$connectedPort"
-                }
-              } else {
-                "$connectedAddress:$connectedPort (socket unavailable)"
-              }
-            } catch (e: Exception) {
-              // Fallback to the original address if reflection fails
-              "$connectedAddress:$connectedPort (unable to resolve: ${e.message})"
-            }
-
+        val actualServer = getConnectedServerInfo(connection)
         log.info("$TAG/$operation Using AD server: $actualServer")
       } finally {
         ldapPool.releaseConnection(connection)
@@ -144,30 +212,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
       // Get and log the connected server at the start
       val connection = ldapPool.connection
       try {
-        // Try to get the actual resolved IP/hostname from the socket
-        connectedServer =
-            try {
-              val socketField = connection.javaClass.getDeclaredField("socket")
-              socketField.isAccessible = true
-              val socket = socketField.get(connection) as? java.net.Socket
-              if (socket != null && socket.isConnected) {
-                val remoteAddress = socket.inetAddress
-                val hostname = remoteAddress.hostName
-                val ip = remoteAddress.hostAddress
-                val port = connection.connectedPort
-                // If hostname is different from IP, show both
-                if (hostname != ip) {
-                  "$hostname ($ip):$port"
-                } else {
-                  "$ip:$port"
-                }
-              } else {
-                "${connection.connectedAddress}:${connection.connectedPort}"
-              }
-            } catch (e: Exception) {
-              "${connection.connectedAddress}:${connection.connectedPort}"
-            }
-
+        connectedServer = getConnectedServerInfo(connection)
         log.info(
             "$TAG/getGroup Starting fetch for group '$groupname' using AD server: $connectedServer")
       } finally {
@@ -596,29 +641,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
     try {
       val connection = ldapPool.connection
       try {
-        // Try to get the actual resolved IP/hostname from the socket
-        connectedServer =
-            try {
-              val socketField = connection.javaClass.getDeclaredField("socket")
-              socketField.isAccessible = true
-              val socket = socketField.get(connection) as? java.net.Socket
-              if (socket != null && socket.isConnected) {
-                val remoteAddress = socket.inetAddress
-                val hostname = remoteAddress.hostName
-                val ip = remoteAddress.hostAddress
-                val port = connection.connectedPort
-                if (hostname != ip) {
-                  "$hostname ($ip):$port"
-                } else {
-                  "$ip:$port"
-                }
-              } else {
-                "${connection.connectedAddress}:${connection.connectedPort}"
-              }
-            } catch (e: Exception) {
-              "${connection.connectedAddress}:${connection.connectedPort}"
-            }
-
+        connectedServer = getConnectedServerInfo(connection)
         log.info(
             "$TAG/removeUsersFromGroup Removing users $dmsUsernames from group '$group' using AD server: $connectedServer")
       } finally {
@@ -702,29 +725,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
     try {
       val connection = ldapPool.connection
       try {
-        // Try to get the actual resolved IP/hostname from the socket
-        connectedServer =
-            try {
-              val socketField = connection.javaClass.getDeclaredField("socket")
-              socketField.isAccessible = true
-              val socket = socketField.get(connection) as? java.net.Socket
-              if (socket != null && socket.isConnected) {
-                val remoteAddress = socket.inetAddress
-                val hostname = remoteAddress.hostName
-                val ip = remoteAddress.hostAddress
-                val port = connection.connectedPort
-                if (hostname != ip) {
-                  "$hostname ($ip):$port"
-                } else {
-                  "$ip:$port"
-                }
-              } else {
-                "${connection.connectedAddress}:${connection.connectedPort}"
-              }
-            } catch (e: Exception) {
-              "${connection.connectedAddress}:${connection.connectedPort}"
-            }
-
+        connectedServer = getConnectedServerInfo(connection)
         log.info(
             "$TAG/addUsersToGroup Adding users $dmsUsernames to group '$group' using AD server: $connectedServer")
       } finally {

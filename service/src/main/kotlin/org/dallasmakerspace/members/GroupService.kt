@@ -44,7 +44,9 @@ constructor(
     return adGroups.map { convertAdGroupToDMSGroup(it) }
   }
 
-  private fun convertAdGroupToDMSGroup(adGroup: org.dallasmakerspace.activedirectory.ADGroup): DMSGroup {
+  private fun convertAdGroupToDMSGroup(
+      adGroup: org.dallasmakerspace.activedirectory.ADGroup
+  ): DMSGroup {
     return DMSGroup(
         name = adGroup.cn,
         description = adGroup.description,

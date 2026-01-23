@@ -6,8 +6,7 @@ import io.ktor.resources.*
 @Resource("/groups")
 class Groups {
 
-  @Resource("batch")
-  class Batch(val parent: Groups = Groups())
+  @Resource("batch") class Batch(val parent: Groups = Groups())
 
   @Resource("{groupslug}")
   class DMSGroup(
