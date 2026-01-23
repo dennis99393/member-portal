@@ -49,22 +49,23 @@ class HttpRfidClient(
    *
    * @param e The timeout exception that occurred
    * @param attempt Current attempt number
-   * @param exceptionType Description of the exception type for logging
+   * @param operationDescription Description of the operation and exception type for logging
    * @return true if should retry, false if max attempts reached
    */
   private suspend fun handleTimeoutAndRetry(
       e: Exception,
       attempt: Int,
-      exceptionType: String
+      operationDescription: String
   ): Boolean {
-    log.warn("$exceptionType for $ip on attempt $attempt/$maxLoginAttempts: ${e.message}")
+    log.warn("$operationDescription for $ip on attempt $attempt/$maxLoginAttempts: ${e.message}")
     if (attempt < maxLoginAttempts) {
       val delayMs = 1000L * (1 shl (attempt - 1)) // 1s, 2s exponential backoff
-      log.info("Retrying login to $ip in ${delayMs}ms...")
+      log.info("Retrying operation on $ip in ${delayMs}ms...")
       delay(delayMs)
       return true // Continue retrying
     } else {
-      log.error("Login failed for $ip after $maxLoginAttempts attempts ($exceptionType)", e)
+      log.error(
+          "Operation failed for $ip after $maxLoginAttempts attempts ($operationDescription)", e)
       return false // Max attempts reached
     }
   }
@@ -131,39 +132,65 @@ class HttpRfidClient(
   /**
    * Reads recent badge swipe events from the controller web interface.
    *
+   * Retries up to 2 times (3 total attempts) with exponential backoff if timeouts occur.
+   *
    * @return List of badge swipe events
    */
   suspend fun readRecentSwipes(): List<BadgeSwipeEvent> =
       withContext(Dispatchers.IO) {
-        try {
-          // Login first
-          if (!login()) {
-            log.error("Cannot read swipes from $ip - login failed")
-            return@withContext emptyList()
-          }
-
-          log.debug("Requesting swipes page from $ip")
-
-          // Request swipes page
-          val response: HttpResponse =
-              httpClient.submitForm(
-                  url = "$baseUrl/ACT_ID_21",
-                  formParameters = Parameters.build { append("s4", "Swipe") },
-              )
-
-          if (!response.status.isSuccess()) {
-            log.error("Failed to fetch swipes from $ip: ${response.status}")
-            return@withContext emptyList()
-          }
-
-          val html = response.bodyAsText()
-          log.debug("Received HTML response (${html.length} chars)")
-
-          parseSwipeEvents(html)
-        } catch (e: Exception) {
-          log.error("Failed to read swipes from $ip: ${e.message}", e)
-          throw Exception("Failed to read swipes from $ip: ${e.message}", e)
+        // Login first
+        if (!login()) {
+          log.error("Cannot read swipes from $ip - login failed")
+          return@withContext emptyList()
         }
+
+        // Retry logic for swipes fetch
+        var attempt = 0
+
+        while (attempt < maxLoginAttempts) {
+          attempt++
+          try {
+            log.debug("Requesting swipes page from $ip (attempt $attempt/$maxLoginAttempts)")
+
+            // Request swipes page
+            val response: HttpResponse =
+                httpClient.submitForm(
+                    url = "$baseUrl/ACT_ID_21",
+                    formParameters = Parameters.build { append("s4", "Swipe") },
+                )
+
+            if (!response.status.isSuccess()) {
+              log.error("Failed to fetch swipes from $ip: ${response.status}")
+              return@withContext emptyList()
+            }
+
+            val html = response.bodyAsText()
+            log.debug("Received HTML response (${html.length} chars)")
+
+            if (attempt > 1) {
+              log.info("Successfully fetched swipes from $ip after $attempt attempts")
+            }
+
+            return@withContext parseSwipeEvents(html)
+          } catch (e: HttpRequestTimeoutException) {
+            if (!handleTimeoutAndRetry(e, attempt, "Swipes fetch timeout")) {
+              return@withContext emptyList()
+            }
+          } catch (e: SocketTimeoutException) {
+            if (!handleTimeoutAndRetry(e, attempt, "Swipes fetch socket timeout")) {
+              return@withContext emptyList()
+            }
+          } catch (e: ConnectTimeoutException) {
+            if (!handleTimeoutAndRetry(e, attempt, "Swipes fetch connect timeout")) {
+              return@withContext emptyList()
+            }
+          } catch (e: Exception) {
+            log.error("Failed to read swipes from $ip on attempt $attempt: ${e.message}", e)
+            return@withContext emptyList() // Don't retry non-timeout errors
+          }
+        }
+
+        emptyList()
       }
 
   /**
