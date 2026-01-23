@@ -38,7 +38,35 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
           MAX_LDAP_CONNECTIONS,
       )
 
+  init {
+    log.info("$TAG/init Configured LDAP server: $bindHost:$bindPort")
+    log.info(
+        "$TAG/init LDAP connection pool initialized with $INITIAL_LDAP_CONNECTIONS initial connections, max $MAX_LDAP_CONNECTIONS")
+  }
+
+  /**
+   * Logs the actual connected AD server for a connection from the pool. Useful for debugging issues
+   * with specific domain controllers.
+   */
+  private fun logConnectedServer(operation: String) {
+    try {
+      val connection = ldapPool.connection
+      try {
+        val connectedAddress = connection.connectedAddress
+        val connectedPort = connection.connectedPort
+        log.info("$TAG/$operation Using AD server: $connectedAddress:$connectedPort")
+      } finally {
+        ldapPool.releaseConnection(connection)
+      }
+    } catch (e: Exception) {
+      log.warn("$TAG/$operation Unable to determine connected AD server: ${e.message}")
+    }
+  }
+
   override fun getUsersByUsernameList(usernames: List<String>): Map<String, Map<String, Any?>> {
+    logConnectedServer("getUsersByUsernameList")
+    log.info("$TAG/getUsersByUsernameList Fetching ${usernames.size} users")
+
     val filter =
         Filter.createANDFilter(
             listOf(
@@ -84,53 +112,78 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
   }
 
   override fun getGroup(groupname: String): Map<String, Any?> {
-    val groupFilter =
-        Filter.createANDFilter(
-            listOf(
-                Filter.createEqualityFilter("name", groupname),
-                Filter.createEqualityFilter("objectCategory", "group"),
-            ))
+    val startTime = System.currentTimeMillis()
+    var connectedServer = "unknown"
 
-    val searchResult =
-        ldapPool.search(
-            "DC=dms,DC=local",
-            SearchScope.SUB,
-            groupFilter,
-            "cn",
-            "distinguishedName",
-            "description",
-            "member",
-            "objectGUID",
-            "managedBy",
-            "nTSecurityDescriptor",
-        )
+    try {
+      // Get and log the connected server at the start
+      val connection = ldapPool.connection
+      try {
+        connectedServer = "${connection.connectedAddress}:${connection.connectedPort}"
+        log.info(
+            "$TAG/getGroup Starting fetch for group '$groupname' using AD server: $connectedServer")
+      } finally {
+        ldapPool.releaseConnection(connection)
+      }
 
-    val groupEntry =
-        searchResult.searchEntries.firstOrNull()
-            ?: throw ADException("Group $groupname not found in AD")
+      val groupFilter =
+          Filter.createANDFilter(
+              listOf(
+                  Filter.createEqualityFilter("name", groupname),
+                  Filter.createEqualityFilter("objectCategory", "group"),
+              ))
 
-    val group =
-        groupEntry.attributes.associate {
-          it.name to if (it.name == "member") it.values else it.values.firstOrNull()
-        }
+      val searchResult =
+          ldapPool.search(
+              "DC=dms,DC=local",
+              SearchScope.SUB,
+              groupFilter,
+              "cn",
+              "distinguishedName",
+              "description",
+              "member",
+              "objectGUID",
+              "managedBy",
+              "nTSecurityDescriptor",
+          )
 
-    // Escape special characters like '(' and ')' in the group DN
-    val groupDN =
-        (group["distinguishedName"] as String?)?.replace("(", "\\28")?.replace(")", "\\29")
-            ?: throw ADException("Group DN not found")
+      val groupEntry =
+          searchResult.searchEntries.firstOrNull()
+              ?: throw ADException("Group $groupname not found in AD")
 
-    // Get all members with paging to handle large groups
-    val allMembers = getAllGroupMembers(groupDN)
+      val group =
+          groupEntry.attributes.associate {
+            it.name to if (it.name == "member") it.values else it.values.firstOrNull()
+          }
 
-    // Get group administrators - entities that can modify the group
-    val groupAdmins = getGroupAdministrators(groupEntry)
+      // Escape special characters like '(' and ')' in the group DN
+      val groupDN =
+          (group["distinguishedName"] as String?)?.replace("(", "\\28")?.replace(")", "\\29")
+              ?: throw ADException("Group DN not found")
 
-    // Update the group information
-    val updatedGroup = group.toMutableMap()
-    updatedGroup["member"] = allMembers.toTypedArray()
-    updatedGroup["administrators"] = groupAdmins.toTypedArray()
+      // Get all members with paging to handle large groups
+      val allMembers = getAllGroupMembers(groupDN)
 
-    return updatedGroup
+      // Get group administrators - entities that can modify the group
+      val groupAdmins = getGroupAdministrators(groupEntry)
+
+      // Update the group information
+      val updatedGroup = group.toMutableMap()
+      updatedGroup["member"] = allMembers.toTypedArray()
+      updatedGroup["administrators"] = groupAdmins.toTypedArray()
+
+      val duration = System.currentTimeMillis() - startTime
+      log.info(
+          "$TAG/getGroup Successfully fetched group '$groupname' from AD server $connectedServer in ${duration}ms")
+
+      return updatedGroup
+    } catch (e: Exception) {
+      val duration = System.currentTimeMillis() - startTime
+      log.error(
+          "$TAG/getGroup Failed to fetch group '$groupname' from AD server $connectedServer after ${duration}ms",
+          e)
+      throw e
+    }
   }
 
   /**
@@ -140,6 +193,9 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
    * @return List of distinguished names of all members
    */
   private fun getAllGroupMembers(groupDN: String): List<String> {
+    logConnectedServer("getAllGroupMembers")
+    log.info("$TAG/getAllGroupMembers Fetching members for group: $groupDN")
+
     val allMembers = mutableListOf<String>()
 
     // Query the group directly using its DN to get all members
@@ -155,6 +211,8 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
     while (hasMoreMembers) {
       val rangeEnd = if (rangeStart == 0) rangeSize - 1 else "*"
       val attributeName = "member;range=$rangeStart-$rangeEnd"
+
+      log.info("$TAG/getAllGroupMembers Fetching range $rangeStart-$rangeEnd for group: $groupDN")
 
       val searchRequest =
           SearchRequest("DC=dms,DC=local", SearchScope.SUB, groupFilter, attributeName)
@@ -200,6 +258,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
    * @return List of distinguished names of administrators
    */
   private fun getGroupAdministrators(groupEntry: com.unboundid.ldap.sdk.Entry): List<String> {
+    logConnectedServer("getGroupAdministrators")
     val administrators = mutableListOf<String>()
 
     // First check managedBy attribute
@@ -232,6 +291,9 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
 
   /** {@inheritDoc} */
   override fun getUsersByDnList(dnList: List<String>): Map<String, Map<String, Any?>> {
+    logConnectedServer("getUsersByDnList")
+    log.info("$TAG/getUsersByDnList Fetching ${dnList.size} users by DN")
+
     val filter =
         Filter.createANDFilter(
             listOf(
@@ -377,127 +439,177 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
   }
 
   /** {@inheritDoc} */
+  @Suppress("LongMethod")
   override fun removeUsersFromGroup(dmsUsernames: List<String>, group: String) {
-    val groupFilter =
-        Filter.createANDFilter(
-            listOf(
-                Filter.createEqualityFilter("name", group),
-                Filter.createEqualityFilter("objectCategory", "group"),
-            ))
+    val startTime = System.currentTimeMillis()
+    var connectedServer = "unknown"
 
-    val searchResult =
-        ldapPool.search(
-            "DC=dms,DC=local",
-            SearchScope.SUB,
-            groupFilter,
-            "cn",
-            "distinguishedName",
-            "description",
-            "member",
-            "objectGUID",
-        )
+    try {
+      val connection = ldapPool.connection
+      try {
+        connectedServer = "${connection.connectedAddress}:${connection.connectedPort}"
+        log.info(
+            "$TAG/removeUsersFromGroup Removing users $dmsUsernames from group '$group' using AD server: $connectedServer")
+      } finally {
+        ldapPool.releaseConnection(connection)
+      }
 
-    val groupEntry =
-        searchResult.searchEntries.firstOrNull()
-            ?: throw ADException("Group $group not found in AD")
+      val groupFilter =
+          Filter.createANDFilter(
+              listOf(
+                  Filter.createEqualityFilter("name", group),
+                  Filter.createEqualityFilter("objectCategory", "group"),
+              ))
 
-    val groupDN = groupEntry.dn.toString()
+      val searchResult =
+          ldapPool.search(
+              "DC=dms,DC=local",
+              SearchScope.SUB,
+              groupFilter,
+              "cn",
+              "distinguishedName",
+              "description",
+              "member",
+              "objectGUID",
+          )
 
-    val userFilter =
-        Filter.createANDFilter(
-            listOf(
-                Filter.createEqualityFilter("objectCategory", "person"),
-                Filter.createEqualityFilter("objectClass", "user"),
-                Filter.createEqualityFilter("memberOf", groupDN),
-                Filter.createORFilter(
-                    dmsUsernames.map { Filter.createEqualityFilter("sAMAccountName", it) }),
-            ))
+      val groupEntry =
+          searchResult.searchEntries.firstOrNull()
+              ?: throw ADException("Group $group not found in AD")
 
-    val searchRequest =
-        SearchRequest(
-            "DC=dms,DC=local",
-            SearchScope.SUB,
-            userFilter,
-            ALL_USER_ATTRIBUTES,
-        )
+      val groupDN = groupEntry.dn.toString()
 
-    val userSearchResult = ldapPool.search(searchRequest)
+      val userFilter =
+          Filter.createANDFilter(
+              listOf(
+                  Filter.createEqualityFilter("objectCategory", "person"),
+                  Filter.createEqualityFilter("objectClass", "user"),
+                  Filter.createEqualityFilter("memberOf", groupDN),
+                  Filter.createORFilter(
+                      dmsUsernames.map { Filter.createEqualityFilter("sAMAccountName", it) }),
+              ))
 
-    val usersToRemove =
-        userSearchResult.searchEntries.filter {
-          it.getAttributeValue("sAMAccountName") in dmsUsernames
-        }
+      val searchRequest =
+          SearchRequest(
+              "DC=dms,DC=local",
+              SearchScope.SUB,
+              userFilter,
+              ALL_USER_ATTRIBUTES,
+          )
 
-    usersToRemove.forEach { user ->
-      val userDN = user.dn.toString()
-      val mod = Modification(ModificationType.DELETE, "member", userDN)
-      ldapPool.modify(groupDN, mod)
+      val userSearchResult = ldapPool.search(searchRequest)
+
+      val usersToRemove =
+          userSearchResult.searchEntries.filter {
+            it.getAttributeValue("sAMAccountName") in dmsUsernames
+          }
+
+      usersToRemove.forEach { user ->
+        val userDN = user.dn.toString()
+        val mod = Modification(ModificationType.DELETE, "member", userDN)
+        ldapPool.modify(groupDN, mod)
+      }
+
+      val duration = System.currentTimeMillis() - startTime
+      log.info(
+          "$TAG/removeUsersFromGroup Successfully removed ${usersToRemove.size} users from group '$group' using AD server $connectedServer in ${duration}ms")
+    } catch (e: Exception) {
+      val duration = System.currentTimeMillis() - startTime
+      log.error(
+          "$TAG/removeUsersFromGroup Failed to remove users from group '$group' using AD server $connectedServer after ${duration}ms",
+          e)
+      throw e
     }
   }
 
   /** {@inheritDoc} */
+  @Suppress("LongMethod")
   override fun addUsersToGroup(dmsUsernames: List<String>, group: String) {
-    val groupFilter =
-        Filter.createANDFilter(
-            listOf(
-                Filter.createEqualityFilter("name", group),
-                Filter.createEqualityFilter("objectCategory", "group"),
-            ))
+    val startTime = System.currentTimeMillis()
+    var connectedServer = "unknown"
 
-    val searchResult =
-        ldapPool.search(
-            "DC=dms,DC=local",
-            SearchScope.SUB,
-            groupFilter,
-            "cn",
-            "distinguishedName",
-            "description",
-            "member",
-            "objectGUID",
-        )
+    try {
+      val connection = ldapPool.connection
+      try {
+        connectedServer = "${connection.connectedAddress}:${connection.connectedPort}"
+        log.info(
+            "$TAG/addUsersToGroup Adding users $dmsUsernames to group '$group' using AD server: $connectedServer")
+      } finally {
+        ldapPool.releaseConnection(connection)
+      }
 
-    val groupEntry =
-        searchResult.searchEntries.firstOrNull()
-            ?: throw ADException("Group $group not found in AD")
+      val groupFilter =
+          Filter.createANDFilter(
+              listOf(
+                  Filter.createEqualityFilter("name", group),
+                  Filter.createEqualityFilter("objectCategory", "group"),
+              ))
 
-    val groupDN = groupEntry.dn.toString()
+      val searchResult =
+          ldapPool.search(
+              "DC=dms,DC=local",
+              SearchScope.SUB,
+              groupFilter,
+              "cn",
+              "distinguishedName",
+              "description",
+              "member",
+              "objectGUID",
+          )
 
-    val userFilter =
-        Filter.createANDFilter(
-            listOf(
-                Filter.createEqualityFilter("objectCategory", "person"),
-                Filter.createEqualityFilter("objectClass", "user"),
-                Filter.createORFilter(
-                    dmsUsernames.map { Filter.createEqualityFilter("sAMAccountName", it) }),
-            ))
+      val groupEntry =
+          searchResult.searchEntries.firstOrNull()
+              ?: throw ADException("Group $group not found in AD")
 
-    val searchRequest =
-        SearchRequest(
-            "DC=dms,DC=local",
-            SearchScope.SUB,
-            userFilter,
-            ALL_USER_ATTRIBUTES,
-        )
+      val groupDN = groupEntry.dn.toString()
 
-    val userSearchResult = ldapPool.search(searchRequest)
+      val userFilter =
+          Filter.createANDFilter(
+              listOf(
+                  Filter.createEqualityFilter("objectCategory", "person"),
+                  Filter.createEqualityFilter("objectClass", "user"),
+                  Filter.createORFilter(
+                      dmsUsernames.map { Filter.createEqualityFilter("sAMAccountName", it) }),
+              ))
 
-    val usersToAdd =
-        userSearchResult.searchEntries.filter {
-          it.getAttributeValue("sAMAccountName") in dmsUsernames
-        }
+      val searchRequest =
+          SearchRequest(
+              "DC=dms,DC=local",
+              SearchScope.SUB,
+              userFilter,
+              ALL_USER_ATTRIBUTES,
+          )
 
-    if (usersToAdd.size != dmsUsernames.size) {
-      val missingUsers =
-          dmsUsernames.filter { username ->
-            usersToAdd.none { it.getAttributeValue("sAMAccountName") == username }
+      val userSearchResult = ldapPool.search(searchRequest)
+
+      val usersToAdd =
+          userSearchResult.searchEntries.filter {
+            it.getAttributeValue("sAMAccountName") in dmsUsernames
           }
-      log.error("$TAG/addUsersToGroup/ Users not found in AD: $missingUsers")
-    }
 
-    usersToAdd.forEach { user ->
-      val userDN = user.dn.toString()
-      val mod = Modification(ModificationType.ADD, "member", userDN)
-      ldapPool.modify(groupDN, mod)
+      if (usersToAdd.size != dmsUsernames.size) {
+        val missingUsers =
+            dmsUsernames.filter { username ->
+              usersToAdd.none { it.getAttributeValue("sAMAccountName") == username }
+            }
+        log.error("$TAG/addUsersToGroup/ Users not found in AD: $missingUsers")
+      }
+
+      usersToAdd.forEach { user ->
+        val userDN = user.dn.toString()
+        val mod = Modification(ModificationType.ADD, "member", userDN)
+        ldapPool.modify(groupDN, mod)
+      }
+
+      val duration = System.currentTimeMillis() - startTime
+      log.info(
+          "$TAG/addUsersToGroup Successfully added ${usersToAdd.size} users to group '$group' using AD server $connectedServer in ${duration}ms")
+    } catch (e: Exception) {
+      val duration = System.currentTimeMillis() - startTime
+      log.error(
+          "$TAG/addUsersToGroup Failed to add users to group '$group' using AD server $connectedServer after ${duration}ms",
+          e)
+      throw e
     }
   }
 
