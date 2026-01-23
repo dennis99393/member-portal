@@ -26,10 +26,19 @@ constructor(
   override suspend fun handleAuthenticated(call: ApplicationCall) {
     val committees = Committees.ALL.filter { it.isActive }
 
-    // Fetch all chair groups in parallel for better performance
-    val committeeData = coroutineScope {
-      committees.map { committee -> async { buildCommitteeMap(committee) } }.awaitAll()
+    // Fetch all groups once with a single AD call
+    val allGroups = try {
+      memberService.getAllGroups(session.sessionId)
+    } catch (e: Exception) {
+      log.warn("Failed to fetch all groups: {}", e.message)
+      emptyList()
     }
+
+    // Create a map of group slug -> group for quick lookup
+    val groupsBySlug = allGroups.associateBy { getSlugFromName(it.name) }
+
+    // Build committee data using the cached groups
+    val committeeData = committees.map { committee -> buildCommitteeMap(committee, groupsBySlug) }
 
     val jsonMap: MutableMap<String, Any> = mutableMapOf("committees" to committeeData)
 

@@ -90,6 +90,20 @@ constructor(
     return dmsGroupFromMap(data)
   }
 
+  suspend fun getAllGroups(sessionId: String?): List<DMSGroup> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val groupMap = dmsHttpClient.get("$baseUrl/groups", apiHeaders)
+      val data =
+          groupMap["data"] as List<*>?
+              ?: throw MemberServiceException("data attribute missing required")
+      data.map { dmsGroupFromMap(it as Map<String, Any?>) }
+    } catch (ex: Exception) {
+      log.error("Failed to get all groups", ex)
+      throw MemberServiceException("Failed to get all groups", ex)
+    }
+  }
+
   suspend fun getSearchPreloads(sessionId: String?): SearchPreloadResponse = coroutineScope {
     val overallTimeoutMs = 15_000L
 

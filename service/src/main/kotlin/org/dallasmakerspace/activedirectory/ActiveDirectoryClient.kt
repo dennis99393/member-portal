@@ -54,7 +54,32 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
       try {
         val connectedAddress = connection.connectedAddress
         val connectedPort = connection.connectedPort
-        log.info("$TAG/$operation Using AD server: $connectedAddress:$connectedPort")
+
+        // Try to get the actual resolved IP address by accessing the socket
+        val actualServer =
+            try {
+              val socketField = connection.javaClass.getDeclaredField("socket")
+              socketField.isAccessible = true
+              val socket = socketField.get(connection) as? java.net.Socket
+              if (socket != null && socket.isConnected) {
+                val remoteAddress = socket.inetAddress
+                val hostname = remoteAddress.hostName
+                val ip = remoteAddress.hostAddress
+                // If hostname is different from IP, show both
+                if (hostname != ip) {
+                  "$hostname ($ip):$connectedPort"
+                } else {
+                  "$ip:$connectedPort"
+                }
+              } else {
+                "$connectedAddress:$connectedPort (socket unavailable)"
+              }
+            } catch (e: Exception) {
+              // Fallback to the original address if reflection fails
+              "$connectedAddress:$connectedPort (unable to resolve: ${e.message})"
+            }
+
+        log.info("$TAG/$operation Using AD server: $actualServer")
       } finally {
         ldapPool.releaseConnection(connection)
       }
@@ -119,7 +144,30 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
       // Get and log the connected server at the start
       val connection = ldapPool.connection
       try {
-        connectedServer = "${connection.connectedAddress}:${connection.connectedPort}"
+        // Try to get the actual resolved IP/hostname from the socket
+        connectedServer =
+            try {
+              val socketField = connection.javaClass.getDeclaredField("socket")
+              socketField.isAccessible = true
+              val socket = socketField.get(connection) as? java.net.Socket
+              if (socket != null && socket.isConnected) {
+                val remoteAddress = socket.inetAddress
+                val hostname = remoteAddress.hostName
+                val ip = remoteAddress.hostAddress
+                val port = connection.connectedPort
+                // If hostname is different from IP, show both
+                if (hostname != ip) {
+                  "$hostname ($ip):$port"
+                } else {
+                  "$ip:$port"
+                }
+              } else {
+                "${connection.connectedAddress}:${connection.connectedPort}"
+              }
+            } catch (e: Exception) {
+              "${connection.connectedAddress}:${connection.connectedPort}"
+            }
+
         log.info(
             "$TAG/getGroup Starting fetch for group '$groupname' using AD server: $connectedServer")
       } finally {
@@ -447,7 +495,29 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
     try {
       val connection = ldapPool.connection
       try {
-        connectedServer = "${connection.connectedAddress}:${connection.connectedPort}"
+        // Try to get the actual resolved IP/hostname from the socket
+        connectedServer =
+            try {
+              val socketField = connection.javaClass.getDeclaredField("socket")
+              socketField.isAccessible = true
+              val socket = socketField.get(connection) as? java.net.Socket
+              if (socket != null && socket.isConnected) {
+                val remoteAddress = socket.inetAddress
+                val hostname = remoteAddress.hostName
+                val ip = remoteAddress.hostAddress
+                val port = connection.connectedPort
+                if (hostname != ip) {
+                  "$hostname ($ip):$port"
+                } else {
+                  "$ip:$port"
+                }
+              } else {
+                "${connection.connectedAddress}:${connection.connectedPort}"
+              }
+            } catch (e: Exception) {
+              "${connection.connectedAddress}:${connection.connectedPort}"
+            }
+
         log.info(
             "$TAG/removeUsersFromGroup Removing users $dmsUsernames from group '$group' using AD server: $connectedServer")
       } finally {
@@ -531,7 +601,29 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
     try {
       val connection = ldapPool.connection
       try {
-        connectedServer = "${connection.connectedAddress}:${connection.connectedPort}"
+        // Try to get the actual resolved IP/hostname from the socket
+        connectedServer =
+            try {
+              val socketField = connection.javaClass.getDeclaredField("socket")
+              socketField.isAccessible = true
+              val socket = socketField.get(connection) as? java.net.Socket
+              if (socket != null && socket.isConnected) {
+                val remoteAddress = socket.inetAddress
+                val hostname = remoteAddress.hostName
+                val ip = remoteAddress.hostAddress
+                val port = connection.connectedPort
+                if (hostname != ip) {
+                  "$hostname ($ip):$port"
+                } else {
+                  "$ip:$port"
+                }
+              } else {
+                "${connection.connectedAddress}:${connection.connectedPort}"
+              }
+            } catch (e: Exception) {
+              "${connection.connectedAddress}:${connection.connectedPort}"
+            }
+
         log.info(
             "$TAG/addUsersToGroup Adding users $dmsUsernames to group '$group' using AD server: $connectedServer")
       } finally {
