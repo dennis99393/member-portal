@@ -137,6 +137,27 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
     )
   }
 
+  override fun getMultipleGroups(groupnames: List<String>): List<ADGroup> {
+    val adResults = activeDirectoryClient.getMultipleGroups(groupnames)
+    return adResults.values.map { groupData ->
+      val administrators =
+          (groupData["administrators"] as? Array<*>)?.map { it.toString() } ?: emptyList()
+
+      val (members, nestedGroups) = parseMembersAndGroups(groupData)
+
+      ADGroup(
+          cn = groupData["cn"].toString(),
+          description = groupData["description"]?.toString(),
+          distinguishedName = groupData["distinguishedName"].toString(),
+          objectGuid = groupData["objectGUID"]?.toString(),
+          members = members,
+          membersListIncomplete = (groupData["member"] as Array<*>).size > MAX_GROUP_MEMBERS,
+          administrators = administrators,
+          nestedGroups = nestedGroups,
+      )
+    }
+  }
+
   /** {@inheritDoc} */
   override fun getAllGroups(): List<ADGroup> {
     val adResults = activeDirectoryClient.getAllGroups()

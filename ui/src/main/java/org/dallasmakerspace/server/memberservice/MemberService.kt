@@ -126,6 +126,10 @@ constructor(
     return memberServiceClient.getAllGroups(sessionId)
   }
 
+  suspend fun getMultipleGroups(groupSlugs: List<String>, sessionId: String?): List<DMSGroup> {
+    return memberServiceClient.getMultipleGroups(groupSlugs, sessionId)
+  }
+
   suspend fun getSearchPreload(sessionId: String?): SearchPreloadResponse {
     return memberServiceClient.getSearchPreloads(sessionId)
   }

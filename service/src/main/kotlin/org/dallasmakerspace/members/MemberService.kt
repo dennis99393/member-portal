@@ -510,6 +510,63 @@ constructor(
     )
   }
 
+  suspend fun getMultipleGroups(groupslugs: List<String>): List<DMSGroup> = coroutineScope {
+    val groupnames = groupslugs.map { Groups.getNameFromSlug(it) }
+
+    // Run AD query and DB members query in parallel
+    val adGroupsDeferred = async {
+      withContext(Dispatchers.IO) { activeDirectoryService.getMultipleGroups(groupnames) }
+    }
+    val dbMembersDeferred = async { memberRepository.getAllMembers() }
+
+    // Await all results
+    val adGroups = adGroupsDeferred.await()
+    val dbMembers = dbMembersDeferred.await()
+
+    // Enrich each group with DB member data
+    adGroups.map { adGroup ->
+      DMSGroup(
+          name = adGroup.cn,
+          description = adGroup.description,
+          distinguishedName = adGroup.distinguishedName,
+          objectGuid = adGroup.objectGuid,
+          members =
+              adGroup.members.map {
+                // Find corresponding DB member
+                val dbMember = dbMembers.find { db -> db.username == it.sAMAccountName }
+                DMSMember(
+                    -1,
+                    it.sAMAccountName,
+                    firstName = it.givenName,
+                    lastName = it.sn,
+                    displayName = it.displayName,
+                    avatarUrl = dbMember?.discourseAvatarUrl,
+                    discourseUsername = dbMember?.discourseUsername,
+                    personalEmail = it.mail,
+                    phoneNumber = getNormalizedPhoneNumber(it.telephoneNumber, it.sAMAccountName),
+                    badgeNumber = it.employeeID,
+                    enabled = it.enabled,
+                    memberSince = calculateMemberSince(it.whenCreated),
+                    groups =
+                        it.groups.map { group ->
+                          DMSGroup(
+                              name = group.cn,
+                              description = null,
+                              distinguishedName = group.distinguishedName,
+                              objectGuid = group.objectGuid,
+                              membersListIncomplete = false,
+                              members = emptyList(),
+                          )
+                        },
+                )
+              },
+          membersListIncomplete = adGroup.membersListIncomplete,
+          administrators = adGroup.administrators,
+          nestedGroups = adGroup.nestedGroups,
+      )
+    }
+  }
+
   suspend fun addMembersToGroup(memberUsernames: List<String>, groupslug: String) {
     val groupname = Groups.getNameFromSlug(groupslug)
     activeDirectoryService.addUsersToGroup(memberUsernames, groupname)

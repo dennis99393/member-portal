@@ -33,6 +33,20 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
   }
 
   /** {@inheritDoc} */
+  override fun getMultipleGroups(groupnames: List<String>): List<ADGroup> {
+    return groupnames.map { groupname ->
+      ADGroup(
+          cn = groupname,
+          description = "Mock group description",
+          distinguishedName = "CN=$groupname,OU=Groups,DC=dms,DC=local",
+          objectGuid = "mock-guid",
+          members = emptyList(),
+          membersListIncomplete = false,
+          administrators = emptyList())
+    }
+  }
+
+  /** {@inheritDoc} */
   override fun getAllGroups(): List<ADGroup> {
     return listOf(
         ADGroup(

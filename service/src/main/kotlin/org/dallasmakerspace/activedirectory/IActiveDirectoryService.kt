@@ -37,6 +37,9 @@ interface IActiveDirectoryService {
   /** Gets the ADGroup object for the given groupname. */
   fun getGroup(groupname: String): ADGroup
 
+  /** Gets multiple ADGroup objects for the given list of group names with their members. */
+  fun getMultipleGroups(groupnames: List<String>): List<ADGroup>
+
   /** Gets all ADGroup objects from Active Directory. */
   fun getAllGroups(): List<ADGroup>
 

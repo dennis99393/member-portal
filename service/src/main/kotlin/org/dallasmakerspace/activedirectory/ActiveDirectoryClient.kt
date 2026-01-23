@@ -234,6 +234,107 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
     }
   }
 
+  override fun getMultipleGroups(groupnames: List<String>): Map<String, Map<String, Any?>> {
+    val startTime = System.currentTimeMillis()
+    var connectedServer = "unknown"
+
+    try {
+      // Get and log the connected server at the start
+      val connection = ldapPool.connection
+      try {
+        connectedServer =
+            try {
+              val socketField = connection.javaClass.getDeclaredField("socket")
+              socketField.isAccessible = true
+              val socket = socketField.get(connection) as? java.net.Socket
+              if (socket != null && socket.isConnected) {
+                val remoteAddress = socket.inetAddress
+                val hostname = remoteAddress.hostName
+                val ip = remoteAddress.hostAddress
+                val port = connection.connectedPort
+                if (hostname != ip) {
+                  "$hostname ($ip):$port"
+                } else {
+                  "$ip:$port"
+                }
+              } else {
+                "${connection.connectedAddress}:${connection.connectedPort}"
+              }
+            } catch (e: Exception) {
+              "${connection.connectedAddress}:${connection.connectedPort}"
+            }
+
+        log.info(
+            "$TAG/getMultipleGroups Starting batch fetch for ${groupnames.size} groups using AD server: $connectedServer")
+      } finally {
+        ldapPool.releaseConnection(connection)
+      }
+
+      // Create OR filter for all group names
+      val nameFilters = groupnames.map { Filter.createEqualityFilter("name", it) }
+      val groupFilter =
+          Filter.createANDFilter(
+              listOf(
+                  Filter.createORFilter(nameFilters),
+                  Filter.createEqualityFilter("objectCategory", "group"),
+              ))
+
+      val searchResult =
+          ldapPool.search(
+              "DC=dms,DC=local",
+              SearchScope.SUB,
+              groupFilter,
+              "cn",
+              "distinguishedName",
+              "description",
+              "member",
+              "objectGUID",
+              "managedBy",
+              "nTSecurityDescriptor",
+          )
+
+      val groups = mutableMapOf<String, Map<String, Any?>>()
+
+      for (groupEntry in searchResult.searchEntries) {
+        val groupName = groupEntry.getAttributeValue("cn")
+        val group =
+            groupEntry.attributes.associate {
+              it.name to if (it.name == "member") it.values else it.values.firstOrNull()
+            }
+
+        // Escape special characters in the group DN
+        val groupDN =
+            (group["distinguishedName"] as String?)?.replace("(", "\\28")?.replace(")", "\\29")
+                ?: continue
+
+        // Get all members with paging to handle large groups
+        val allMembers = getAllGroupMembers(groupDN)
+
+        // Get group administrators
+        val groupAdmins = getGroupAdministrators(groupEntry)
+
+        // Update the group information
+        val updatedGroup = group.toMutableMap()
+        updatedGroup["member"] = allMembers.toTypedArray()
+        updatedGroup["administrators"] = groupAdmins.toTypedArray()
+
+        groups[groupName] = updatedGroup
+      }
+
+      val duration = System.currentTimeMillis() - startTime
+      log.info(
+          "$TAG/getMultipleGroups Successfully fetched ${groups.size} groups from AD server $connectedServer in ${duration}ms")
+
+      return groups
+    } catch (e: Exception) {
+      val duration = System.currentTimeMillis() - startTime
+      log.error(
+          "$TAG/getMultipleGroups Failed to fetch groups from AD server $connectedServer after ${duration}ms",
+          e)
+      throw e
+    }
+  }
+
   /**
    * Retrieves all members of a group, handling pagination for large groups.
    *

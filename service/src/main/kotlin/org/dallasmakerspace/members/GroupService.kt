@@ -35,6 +35,16 @@ constructor(
   fun getGroup(groupslug: String): DMSGroup {
     val groupname = Groups.getNameFromSlug(groupslug)
     val adGroup = activeDirectoryService.getGroup(groupname)
+    return convertAdGroupToDMSGroup(adGroup)
+  }
+
+  fun getMultipleGroups(groupslugs: List<String>): List<DMSGroup> {
+    val groupnames = groupslugs.map { Groups.getNameFromSlug(it) }
+    val adGroups = activeDirectoryService.getMultipleGroups(groupnames)
+    return adGroups.map { convertAdGroupToDMSGroup(it) }
+  }
+
+  private fun convertAdGroupToDMSGroup(adGroup: org.dallasmakerspace.activedirectory.ADGroup): DMSGroup {
     return DMSGroup(
         name = adGroup.cn,
         description = adGroup.description,
