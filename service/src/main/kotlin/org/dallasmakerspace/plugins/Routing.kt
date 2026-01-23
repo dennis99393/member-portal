@@ -11,7 +11,6 @@ import io.ktor.server.resources.patch
 import io.ktor.server.resources.post
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.util.*
 import kotlinx.serialization.Serializable
 import org.dallasmakerspace.askai.AskAiService
 import org.dallasmakerspace.auth.ApiKeyAuthProvider
@@ -129,7 +128,8 @@ fun Application.configureRouting() {
                   Status.SUCCESS,
                   "Activity log for ${activityLogRequested.parent.username}",
                   activityLog,
-              ))
+              )
+          )
         }
 
         /** Calendar Events operations - requires member:read since it's member data * */
@@ -145,7 +145,8 @@ fun Application.configureRouting() {
                   Status.SUCCESS,
                   "Events organized by ${eventsRequested.parent.username}",
                   events,
-              ))
+              )
+          )
         }
       }
 
@@ -156,8 +157,8 @@ fun Application.configureRouting() {
           val updatedMember = call.receive<Members.DMSMember>()
           memberService.updateMember(update.parent.username, routeObjectToModel(updatedMember))
           call.respond(
-              ApiResponse(
-                  Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember))
+              ApiResponse(Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember)
+          )
         }
       }
 
@@ -199,7 +200,8 @@ fun Application.configureRouting() {
                   Status.SUCCESS,
                   "Added member to $groupslug updated: $memberUsername",
                   null,
-              ))
+              )
+          )
         }
 
         delete<Groups.DMSGroup.Add> { groupRequested ->
@@ -212,7 +214,8 @@ fun Application.configureRouting() {
                   Status.SUCCESS,
                   "Removed member to $groupslug updated: $memberUsername",
                   null,
-              ))
+              )
+          )
         }
       }
 
@@ -324,7 +327,8 @@ fun Application.configureRouting() {
                   Status.SUCCESS,
                   "Popular short links retrieved",
                   popularLinks.map { (link, clicks) -> PopularShortLinkResponse(link, clicks) },
-              ))
+              )
+          )
         }
       }
 
@@ -616,7 +620,8 @@ fun Application.configureRouting() {
           "Webhook request received: path=${call.request.path()}, " +
               "query params=${call.request.queryParameters.entries().map { "${it.key}:${it.value}" }
                 .joinToString { ";" }}, " +
-              "headers=${call.request.headers.entries().map{ "${it.key}:${it.value}" }.joinToString { ";" }}")
+              "headers=${call.request.headers.entries().map{ "${it.key}:${it.value}" }.joinToString { ";" }}"
+      )
 
       // Route the webhook to appropriate handler
       val result = webhookRouter.route(path, body)
