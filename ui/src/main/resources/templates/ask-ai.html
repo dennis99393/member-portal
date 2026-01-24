@@ -266,6 +266,9 @@
                           th:data-question="${q.question}"
                           th:title="${q.question}"
                           th:text="${#strings.abbreviate(q.question, 50)}"
+                          data-track-action="click_cached_question"
+                          data-track-category="ask_ai"
+                          th:data-track-label="${q.question}"
                           onclick="askQuestion(this.dataset.question)"></span>
                 </div>
             </div>

@@ -25,18 +25,17 @@ constructor(
     val committees = Committees.ALL.filter { it.isActive }
 
     // Get unique chair group slugs
-    val uniqueChairGroupSlugs = committees
-        .mapNotNull { it.chairGroupName }
-        .distinct()
-        .map { getSlugFromName(it) }
+    val uniqueChairGroupSlugs =
+        committees.mapNotNull { it.chairGroupName }.distinct().map { getSlugFromName(it) }
 
     // Fetch all chair groups with members in a single AD call
-    val chairGroups = try {
-      memberService.getMultipleGroups(uniqueChairGroupSlugs, session.sessionId)
-    } catch (e: Exception) {
-      log.warn("Failed to fetch chair groups: {}", e.message)
-      emptyList()
-    }
+    val chairGroups =
+        try {
+          memberService.getMultipleGroups(uniqueChairGroupSlugs, session.sessionId)
+        } catch (e: Exception) {
+          log.warn("Failed to fetch chair groups: {}", e.message)
+          emptyList()
+        }
 
     // Create a map of group slug -> group for quick lookup
     val chairGroupsMap = chairGroups.associateBy { getSlugFromName(it.name) }
