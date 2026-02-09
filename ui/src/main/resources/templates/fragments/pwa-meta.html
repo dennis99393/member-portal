@@ -40,7 +40,12 @@
                 });
             </script>
             <script th:if="${preferred_username != null}" th:inline="javascript">
-                posthog.identify(/*[[${preferred_username}]]*/ '');
+                posthog.identify(
+                    /*[[${preferred_username}]]*/ '',
+                    {
+                        username: /*[[${preferred_username}]]*/ ''
+                    }
+                );
             </script>
         </th:block>
     </th:block>
