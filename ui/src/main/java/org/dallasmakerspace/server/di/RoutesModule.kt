@@ -17,6 +17,8 @@ import org.dallasmakerspace.server.routes.GroupsHandler
 import org.dallasmakerspace.server.routes.IRouteHandler
 import org.dallasmakerspace.server.routes.IndexHandler
 import org.dallasmakerspace.server.routes.LoginHandler
+import org.dallasmakerspace.server.routes.ManifestHandler
+import org.dallasmakerspace.server.routes.OfflineHandler
 import org.dallasmakerspace.server.routes.OidcCallbackHandler
 import org.dallasmakerspace.server.routes.PingHandler
 import org.dallasmakerspace.server.routes.ProfileHandler
@@ -173,4 +175,16 @@ class RoutesModule {
       memberService: MemberService,
       appConfig: AppConfig
   ): IRouteHandler = AskAiHandler(loggerFactory, userInfoProvider, memberService, appConfig)
+
+  @IntoMap
+  @Provides
+  @StringKey("/manifest.json")
+  fun providesManifestHandler(loggerFactory: LoggerFactory, appConfig: AppConfig): IRouteHandler =
+      ManifestHandler(loggerFactory, appConfig)
+
+  @IntoMap
+  @Provides
+  @StringKey("/offline")
+  fun providesOfflineHandler(loggerFactory: LoggerFactory): IRouteHandler =
+      OfflineHandler(loggerFactory)
 }

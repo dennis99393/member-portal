@@ -39,6 +39,9 @@
         }
     }
 
+    // Expose track function globally for PWA and other tracking
+    window.track = track;
+
     /**
      * Track external link click
      */

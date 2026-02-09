@@ -91,6 +91,23 @@ fun Application.configureRouting() {
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handleBase(call) }
 
+    // PWA routes - no authentication required
+    get(RouteFactory.Paths.MANIFEST.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+    get(RouteFactory.Paths.OFFLINE.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+
+    // Service worker - must be served from root, no caching
+    get("/sw.js") {
+      val resource = Application::class.java.classLoader.getResource("static/sw.js")
+      if (resource != null) {
+        call.response.headers.append(
+            HttpHeaders.CacheControl, "no-cache, no-store, must-revalidate")
+        call.response.headers.append(HttpHeaders.ContentType, "application/javascript")
+        call.respondText(resource.readText(), ContentType.Application.JavaScript)
+      } else {
+        call.respond(HttpStatusCode.NotFound)
+      }
+    }
+
     // Block all bots from crawling the site
     get("robots.txt") {
       call.respond(

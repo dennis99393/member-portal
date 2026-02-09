@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:fragment="pwa-meta">
+        <!-- PWA Manifest -->
+        <link rel="manifest" href="/manifest.json">
+
+        <!-- Theme Color -->
+        <meta name="theme-color" content="#0b9cc9">
+
+        <!-- Apple Mobile Web App -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="DMS Portal">
+
+        <!-- Icons -->
+        <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+        <link rel="shortcut icon" href="/static/icons/favicon.ico">
+        <link rel="mask-icon" href="/static/icons/safari-pinned-tab.svg" color="#0b9cc9">
+
+        <!-- Microsoft Tile -->
+        <meta name="msapplication-TileColor" content="#0b9cc9">
+        <meta name="msapplication-TileImage" content="/static/icons/icon-144x144.png">
+    </th:block>
+</head>
+</html>
