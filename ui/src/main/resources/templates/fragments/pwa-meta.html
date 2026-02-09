@@ -33,7 +33,10 @@
                     person_profiles: 'identified_only',
                     autocapture: true,
                     capture_pageview: true,
-                    capture_pageleave: true
+                    capture_pageleave: true,
+                    session_recording: {
+                        maskTextSelector: '.ph-mask'
+                    }
                 });
             </script>
             <script th:if="${preferred_username != null}" th:inline="javascript">

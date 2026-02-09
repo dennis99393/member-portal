@@ -263,17 +263,17 @@
 
                             <div th:if="${personal_email}" class="d-flex align-items-center mb-3">
                                 <span class="material-symbols-outlined card-item-icon">unsubscribe</span>
-                                <span>Personal email: <span class="overflow-hidden" th:text="${personal_email}"></span></span>
+                                <span>Personal email: <span class="overflow-hidden ph-mask" th:text="${personal_email}"></span></span>
                             </div>
 
                             <div th:if="${phone_number}" class="d-flex align-items-center mb-3">
                                 <span class="material-symbols-outlined card-item-icon">dialpad</span>
-                                <span>Phone number: <span th:text="${phone_number}"></span></span>
+                                <span>Phone number: <span class="ph-mask" th:text="${phone_number}"></span></span>
                             </div>
 
                             <div th:if="${badge_number}" class="d-flex align-items-center">
                                 <span class="material-symbols-outlined card-item-icon">security_key</span>
-                                <span>DMS Badge: <span th:text="${badge_number}"></span></span>
+                                <span>DMS Badge: <span class="ph-mask" th:text="${badge_number}"></span></span>
                             </div>
                         </th:block>
                     </div>
@@ -286,7 +286,7 @@
 
                     <div class="mt-4">
                         <div class="d-flex align-items-center" th:if="${whmcs_id}">
-                            <span>WhmcsId: <span th:text="${whmcs_id}"></span></span>
+                            <span>WhmcsId: <span class="ph-mask" th:text="${whmcs_id}"></span></span>
                         </div>
                         <div class="d-flex align-items-center">
                             <span>isPrimaryAccount: <span th:text="${is_primary_account}"></span></span>
@@ -299,13 +299,13 @@
                                         th:text="|${last_inactive_date} (${days_since_last_inactive})|"></span></span>
                         </div>
                         <div class="d-flex align-items-center">
-                            <span>Personal email: <span th:text="${personal_email}"></span></span>
+                            <span>Personal email: <span class="ph-mask" th:text="${personal_email}"></span></span>
                         </div>
                         <div class="d-flex align-items-center">
-                            <span>Phone number: <span th:text="${phone_number}"></span></span>
+                            <span>Phone number: <span class="ph-mask" th:text="${phone_number}"></span></span>
                         </div>
                         <div class="d-flex align-items-center">
-                            <span>DMS Badge: <span th:text="${badge_number}"></span></span>
+                            <span>DMS Badge: <span class="ph-mask" th:text="${badge_number}"></span></span>
                         </div>
                     </div>
                 </div>
