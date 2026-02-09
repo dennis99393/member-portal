@@ -37,6 +37,11 @@
                 keepalive: true
             }).catch(function() {});
         }
+
+        // Bridge to PostHog
+        if (window.posthog && typeof window.posthog.capture === 'function') {
+            window.posthog.capture(actionType, actionDetails || {});
+        }
     }
 
     // Expose track function globally for PWA and other tracking

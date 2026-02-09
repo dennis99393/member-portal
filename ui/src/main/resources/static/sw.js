@@ -68,6 +68,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Only handle http/https — skip chrome-extension:// and other schemes
+  if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // PostHog analytics: pass through without caching
+  if (url.hostname.includes('posthog.com')) {
+    return;
+  }
+
   // API calls: Network Only (no caching for member data)
   if (url.pathname.startsWith('/backend-api/')) {
     event.respondWith(networkOnly(request));
