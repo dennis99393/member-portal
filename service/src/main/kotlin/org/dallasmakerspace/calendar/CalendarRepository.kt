@@ -81,8 +81,67 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
     val hasEvents = result?.data?.firstOrNull()?.get("has_events")
     return hasEvents == 1L || hasEvents == 1 || hasEvents == true
   }
+
+  /**
+   * Fetches upcoming prerequisite events for multiple AD groups.
+   *
+   * @param groupNames The list of AD group names to fetch events for.
+   * @return A list of [EventSummary] objects for upcoming events.
+   */
+  suspend fun getUpcomingPrerequisiteEvents(groupNames: List<String>): List<EventSummary> {
+    if (groupNames.isEmpty()) {
+      return emptyList()
+    }
+
+    // Build SQL IN clause with escaped group names
+    val groupNamesList = groupNames.joinToString(",") { "'${it.replace("'", "''")}'" }
+
+    val query =
+        """
+      SELECT
+          e.id,
+          e.name,
+          CONVERT_TZ(e.event_start, '+00:00', 'America/Chicago') AS event_start_cst,
+          e.status,
+          c.ad_username as organizer_username
+      FROM `dms-calendar`.events e
+      JOIN `dms-calendar`.prerequisites p ON e.fulfills_prerequisite_id = p.id
+      LEFT JOIN `dms-calendar`.contacts c ON e.contact_id = c.id
+      WHERE
+          e.event_start >= NOW()
+          AND p.ad_group IN ($groupNamesList)
+      ORDER BY e.event_start ASC
+      LIMIT 20
+    """
+
+    log.debug("Fetching upcoming prerequisite events for ${groupNames.size} groups")
+
+    val result = genericRepository.getReportData(query)
+
+    return result?.data?.map { row ->
+      val id = (row["id"] as? Number)?.toInt() ?: 0
+      val name = row["name"]?.toString() ?: ""
+      val eventStart = row["event_start_cst"]?.toString() ?: ""
+      val status = row["status"]?.toString() ?: ""
+      val organizerUsername = row["organizer_username"]?.toString()
+
+      EventSummary(
+          id = id,
+          name = name,
+          eventStart = eventStart,
+          status = status,
+          organizerUsername = organizerUsername
+      )
+    } ?: emptyList()
+  }
 }
 
 /** Represents a summary of a calendar event. */
 @Serializable
-data class EventSummary(val id: Int, val name: String, val eventStart: String, val status: String)
+data class EventSummary(
+    val id: Int,
+    val name: String,
+    val eventStart: String,
+    val status: String,
+    val organizerUsername: String? = null
+)

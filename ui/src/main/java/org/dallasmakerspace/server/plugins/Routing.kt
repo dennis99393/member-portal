@@ -78,6 +78,9 @@ fun Application.configureRouting() {
         RouteFactory.getHandler(call)?.handleBase(call)
       }
       get(RouteFactory.Paths.COMMITTEES.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.COMMITTEE_DETAIL.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
       post(RouteFactory.Paths.ACTION_TRACK.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       get(RouteFactory.Paths.ASK_AI.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       post(RouteFactory.Paths.ASK_AI.path) { RouteFactory.getHandler(call)?.handleBase(call) }

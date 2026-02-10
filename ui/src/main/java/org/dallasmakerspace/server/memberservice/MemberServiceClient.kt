@@ -291,6 +291,32 @@ constructor(
     }
   }
 
+  suspend fun getUpcomingPrerequisiteEvents(
+      groupNames: List<String>,
+      sessionId: String?
+  ): List<EventSummary> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.post("$baseUrl/calendar/upcoming-events", apiHeaders, groupNames)
+      val data =
+          result["data"] as List<*>?
+              ?: throw MemberServiceException("data attribute missing required")
+      data.map { eventMap ->
+        val event = eventMap as Map<*, *>
+        EventSummary(
+            id = (event["id"] as Number).toInt(),
+            name = event["name"] as String,
+            eventStart = event["eventStart"] as String,
+            status = event["status"] as String,
+            organizerUsername = event["organizerUsername"] as? String,
+        )
+      }
+    } catch (ex: Exception) {
+      log.error("Failed to get upcoming prerequisite events", ex)
+      throw MemberServiceException("Failed to get upcoming prerequisite events", ex)
+    }
+  }
+
   suspend fun askAi(
       sessionId: String?,
       question: String,

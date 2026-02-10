@@ -12,6 +12,7 @@ import org.dallasmakerspace.server.memberservice.MemberServiceClient
 import org.dallasmakerspace.server.routes.ActionTrackingHandler
 import org.dallasmakerspace.server.routes.AskAiHandler
 import org.dallasmakerspace.server.routes.BackendApiHandler
+import org.dallasmakerspace.server.routes.CommitteeDetailHandler
 import org.dallasmakerspace.server.routes.CommitteesHandler
 import org.dallasmakerspace.server.routes.GroupsHandler
 import org.dallasmakerspace.server.routes.IRouteHandler
@@ -158,6 +159,15 @@ class RoutesModule {
       userInfoProvider: UserInfoProvider,
       memberService: MemberService
   ): IRouteHandler = CommitteesHandler(loggerFactory, userInfoProvider, memberService)
+
+  @IntoMap
+  @Provides
+  @StringKey("/committees/{committee_slug}")
+  fun providesCommitteeDetailHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService
+  ): IRouteHandler = CommitteeDetailHandler(loggerFactory, userInfoProvider, memberService)
 
   @IntoMap
   @Provides

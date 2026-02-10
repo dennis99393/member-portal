@@ -19,8 +19,31 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarContent">
-                <!-- Reports -->
+                <!-- Navigation -->
                 <ul class="navbar-nav me-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="javascript:void(0)" role="button"
+                           data-bs-toggle="dropdown"
+                           data-bs-auto-close="outside" aria-expanded="false">Organization</a>
+                        <ul class="dropdown-menu">
+                            <!-- Committees nested dropdown -->
+                            <li class="dropend">
+                                <a class="dropdown-item dropdown-toggle" href="javascript:void(0)"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside" aria-expanded="false">Committees</a>
+                                <ul class="dropdown-menu">
+                                    <li th:each="committee : ${@org.dallasmakerspace.models.Committees@getActiveCommittees()}">
+                                        <a class="dropdown-item" th:href="'/committees/' + ${committee.slug}"
+                                           th:text="${committee.name}"></a>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item" href="/committees">View All</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
                     <li class="nav-item dropdown"
                         th:if="${@org.dallasmakerspace.server.reports.ReportGraph@getRoot() != null}">
                         <a class="nav-link dropdown-toggle" href="javascript:void(0)" role="button"
@@ -58,9 +81,6 @@
                                    href="https://talk.dallasmakerspace.org/new-topic?category=Infrastructure&title=%5BMemberPortal%5D%20Report%20suggestion&body=Please%20provide%20details%20about%20the%20report%20you%20would%20like%20to%20see.%0A%0A**Report%20Name:**%0A**Description:**"
                                    target="_blank">Suggest a report</a></li>
                         </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/committees">Committees</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/short-links">Short-Links</a>

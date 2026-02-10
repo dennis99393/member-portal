@@ -1,0 +1,262 @@
+package org.dallasmakerspace.server.routes
+
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.thymeleaf.*
+import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import org.dallasmakerspace.models.Committee
+import org.dallasmakerspace.models.Committees
+import org.dallasmakerspace.models.DMSGroup
+import org.dallasmakerspace.server.auth.UserInfoProvider
+import org.dallasmakerspace.server.common.logging.LoggerFactory
+import org.dallasmakerspace.server.memberservice.MemberService
+import org.dallasmakerspace.server.models.getSlugFromName
+import org.dallasmakerspace.server.plugins.AuthException
+
+class CommitteeDetailHandler
+@Inject
+constructor(
+    loggerFactory: LoggerFactory,
+    userInfoProvider: UserInfoProvider,
+    private val memberService: MemberService,
+) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
+  private val log = loggerFactory.create(javaClass)
+
+  override suspend fun handleAuthenticated(call: ApplicationCall) = coroutineScope {
+    // Get committee slug from path
+    val committeeSlug =
+        call.parameters["committee_slug"] ?: throw AuthException("No committee slug found in url path")
+
+    // Find committee by slug
+    val committee = Committees.findBySlug(committeeSlug)
+    if (committee == null) {
+      log.warn("Committee not found for slug: $committeeSlug")
+      call.respond(HttpStatusCode.NotFound, "Committee not found")
+      return@coroutineScope
+    }
+
+    // Fetch chair groups, teacher groups, and all groups in parallel
+    val chairGroupsDeferred = async {
+      val uniqueChairGroupSlugs =
+          listOfNotNull(committee.chairGroupName).map { getSlugFromName(it) }
+      if (uniqueChairGroupSlugs.isEmpty()) {
+        emptyList()
+      } else {
+        try {
+          memberService.getMultipleGroups(uniqueChairGroupSlugs, session.sessionId)
+        } catch (e: Exception) {
+          log.warn("Failed to fetch chair groups: {}", e.message)
+          emptyList()
+        }
+      }
+    }
+
+    val teacherGroupsDeferred = async {
+      val teacherGroupSlugs = committee.teacherGroups.map { getSlugFromName(it) }
+      if (teacherGroupSlugs.isEmpty()) {
+        emptyList()
+      } else {
+        try {
+          memberService.getMultipleGroups(teacherGroupSlugs, session.sessionId)
+        } catch (e: Exception) {
+          log.warn("Failed to fetch teacher groups: {}", e.message)
+          emptyList()
+        }
+      }
+    }
+
+    val allGroupsDeferred = async {
+      try {
+        memberService.getAllGroups(session.sessionId)
+      } catch (e: Exception) {
+        log.warn("Failed to fetch all groups: {}", e.message)
+        emptyList()
+      }
+    }
+
+    val chairGroups = chairGroupsDeferred.await()
+    val teacherGroups = teacherGroupsDeferred.await()
+    val allGroups = allGroupsDeferred.await()
+
+    // Build committee data
+    val chairGroupsMap = chairGroups.associateBy { getSlugFromName(it.name) }
+    val chairpersons = getChairMembersFromCache(committee, chairGroupsMap)
+
+    // Build teacher group data with members
+    val teacherGroupsMap = teacherGroups.associateBy { getSlugFromName(it.name) }
+    val teacherGroupsWithMembers =
+        committee.teacherGroups.mapNotNull { groupName ->
+          val slug = getSlugFromName(groupName)
+          val group = teacherGroupsMap[slug]
+          if (group != null) {
+            val members = processMembersList(group.members)
+            mapOf("name" to groupName, "slug" to slug, "members" to members)
+          } else {
+            null
+          }
+        }
+
+    // Filter related groups by committee prefixes
+    val relatedGroups =
+        if (committee.groupPrefixes.isNotEmpty()) {
+          allGroups
+              .filter { group ->
+                committee.groupPrefixes.any { prefix ->
+                  group.name.startsWith(prefix, ignoreCase = true)
+                }
+              }
+              .sortedBy { it.name }
+              .map { group -> mapOf("name" to group.name, "slug" to getSlugFromName(group.name)) }
+        } else {
+          emptyList()
+        }
+
+    // Collect all related group names for event fetching
+    val relatedGroupNames =
+        if (committee.groupPrefixes.isNotEmpty()) {
+          allGroups
+              .filter { group ->
+                committee.groupPrefixes.any { prefix ->
+                  group.name.startsWith(prefix, ignoreCase = true)
+                }
+              }
+              .map { it.name }
+        } else {
+          emptyList()
+        }
+
+    // Fetch upcoming prerequisite events
+    val upcomingEventsRaw = async {
+      if (relatedGroupNames.isNotEmpty()) {
+        try {
+          memberService.getUpcomingPrerequisiteEvents(relatedGroupNames, session.sessionId)
+        } catch (e: Exception) {
+          log.warn("Failed to fetch upcoming events: {}", e.message)
+          emptyList()
+        }
+      } else {
+        emptyList()
+      }
+    }.await()
+
+    // Collect unique organizer usernames
+    val organizerUsernames =
+        upcomingEventsRaw.mapNotNull { it.organizerUsername }.distinct()
+
+    // Fetch organizer member details
+    val organizerMembers = async {
+      if (organizerUsernames.isNotEmpty()) {
+        try {
+          organizerUsernames.mapNotNull { username ->
+            try {
+              username to memberService.getMember(username, session.sessionId)
+            } catch (e: Exception) {
+              log.warn("Failed to fetch organizer member: $username", e)
+              null
+            }
+          }.toMap()
+        } catch (e: Exception) {
+          log.warn("Failed to fetch organizer members: {}", e.message)
+          emptyMap()
+        }
+      } else {
+        emptyMap()
+      }
+    }.await()
+
+    // Enrich events with organizer details
+    val upcomingEvents =
+        upcomingEventsRaw.map { event ->
+          val organizer = event.organizerUsername?.let { organizerMembers[it] }
+          val avatarUrl =
+              organizer?.avatarUrl
+                  ?.takeIf { it.isNotEmpty() }
+                  ?.let { url ->
+                    when {
+                      url.startsWith("//") -> "https:$url"
+                      else -> "https://talk.dallasmakerspace.org$url"
+                    }.replace("{size}", "144")
+                  } ?: ""
+
+          mapOf(
+              "id" to event.id,
+              "name" to event.name,
+              "eventStart" to event.eventStart,
+              "status" to event.status,
+              "organizer" to
+                  mapOf(
+                      "username" to (event.organizerUsername ?: ""),
+                      "displayName" to (organizer?.displayName ?: event.organizerUsername ?: ""),
+                      "avatarUrl" to avatarUrl,
+                  ))
+        }
+
+    val jsonMap: MutableMap<String, Any?> =
+        mutableMapOf(
+            "committee" to
+                mapOf(
+                    "id" to committee.id,
+                    "name" to committee.name,
+                    "slug" to committee.slug,
+                    "description" to committee.description,
+                    "color" to committee.color,
+                ),
+            "chairpersons" to chairpersons,
+            "teacherGroups" to teacherGroupsWithMembers,
+            "relatedGroups" to relatedGroups,
+            "upcomingEvents" to upcomingEvents,
+        )
+
+    call.respond(ThymeleafContent("committee-detail", jsonMap))
+  }
+
+  private fun processMembersList(members: List<org.dallasmakerspace.models.DMSMember>): List<Map<String, Any?>> {
+    return members.map { member ->
+      val avatarUrl =
+          member.avatarUrl
+              ?.takeIf { it.isNotEmpty() }
+              ?.let { url ->
+                when {
+                  url.startsWith("//") -> "https:$url"
+                  else -> "https://talk.dallasmakerspace.org$url"
+                }.replace("{size}", "144")
+              } ?: ""
+
+      mapOf(
+          "username" to member.username,
+          "displayName" to member.displayName,
+          "avatarUrl" to avatarUrl,
+      )
+    }
+  }
+
+  private fun getChairMembersFromCache(
+      committee: Committee,
+      chairGroupsMap: Map<String, DMSGroup>
+  ): List<Map<String, Any?>> {
+    val chairGroupName = committee.chairGroupName ?: return emptyList()
+    val chairGroupSlug = getSlugFromName(chairGroupName)
+    val group = chairGroupsMap[chairGroupSlug] ?: return emptyList()
+
+    return group.members.map { member ->
+      val avatarUrl =
+          member.avatarUrl
+              ?.takeIf { it.isNotEmpty() }
+              ?.let { url ->
+                when {
+                  url.startsWith("//") -> "https:$url"
+                  else -> "https://talk.dallasmakerspace.org$url"
+                }.replace("{size}", "144")
+              } ?: ""
+
+      mapOf(
+          "username" to member.username,
+          "displayName" to member.displayName,
+          "avatarUrl" to avatarUrl,
+      )
+    }
+  }
+}

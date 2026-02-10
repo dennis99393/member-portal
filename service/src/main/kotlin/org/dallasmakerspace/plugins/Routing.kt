@@ -186,6 +186,16 @@ fun Application.configureRouting() {
           val hasClasses = calendarService.hasPrerequisiteEvents(group.name)
           call.respond(ApiResponse(Status.SUCCESS, "Has prerequisite classes", hasClasses))
         }
+
+        post("/calendar/upcoming-events") {
+          val groupNames = call.receive<List<String>>()
+          val events = calendarService.getUpcomingPrerequisiteEvents(groupNames)
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS, "Upcoming prerequisite events for ${groupNames.size} groups", events
+              )
+          )
+        }
       }
 
       /** Group operations - WRITE * */

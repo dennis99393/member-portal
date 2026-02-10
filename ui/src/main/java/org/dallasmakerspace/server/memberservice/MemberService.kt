@@ -174,6 +174,13 @@ constructor(
     return memberServiceClient.hasPrerequisiteClasses(groupSlug, sessionId)
   }
 
+  suspend fun getUpcomingPrerequisiteEvents(
+      groupNames: List<String>,
+      sessionId: String?
+  ): List<EventSummary> {
+    return memberServiceClient.getUpcomingPrerequisiteEvents(groupNames, sessionId)
+  }
+
   suspend fun askAi(
       sessionId: String?,
       question: String,

@@ -12,9 +12,15 @@ data class Committee(
     val isActive: Boolean = true,
     val teacherGroups: List<String> = emptyList(),
     val groupPrefixes: List<String> = emptyList(),
-)
+) {
+  val slug: String
+    get() = name.lowercase().replace(" ", "-")
+}
 
 object Committees {
+  @JvmStatic
+  fun getActiveCommittees(): List<Committee> = ALL.filter { it.isActive }
+
   val ALL =
       listOf(
           Committee(
@@ -175,4 +181,6 @@ object Committees {
   fun findById(id: Int): Committee? = ALL.find { it.id == id }
 
   fun findByName(name: String): Committee? = ALL.find { it.name.equals(name, ignoreCase = true) }
+
+  fun findBySlug(slug: String): Committee? = ALL.find { it.slug == slug }
 }

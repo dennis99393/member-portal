@@ -32,4 +32,15 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
     log.info("Checking prerequisite events for group: $groupName")
     return calendarRepository.hasPrerequisiteEvents(groupName)
   }
+
+  /**
+   * Gets upcoming prerequisite events for multiple AD groups.
+   *
+   * @param groupNames The list of AD group names.
+   * @return A list of [EventSummary] objects for upcoming events.
+   */
+  suspend fun getUpcomingPrerequisiteEvents(groupNames: List<String>): List<EventSummary> {
+    log.info("Getting upcoming prerequisite events for ${groupNames.size} groups")
+    return calendarRepository.getUpcomingPrerequisiteEvents(groupNames)
+  }
 }

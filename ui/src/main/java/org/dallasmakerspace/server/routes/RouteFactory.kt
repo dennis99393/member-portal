@@ -29,6 +29,7 @@ object RouteFactory {
             "/short-links/admin".toRegex(), "/short-links/admin") // Admin must come before details
         .replace("/short-links/[0-9]+".toRegex(), "/short-links/{id}")
         .replace("/go/.*".toRegex(), "/go/{path...}")
+        .replace("/committees/[^/]+".toRegex(), "/committees/{committee_slug}")
   }
 
   fun getHandler(path: String): IRouteHandler? {
@@ -64,6 +65,7 @@ object RouteFactory {
     SHORT_LINK_DETAILS("/short-links/{id}"),
     SHORT_LINK_REDIRECT("/go/{path...}"),
     COMMITTEES("/committees"),
+    COMMITTEE_DETAIL("/committees/{committee_slug}"),
     ACTION_TRACK("/api/track"),
     ASK_AI("/ask-ai"),
     MANIFEST("/manifest.json"),
