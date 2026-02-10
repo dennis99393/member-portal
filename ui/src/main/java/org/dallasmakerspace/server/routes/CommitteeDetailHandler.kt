@@ -203,6 +203,7 @@ constructor(
                     "slug" to committee.slug,
                     "description" to committee.description,
                     "color" to committee.color,
+                    "homepageUrl" to committee.homepageUrl,
                 ),
             "chairpersons" to chairpersons,
             "teacherGroups" to teacherGroupsWithMembers,
