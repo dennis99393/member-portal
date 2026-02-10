@@ -92,10 +92,8 @@
                                         </dms-member-card>
                                     </div>
                                 </div>
-                                <div th:if="${#lists.size(group.members) > 6}" class="mt-2">
-                                    <a th:href="'/groups/' + ${group.slug}" class="btn btn-sm btn-outline-primary">
-                                        Show More (<span th:text="${#lists.size(group.members) - 6}"></span> more)
-                                    </a>
+                                <div th:if="${#lists.size(group.members) > 6}" class="mt-2 text-muted small text-end">
+                                    and <span th:text="${#lists.size(group.members) - 6}"></span> more...
                                 </div>
                             </div>
                             <span th:if="${group.members == null or group.members.empty}"

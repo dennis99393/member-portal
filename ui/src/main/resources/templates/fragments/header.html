@@ -42,51 +42,77 @@
                                     <li><a class="dropdown-item" href="/committees">View All</a></li>
                                 </ul>
                             </li>
+                            <!-- Officers nested dropdown -->
+                            <li class="dropend">
+                                <a class="dropdown-item dropdown-toggle" href="javascript:void(0)"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside" aria-expanded="false">Officers</a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="/groups/logistics+committee+chair">Logistics Committee Chair</a></li>
+                                    <li><a class="dropdown-item" href="/groups/president">President</a></li>
+                                    <li><a class="dropdown-item" href="/groups/treasurer">Treasurer</a></li>
+                                    <li><a class="dropdown-item" href="/groups/secretary">Secretary</a></li>
+                                    <li><a class="dropdown-item" href="/groups/infrastructure+committee+chair">Infrastructure Committee Chair</a></li>
+                                </ul>
+                            </li>
+                            <!-- Board of Directors -->
+                            <li>
+                                <a class="dropdown-item" href="/groups/board+of+directors">Board of Directors</a>
+                            </li>
                         </ul>
                     </li>
-                    <li class="nav-item dropdown"
-                        th:if="${@org.dallasmakerspace.server.reports.ReportGraph@getRoot() != null}">
+                    <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="javascript:void(0)" role="button"
                            data-bs-toggle="dropdown"
-                           data-bs-auto-close="outside" aria-expanded="false">Reports</a>
+                           data-bs-auto-close="outside" aria-expanded="false">Resources</a>
                         <ul class="dropdown-menu">
-                            <th:block
-                                    th:each="reportNode : ${@org.dallasmakerspace.server.reports.ReportGraph@getRoot().getVisibleChildren()}">
-                                <!-- Disabled item if no children - this is for WIP reports -->
-                                <li th:if="${reportNode.children == null || reportNode.getVisibleChildren().empty}">
-                                    <a class="dropdown-item disabled" th:href="'/reports/' + ${reportNode.urlSlug}"
-                                       th:text="${reportNode.name}"></a>
-                                </li>
-
-                                <!-- Dropdown if has children -->
-                                <li class="dropend"
-                                    th:if="${reportNode.children != null && !reportNode.getVisibleChildren().empty}">
-                                    <a class="dropdown-item dropdown-toggle" href="javascript:void(0)"
-                                       data-bs-toggle="dropdown"
-                                       data-bs-auto-close="outside" aria-expanded="false"
-                                       th:text="${reportNode.name}"></a>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li th:each="childNode : ${reportNode.getVisibleChildren()}">
-                                            <a class="dropdown-item"
-                                               th:href="'/reports/' + ${reportNode.urlSlug} + '/' + ${childNode.urlSlug}"
-                                               th:text="${childNode.name}"></a>
+                            <!-- Reports nested dropdown -->
+                            <li class="dropend" th:if="${@org.dallasmakerspace.server.reports.ReportGraph@getRoot() != null}">
+                                <a class="dropdown-item dropdown-toggle" href="javascript:void(0)"
+                                   data-bs-toggle="dropdown"
+                                   data-bs-auto-close="outside" aria-expanded="false">Reports</a>
+                                <ul class="dropdown-menu">
+                                    <th:block
+                                            th:each="reportNode : ${@org.dallasmakerspace.server.reports.ReportGraph@getRoot().getVisibleChildren()}">
+                                        <!-- Disabled item if no children - this is for WIP reports -->
+                                        <li th:if="${reportNode.children == null || reportNode.getVisibleChildren().empty}">
+                                            <a class="dropdown-item disabled" th:href="'/reports/' + ${reportNode.urlSlug}"
+                                               th:text="${reportNode.name}"></a>
                                         </li>
-                                    </ul>
-                                </li>
-                            </th:block>
-                            <li>
-                                <hr class="dropdown-divider">
+
+                                        <!-- Dropdown if has children -->
+                                        <li class="dropend"
+                                            th:if="${reportNode.children != null && !reportNode.getVisibleChildren().empty}">
+                                            <a class="dropdown-item dropdown-toggle" href="javascript:void(0)"
+                                               data-bs-toggle="dropdown"
+                                               data-bs-auto-close="outside" aria-expanded="false"
+                                               th:text="${reportNode.name}"></a>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li th:each="childNode : ${reportNode.getVisibleChildren()}">
+                                                    <a class="dropdown-item"
+                                                       th:href="'/reports/' + ${reportNode.urlSlug} + '/' + ${childNode.urlSlug}"
+                                                       th:text="${childNode.name}"></a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </th:block>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item"
+                                           href="https://talk.dallasmakerspace.org/new-topic?category=Infrastructure&title=%5BMemberPortal%5D%20Report%20suggestion&body=Please%20provide%20details%20about%20the%20report%20you%20would%20like%20to%20see.%0A%0A**Report%20Name:**%0A**Description:**"
+                                           target="_blank">Suggest a report</a></li>
+                                </ul>
                             </li>
-                            <li><a class="dropdown-item"
-                                   href="https://talk.dallasmakerspace.org/new-topic?category=Infrastructure&title=%5BMemberPortal%5D%20Report%20suggestion&body=Please%20provide%20details%20about%20the%20report%20you%20would%20like%20to%20see.%0A%0A**Report%20Name:**%0A**Description:**"
-                                   target="_blank">Suggest a report</a></li>
+                            <!-- Short-Links -->
+                            <li>
+                                <a class="dropdown-item" href="/short-links">Short-Links</a>
+                            </li>
+                            <!-- Ask-AI -->
+                            <li>
+                                <a class="dropdown-item" href="/ask-ai">Ask-AI</a>
+                            </li>
                         </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/short-links">Short-Links</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/ask-ai">Ask-AI</a>
                     </li>
                 </ul>
 
