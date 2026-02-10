@@ -123,6 +123,28 @@ This is a Gradle multi-module monorepo containing two Kotlin/Ktor applications f
 
 **Configuration:** `ui/src/main/resources/application.conf`
 
+### UI Template Requirements
+
+**IMPORTANT:** All HTML templates in `ui/src/main/resources/templates/` must include the following scripts before the closing `</body>` tag:
+
+```html
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+<!-- App JS -->
+<script src="/static/js/app.js"></script>
+<!-- Page Loader (REQUIRED for all pages) -->
+<script src="/static/js/dms-page-loader.js" defer></script>
+```
+
+The page loader (`dms-page-loader.js`) provides:
+- Red progress bar at the top of the page during navigation
+- Automatic handling of link clicks, form submissions, and back/forward navigation
+- YouTube-style loading animation (0% → 30% → 50% → 70% → 85% → 100%)
+
+**When creating new templates:** Always include `dms-page-loader.js` to ensure consistent loading feedback across all pages.
+
 ## Development Setup
 
 ### IntelliJ IDEA
