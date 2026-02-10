@@ -155,21 +155,20 @@
                 </div>
             </div>
 
-            <!-- Related Groups card -->
+            <!-- Committee Groups card -->
             <div class="dms-card shadow-sm mt-4">
                 <div class="card-body">
                     <h4 class="card-title mt-3 mb-4 dms-card-title">
-                        Related Groups
-                        <span th:if="${relatedGroups != null}" th:text="'(' + ${#lists.size(relatedGroups)} + ')'"></span>
+                        Committee Groups
                     </h4>
                     <div class="card-text">
-                        <div th:if="${relatedGroups != null and !relatedGroups.empty}" class="group-pills-container">
-                            <dms-group-pill th:each="group : ${relatedGroups}"
+                        <div th:if="${committeeGroups != null and !committeeGroups.empty}" class="group-pills-container">
+                            <dms-group-pill th:each="group : ${committeeGroups}"
                                             th:attr="name=${group.name},slug=${group.slug}">
                             </dms-group-pill>
                         </div>
-                        <div th:if="${relatedGroups == null or relatedGroups.empty}" class="text-muted">
-                            No related groups found for this committee.
+                        <div th:if="${committeeGroups == null or committeeGroups.empty}" class="text-muted">
+                            No groups found for this committee.
                         </div>
                     </div>
                 </div>

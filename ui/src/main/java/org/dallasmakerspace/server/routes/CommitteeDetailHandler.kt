@@ -99,8 +99,8 @@ constructor(
           }
         }
 
-    // Filter related groups by committee prefixes
-    val relatedGroups =
+    // Filter committee groups by committee prefixes
+    val committeeGroups =
         if (committee.groupPrefixes.isNotEmpty()) {
           allGroups
               .filter { group ->
@@ -206,7 +206,7 @@ constructor(
                 ),
             "chairpersons" to chairpersons,
             "teacherGroups" to teacherGroupsWithMembers,
-            "relatedGroups" to relatedGroups,
+            "committeeGroups" to committeeGroups,
             "upcomingEvents" to upcomingEvents,
         )
 
