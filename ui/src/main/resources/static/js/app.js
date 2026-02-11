@@ -169,8 +169,8 @@ window.addEventListener('appinstalled', () => {
         });
     }
 
-    // Clear dismiss timestamp since app is now installed
-    localStorage.removeItem('pwa_install_dismissed_at');
+    // Clear dismiss flag since app is now installed
+    localStorage.removeItem('pwa_install_dismissed');
 
     deferredPrompt = null;
     installPromptShownAt = null;

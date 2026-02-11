@@ -197,20 +197,10 @@
             const pwaInstall = document.querySelector('pwa-install');
 
             if (pwaInstall) {
-                // Check if prompt was dismissed within last 30 days
-                const dismissedAt = localStorage.getItem('pwa_install_dismissed_at');
-                const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
-
-                if (dismissedAt) {
-                    const timeSinceDismiss = Date.now() - parseInt(dismissedAt, 10);
-                    if (timeSinceDismiss < thirtyDaysMs) {
-                        // Hide component if dismissed within last 30 days
-                        pwaInstall.style.display = 'none';
-                        return;
-                    } else {
-                        // Clear old dismiss timestamp if 30 days have passed
-                        localStorage.removeItem('pwa_install_dismissed_at');
-                    }
+                // Check if prompt was already dismissed - if so, never show again
+                if (localStorage.getItem('pwa_install_dismissed')) {
+                    pwaInstall.style.display = 'none';
+                    return;
                 }
 
                 // Track when custom install dialog is shown using IntersectionObserver (more performant)
@@ -240,8 +230,8 @@
                     const isCancelButton = buttonText.includes('Not now') || buttonText.includes('Cancel');
 
                     if (isCancelButton) {
-                        // Store dismiss timestamp
-                        localStorage.setItem('pwa_install_dismissed_at', Date.now().toString());
+                        // Mark as dismissed - never show again
+                        localStorage.setItem('pwa_install_dismissed', 'true');
                         // Hide the component
                         pwaInstall.style.display = 'none';
                     }
