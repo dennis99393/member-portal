@@ -106,12 +106,14 @@ constructor(
 
   suspend fun getMultipleGroups(groupSlugs: List<String>, sessionId: String?): List<DMSGroup> {
     return try {
-      val apiHeaders = getApiHeaders(sessionId)
-      val groupMap = dmsHttpClient.post("$baseUrl/groups/batch", apiHeaders, groupSlugs)
-      val data =
-          groupMap["data"] as List<*>?
-              ?: throw MemberServiceException("data attribute missing required")
-      data.map { dmsGroupFromMap(it as Map<String, Any?>) }
+      withTimeout(10_000L) { // 10 second timeout
+        val apiHeaders = getApiHeaders(sessionId)
+        val groupMap = dmsHttpClient.post("$baseUrl/groups/batch", apiHeaders, groupSlugs)
+        val data =
+            groupMap["data"] as List<*>?
+                ?: throw MemberServiceException("data attribute missing required")
+        data.map { dmsGroupFromMap(it as Map<String, Any?>) }
+      }
     } catch (ex: Exception) {
       log.error("Failed to get multiple groups", ex)
       throw MemberServiceException("Failed to get multiple groups", ex)
