@@ -39,21 +39,21 @@ function shouldLoadSeasonalEffect() {
 function getPWAContext() {
     const ua = navigator.userAgent;
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-                       || window.navigator.standalone
-                       || document.referrer.includes('android-app://');
+    || window.navigator.standalone
+    || document.referrer.includes('android-app://');
 
     return {
         platform: /Android/i.test(ua) ? 'android'
-                : /iPhone|iPad|iPod/i.test(ua) ? 'ios'
-                : /Windows/i.test(ua) ? 'windows'
-                : /Mac/i.test(ua) ? 'macos'
-                : /Linux/i.test(ua) ? 'linux'
-                : 'unknown',
+            : /iPhone|iPad|iPod/i.test(ua) ? 'ios'
+            : /Windows/i.test(ua) ? 'windows'
+            : /Mac/i.test(ua) ? 'macos'
+            : /Linux/i.test(ua) ? 'linux'
+            : 'unknown',
         browser: /Chrome/i.test(ua) && !/Edg/i.test(ua) ? 'chrome'
-               : /Edg/i.test(ua) ? 'edge'
-               : /Firefox/i.test(ua) ? 'firefox'
-               : /Safari/i.test(ua) && !/Chrome/i.test(ua) ? 'safari'
-               : 'other',
+            : /Edg/i.test(ua) ? 'edge'
+            : /Firefox/i.test(ua) ? 'firefox'
+            : /Safari/i.test(ua) && !/Chrome/i.test(ua) ? 'safari'
+            : 'other',
         isStandalone: isStandalone,
         displayMode: isStandalone ? 'standalone' : 'browser'
     };
@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         hideToast();
     }, 20000);
     if (shouldLoadSeasonalEffect()) {
-        loadScript('/static/js/falling-effect.js');
+        loadScript('/static/js/falling-effect-v2.js');
     }
 });
 
@@ -75,56 +75,56 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
             .then(registration => {
-                console.log('ServiceWorker registered:', registration.scope);
+            console.log('ServiceWorker registered:', registration.scope);
 
-                // Track successful registration
-                if (typeof track === 'function') {
-                    track('pwa_service_worker_registered', {
-                        scope: registration.scope,
-                        ...getPWAContext()
-                    });
-                }
-
-                // Check for updates every hour
-                setInterval(() => {
-                    registration.update();
-                }, 60 * 60 * 1000);
-
-                // Listen for updates
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-
-                    if (typeof track === 'function') {
-                        track('pwa_service_worker_update_found', {
-                            state: newWorker.state
-                        });
-                    }
-
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('New service worker available');
-
-                            if (typeof track === 'function') {
-                                track('pwa_service_worker_update_available', {
-                                    previousController: !!navigator.serviceWorker.controller
-                                });
-                            }
-                            // Optionally notify user about update
-                        }
-                    });
+            // Track successful registration
+            if (typeof track === 'function') {
+                track('pwa_service_worker_registered', {
+                    scope: registration.scope,
+                    ...getPWAContext()
                 });
-            })
-            .catch(err => {
-                console.log('ServiceWorker registration failed:', err);
+            }
 
-                // Track registration failures
+            // Check for updates every hour
+            setInterval(() => {
+                registration.update();
+            }, 60 * 60 * 1000);
+
+            // Listen for updates
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+
                 if (typeof track === 'function') {
-                    track('pwa_service_worker_registration_failed', {
-                        error: err.message || 'Unknown error',
-                        ...getPWAContext()
+                    track('pwa_service_worker_update_found', {
+                        state: newWorker.state
                     });
                 }
+
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        console.log('New service worker available');
+
+                        if (typeof track === 'function') {
+                            track('pwa_service_worker_update_available', {
+                                previousController: !!navigator.serviceWorker.controller
+                            });
+                        }
+                        // Optionally notify user about update
+                    }
+                });
             });
+        })
+            .catch(err => {
+            console.log('ServiceWorker registration failed:', err);
+
+            // Track registration failures
+            if (typeof track === 'function') {
+                track('pwa_service_worker_registration_failed', {
+                    error: err.message || 'Unknown error',
+                    ...getPWAContext()
+                });
+            }
+        });
     });
 }
 
