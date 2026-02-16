@@ -130,8 +130,7 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
           name = name,
           eventStart = eventStart,
           status = status,
-          organizerUsername = organizerUsername
-      )
+          organizerUsername = organizerUsername)
     } ?: emptyList()
   }
 }

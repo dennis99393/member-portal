@@ -9,6 +9,8 @@ import com.unboundid.ldap.sdk.SearchRequest
 import com.unboundid.ldap.sdk.SearchRequest.ALL_USER_ATTRIBUTES
 import com.unboundid.ldap.sdk.SearchScope
 import com.unboundid.ldap.sdk.SimpleBindRequest
+import com.unboundid.ldap.sdk.controls.SimplePagedResultsControl
+import com.unboundid.asn1.ASN1OctetString
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -868,6 +870,65 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
     }
 
     return result
+  }
+
+  /** {@inheritDoc} */
+  @Suppress("MagicNumber")
+  override fun getAllActiveUsersWithBadges(): Map<String, Map<String, Any?>> {
+    val filter =
+        Filter.createANDFilter(
+            listOf(
+                Filter.createEqualityFilter("objectCategory", "person"),
+                Filter.createORFilter(
+                    listOf(
+                        Filter.createEqualityFilter("objectClass", "member"),
+                        Filter.createEqualityFilter("objectClass", "user"),
+                    )),
+                Filter.createPresenceFilter("employeeID"), // Only users with badge numbers
+            ))
+
+    val pageSize = 1000 // Fetch 1000 entries at a time
+    val allEntries = mutableListOf<com.unboundid.ldap.sdk.SearchResultEntry>()
+    var cookie: ASN1OctetString? = null
+
+    do {
+      val searchRequest =
+          SearchRequest(
+              "ou=Members,dc=dms,dc=local",
+              SearchScope.SUB,
+              filter,
+              "sAMAccountName",
+              "displayName",
+              "givenName",
+              "sn",
+              "employeeID",
+              "userAccountControl",
+          )
+
+      if (cookie == null) {
+        searchRequest.addControl(SimplePagedResultsControl(pageSize, true))
+      } else {
+        searchRequest.addControl(SimplePagedResultsControl(pageSize, cookie, true))
+      }
+
+      val searchResult = ldapPool.search(searchRequest)
+      allEntries.addAll(searchResult.searchEntries)
+
+      val responseControl = SimplePagedResultsControl.get(searchResult)
+      cookie = responseControl?.cookie
+
+    } while (cookie != null && cookie.valueLength > 0)
+
+    log.info("$TAG/getAllActiveUsersWithBadges Retrieved ${allEntries.size} users with badges")
+
+    return allEntries.associate { entry ->
+      val username = entry.getAttributeValue("sAMAccountName")
+
+      username to
+          entry.attributes.associate {
+            it.name to if (it.name == "memberOf") it.values else it.values?.firstOrNull()
+          }
+    }
   }
 
   companion object {

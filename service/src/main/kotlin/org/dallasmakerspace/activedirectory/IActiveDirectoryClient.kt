@@ -38,4 +38,11 @@ interface IActiveDirectoryClient {
 
   /** Add given list of users to group * */
   fun addUsersToGroup(dmsUsernames: List<String>, group: String)
+
+  /**
+   * Gets all active users with their badge numbers.
+   *
+   * @return Map of username to user attributes (including employeeID/badge number)
+   */
+  fun getAllActiveUsersWithBadges(): Map<String, Map<String, Any?>>
 }

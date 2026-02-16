@@ -19,8 +19,7 @@ data class Committee(
 }
 
 object Committees {
-  @JvmStatic
-  fun getActiveCommittees(): List<Committee> = ALL.filter { it.isActive }
+  @JvmStatic fun getActiveCommittees(): List<Committee> = ALL.filter { it.isActive }
 
   val ALL =
       listOf(
@@ -28,7 +27,8 @@ object Committees {
               id = 1,
               name = "3D Fab",
               chairGroupName = "3D Fabrication Chair",
-              description = "Focuses on creation, maintenance, and education of 3D fabrication processes using equipment such as FDM and SLA printers.",
+              description =
+                  "Focuses on creation, maintenance, and education of 3D fabrication processes using equipment such as FDM and SLA printers.",
               teacherGroups = listOf("3D Printer Teachers", "3D Vacuum Former Teachers"),
               groupPrefixes = listOf("3D"),
               homepageUrl = "https://source.dallasmakerspace.org/display/3DFAB/3D+Fabrication",
@@ -38,7 +38,8 @@ object Committees {
               id = 2,
               name = "Blacksmith",
               chairGroupName = "Blacksmith Committee Chair",
-              description = "Teaches blacksmithing techniques including forging, metalworking, and hand tools while maintaining workshop safety standards and organizing open forges.",
+              description =
+                  "Teaches blacksmithing techniques including forging, metalworking, and hand tools while maintaining workshop safety standards and organizing open forges.",
               teacherGroups = listOf("Blacksmith Teachers"),
               groupPrefixes = listOf("Blacksmith"),
               homepageUrl = "https://source.dallasmakerspace.org/display/BSMITH/Blacksmithing",
@@ -57,7 +58,8 @@ object Committees {
               id = 4,
               name = "Ceramics",
               chairGroupName = "Fired Arts Committee Chair",
-              description = "Offers an open learning environment teaching hand building, wheel throwing, and slip casting techniques for all skill levels.",
+              description =
+                  "Offers an open learning environment teaching hand building, wheel throwing, and slip casting techniques for all skill levels.",
               teacherGroups = listOf("Ceramics Teachers"),
               groupPrefixes = listOf("Ceramics"),
               homepageUrl = "https://source.dallasmakerspace.org/display/CER/Ceramics",
@@ -67,7 +69,8 @@ object Committees {
               id = 5,
               name = "Digital Media",
               chairGroupName = "Digital Media Committee Chair",
-              description = "Maintains the digital media room and equipment for audio, photography, video, virtual reality, augmented reality, and 3D modeling projects.",
+              description =
+                  "Maintains the digital media room and equipment for audio, photography, video, virtual reality, augmented reality, and 3D modeling projects.",
               teacherGroups = listOf("Digital Media Darkroom Teachers", "Digital Media Teachers"),
               groupPrefixes = listOf("Digital Media"),
               homepageUrl = "https://source.dallasmakerspace.org/display/DM/Digital+Media",
@@ -86,7 +89,8 @@ object Committees {
               id = 7,
               name = "Glassworks",
               chairGroupName = "Glassworks Committee Chair",
-              description = "Provides facilities and instruction for glass arts including glassblowing and other hot glass techniques for member projects.",
+              description =
+                  "Provides facilities and instruction for glass arts including glassblowing and other hot glass techniques for member projects.",
               teacherGroups = listOf("Glassworks Teachers"),
               groupPrefixes = listOf("Glassworks"),
               homepageUrl = "https://source.dallasmakerspace.org/display/GLASS/Glassworks",
@@ -96,7 +100,8 @@ object Committees {
               id = 8,
               name = "Jewelry",
               chairGroupName = "Jewelry Committee Chair",
-              description = "Maintains the jewelry studio offering training and equipment for jewelry making, lapidary work, enameling, and metal casting techniques.",
+              description =
+                  "Maintains the jewelry studio offering training and equipment for jewelry making, lapidary work, enameling, and metal casting techniques.",
               teacherGroups = listOf("Jewelry Casting Teachers", "Lapidary Teachers"),
               groupPrefixes = listOf("Jewelry", "Lapidary"),
               homepageUrl = "https://source.dallasmakerspace.org/display/JEWEL/Jewelry+Studio",
@@ -106,7 +111,8 @@ object Committees {
               id = 9,
               name = "Laser",
               chairGroupName = "Laser Committee Chair",
-              description = "Trains members in safe use of laser cutters (Epilog, Zing, Thunder Nova), maintains equipment, manages consumables, and promotes laser technology innovation.",
+              description =
+                  "Trains members in safe use of laser cutters (Epilog, Zing, Thunder Nova), maintains equipment, manages consumables, and promotes laser technology innovation.",
               teacherGroups = listOf("Laser Teachers"),
               groupPrefixes = listOf("Laser"),
               homepageUrl = "https://source.dallasmakerspace.org/display/LASER/Laser",
@@ -116,7 +122,8 @@ object Committees {
               id = 11,
               name = "Machine Shop",
               chairGroupName = "Machine Shop Committee Chair",
-              description = "Maintains machine shop tooling and equipment, trains members on safe operation, and oversees asset usage for precision machining projects.",
+              description =
+                  "Maintains machine shop tooling and equipment, trains members on safe operation, and oversees asset usage for precision machining projects.",
               teacherGroups =
                   listOf(
                       "Machine Shop Haas Teachers",
@@ -132,7 +139,8 @@ object Committees {
               id = 11,
               name = "Metal Shop",
               chairGroupName = "Metal Shop Committee Chair",
-              description = "Provides welding, metalworking, and metal fabrication facilities with equipment maintenance and member access management.",
+              description =
+                  "Provides welding, metalworking, and metal fabrication facilities with equipment maintenance and member access management.",
               teacherGroups = listOf("Metal Shop Teachers"),
               groupPrefixes = listOf("Metal Shop"),
               homepageUrl = "https://source.dallasmakerspace.org/display/METAL/Metal+Shop",
@@ -142,7 +150,8 @@ object Committees {
               id = 12,
               name = "Science",
               chairGroupName = "Science Committee Chair",
-              description = "Educates members in scientific subjects through Special Interest Groups (SIGs) in Biology, Chemistry, Physics, Rockets, and Computing via weekly Science Sunday events.",
+              description =
+                  "Educates members in scientific subjects through Special Interest Groups (SIGs) in Biology, Chemistry, Physics, Rockets, and Computing via weekly Science Sunday events.",
               teacherGroups = listOf("Science Teachers"),
               groupPrefixes = listOf("Science"),
               homepageUrl = "https://source.dallasmakerspace.org/display/SCIENCE/Science",
@@ -152,7 +161,8 @@ object Committees {
               id = 13,
               name = "Woodshop",
               chairGroupName = "Woodshop Committee Chair",
-              description = "Maintains a knowledge base for woodworking safety, training, and tool information while supporting wood crafting projects at the makerspace.",
+              description =
+                  "Maintains a knowledge base for woodworking safety, training, and tool information while supporting wood crafting projects at the makerspace.",
               teacherGroups =
                   listOf("WS Shapeoko Teachers", "Woodshop Multicam Teachers", "Woodshop Teachers"),
               groupPrefixes = listOf("Woodshop", "WS"),
@@ -163,7 +173,8 @@ object Committees {
               id = 14,
               name = "VECTOR",
               chairGroupName = "VECTOR Committee Chair",
-              description = "Focuses on restoration and education of vintage electromechanical arcade technology (including pinball machines) with hands-on learning and collaborative projects.",
+              description =
+                  "Focuses on restoration and education of vintage electromechanical arcade technology (including pinball machines) with hands-on learning and collaborative projects.",
               homepageUrl = "https://source.dallasmakerspace.org/display/VECTOR/Vector",
               isActive = true,
           ),
@@ -177,7 +188,8 @@ object Committees {
               id = 16,
               name = "Printmaking",
               chairGroupName = "Printmaking Committee Chair",
-              description = "Teaches various printing methods with beginner-friendly classes organized by difficulty level for all experience levels.",
+              description =
+                  "Teaches various printing methods with beginner-friendly classes organized by difficulty level for all experience levels.",
               homepageUrl = "https://source.dallasmakerspace.org/display/PRINT/Printmaking",
               isActive = true,
           ),
@@ -185,7 +197,8 @@ object Committees {
               id = 16,
               name = "MotorSports",
               chairGroupName = "MotorSports Committee Chair",
-              description = "Manages motorsports and vehicle projects including racing vehicles, tools, and related equipment for automotive enthusiasts.",
+              description =
+                  "Manages motorsports and vehicle projects including racing vehicles, tools, and related equipment for automotive enthusiasts.",
               homepageUrl = "https://source.dallasmakerspace.org/display/RACE/Motorsports",
               isActive = true,
           ),

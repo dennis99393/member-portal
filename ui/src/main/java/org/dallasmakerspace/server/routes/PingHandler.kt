@@ -34,9 +34,8 @@ constructor(loggerFactory: LoggerFactory, private val memberService: MemberServi
 
     // Fetch random group from committee teacher groups
     val groupStartTime = System.currentTimeMillis()
-    val allTeacherGroups = Committees.getActiveCommittees()
-        .flatMap { it.teacherGroups }
-        .filter { it.isNotEmpty() }
+    val allTeacherGroups =
+        Committees.getActiveCommittees().flatMap { it.teacherGroups }.filter { it.isNotEmpty() }
     val randomGroup = allTeacherGroups.random()
     val groupSlug = getSlugFromName(randomGroup)
     var groupTimeTaken: Long = 0

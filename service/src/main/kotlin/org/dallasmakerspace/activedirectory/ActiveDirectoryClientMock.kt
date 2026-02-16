@@ -22,4 +22,6 @@ class ActiveDirectoryClientMock : IActiveDirectoryClient {
   override fun removeUsersFromGroup(dmsUsernames: List<String>, group: String) = Unit
 
   override fun addUsersToGroup(dmsUsernames: List<String>, group: String) = Unit
+
+  override fun getAllActiveUsersWithBadges(): Map<String, Map<String, Any?>> = emptyMap()
 }

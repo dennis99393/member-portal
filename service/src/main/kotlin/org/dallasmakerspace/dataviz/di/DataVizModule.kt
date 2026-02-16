@@ -13,7 +13,9 @@ import org.dallasmakerspace.dataviz.reports.calendar.GroupCalendarReport
 import org.dallasmakerspace.dataviz.reports.calendar.TopAttendees
 import org.dallasmakerspace.dataviz.reports.calendar.TopOrganizers
 import org.dallasmakerspace.dataviz.reports.groups.GroupHistoryReport
+import org.dallasmakerspace.dataviz.reports.it.BadgeValidationAdReport
 import org.dallasmakerspace.dataviz.reports.membership.ActiveMembers
+import org.dallasmakerspace.dataviz.reports.membership.BadgeValidationReport
 import org.dallasmakerspace.dataviz.reports.membership.DistributionDistance
 import org.dallasmakerspace.dataviz.reports.membership.DistributionRate
 import org.dallasmakerspace.smartwaiver.SignedWaivers
@@ -37,6 +39,8 @@ class DataVizModule {
       signedWaivers: SignedWaivers,
       groupHistoryReport: GroupHistoryReport,
       badgeSwipesReport: BadgeSwipesReport,
+      badgeValidationReport: BadgeValidationReport,
+      badgeValidationAdReport: BadgeValidationAdReport,
   ): Set<DataVizReport> {
     return setOf(
         visitorsByDayReport,
@@ -52,6 +56,8 @@ class DataVizModule {
         signedWaivers,
         groupHistoryReport,
         badgeSwipesReport,
+        badgeValidationReport,
+        badgeValidationAdReport,
     )
   }
 }

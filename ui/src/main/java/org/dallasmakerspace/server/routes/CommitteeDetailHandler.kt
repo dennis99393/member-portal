@@ -28,7 +28,8 @@ constructor(
   override suspend fun handleAuthenticated(call: ApplicationCall) = coroutineScope {
     // Get committee slug from path
     val committeeSlug =
-        call.parameters["committee_slug"] ?: throw AuthException("No committee slug found in url path")
+        call.parameters["committee_slug"]
+            ?: throw AuthException("No committee slug found in url path")
 
     // Find committee by slug
     val committee = Committees.findBySlug(committeeSlug)
@@ -129,50 +130,56 @@ constructor(
         }
 
     // Fetch upcoming prerequisite events
-    val upcomingEventsRaw = async {
-      if (relatedGroupNames.isNotEmpty()) {
-        try {
-          memberService.getUpcomingPrerequisiteEvents(relatedGroupNames, session.sessionId)
-        } catch (e: Exception) {
-          log.warn("Failed to fetch upcoming events: {}", e.message)
-          emptyList()
-        }
-      } else {
-        emptyList()
-      }
-    }.await()
+    val upcomingEventsRaw =
+        async {
+              if (relatedGroupNames.isNotEmpty()) {
+                try {
+                  memberService.getUpcomingPrerequisiteEvents(relatedGroupNames, session.sessionId)
+                } catch (e: Exception) {
+                  log.warn("Failed to fetch upcoming events: {}", e.message)
+                  emptyList()
+                }
+              } else {
+                emptyList()
+              }
+            }
+            .await()
 
     // Collect unique organizer usernames
-    val organizerUsernames =
-        upcomingEventsRaw.mapNotNull { it.organizerUsername }.distinct()
+    val organizerUsernames = upcomingEventsRaw.mapNotNull { it.organizerUsername }.distinct()
 
     // Fetch organizer member details
-    val organizerMembers = async {
-      if (organizerUsernames.isNotEmpty()) {
-        try {
-          organizerUsernames.mapNotNull { username ->
-            try {
-              username to memberService.getMember(username, session.sessionId)
-            } catch (e: Exception) {
-              log.warn("Failed to fetch organizer member: $username", e)
-              null
+    val organizerMembers =
+        async {
+              if (organizerUsernames.isNotEmpty()) {
+                try {
+                  organizerUsernames
+                      .mapNotNull { username ->
+                        try {
+                          username to memberService.getMember(username, session.sessionId)
+                        } catch (e: Exception) {
+                          log.warn("Failed to fetch organizer member: $username", e)
+                          null
+                        }
+                      }
+                      .toMap()
+                } catch (e: Exception) {
+                  log.warn("Failed to fetch organizer members: {}", e.message)
+                  emptyMap()
+                }
+              } else {
+                emptyMap()
+              }
             }
-          }.toMap()
-        } catch (e: Exception) {
-          log.warn("Failed to fetch organizer members: {}", e.message)
-          emptyMap()
-        }
-      } else {
-        emptyMap()
-      }
-    }.await()
+            .await()
 
     // Enrich events with organizer details
     val upcomingEvents =
         upcomingEventsRaw.map { event ->
           val organizer = event.organizerUsername?.let { organizerMembers[it] }
           val avatarUrl =
-              organizer?.avatarUrl
+              organizer
+                  ?.avatarUrl
                   ?.takeIf { it.isNotEmpty() }
                   ?.let { url ->
                     when {
@@ -214,7 +221,9 @@ constructor(
     call.respond(ThymeleafContent("committee-detail", jsonMap))
   }
 
-  private fun processMembersList(members: List<org.dallasmakerspace.models.DMSMember>): List<Map<String, Any?>> {
+  private fun processMembersList(
+      members: List<org.dallasmakerspace.models.DMSMember>
+  ): List<Map<String, Any?>> {
     return members.map { member ->
       val avatarUrl =
           member.avatarUrl

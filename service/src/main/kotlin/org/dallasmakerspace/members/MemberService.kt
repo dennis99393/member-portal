@@ -528,63 +528,62 @@ constructor(
       val dbMembers = dbMembersDeferred.await()
 
       // Enrich each group with DB member data
-      val enrichedGroups = adGroups.map { adGroup ->
-        DMSGroup(
-            name = adGroup.cn,
-            description = adGroup.description,
-            distinguishedName = adGroup.distinguishedName,
-            objectGuid = adGroup.objectGuid,
-            members =
-                adGroup.members.map {
-                  // Find corresponding DB member
-                  val dbMember = dbMembers.find { db -> db.username == it.sAMAccountName }
-                  DMSMember(
-                      -1,
-                      it.sAMAccountName,
-                      firstName = it.givenName,
-                      lastName = it.sn,
-                      displayName = it.displayName,
-                      avatarUrl = dbMember?.discourseAvatarUrl,
-                      discourseUsername = dbMember?.discourseUsername,
-                      personalEmail = it.mail,
-                      phoneNumber = getNormalizedPhoneNumber(it.telephoneNumber, it.sAMAccountName),
-                      badgeNumber = it.employeeID,
-                      enabled = it.enabled,
-                      memberSince = calculateMemberSince(it.whenCreated),
-                      groups =
-                          it.groups.map { group ->
-                            DMSGroup(
-                                name = group.cn,
-                                description = null,
-                                distinguishedName = group.distinguishedName,
-                                objectGuid = group.objectGuid,
-                                membersListIncomplete = false,
-                                members = emptyList(),
-                            )
-                          },
-                  )
-                },
-            membersListIncomplete = adGroup.membersListIncomplete,
-            administrators = adGroup.administrators,
-            nestedGroups = adGroup.nestedGroups,
-        )
-      }
+      val enrichedGroups =
+          adGroups.map { adGroup ->
+            DMSGroup(
+                name = adGroup.cn,
+                description = adGroup.description,
+                distinguishedName = adGroup.distinguishedName,
+                objectGuid = adGroup.objectGuid,
+                members =
+                    adGroup.members.map {
+                      // Find corresponding DB member
+                      val dbMember = dbMembers.find { db -> db.username == it.sAMAccountName }
+                      DMSMember(
+                          -1,
+                          it.sAMAccountName,
+                          firstName = it.givenName,
+                          lastName = it.sn,
+                          displayName = it.displayName,
+                          avatarUrl = dbMember?.discourseAvatarUrl,
+                          discourseUsername = dbMember?.discourseUsername,
+                          personalEmail = it.mail,
+                          phoneNumber =
+                              getNormalizedPhoneNumber(it.telephoneNumber, it.sAMAccountName),
+                          badgeNumber = it.employeeID,
+                          enabled = it.enabled,
+                          memberSince = calculateMemberSince(it.whenCreated),
+                          groups =
+                              it.groups.map { group ->
+                                DMSGroup(
+                                    name = group.cn,
+                                    description = null,
+                                    distinguishedName = group.distinguishedName,
+                                    objectGuid = group.objectGuid,
+                                    membersListIncomplete = false,
+                                    members = emptyList(),
+                                )
+                              },
+                      )
+                    },
+                membersListIncomplete = adGroup.membersListIncomplete,
+                administrators = adGroup.administrators,
+                nestedGroups = adGroup.nestedGroups,
+            )
+          }
 
       // Update fallback cache on success
-      enrichedGroups.forEach { group ->
-        groupsFallbackCache[group.name] = group
-      }
+      enrichedGroups.forEach { group -> groupsFallbackCache[group.name] = group }
 
       enrichedGroups
     } catch (e: Exception) {
       log.warn("Failed to fetch groups from AD/DB, attempting fallback cache: ${e.message}")
 
       // Try to return cached groups
-      val cachedGroups = groupnames.mapNotNull { name ->
-        groupsFallbackCache[name]?.also {
-          log.info("Returning cached group for name: $name")
-        }
-      }
+      val cachedGroups =
+          groupnames.mapNotNull { name ->
+            groupsFallbackCache[name]?.also { log.info("Returning cached group for name: $name") }
+          }
 
       if (cachedGroups.isNotEmpty()) {
         log.info("Returned ${cachedGroups.size} groups from fallback cache")

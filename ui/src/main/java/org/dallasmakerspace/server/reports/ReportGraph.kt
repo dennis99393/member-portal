@@ -79,6 +79,26 @@ object ReportGraph {
                         ),
                 ),
                 ReportNode(
+                    name = "IT Infrastructure",
+                    description = "IT Infrastructure reports",
+                    urlSlug = "it",
+                    children =
+                        listOf(
+                            ReportNode(
+                                name = "Badge Validation (MakerManager)",
+                                description =
+                                    "Active members with invalid badge numbers in MakerManager (Infra only)",
+                                urlSlug = "badge-validation",
+                            ),
+                            ReportNode(
+                                name = "Badge Validation (Active Directory)",
+                                description =
+                                    "Active users with invalid badge numbers in AD (Infra only)",
+                                urlSlug = "badge-validation-ad",
+                            ),
+                        ),
+                ),
+                ReportNode(
                     name = "Group History",
                     description = "History of group membership changes",
                     urlSlug = "group-history",
