@@ -34,6 +34,29 @@ constructor(
             attributes = null))
   }
 
+  /**
+   * Inserts a new activity log entry with separate actor and subject, and optional attributes.
+   *
+   * @param actorUsername The username of the user performing the action.
+   * @param subjectUsername The username of the user being acted upon.
+   * @param event The activity log event type.
+   * @param attributes Optional JSON attributes to store with the log entry.
+   */
+  suspend fun insertActivityLogEntry(
+      actorUsername: String,
+      subjectUsername: String,
+      event: ActivityLogEvent,
+      attributes: String? = null
+  ) {
+    activityLogRepository.insertActivityLogEntry(
+        ActivityLog(
+            source = ActivityLogSource.PROFILE,
+            actorProfileUsername = actorUsername,
+            subjectProfileUsername = subjectUsername,
+            event = event,
+            attributes = attributes))
+  }
+
   suspend fun insertBulkActivityLogEntry(subjectUsernames: List<String>, event: ActivityLogEvent) {
     activityLogRepository.insertBulkActivityLogEntry(
         subjectUsernames.map {

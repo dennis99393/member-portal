@@ -132,4 +132,9 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
   override fun addUsersToGroup(dmsUsernames: List<String>, group: String) {
     // Do nothing
   }
+
+  /** {@inheritDoc} */
+  override fun updateBadgeNumber(username: String, newBadgeNumber: String) {
+    // Do nothing
+  }
 }

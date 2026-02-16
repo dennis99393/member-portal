@@ -263,7 +263,8 @@
 
                             <div th:if="${personal_email}" class="d-flex align-items-center mb-3">
                                 <span class="material-symbols-outlined card-item-icon">unsubscribe</span>
-                                <span>Personal email: <span class="overflow-hidden ph-mask" th:text="${personal_email}"></span></span>
+                                <span>Personal email: <span class="overflow-hidden ph-mask"
+                                                            th:text="${personal_email}"></span></span>
                             </div>
 
                             <div th:if="${phone_number}" class="d-flex align-items-center mb-3">
@@ -271,9 +272,18 @@
                                 <span>Phone number: <span class="ph-mask" th:text="${phone_number}"></span></span>
                             </div>
 
-                            <div th:if="${badge_number}" class="d-flex align-items-center">
-                                <span class="material-symbols-outlined card-item-icon">security_key</span>
-                                <span>DMS Badge: <span class="ph-mask" th:text="${badge_number}"></span></span>
+                            <div th:if="${badge_number_ad}" class="d-flex align-items-center mb-3">
+                                <span class="material-symbols-outlined card-item-icon">badge</span>
+                                <span>Badge: <span class="ph-mask" th:text="${badge_number_ad}"></span></span>
+                            </div>
+
+                            <div th:if="${badge_needs_fix and is_infra}" class="d-flex align-items-center mb-3">
+                                <button class="btn btn-sm btn-warning" id="fixBadgeBtn"
+                                        th:attr="data-username=${preferred_username},data-padded=${badge_padded}">
+                                    <span class="material-symbols-outlined"
+                                          style="font-size: 16px; vertical-align: middle;">build</span>
+                                    Fix Badge Length in AD
+                                </button>
                             </div>
                         </th:block>
                     </div>
@@ -304,8 +314,13 @@
                         <div class="d-flex align-items-center">
                             <span>Phone number: <span class="ph-mask" th:text="${phone_number}"></span></span>
                         </div>
-                        <div class="d-flex align-items-center">
-                            <span>DMS Badge: <span class="ph-mask" th:text="${badge_number}"></span></span>
+                        <div class="d-flex align-items-center" th:if="${badge_number_mm}">
+                            <span>Badge  <span style="font-family:monospace">(MM)</span>: <span class="ph-mask"
+                                                                                                th:text="${badge_number_mm}"></span></span>
+                        </div>
+                        <div class="d-flex align-items-center" th:if="${badge_number_ad}">
+                            <span>Badge <span style="font-family:monospace">(AD)</span>: <span class="ph-mask"
+                                                                                               th:text="${badge_number_ad}"></span></span>
                         </div>
                     </div>
                 </div>
@@ -575,69 +590,118 @@
 
 <!-- LinkedIn Modal Script -->
 <script th:if="${is_self and !linkedin_username}">
-(function() {
-    'use strict';
+    (function() {
+        'use strict';
 
-    const linkedinUrlInput = document.getElementById('linkedinUrl');
-    const linkBtn = document.getElementById('linkLinkedInBtn');
-    const usernamePreview = document.getElementById('linkedinUsernamePreview');
-    const extractedUsernameSpan = document.getElementById('extractedUsername');
+        const linkedinUrlInput = document.getElementById('linkedinUrl');
+        const linkBtn = document.getElementById('linkLinkedInBtn');
+        const usernamePreview = document.getElementById('linkedinUsernamePreview');
+        const extractedUsernameSpan = document.getElementById('extractedUsername');
 
-    // LinkedIn URL validation regex
-    // Matches: https://www.linkedin.com/in/username, http://linkedin.com/in/username, etc.
-    const linkedinUrlPattern = /^https?:\/\/(?:www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/;
+        // LinkedIn URL validation regex
+        // Matches: https://www.linkedin.com/in/username, http://linkedin.com/in/username, etc.
+        const linkedinUrlPattern = /^https?:\/\/(?:www\.)?linkedin\.com\/in\/([a-zA-Z0-9\-]+)\/?$/;
 
-    function validateAndExtractUsername(url) {
-        const match = url.trim().match(linkedinUrlPattern);
-        if (match) {
-            return match[1]; // Return the captured username
+        function validateAndExtractUsername(url) {
+            const match = url.trim().match(linkedinUrlPattern);
+            if (match) {
+                return match[1]; // Return the captured username
+            }
+            return null;
         }
-        return null;
-    }
 
-    function updateValidationState() {
-        const url = linkedinUrlInput.value;
-        const username = validateAndExtractUsername(url);
+        function updateValidationState() {
+            const url = linkedinUrlInput.value;
+            const username = validateAndExtractUsername(url);
 
-        if (url === '') {
-            // Empty - neutral state
+            if (url === '') {
+                // Empty - neutral state
+                linkedinUrlInput.classList.remove('is-valid', 'is-invalid');
+                usernamePreview.classList.add('d-none');
+                linkBtn.disabled = true;
+            } else if (username) {
+                // Valid
+                linkedinUrlInput.classList.remove('is-invalid');
+                linkedinUrlInput.classList.add('is-valid');
+                extractedUsernameSpan.textContent = username;
+                usernamePreview.classList.remove('d-none');
+                linkBtn.disabled = false;
+            } else {
+                // Invalid
+                linkedinUrlInput.classList.remove('is-valid');
+                linkedinUrlInput.classList.add('is-invalid');
+                usernamePreview.classList.add('d-none');
+                linkBtn.disabled = true;
+            }
+        }
+
+        linkedinUrlInput.addEventListener('input', updateValidationState);
+
+        linkBtn.addEventListener('click', function() {
+            const username = validateAndExtractUsername(linkedinUrlInput.value);
+            if (username) {
+                // Redirect to link handler with username as query param
+                window.location.href = '/link-linkedin?linkedinUsername=' + encodeURIComponent(username);
+            }
+        });
+
+        // Reset modal state when hidden
+        document.getElementById('linkLinkedInModal').addEventListener('hidden.bs.modal', function() {
+            linkedinUrlInput.value = '';
             linkedinUrlInput.classList.remove('is-valid', 'is-invalid');
             usernamePreview.classList.add('d-none');
             linkBtn.disabled = true;
-        } else if (username) {
-            // Valid
-            linkedinUrlInput.classList.remove('is-invalid');
-            linkedinUrlInput.classList.add('is-valid');
-            extractedUsernameSpan.textContent = username;
-            usernamePreview.classList.remove('d-none');
-            linkBtn.disabled = false;
-        } else {
-            // Invalid
-            linkedinUrlInput.classList.remove('is-valid');
-            linkedinUrlInput.classList.add('is-invalid');
-            usernamePreview.classList.add('d-none');
-            linkBtn.disabled = true;
-        }
-    }
+        });
+    })();
+</script>
 
-    linkedinUrlInput.addEventListener('input', updateValidationState);
+<!-- Fix Badge Script -->
+<script th:if="${badge_needs_fix and is_infra}">
+    (function() {
+        'use strict';
 
-    linkBtn.addEventListener('click', function() {
-        const username = validateAndExtractUsername(linkedinUrlInput.value);
-        if (username) {
-            // Redirect to link handler with username as query param
-            window.location.href = '/link-linkedin?linkedinUsername=' + encodeURIComponent(username);
-        }
-    });
+        const fixBadgeBtn = document.getElementById('fixBadgeBtn');
+        if (!fixBadgeBtn) return;
 
-    // Reset modal state when hidden
-    document.getElementById('linkLinkedInModal').addEventListener('hidden.bs.modal', function() {
-        linkedinUrlInput.value = '';
-        linkedinUrlInput.classList.remove('is-valid', 'is-invalid');
-        usernamePreview.classList.add('d-none');
-        linkBtn.disabled = true;
-    });
-})();
+        fixBadgeBtn.addEventListener('click', async function() {
+            const username = this.getAttribute('data-username');
+            const paddedBadge = this.getAttribute('data-padded');
+
+            if (!confirm(`Fix badge length in Active Directory?\n\nThis will update the badge to: ${paddedBadge}`)) {
+                return;
+            }
+
+            // Disable button and show loading state
+            fixBadgeBtn.disabled = true;
+            fixBadgeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Fixing...';
+
+            try {
+                const response = await fetch(`/backend-api/members/${username}/fix-badge`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'SUCCESS') {
+                    // Show success message and reload page
+                    alert(`Badge fixed successfully!\nOld: ${result.data.old_badge}\nNew: ${result.data.new_badge}`);
+                    window.location.reload();
+                } else {
+                    alert(`Failed to fix badge: ${result.message}`);
+                    fixBadgeBtn.disabled = false;
+                    fixBadgeBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">build</span> Fix Badge Length in AD';
+                }
+            } catch (error) {
+                console.error('Error fixing badge:', error);
+                alert(`Error fixing badge: ${error.message}`);
+                fixBadgeBtn.disabled = false;
+                fixBadgeBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px; vertical-align: middle;">build</span> Fix Badge Length in AD';
+            }
+        });
+    })();
 </script>
 
 </body>

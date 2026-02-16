@@ -201,4 +201,12 @@ constructor(
   suspend fun submitAskAiFeedback(sessionId: String?, cacheId: Int, isHelpful: Boolean): Boolean {
     return memberServiceClient.submitAskAiFeedback(sessionId, cacheId, isHelpful)
   }
+
+  suspend fun getBadgeFromMakerManager(username: String, sessionId: String?): String? {
+    return memberServiceClient.getBadgeFromMakerManager(username, sessionId)
+  }
+
+  suspend fun getBadgeFromActiveDirectory(username: String, sessionId: String?): String? {
+    return memberServiceClient.getBadgeFromActiveDirectory(username, sessionId)
+  }
 }

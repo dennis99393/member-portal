@@ -45,4 +45,13 @@ interface IActiveDirectoryClient {
    * @return Map of username to user attributes (including employeeID/badge number)
    */
   fun getAllActiveUsersWithBadges(): Map<String, Map<String, Any?>>
+
+  /**
+   * Updates the employeeID (badge number) for a user in Active Directory.
+   *
+   * @param username The username of the user to update
+   * @param newBadgeNumber The new badge number (employeeID) to set
+   * @throws Exception if the user is not found or update fails
+   */
+  fun updateBadgeNumber(username: String, newBadgeNumber: String)
 }

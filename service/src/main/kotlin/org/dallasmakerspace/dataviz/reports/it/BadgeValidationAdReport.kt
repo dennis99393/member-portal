@@ -32,8 +32,10 @@ constructor(
         allUsersWithBadges
             .filter { (_, attributes) ->
               val badgeNumber = attributes["employeeID"] as? String ?: ""
-              val userAccountControl = (attributes["userAccountControl"] as? String)?.toIntOrNull() ?: 0
-              val isActive = (userAccountControl and 0x0002) == 0 // Check if account is NOT disabled
+              val userAccountControl =
+                  (attributes["userAccountControl"] as? String)?.toIntOrNull() ?: 0
+              val isActive =
+                  (userAccountControl and 0x0002) == 0 // Check if account is NOT disabled
 
               badgeNumber.isNotEmpty() && badgeNumber.length < 10 && isActive
             }

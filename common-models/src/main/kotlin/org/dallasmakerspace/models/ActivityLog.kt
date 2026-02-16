@@ -33,6 +33,9 @@ enum class ActivityLogEvent(val value: Int) {
   LABEL_PRINT_CERAMICS(9),
   LABEL_PRINT_CA(10),
   LABEL_PRINT_3DFAB(11),
+
+  /** Badge management events * */
+  FIX_BADGE_LENGTH_AD(12),
 }
 
 @Suppress("MagicNumber")

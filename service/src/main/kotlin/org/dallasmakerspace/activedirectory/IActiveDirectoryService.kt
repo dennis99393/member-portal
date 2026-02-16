@@ -59,4 +59,12 @@ interface IActiveDirectoryService {
 
   /** Add given list of users to group * */
   fun addUsersToGroup(dmsUsernames: List<String>, group: String): Unit
+
+  /**
+   * Updates the badge number (employeeID) for a user in Active Directory.
+   *
+   * @param username The username of the user to update
+   * @param newBadgeNumber The new badge number (employeeID) to set
+   */
+  fun updateBadgeNumber(username: String, newBadgeNumber: String)
 }

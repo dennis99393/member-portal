@@ -87,7 +87,40 @@ constructor(
     jsonMap["is_self"] = (requestedUsername == currentUsername).toString()
     if (jsonMap["is_self"] == "true" || isInfra) {
       requestedMember.personalEmail?.apply { jsonMap["personal_email"] = this as Any }
-      requestedMember.badgeNumber?.apply { jsonMap["badge_number"] = this as Any }
+
+      // Fetch badges from both sources separately
+      try {
+        val badgeMM = memberService.getBadgeFromMakerManager(requestedUsername, session.sessionId)
+        val badgeAD =
+            memberService.getBadgeFromActiveDirectory(requestedUsername, session.sessionId)
+
+        // If both are null, fall back to member object's badge
+        if (badgeMM == null && badgeAD == null) {
+          requestedMember.badgeNumber?.let {
+            jsonMap["badge_number_mm"] = it
+            jsonMap["badge_number_ad"] = it
+          }
+        } else {
+          // Use fetched values (may be null individually)
+          badgeMM?.let { jsonMap["badge_number_mm"] = it }
+          badgeAD?.let { jsonMap["badge_number_ad"] = it }
+        }
+
+        // Check if AD badge needs fixing (< 10 digits)
+        val badgeToCheck = badgeAD ?: requestedMember.badgeNumber
+        if (badgeToCheck != null && badgeToCheck.length < 10) {
+          jsonMap["badge_needs_fix"] = true
+          jsonMap["badge_padded"] = badgeToCheck.padStart(10, '0')
+        }
+      } catch (e: Exception) {
+        log.warn("Failed to fetch badges for member: $requestedUsername", e)
+        // Fall back to badge from member object
+        requestedMember.badgeNumber?.apply {
+          jsonMap["badge_number_mm"] = this as Any
+          jsonMap["badge_number_ad"] = this as Any
+        }
+      }
+
       requestedMember.phoneNumber?.apply { jsonMap["phone_number"] = this as Any }
     }
     jsonMap["is_infra"] = isInfra

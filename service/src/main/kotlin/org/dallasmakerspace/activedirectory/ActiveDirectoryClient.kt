@@ -1,5 +1,6 @@
 package org.dallasmakerspace.activedirectory
 
+import com.unboundid.asn1.ASN1OctetString
 import com.unboundid.ldap.sdk.FailoverServerSet
 import com.unboundid.ldap.sdk.Filter
 import com.unboundid.ldap.sdk.LDAPConnectionPool
@@ -10,7 +11,6 @@ import com.unboundid.ldap.sdk.SearchRequest.ALL_USER_ATTRIBUTES
 import com.unboundid.ldap.sdk.SearchScope
 import com.unboundid.ldap.sdk.SimpleBindRequest
 import com.unboundid.ldap.sdk.controls.SimplePagedResultsControl
-import com.unboundid.asn1.ASN1OctetString
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -916,7 +916,6 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
 
       val responseControl = SimplePagedResultsControl.get(searchResult)
       cookie = responseControl?.cookie
-
     } while (cookie != null && cookie.valueLength > 0)
 
     log.info("$TAG/getAllActiveUsersWithBadges Retrieved ${allEntries.size} users with badges")
@@ -929,6 +928,29 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
             it.name to if (it.name == "memberOf") it.values else it.values?.firstOrNull()
           }
     }
+  }
+
+  /** {@inheritDoc} */
+  override fun updateBadgeNumber(username: String, newBadgeNumber: String) {
+    val filter = Filter.createEqualityFilter("sAMAccountName", username)
+
+    val searchResult =
+        ldapPool.search(
+            "ou=Members,dc=dms,dc=local",
+            SearchScope.SUB,
+            filter,
+            "distinguishedName",
+        )
+
+    if (searchResult.searchEntries.isEmpty()) {
+      throw Exception("User $username not found in Active Directory")
+    }
+
+    val userDN = searchResult.searchEntries.first().getAttributeValue("distinguishedName")
+    val mod = Modification(ModificationType.REPLACE, "employeeID", newBadgeNumber)
+
+    ldapPool.modify(userDN, mod)
+    log.info("$TAG/updateBadgeNumber Updated badge number for $username to $newBadgeNumber")
   }
 
   companion object {

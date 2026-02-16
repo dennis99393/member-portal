@@ -652,4 +652,46 @@ constructor(
       record.copy(actorDisplayName = actorDisplayName, memberDisplayName = memberDisplayName)
     }
   }
+
+  /**
+   * Updates the badge number (employeeID) in Active Directory.
+   *
+   * @param username The username of the member
+   * @param badgeNumber The new badge number to set
+   */
+  fun updateBadgeInAD(username: String, badgeNumber: String) {
+    activeDirectoryService.updateBadgeNumber(username, badgeNumber)
+  }
+
+  /**
+   * Gets the badge number from MakerManager database.
+   *
+   * @param username The username of the member
+   * @return The badge number or null if not found
+   */
+  suspend fun getBadgeFromMakerManager(username: String): String? {
+    return try {
+      val users = makerManagerDataService.getAllUsers()
+      users.find { it.username == username }?.badgeNumber
+    } catch (e: Exception) {
+      log.error("Failed to get badge from MakerManager for $username", e)
+      null
+    }
+  }
+
+  /**
+   * Gets the badge number from Active Directory.
+   *
+   * @param username The username of the member
+   * @return The badge number or null if not found
+   */
+  fun getBadgeFromActiveDirectory(username: String): String? {
+    return try {
+      val adUser = activeDirectoryService.getMemberByUsername(username)
+      adUser.employeeID
+    } catch (e: Exception) {
+      log.error("Failed to get badge from Active Directory for $username", e)
+      null
+    }
+  }
 }

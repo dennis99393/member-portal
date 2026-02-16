@@ -26,5 +26,11 @@ class Members(val loggedInDays: Int = 90) {
     }
 
     @Resource("events") class Events(val parent: DMSMember, val limit: Int = 5)
+
+    @Resource("badge-mm") class BadgeMM(val parent: DMSMember)
+
+    @Resource("badge-ad") class BadgeAD(val parent: DMSMember)
+
+    @Resource("fix-badge") class FixBadge(val parent: DMSMember)
   }
 }

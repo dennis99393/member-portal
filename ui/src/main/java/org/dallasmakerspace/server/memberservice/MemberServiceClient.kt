@@ -379,6 +379,28 @@ constructor(
     }
   }
 
+  suspend fun getBadgeFromMakerManager(username: String, sessionId: String?): String? {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/members/$username/badge-mm", apiHeaders)
+      result["data"] as? String
+    } catch (ex: Exception) {
+      log.warn("Failed to get badge from MakerManager for $username", ex)
+      null
+    }
+  }
+
+  suspend fun getBadgeFromActiveDirectory(username: String, sessionId: String?): String? {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/members/$username/badge-ad", apiHeaders)
+      result["data"] as? String
+    } catch (ex: Exception) {
+      log.warn("Failed to get badge from Active Directory for $username", ex)
+      null
+    }
+  }
+
   suspend fun resolveShortLink(
       path: String,
       sessionId: String?,

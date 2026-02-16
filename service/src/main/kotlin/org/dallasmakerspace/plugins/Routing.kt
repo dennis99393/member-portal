@@ -146,6 +146,28 @@ fun Application.configureRouting() {
                   events,
               ))
         }
+
+        /** Badge operations - get badge from MakerManager * */
+        get<Members.DMSMember.BadgeMM> { badgeRequest ->
+          val badge = memberService.getBadgeFromMakerManager(badgeRequest.parent.username)
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS,
+                  "Badge from MakerManager for ${badgeRequest.parent.username}",
+                  badge,
+              ))
+        }
+
+        /** Badge operations - get badge from Active Directory * */
+        get<Members.DMSMember.BadgeAD> { badgeRequest ->
+          val badge = memberService.getBadgeFromActiveDirectory(badgeRequest.parent.username)
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS,
+                  "Badge from Active Directory for ${badgeRequest.parent.username}",
+                  badge,
+              ))
+        }
       }
 
       /** Member profile operations - WRITE * */
@@ -157,6 +179,64 @@ fun Application.configureRouting() {
           call.respond(
               ApiResponse(
                   Status.SUCCESS, "Member ${update.parent.username} updated", updatedMember))
+        }
+
+        post<Members.DMSMember.FixBadge> { fixBadge ->
+          // Fix badge number by prepending zeros
+          val username = fixBadge.parent.username
+
+          // Get badge from member service
+          val member = memberService.getMemberByUsername(username, false)
+          val badgeFromMM = member.badgeNumber
+          if (badgeFromMM.isNullOrEmpty() || badgeFromMM.length >= 10) {
+            return@post call.respond(
+                HttpStatusCode.BadRequest,
+                ApiResponse(
+                    Status.ERROR,
+                    "Badge number does not need fixing (either missing or already 10+ digits)",
+                    null))
+          }
+
+          // Validate badge is numeric
+          if (!badgeFromMM.all { it.isDigit() }) {
+            return@post call.respond(
+                HttpStatusCode.BadRequest,
+                ApiResponse(
+                    Status.ERROR,
+                    "Badge number must be numeric (contains non-digit characters: $badgeFromMM)",
+                    null))
+          }
+
+          // Prepend zeros to make it 10 digits
+          val paddedBadge = badgeFromMM.padStart(10, '0')
+
+          // Update AD
+          try {
+            memberService.updateBadgeInAD(username, paddedBadge)
+          } catch (e: Exception) {
+            log.error("Failed to update badge for $username", e)
+            return@post call.respond(
+                HttpStatusCode.InternalServerError,
+                ApiResponse(
+                    Status.ERROR, "Failed to update badge in Active Directory: ${e.message}", null))
+          }
+
+          // Get authenticated user who performed the fix
+          val actorUsername = call.request.headers["X-Username"] ?: username
+
+          // Log activity with actor and attributes
+          val attributes = """{"oldBadge":"$badgeFromMM","newBadge":"$paddedBadge"}"""
+          activityLogService.insertActivityLogEntry(
+              actorUsername,
+              username,
+              org.dallasmakerspace.models.ActivityLogEvent.FIX_BADGE_LENGTH_AD,
+              attributes)
+
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS,
+                  "Badge fixed: $badgeFromMM → $paddedBadge",
+                  mapOf("old_badge" to badgeFromMM, "new_badge" to paddedBadge)))
         }
       }
 

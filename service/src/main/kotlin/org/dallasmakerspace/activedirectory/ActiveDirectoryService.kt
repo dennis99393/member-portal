@@ -306,4 +306,9 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
   override fun addUsersToGroup(dmsUsernames: List<String>, group: String) {
     activeDirectoryClient.addUsersToGroup(dmsUsernames, group)
   }
+
+  /** {@inheritDoc} */
+  override fun updateBadgeNumber(username: String, newBadgeNumber: String) {
+    activeDirectoryClient.updateBadgeNumber(username, newBadgeNumber)
+  }
 }

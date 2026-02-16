@@ -82,8 +82,7 @@ constructor(
                       "Badge Number" to (dataItem.values["number"] ?: JsonPrimitive("")),
                       "Badge Length" to (dataItem.values["Badge Length"] ?: JsonPrimitive(0)),
                       "Member" to memberJson,
-                  )
-          )
+                  ))
         }
 
     return baseResponse.copy(data = enrichedData)
