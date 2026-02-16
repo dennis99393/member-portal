@@ -14,6 +14,7 @@ import org.dallasmakerspace.dataviz.reports.calendar.TopAttendees
 import org.dallasmakerspace.dataviz.reports.calendar.TopOrganizers
 import org.dallasmakerspace.dataviz.reports.groups.GroupHistoryReport
 import org.dallasmakerspace.dataviz.reports.it.BadgeValidationAdReport
+import org.dallasmakerspace.dataviz.reports.it.BadgeValidationMergedReport
 import org.dallasmakerspace.dataviz.reports.membership.ActiveMembers
 import org.dallasmakerspace.dataviz.reports.membership.BadgeValidationReport
 import org.dallasmakerspace.dataviz.reports.membership.DistributionDistance
@@ -41,6 +42,7 @@ class DataVizModule {
       badgeSwipesReport: BadgeSwipesReport,
       badgeValidationReport: BadgeValidationReport,
       badgeValidationAdReport: BadgeValidationAdReport,
+      badgeValidationMergedReport: BadgeValidationMergedReport,
   ): Set<DataVizReport> {
     return setOf(
         visitorsByDayReport,
@@ -58,6 +60,7 @@ class DataVizModule {
         badgeSwipesReport,
         badgeValidationReport,
         badgeValidationAdReport,
+        badgeValidationMergedReport,
     )
   }
 }

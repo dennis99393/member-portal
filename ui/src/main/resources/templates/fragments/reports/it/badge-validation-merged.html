@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Badge Validation</title>
+</head>
+<body>
+<div th:fragment="report">
+    <!-- Restriction note - ALWAYS shown to all users -->
+    <div class="alert alert-info" role="alert">
+        <strong>Note:</strong> This report is restricted to IT Infrastructure team. It shows active members with invalid badge numbers (&lt; 10 digits) in either MakerManager or Active Directory, making it easy to identify discrepancies between the two systems.
+    </div>
+
+    <!-- Report content - ONLY shown to authorized users -->
+    <div th:if="${is_infra}">
+        <!-- Data visualizer component -->
+        <dms-data-visualizer
+                id="badge-validation-merged-visualizer"
+                dataUrl="/backend-api/data-viz/badge-validation-merged"
+                renderAs="table"
+                title="Badge Validation"
+                description="Active members with invalid badge numbers (&lt; 10 digits) in MakerManager or Active Directory"
+                filterable="true"
+                alwaysShowRawData="true"
+        ></dms-data-visualizer>
+    </div>
+</div>
+</body>
+</html>

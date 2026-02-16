@@ -85,16 +85,10 @@ object ReportGraph {
                     children =
                         listOf(
                             ReportNode(
-                                name = "Badge Validation (MakerManager)",
+                                name = "Badge Validation",
                                 description =
-                                    "Active members with invalid badge numbers in MakerManager (Infra only)",
-                                urlSlug = "badge-validation",
-                            ),
-                            ReportNode(
-                                name = "Badge Validation (Active Directory)",
-                                description =
-                                    "Active users with invalid badge numbers in AD (Infra only)",
-                                urlSlug = "badge-validation-ad",
+                                    "Badge validation across MakerManager and Active Directory (Infra only)",
+                                urlSlug = "badge-validation-merged",
                             ),
                         ),
                 ),
