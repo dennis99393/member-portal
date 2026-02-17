@@ -90,6 +90,12 @@ object ReportGraph {
                                     "Badge validation across MakerManager and Active Directory (Infra only)",
                                 urlSlug = "badge-validation-merged",
                             ),
+                            ReportNode(
+                                name = "Lapsed Members with Active AD",
+                                description =
+                                    "Past members with enabled AD accounts (badge 0000000)",
+                                urlSlug = "lapsed-members-active-ad",
+                            ),
                         ),
                 ),
                 ReportNode(

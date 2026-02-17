@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lapsed Members with Active AD Accounts</title>
+</head>
+<body>
+<div th:fragment="report">
+    <!-- Data visualizer component -->
+    <dms-data-visualizer
+            id="lapsed-members-active-ad-visualizer"
+            dataUrl="/backend-api/data-viz/lapsed-members-active-ad"
+            renderAs="table"
+            title="Lapsed Members with Active AD Accounts"
+            description="Past members who have active AD accounts with badge number 0000000. These are typically cases where IT volunteers have temporarily enabled accounts to allow access to email or backup files. Column sources: AD Account Enabled (LDAP userAccountControl attribute), MM AD Active (MakerManager users.ad_active field), WHMCS Active (active product within last 90 days from WHMCS product history)."
+            filterable="true"
+            alwaysShowRawData="true"
+    ></dms-data-visualizer>
+</div>
+</body>
+</html>
