@@ -694,4 +694,106 @@ constructor(
       null
     }
   }
+
+  /**
+   * Gets debug information for a member, including AD status, MM status, and WHMCS status.
+   *
+   * @param username The username of the member
+   * @return MemberDebugInfo with status from all three systems
+   */
+  suspend fun getDebugInfo(username: String): org.dallasmakerspace.models.MemberDebugInfo {
+    // Get AD account status
+    val adAccountEnabled =
+        try {
+          val adUser = activeDirectoryService.getMemberByUsername(username)
+          adUser.enabled
+        } catch (e: Exception) {
+          log.error("Failed to get AD account status for $username", e)
+          false
+        }
+
+    // Get MM AD Active status
+    val mmAdActive =
+        try {
+          val users = makerManagerDataService.getAllUsers()
+          users.find { it.username == username }?.adActive ?: false
+        } catch (e: Exception) {
+          log.error("Failed to get MM AD active status for $username", e)
+          false
+        }
+
+    // Get WHMCS status with full history from registration date (no caps)
+    val relatedAccounts = makerManagerDataService.getAccountInfoMap(listOf(username))
+    val accountInfo = relatedAccounts[username]
+    var whmcsActive = false
+    var daysInCurrentWhmcsStatus: Int? = null
+    var totalActiveDays: Int? = null
+    var timeline = emptyList<org.dallasmakerspace.models.TimelineEntryInfo>()
+
+    if (accountInfo != null) {
+      val account =
+          if (accountInfo.isPrimaryAccount) accountInfo.primaryAccount
+          else accountInfo.addonAccounts.find { it.username == username }
+
+      account?.let {
+        val whmcsId = it.whmcsId
+
+        // Get full history from WHMCS registration date (no caps)
+        // First, try to get regDate from WHMCS directly if not already populated
+        val regDate =
+            accountInfo.regDate?.let { date ->
+              java.time.LocalDate.of(date.year, date.monthNumber, date.dayOfMonth)
+            } ?: whmcsDataService.getAccountRegdate(whmcsId)
+
+        // Use registration date if available
+        if (regDate != null) {
+          // Get the account status from WHMCS with full history
+          val accountStatus = whmcsDataService.getAccountInfoMap(listOf(whmcsId), regDate)[whmcsId]
+          if (accountStatus != null) {
+            // Convert timeline to kotlinx LocalDate
+            timeline =
+                accountStatus.timeline.map { entry ->
+                  org.dallasmakerspace.models.TimelineEntryInfo(
+                      type =
+                          when (entry.type) {
+                            org.dallasmakerspace.db.master.TimelineEntryType.ACTIVE ->
+                                org.dallasmakerspace.models.TimelineEntryType.ACTIVE
+                            org.dallasmakerspace.db.master.TimelineEntryType.GAP ->
+                                org.dallasmakerspace.models.TimelineEntryType.GAP
+                          },
+                      startDate = entry.startDate.toKotlinLocalDate(),
+                      endDate = entry.endDate?.toKotlinLocalDate(),
+                      durationDays = entry.durationDays)
+                }
+
+            // Determine if currently active from timeline
+            // Member is active if last timeline entry is ACTIVE with no end date (ongoing)
+            whmcsActive =
+                timeline.lastOrNull()?.let {
+                  it.type == org.dallasmakerspace.models.TimelineEntryType.ACTIVE &&
+                      it.endDate == null
+                } ?: false
+
+            // Get days in current status from the properly calculated field
+            daysInCurrentWhmcsStatus = accountStatus.daysInCurrentStatus
+
+            // Calculate total active days (sum of all ACTIVE periods)
+            totalActiveDays =
+                timeline
+                    .filter { it.type == org.dallasmakerspace.models.TimelineEntryType.ACTIVE }
+                    .sumOf { it.durationDays }
+          }
+        }
+      }
+    }
+
+    return org.dallasmakerspace.models.MemberDebugInfo(
+        adAccountEnabled = adAccountEnabled,
+        mmAdActive = mmAdActive,
+        whmcsActive = whmcsActive,
+        daysInCurrentWhmcsStatus = daysInCurrentWhmcsStatus,
+        totalActiveDays = totalActiveDays,
+        timeline = timeline,
+    )
+  }
 }

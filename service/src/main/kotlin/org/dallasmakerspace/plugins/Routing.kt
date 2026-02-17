@@ -168,6 +168,17 @@ fun Application.configureRouting() {
                   badge,
               ))
         }
+
+        /** Debug info operations - get debug info for member * */
+        get<Members.DMSMember.DebugInfo> { debugInfoRequest ->
+          val debugInfo = memberService.getDebugInfo(debugInfoRequest.parent.username)
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS,
+                  "Debug info for ${debugInfoRequest.parent.username}",
+                  debugInfo,
+              ))
+        }
       }
 
       /** Member profile operations - WRITE * */

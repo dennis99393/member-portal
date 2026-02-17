@@ -295,30 +295,115 @@
                     <h4 class="card-title mt-4 dms-card-title">Debug Info</h4> <span class="text-sm text-danger">[Infra only]</span>
 
                     <div class="mt-4">
-                        <div class="d-flex align-items-center" th:if="${whmcs_id}">
+                        <div class="d-flex align-items-center mb-2" th:if="${ad_account_enabled != null}">
+                            <span>AD Account Enabled:
+                                <span th:text="${ad_account_enabled}"
+                                      th:classappend="${ad_account_enabled} ? 'text-success fw-bold' : 'text-danger fw-bold'"></span>
+                                <span class="material-symbols-outlined text-muted ms-1"
+                                      style="font-size: 16px; vertical-align: middle; cursor: help;"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="right"
+                                      title="From Active Directory LDAP userAccountControl attribute">info</span>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2" th:if="${mm_ad_active != null}">
+                            <span>MM AD Active:
+                                <span th:text="${mm_ad_active}"
+                                      th:classappend="${mm_ad_active} ? 'text-success fw-bold' : 'text-danger fw-bold'"></span>
+                                <span class="material-symbols-outlined text-muted ms-1"
+                                      style="font-size: 16px; vertical-align: middle; cursor: help;"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="right"
+                                      title="From MakerManager users.ad_active field">info</span>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2" th:if="${whmcs_active != null}">
+                            <span>WHMCS Active:
+                                <span th:text="${whmcs_active}"
+                                      th:classappend="${whmcs_active} ? 'text-success fw-bold' : 'text-danger fw-bold'"></span>
+                                <span class="material-symbols-outlined text-muted ms-1"
+                                      style="font-size: 16px; vertical-align: middle; cursor: help;"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="right"
+                                      title="True if member currently has an active WHMCS product (determined from timeline - last entry is ACTIVE with no end date).">info</span>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2" th:if="${days_in_current_whmcs_status != null}">
+                            <span>Days in current WHMCS status:
+                                <span th:text="${days_in_current_whmcs_status}"></span>
+                                <span class="material-symbols-outlined text-muted ms-1"
+                                      style="font-size: 16px; vertical-align: middle; cursor: help;"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="right"
+                                      title="Days since last WHMCS status change (active/inactive)">info</span>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2" th:if="${total_active_duration != null}">
+                            <span>Total Active Time:
+                                <span th:text="${total_active_duration}" class="text-success fw-bold"></span>
+                                <span class="material-symbols-outlined text-muted ms-1"
+                                      style="font-size: 16px; vertical-align: middle; cursor: help;"
+                                      data-bs-toggle="tooltip"
+                                      data-bs-placement="right"
+                                      title="Total time member had active WHMCS products (sum of all ACTIVE periods from timeline)">info</span>
+                            </span>
+                        </div>
+
+                        <!-- Product History Timeline (Unified) -->
+                        <div th:if="${product_timeline != null and !#lists.isEmpty(product_timeline)}" class="mt-3">
+                            <hr class="my-3">
+                            <h6 class="text-muted mb-3">Product Coverage Timeline (Full History):</h6>
+
+                            <!-- Unified Timeline -->
+                            <ul class="list-unstyled ms-3 mt-2">
+                                <li th:each="entry : ${product_timeline}" class="mb-2">
+                                    <!-- Active Period -->
+                                    <div th:if="${entry.type == 'ACTIVE'}">
+                                        <span class="material-symbols-outlined text-success"
+                                              style="font-size: 16px; vertical-align: middle;">check_circle</span>
+                                        <strong class="text-success">Active:</strong>
+                                        <span th:text="${entry.start_date}"></span> →
+                                        <span th:text="${entry.end_date}"></span>
+                                        <span class="text-muted">(<span th:text="${entry.duration_days}"></span> days)</span>
+                                    </div>
+                                    <!-- Gap -->
+                                    <div th:if="${entry.type == 'GAP'}">
+                                        <span class="material-symbols-outlined text-danger"
+                                              style="font-size: 16px; vertical-align: middle;">cancel</span>
+                                        <strong class="text-danger">Gap:</strong>
+                                        <span th:text="${entry.start_date}"></span> →
+                                        <span th:text="${entry.end_date}"></span>
+                                        <span class="text-muted">(<span th:text="${entry.duration_days}"></span> days)</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <hr class="my-3">
+                        <div class="d-flex align-items-center mb-2" th:if="${whmcs_id}">
                             <span>WhmcsId: <span class="ph-mask" th:text="${whmcs_id}"></span></span>
                         </div>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center mb-2">
                             <span>isPrimaryAccount: <span th:text="${is_primary_account}"></span></span>
                         </div>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center mb-2">
                             <span>wasActivePast90Days: <span th:text="${was_active_past_90_days}"></span></span>
                         </div>
-                        <div class="d-flex align-items-center" th:unless="${was_active_past_90_days}">
+                        <div class="d-flex align-items-center mb-2" th:unless="${was_active_past_90_days}">
                                 <span>lastInactiveDate: <span
                                         th:text="|${last_inactive_date} (${days_since_last_inactive})|"></span></span>
                         </div>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center mb-2">
                             <span>Personal email: <span class="ph-mask" th:text="${personal_email}"></span></span>
                         </div>
-                        <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center mb-2">
                             <span>Phone number: <span class="ph-mask" th:text="${phone_number}"></span></span>
                         </div>
-                        <div class="d-flex align-items-center" th:if="${badge_number_mm}">
+                        <div class="d-flex align-items-center mb-2" th:if="${badge_number_mm}">
                             <span>Badge  <span style="font-family:monospace">(MM)</span>: <span class="ph-mask"
                                                                                                 th:text="${badge_number_mm}"></span></span>
                         </div>
-                        <div class="d-flex align-items-center" th:if="${badge_number_ad}">
+                        <div class="d-flex align-items-center mb-2" th:if="${badge_number_ad}">
                             <span>Badge <span style="font-family:monospace">(AD)</span>: <span class="ph-mask"
                                                                                                th:text="${badge_number_ad}"></span></span>
                         </div>
@@ -652,6 +737,16 @@
             usernamePreview.classList.add('d-none');
             linkBtn.disabled = true;
         });
+    })();
+</script>
+
+<!-- Initialize Bootstrap tooltips -->
+<script th:if="${is_infra}">
+    (function() {
+        'use strict';
+        // Initialize all tooltips
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
     })();
 </script>
 

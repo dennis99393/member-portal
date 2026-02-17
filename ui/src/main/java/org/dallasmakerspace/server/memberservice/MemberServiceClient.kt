@@ -401,6 +401,49 @@ constructor(
     }
   }
 
+  suspend fun getDebugInfo(
+      username: String,
+      sessionId: String?
+  ): org.dallasmakerspace.models.MemberDebugInfo? {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/members/$username/debug-info", apiHeaders)
+      val data = result["data"] as? Map<*, *> ?: return null
+
+      // Parse timeline
+      val timeline =
+          (data["timeline"] as? List<*>)?.mapNotNull { entryData ->
+            val entry = entryData as? Map<*, *> ?: return@mapNotNull null
+            val type = entry["type"] as? String ?: return@mapNotNull null
+            val startDate = entry["startDate"] as? String ?: return@mapNotNull null
+            val endDate = entry["endDate"] as? String
+            val durationDays = (entry["durationDays"] as? Number)?.toInt() ?: return@mapNotNull null
+            org.dallasmakerspace.models.TimelineEntryInfo(
+                type =
+                    when (type) {
+                      "ACTIVE" -> org.dallasmakerspace.models.TimelineEntryType.ACTIVE
+                      "GAP" -> org.dallasmakerspace.models.TimelineEntryType.GAP
+                      else -> return@mapNotNull null
+                    },
+                startDate = kotlinx.datetime.LocalDate.parse(startDate),
+                endDate = endDate?.let { kotlinx.datetime.LocalDate.parse(it) },
+                durationDays = durationDays)
+          } ?: emptyList()
+
+      org.dallasmakerspace.models.MemberDebugInfo(
+          adAccountEnabled = data["adAccountEnabled"] as? Boolean ?: false,
+          mmAdActive = data["mmAdActive"] as? Boolean ?: false,
+          whmcsActive = data["whmcsActive"] as? Boolean ?: false,
+          daysInCurrentWhmcsStatus = (data["daysInCurrentWhmcsStatus"] as? Number)?.toInt(),
+          totalActiveDays = (data["totalActiveDays"] as? Number)?.toInt(),
+          timeline = timeline,
+      )
+    } catch (ex: Exception) {
+      log.warn("Failed to get debug info for $username", ex)
+      null
+    }
+  }
+
   suspend fun resolveShortLink(
       path: String,
       sessionId: String?,

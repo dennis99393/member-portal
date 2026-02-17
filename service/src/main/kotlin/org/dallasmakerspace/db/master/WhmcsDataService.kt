@@ -19,6 +19,19 @@ constructor(
   suspend fun getAccountInfoMap(whmcsIdList: List<Int>): Map<Int, AccountStatus> {
     val startDate: LocalDate =
         time.getToday().minusDays(VoterRegistrationManager.MEMBER_IN_GOOD_STANDING_DAYS)
+    return getAccountInfoMap(whmcsIdList, startDate)
+  }
+
+  /**
+   * Get account info for a list of WHMCS user IDs with a custom start date.
+   *
+   * @param whmcsIdList List of WHMCS user IDs
+   * @param startDate Start date for the check (how far back to scan)
+   */
+  suspend fun getAccountInfoMap(
+      whmcsIdList: List<Int>,
+      startDate: LocalDate
+  ): Map<Int, AccountStatus> {
     val accountProductsInfoMap =
         whmcsDataRepository.getAccountProductInfoMap(whmcsIdList, startDate)
     val result = mutableMapOf<Int, AccountStatus>()
@@ -51,6 +64,13 @@ constructor(
     val userProducts = products.sortedBy { it.regDate }
     var lastInactiveDate: LocalDate? = null
     var hasAnyInactiveDate = false
+    var currentStatusStartDate: LocalDate? = null
+    var previousDayWasActive: Boolean? = null
+
+    // Track timeline entries (active periods and gaps)
+    val timeline = mutableListOf<TimelineEntry>()
+    var currentPeriodStart: LocalDate? = null
+    var currentPeriodType: TimelineEntryType? = null
 
     // For each date between start date and now, check if the user has an active product
     var currentDate = startDate
@@ -77,17 +97,68 @@ constructor(
                 !currentDate.isAfter(gracePeriod.endDate)
           }
 
-      if (!dateIsCovered && !dateInGracePeriod) {
+      val isActiveToday = dateIsCovered || dateInGracePeriod
+
+      if (!isActiveToday) {
         lastInactiveDate = currentDate
         hasAnyInactiveDate = true
       }
+
+      // Track status transitions and build timeline
+      if (previousDayWasActive != null && previousDayWasActive != isActiveToday) {
+        // Status changed - close current period and start new one
+        currentStatusStartDate = currentDate
+
+        if (currentPeriodStart != null && currentPeriodType != null) {
+          // Close the current period
+          val periodEnd = currentDate.minusDays(1)
+          val durationDays =
+              java.time.temporal.ChronoUnit.DAYS.between(currentPeriodStart, periodEnd).toInt() + 1
+          timeline.add(
+              TimelineEntry(
+                  type = currentPeriodType,
+                  startDate = currentPeriodStart,
+                  endDate = periodEnd,
+                  durationDays = durationDays))
+        }
+
+        // Start new period
+        currentPeriodStart = currentDate
+        currentPeriodType = if (isActiveToday) TimelineEntryType.ACTIVE else TimelineEntryType.GAP
+      } else if (previousDayWasActive == null) {
+        // First day - initialize tracking
+        currentPeriodStart = currentDate
+        currentPeriodType = if (isActiveToday) TimelineEntryType.ACTIVE else TimelineEntryType.GAP
+      }
+
+      previousDayWasActive = isActiveToday
       currentDate = currentDate.plusDays(1)
     }
+
+    // Close any open period at the end of the scan
+    if (currentPeriodStart != null && currentPeriodType != null) {
+      val durationDays =
+          java.time.temporal.ChronoUnit.DAYS.between(currentPeriodStart, today).toInt() + 1
+      timeline.add(
+          TimelineEntry(
+              type = currentPeriodType,
+              startDate = currentPeriodStart,
+              endDate = null, // null means "ongoing" (extends to today)
+              durationDays = durationDays))
+    }
+
+    // Calculate days in current status (inclusive, so add 1)
+    val daysInCurrentStatus =
+        currentStatusStartDate?.let { startDate ->
+          java.time.temporal.ChronoUnit.DAYS.between(startDate, today).toInt() + 1
+        }
 
     return AccountStatus(
         wasActiveInRange = !hasAnyInactiveDate,
         lastInactiveDate = lastInactiveDate,
-        regDate = userProducts.firstOrNull()?.regDate)
+        regDate = userProducts.firstOrNull()?.regDate,
+        daysInCurrentStatus = daysInCurrentStatus,
+        timeline = timeline)
   }
 
   suspend fun getAccountRegdate(whmcsId: Int): LocalDate? {
@@ -100,5 +171,25 @@ constructor(
 data class AccountStatus(
     val wasActiveInRange: Boolean,
     val lastInactiveDate: LocalDate?,
-    val regDate: LocalDate?
+    val regDate: LocalDate?,
+    /**
+     * Number of days in the current WHMCS status (active or inactive). Returns null if no status
+     * transition occurred within the 90-day scan window.
+     */
+    val daysInCurrentStatus: Int?,
+    /** Unified chronological timeline of active periods and gaps */
+    val timeline: List<TimelineEntry>
 )
+
+/** Represents an entry in the product coverage timeline (either active period or gap) */
+data class TimelineEntry(
+    val type: TimelineEntryType,
+    val startDate: LocalDate,
+    val endDate: LocalDate?,
+    val durationDays: Int
+)
+
+enum class TimelineEntryType {
+  ACTIVE,
+  GAP
+}

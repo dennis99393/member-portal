@@ -31,10 +31,10 @@ class WhmcsDataRepository @Inject constructor() {
           h.domainstatus
         FROM
         `dms-whmcs`.tblhosting h
-        JOIN `dms-whmcs`.tblproducts p 
+        JOIN `dms-whmcs`.tblproducts p
         ON
             h.packageid = p.id
-        JOIN `dms-whmcs`.tblcustomfields c 
+        JOIN `dms-whmcs`.tblcustomfields c
         ON
             c.relid = p.id
         WHERE

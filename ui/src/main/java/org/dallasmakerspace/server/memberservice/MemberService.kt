@@ -209,4 +209,11 @@ constructor(
   suspend fun getBadgeFromActiveDirectory(username: String, sessionId: String?): String? {
     return memberServiceClient.getBadgeFromActiveDirectory(username, sessionId)
   }
+
+  suspend fun getDebugInfo(
+      username: String,
+      sessionId: String?
+  ): org.dallasmakerspace.models.MemberDebugInfo? {
+    return memberServiceClient.getDebugInfo(username, sessionId)
+  }
 }
