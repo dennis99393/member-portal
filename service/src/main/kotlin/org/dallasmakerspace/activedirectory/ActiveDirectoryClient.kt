@@ -891,32 +891,41 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
     val allEntries = mutableListOf<com.unboundid.ldap.sdk.SearchResultEntry>()
     var cookie: ASN1OctetString? = null
 
-    do {
-      val searchRequest =
-          SearchRequest(
-              "ou=Members,dc=dms,dc=local",
-              SearchScope.SUB,
-              filter,
-              "sAMAccountName",
-              "displayName",
-              "givenName",
-              "sn",
-              "employeeID",
-              "userAccountControl",
-          )
+    // AD paged-results cookies are bound to the specific TCP connection/session.
+    // Using ldapPool.search() can hand each page to a different connection, causing AD to
+    // reject the cookie with: LdapErr: DSID-0C090DAE, comment: Error processing control (0x57).
+    // Hold a single dedicated connection for the entire paginated loop.
+    val connection = ldapPool.connection
+    try {
+      do {
+        val searchRequest =
+            SearchRequest(
+                "ou=Members,dc=dms,dc=local",
+                SearchScope.SUB,
+                filter,
+                "sAMAccountName",
+                "displayName",
+                "givenName",
+                "sn",
+                "employeeID",
+                "userAccountControl",
+            )
 
-      if (cookie == null) {
-        searchRequest.addControl(SimplePagedResultsControl(pageSize, true))
-      } else {
-        searchRequest.addControl(SimplePagedResultsControl(pageSize, cookie, true))
-      }
+        if (cookie == null) {
+          searchRequest.addControl(SimplePagedResultsControl(pageSize, false))
+        } else {
+          searchRequest.addControl(SimplePagedResultsControl(pageSize, cookie, false))
+        }
 
-      val searchResult = ldapPool.search(searchRequest)
-      allEntries.addAll(searchResult.searchEntries)
+        val searchResult = connection.search(searchRequest)
+        allEntries.addAll(searchResult.searchEntries)
 
-      val responseControl = SimplePagedResultsControl.get(searchResult)
-      cookie = responseControl?.cookie
-    } while (cookie != null && cookie.valueLength > 0)
+        val responseControl = SimplePagedResultsControl.get(searchResult)
+        cookie = responseControl?.cookie
+      } while (cookie != null && cookie.valueLength > 0)
+    } finally {
+      ldapPool.releaseConnection(connection)
+    }
 
     log.info("$TAG/getAllActiveUsersWithBadges Retrieved ${allEntries.size} users with badges")
 
