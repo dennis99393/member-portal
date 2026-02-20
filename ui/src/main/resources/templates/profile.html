@@ -259,31 +259,38 @@
 
                         <th:block th:if="${is_self}">
                             <hr>
-                            <h6 class="text-muted mb-3">Information on file:</h6>
-
-                            <div th:if="${personal_email}" class="d-flex align-items-center mb-3">
-                                <span class="material-symbols-outlined card-item-icon">unsubscribe</span>
-                                <span>Personal email: <span class="overflow-hidden ph-mask"
-                                                            th:text="${personal_email}"></span></span>
-                            </div>
-
-                            <div th:if="${phone_number}" class="d-flex align-items-center mb-3">
-                                <span class="material-symbols-outlined card-item-icon">dialpad</span>
-                                <span>Phone number: <span class="ph-mask" th:text="${phone_number}"></span></span>
-                            </div>
-
-                            <div th:if="${badge_number_ad}" class="d-flex align-items-center mb-3">
-                                <span class="material-symbols-outlined card-item-icon">badge</span>
-                                <span>Badge: <span class="ph-mask" th:text="${badge_number_ad}"></span></span>
-                            </div>
-
-                            <div th:if="${badge_needs_fix and is_infra}" class="d-flex align-items-center mb-3">
-                                <button class="btn btn-sm btn-warning" id="fixBadgeBtn"
-                                        th:attr="data-username=${preferred_username},data-padded=${badge_padded}">
-                                    <span class="material-symbols-outlined"
-                                          style="font-size: 16px; vertical-align: middle;">build</span>
-                                    Fix Badge Length in AD
+                            <div class="d-flex align-items-center mb-3">
+                                <h6 class="text-muted mb-0 me-2">Information on file:</h6>
+                                <button id="toggleInfoMask" class="btn btn-link p-0 text-muted"
+                                        title="Show/hide personal information" style="line-height:1;">
+                                    <span class="material-symbols-outlined" style="font-size:18px;" id="infoMaskIcon">visibility_off</span>
                                 </button>
+                            </div>
+                            <div id="infoOnFileContainer" class="info-masked">
+                                <div th:if="${personal_email}" class="d-flex align-items-center mb-3">
+                                    <span class="material-symbols-outlined card-item-icon">unsubscribe</span>
+                                    <span>Personal email: <span class="overflow-hidden ph-mask"
+                                                                th:text="${personal_email}"></span></span>
+                                </div>
+
+                                <div th:if="${phone_number}" class="d-flex align-items-center mb-3">
+                                    <span class="material-symbols-outlined card-item-icon">dialpad</span>
+                                    <span>Phone number: <span class="ph-mask" th:text="${phone_number}"></span></span>
+                                </div>
+
+                                <div th:if="${badge_number_ad}" class="d-flex align-items-center mb-3">
+                                    <span class="material-symbols-outlined card-item-icon">badge</span>
+                                    <span>Badge: <span class="ph-mask" th:text="${badge_number_ad}"></span></span>
+                                </div>
+
+                                <div th:if="${badge_needs_fix and is_infra}" class="d-flex align-items-center mb-3">
+                                    <button class="btn btn-sm btn-warning" id="fixBadgeBtn"
+                                            th:attr="data-username=${preferred_username},data-padded=${badge_padded}">
+                                        <span class="material-symbols-outlined"
+                                              style="font-size: 16px; vertical-align: middle;">build</span>
+                                        Fix Badge Length in AD
+                                    </button>
+                                </div>
                             </div>
                         </th:block>
                     </div>
@@ -292,8 +299,14 @@
             <!-- Debug info card -->
             <div class="card shadow-sm overflow-hidden mt-4" style="margin: auto;" th:if="${is_infra}">
                 <div class="card-body pt-0">
-                    <h4 class="card-title mt-4 dms-card-title">Debug Info</h4> <span class="text-sm text-danger">[Infra only]</span>
-
+                    <div class="d-flex align-items-center mt-4" style="cursor:pointer;"
+                         data-bs-toggle="collapse" data-bs-target="#debugInfoContent"
+                         aria-expanded="false" aria-controls="debugInfoContent">
+                        <h4 class="card-title mb-0 dms-card-title">Debug Info</h4>
+                        <span class="text-sm text-danger ms-2">[Infra only]</span>
+                        <span class="material-symbols-outlined ms-auto text-muted" id="debugToggleIcon">expand_more</span>
+                    </div>
+                    <div class="collapse" id="debugInfoContent">
                     <div class="mt-4">
                         <div class="d-flex align-items-center mb-2" th:if="${ad_account_enabled != null}">
                             <span>AD Account Enabled:
@@ -408,6 +421,7 @@
                                                                                                th:text="${badge_number_ad}"></span></span>
                         </div>
                     </div>
+                    </div><!-- end collapse -->
                 </div>
             </div>
         </div>
@@ -747,6 +761,39 @@
         // Initialize all tooltips
         const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    })();
+</script>
+
+<!-- Info Mask & Debug Collapse Script -->
+<script>
+    (function() {
+        'use strict';
+
+        // On page load, replace sensitive text with asterisks and stash originals
+        const infoContainer = document.getElementById('infoOnFileContainer');
+        if (infoContainer) {
+            infoContainer.querySelectorAll('.ph-mask').forEach(function(el) {
+                el.dataset.original = el.textContent;
+                el.textContent = '*'.repeat(el.textContent.length);
+            });
+        }
+
+        document.getElementById('toggleInfoMask')?.addEventListener('click', function() {
+            const container = document.getElementById('infoOnFileContainer');
+            const icon = document.getElementById('infoMaskIcon');
+            const isMasked = container.classList.toggle('info-masked');
+            icon.textContent = isMasked ? 'visibility_off' : 'visibility';
+            container.querySelectorAll('.ph-mask').forEach(function(el) {
+                el.textContent = isMasked ? '*'.repeat(el.dataset.original.length) : el.dataset.original;
+            });
+        });
+
+        document.getElementById('debugInfoContent')?.addEventListener('show.bs.collapse', function() {
+            document.getElementById('debugToggleIcon').textContent = 'expand_less';
+        });
+        document.getElementById('debugInfoContent')?.addEventListener('hide.bs.collapse', function() {
+            document.getElementById('debugToggleIcon').textContent = 'expand_more';
+        });
     })();
 </script>
 
