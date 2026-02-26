@@ -9,6 +9,8 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import kotlinx.datetime.format.byUnicodePattern
@@ -32,13 +34,49 @@ constructor(
 ) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
-  override suspend fun handleAuthenticated(call: ApplicationCall) {
+  companion object {
+    private val CHICAGO_ZONE = ZoneId.of("America/Chicago")
+    private val EVENT_INPUT_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    private val EVENT_OUTPUT_FORMATTER =
+        DateTimeFormatter.ofPattern("EEE, MMM d, yyyy 'at' h:mm a")
+  }
 
+  override suspend fun handleAuthenticated(call: ApplicationCall) = coroutineScope {
     // Get username requested from path /profile/@{preferred_username}
     val requestedUsername =
         call.parameters["preferred_username"]
             ?: throw AuthException("No username found in url path")
-    val requestedMember = memberService.getMember(requestedUsername, session.sessionId)
+
+    // Compute flags before any service calls (userInfo already populated by base class)
+    val currentUsername = userInfo["preferred_username"] as String?
+    val isSelf = requestedUsername == currentUsername
+    val shouldFetchBadges = isSelf || isInfra
+
+    // Launch all calls in parallel immediately
+    val memberDeferred = async { memberService.getMember(requestedUsername, session.sessionId) }
+    val eventsDeferred = async {
+      try {
+        memberService.getEventsOrganizedByMember(requestedUsername, 5, session.sessionId)
+      } catch (e: Exception) {
+        log.warn("Failed to fetch events for member: $requestedUsername", e)
+        emptyList()
+      }
+    }
+    data class BadgeDeferreds(
+        val mm: kotlinx.coroutines.Deferred<String?>,
+        val ad: kotlinx.coroutines.Deferred<String?>,
+    )
+    val badgeDeferreds =
+        if (shouldFetchBadges)
+            BadgeDeferreds(
+                mm = async { memberService.getBadgeFromMakerManager(requestedUsername, session.sessionId) },
+                ad = async { memberService.getBadgeFromActiveDirectory(requestedUsername, session.sessionId) },
+            )
+        else null
+
+    // Await critical result; badge/events still running concurrently
+    val requestedMember = memberDeferred.await()
+
     val avatarUrl =
         requestedMember.discourseAvatarUrl
             ?.takeIf { it.isNotEmpty() }
@@ -48,8 +86,10 @@ constructor(
                 else -> "https://talk.dallasmakerspace.org$url"
               }.replace("{size}", "144")
             } ?: ""
-    val memberSinceString = getMemberSinceString(requestedMember.memberSince?.toJavaInstant())
-    val memberDurationString = getMemberDurationString(requestedMember.memberSince?.toJavaInstant())
+    val now = Instant.now()
+    val memberSince = requestedMember.memberSince?.toJavaInstant()
+    val memberSinceString = getMemberSinceString(memberSince)
+    val memberDurationString = getMemberDurationString(memberSince, now)
     val jsonMap =
         mutableMapOf(
             "name" to requestedMember.displayName as Any,
@@ -83,16 +123,14 @@ constructor(
     requestedMember.groups
         .firstOrNull { group -> group.name == voterRegistrationManager.getVotingMembersGroupName() }
         ?.apply { jsonMap["is_voting_member"] = "true" }
-    val currentUsername = userInfo["preferred_username"] as String?
-    jsonMap["is_self"] = (requestedUsername == currentUsername).toString()
-    if (jsonMap["is_self"] == "true" || isInfra) {
+    jsonMap["is_self"] = isSelf.toString()
+    if (shouldFetchBadges) {
       requestedMember.personalEmail?.apply { jsonMap["personal_email"] = this as Any }
 
       // Fetch badges from both sources separately
       try {
-        val badgeMM = memberService.getBadgeFromMakerManager(requestedUsername, session.sessionId)
-        val badgeAD =
-            memberService.getBadgeFromActiveDirectory(requestedUsername, session.sessionId)
+        val badgeMM = badgeDeferreds?.mm?.await()
+        val badgeAD = badgeDeferreds?.ad?.await()
 
         // If both are null, fall back to member object's badge
         if (badgeMM == null && badgeAD == null) {
@@ -122,7 +160,6 @@ constructor(
       }
 
       requestedMember.phoneNumber?.apply { jsonMap["phone_number"] = this as Any }
-
     }
     jsonMap["is_infra"] = isInfra
     jsonMap["is_voter_registration_test_mode_enabled"] =
@@ -143,26 +180,21 @@ constructor(
       }
     }
 
-    // Fetch events organized by the member
-    try {
-      val events = memberService.getEventsOrganizedByMember(requestedUsername, 5, session.sessionId)
-      if (events.isNotEmpty()) {
-        val formattedEvents =
-            events.map { event ->
-              mapOf(
-                  "id" to event.id,
-                  "name" to event.name,
-                  "eventStart" to formatEventDate(event.eventStart),
-                  "eventStartRaw" to event.eventStart,
-                  "status" to event.status,
-                  "isUpcoming" to isUpcomingEvent(event.eventStart),
-                  "url" to "https://calendar.dallasmakerspace.org/events/view/${event.id}")
-            }
-        jsonMap["events_organized"] = formattedEvents
-      }
-    } catch (e: Exception) {
-      log.warn("Failed to fetch events for member: $requestedUsername", e)
-      // Events are optional, so we continue without them
+    // Await events last — has been running throughout all synchronous processing
+    val events = eventsDeferred.await()
+    if (events.isNotEmpty()) {
+      val formattedEvents =
+          events.map { event ->
+            mapOf(
+                "id" to event.id,
+                "name" to event.name,
+                "eventStart" to formatEventDate(event.eventStart),
+                "eventStartRaw" to event.eventStart,
+                "status" to event.status,
+                "isUpcoming" to isUpcomingEvent(event.eventStart),
+                "url" to "https://calendar.dallasmakerspace.org/events/view/${event.id}")
+          }
+      jsonMap["events_organized"] = formattedEvents
     }
 
     setToastMessage(call, jsonMap, requestedMember, session)
@@ -208,14 +240,17 @@ constructor(
    * Calculate the duration of time since the member joined the space.
    *
    * @param memberSince The date the member joined the space. e.g. - 2022-09-10T16:36:20Z
+   * @param now The current instant (shared to avoid multiple Instant.now() calls).
    * @return A human-readable string like - "2 years, 3 months".
    */
   @Suppress("MagicNumber")
-  private fun getMemberDurationString(memberSince: Instant?): String {
-    if (memberSince == null || Instant.now().isBefore(memberSince)) {
+  private fun getMemberDurationString(
+      memberSince: Instant?,
+      now: Instant = Instant.now(),
+  ): String {
+    if (memberSince == null || now.isBefore(memberSince)) {
       return "Unknown"
     }
-    val now = Instant.now()
     val duration = now.epochSecond - memberSince.epochSecond
     val years = duration / (60 * 60 * 24 * 365)
     val months = (duration % (60 * 60 * 24 * 365)) / (60 * 60 * 24 * 30)
@@ -246,7 +281,7 @@ constructor(
       return "Unknown"
     }
     // Convert Instant to LocalDate CDT
-    val localDate = memberSince.atZone(ZoneId.of("America/Chicago")).toLocalDate()
+    val localDate = memberSince.atZone(CHICAGO_ZONE).toLocalDate()
     // Get short version of month with first letter capitalized
     val month = localDate.month.toString().lowercase().replaceFirstChar { it.uppercase() }
     val year = localDate.year.toString()
@@ -264,10 +299,9 @@ constructor(
     return try {
       // Remove milliseconds if present (e.g., "2024-03-15 14:30:00.0" -> "2024-03-15 14:30:00")
       val cleanedEventStart = eventStart.substringBefore(".")
-      val dateTime =
-          LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-      val zonedDateTime = dateTime.atZone(ZoneId.of("America/Chicago"))
-      zonedDateTime.format(DateTimeFormatter.ofPattern("EEE, MMM d, yyyy 'at' h:mm a"))
+      val dateTime = LocalDateTime.parse(cleanedEventStart, EVENT_INPUT_FORMATTER)
+      val zonedDateTime = dateTime.atZone(CHICAGO_ZONE)
+      zonedDateTime.format(EVENT_OUTPUT_FORMATTER)
     } catch (e: Exception) {
       log.error("Failed to parse event date: $eventStart", e)
       eventStart
@@ -283,9 +317,8 @@ constructor(
   private fun isUpcomingEvent(eventStart: String): Boolean {
     return try {
       val cleanedEventStart = eventStart.substringBefore(".")
-      val dateTime =
-          LocalDateTime.parse(cleanedEventStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-      val zonedDateTime = dateTime.atZone(ZoneId.of("America/Chicago"))
+      val dateTime = LocalDateTime.parse(cleanedEventStart, EVENT_INPUT_FORMATTER)
+      val zonedDateTime = dateTime.atZone(CHICAGO_ZONE)
       zonedDateTime.toInstant().isAfter(Instant.now())
     } catch (e: Exception) {
       false
