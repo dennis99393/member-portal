@@ -22,6 +22,7 @@ import org.dallasmakerspace.server.routes.ManifestHandler
 import org.dallasmakerspace.server.routes.OfflineHandler
 import org.dallasmakerspace.server.routes.OidcCallbackHandler
 import org.dallasmakerspace.server.routes.PingHandler
+import org.dallasmakerspace.server.routes.ProfileDebugInfoHandler
 import org.dallasmakerspace.server.routes.ProfileHandler
 import org.dallasmakerspace.server.routes.ProfileMeHandler
 import org.dallasmakerspace.server.routes.ReportHandler
@@ -72,6 +73,15 @@ class RoutesModule {
       voterRegistrationManager: VoterRegistrationManager
   ): IRouteHandler =
       ProfileHandler(loggerFactory, userInfoProvider, memberService, voterRegistrationManager)
+
+  @IntoMap
+  @Provides
+  @StringKey("/profile/@{preferred_username}/debug-info")
+  fun providesProfileDebugInfoHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService,
+  ): IRouteHandler = ProfileDebugInfoHandler(loggerFactory, userInfoProvider, memberService)
 
   @IntoMap
   @Provides

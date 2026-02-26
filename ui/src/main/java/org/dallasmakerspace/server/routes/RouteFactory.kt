@@ -26,6 +26,9 @@ object RouteFactory {
         .replace("/reports.*".toRegex(), "/reports/{path...}")
         .replace("/backend-api/.*".toRegex(), "/backend-api/{path...}")
         .replace(
+            "/profile/@[a-zA-Z0-9_-]*/debug-info".toRegex(),
+            "/profile/@{preferred_username}/debug-info")
+        .replace(
             "/short-links/admin".toRegex(), "/short-links/admin") // Admin must come before details
         .replace("/short-links/[0-9]+".toRegex(), "/short-links/{id}")
         .replace("/go/.*".toRegex(), "/go/{path...}")
@@ -56,6 +59,7 @@ object RouteFactory {
     STATIC("/static"),
     GROUPS("/groups/{group_slug}"),
     SEARCH_PRELOAD("/search-preload"),
+    PROFILE_DEBUG_INFO("/profile/@{preferred_username}/debug-info"),
     REGISTER_VOTING("/profile/@{preferred_username}/register-voting"),
     UNREGISTER_VOTING("/profile/@{preferred_username}/unregister-voting"),
     REPORT("/reports/{path...}"),

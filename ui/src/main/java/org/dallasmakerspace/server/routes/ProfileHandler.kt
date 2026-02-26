@@ -123,38 +123,6 @@ constructor(
 
       requestedMember.phoneNumber?.apply { jsonMap["phone_number"] = this as Any }
 
-      // Fetch debug info for infra users
-      if (isInfra) {
-        try {
-          val debugInfo = memberService.getDebugInfo(requestedUsername, session.sessionId)
-          debugInfo?.let {
-            jsonMap["ad_account_enabled"] = it.adAccountEnabled
-            jsonMap["mm_ad_active"] = it.mmAdActive
-            jsonMap["whmcs_active"] = it.whmcsActive
-            it.daysInCurrentWhmcsStatus?.let { days ->
-              jsonMap["days_in_current_whmcs_status"] = days
-            }
-            it.totalActiveDays?.let { days ->
-              jsonMap["total_active_days"] = days
-              jsonMap["total_active_duration"] = formatDurationFromDays(days)
-            }
-            // Product history timeline (unified timeline of active periods and gaps)
-            if (it.timeline.isNotEmpty()) {
-              jsonMap["product_timeline"] =
-                  it.timeline.map { entry ->
-                    mapOf(
-                        "type" to entry.type.name,
-                        "start_date" to entry.startDate.toString(),
-                        "end_date" to (entry.endDate?.toString() ?: "Present"),
-                        "duration_days" to entry.durationDays)
-                  }
-            }
-          }
-        } catch (e: Exception) {
-          log.warn("Failed to fetch debug info for member: $requestedUsername", e)
-          // Debug info is optional, continue without it
-        }
-      }
     }
     jsonMap["is_infra"] = isInfra
     jsonMap["is_voter_registration_test_mode_enabled"] =
@@ -264,34 +232,6 @@ constructor(
       days > 0 -> "$days day"
       hours > 1 -> "$hours hours"
       else -> "$hours hour"
-    }
-  }
-
-  /**
-   * Format a duration from total days into a human-readable string.
-   *
-   * @param totalDays Total number of days
-   * @return A human-readable string like - "9 years, 8 months".
-   */
-  @Suppress("MagicNumber")
-  private fun formatDurationFromDays(totalDays: Int): String {
-    if (totalDays <= 0) {
-      return "0 days"
-    }
-    val years = totalDays / 365
-    val remainingDaysAfterYears = totalDays % 365
-    val months = remainingDaysAfterYears / 30
-    val days = remainingDaysAfterYears % 30
-
-    return when {
-      years > 1 && months > 0 -> "$years years, $months months"
-      years > 1 -> "$years years"
-      years == 1 && months > 0 -> "$years year, $months months"
-      years == 1 -> "$years year"
-      months > 1 -> "$months months"
-      months == 1 -> "$months month"
-      days > 1 -> "$days days"
-      else -> "$days day"
     }
   }
 
