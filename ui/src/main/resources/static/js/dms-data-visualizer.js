@@ -1,5 +1,5 @@
-import { LitElement, html, css } from 'https://cdn.jsdelivr.net/npm/lit@3.3.0/+esm';
-import { unsafeHTML } from 'https://cdn.jsdelivr.net/npm/lit-html@3.3.0/directives/unsafe-html.js';
+import { LitElement, html, css } from 'https://esm.sh/lit@3.3.0';
+import { unsafeHTML } from 'https://esm.sh/lit@3.3.0/directives/unsafe-html.js';
 import { DmsTableVisualizer } from './dms-table-visualizer.js';
 import { DmsLineChartVisualizer } from './dms-line-chart-visualizer.js';
 import { DmsBarChartVisualizer } from './dms-bar-chart-visualizer.js';

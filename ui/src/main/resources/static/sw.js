@@ -99,10 +99,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // External CDN resources (Bootstrap, fonts): Stale While Revalidate
+  // External CDN resources (Bootstrap, fonts, Lit): Stale While Revalidate
   if (
     url.origin !== location.origin &&
     (url.hostname.includes('cdn.jsdelivr.net') ||
+     url.hostname.includes('esm.sh') ||
      url.hostname.includes('fonts.googleapis.com') ||
      url.hostname.includes('fonts.gstatic.com'))
   ) {

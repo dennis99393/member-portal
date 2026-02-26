@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'https://cdn.jsdelivr.net/npm/lit@3.3.0/+esm';
+import { LitElement, html, css } from 'https://esm.sh/lit@3.3.0';
 import { DmsTableBase } from './dms-table-base.js';
 
 /**
