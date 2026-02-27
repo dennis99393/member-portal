@@ -25,8 +25,8 @@ fun main() {
         configureSerialization()
         configureMonitoring()
         configureHTTP()
-        configureRouting()
         configureDatabase()
+        configureRouting()
         configureElasticsearch()
       }
       .start(wait = true)

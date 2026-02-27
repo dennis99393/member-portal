@@ -7,6 +7,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -44,6 +45,25 @@ constructor(
   // Fallback cache with unlimited TTL - used only when API calls fail
   private val groupsFallbackCache = java.util.concurrent.ConcurrentHashMap<String, DMSGroup>()
 
+  // Cache of whmcsId + isPrimaryAccount per username; populated at startup via populateWhmcsAccountCache().
+  // Reads are unsynchronized (safe once stable); writes are synchronized.
+  private val whmcsAccountCache = HashMap<String, WhmcsAccountCacheEntry>()
+
+  /** Pre-populates the WHMCS account cache from MakerManager at startup. */
+  suspend fun populateWhmcsAccountCache() {
+    try {
+      val users = makerManagerDataService.getAllUsers()
+      val entries =
+          users.associate { user ->
+            user.username to WhmcsAccountCacheEntry(user.whmcsUserId, user.isPrimaryAccount)
+          }
+      synchronized(whmcsAccountCache) { whmcsAccountCache.putAll(entries) }
+      log.info("Populated WHMCS ID cache with ${entries.size} entries")
+    } catch (e: Exception) {
+      log.error("Failed to populate WHMCS ID cache: ${e.message}", e)
+    }
+  }
+
   suspend fun getMembersLoggedInDays(days: Int): List<DMSMember> {
     val adMembers = activeDirectoryService.getMembersByLoggedInDays(days)
     val dbMembers = memberRepository.getAllMembers()
@@ -65,70 +85,162 @@ constructor(
     }
   }
 
-  suspend fun getMemberByUsername(username: String, refreshAvatar: Boolean = false): DMSMember {
-    // Fetch member from active directory.
-    val adMember = activeDirectoryService.getMemberByUsername(username)
+  suspend fun getMemberByUsername(username: String, refreshAvatar: Boolean = false): DMSMember =
+      coroutineScope {
+        val t0 = System.nanoTime()
+        fun ms() = (System.nanoTime() - t0) / 1_000_000
 
-    // Get related accounts from MakerManager
-    val relatedAccounts = makerManagerDataService.getAccountInfoMap(listOf(username))
+        val cached = whmcsAccountCache[username]
 
-    val accountInfo = relatedAccounts[username]
-    if (accountInfo != null) {
-      val account =
-          if (accountInfo.isPrimaryAccount) accountInfo.primaryAccount
-          else accountInfo.addonAccounts.find { it.username == username }
+        // Phase 1: launch all I/O at t=0.
+        // Each lambda records its own start time so we can see if it actually ran concurrently.
+        var adStartMs = -1L
+        val adDeferred =
+            async(Dispatchers.IO) {
+              adStartMs = ms()
+              activeDirectoryService.getMemberByUsername(username)
+            }
 
-      account?.let {
-        val whmcsId = it.whmcsId
-        // Get the account status from WHMCS
-        val accountStatus = whmcsDataService.getAccountInfoMap(listOf(whmcsId))[whmcsId]
-        if (accountStatus != null) {
-          accountInfo.wasActivePast90Days = accountStatus.wasActiveInRange
-          accountInfo.lastInactiveDate = accountStatus.lastInactiveDate?.toKotlinLocalDate()
-          accountInfo.regDate =
-              if (accountInfo.isPrimaryAccount)
-                  whmcsDataService.getAccountRegdate(whmcsId)?.toKotlinLocalDate()
-              else
-                  calculateMemberSince(adMember.whenCreated)?.let { createdInstant ->
-                    java.time.LocalDate.ofEpochDay(createdInstant.epochSeconds / 86_400)
-                        .toKotlinLocalDate()
-                  }
+        var mmStartMs = -1L
+        val mmDeferred =
+            async {
+              mmStartMs = ms()
+              makerManagerDataService.getAccountInfoMap(listOf(username))
+            }
+
+        var whmcsStatusStartMs = -1L
+        val whmcsStatusDeferred =
+            cached?.let { c ->
+              async {
+                whmcsStatusStartMs = ms()
+                whmcsDataService.getAccountInfoMap(listOf(c.whmcsId))[c.whmcsId]
+              }
+            }
+
+        // Pre-fetch regdate for all cached accounts regardless of isPrimaryAccount — the
+        // isPrimaryAccount flag in the cache may disagree with what MakerManager returns
+        // (different derivation), and the query is a cheap SELECT MIN. The result is only
+        // used if accountInfo.isPrimaryAccount turns out to be true.
+        var whmcsRegdateStartMs = -1L
+        val whmcsRegdateDeferred =
+            cached?.let { c ->
+              async {
+                whmcsRegdateStartMs = ms()
+                whmcsDataService.getAccountRegdate(c.whmcsId)?.toKotlinLocalDate()
+              }
+            }
+
+        // AD is fast (~35ms) — start memberRepository ASAP once it finishes
+        val adMember = adDeferred.await()
+        val adDoneMs = ms()
+
+        var dbStartMs = -1L
+        val dbDeferred =
+            async {
+              dbStartMs = ms()
+              memberRepository.getMemberOrInsert(username, adMember.enabled)
+            }
+
+        // Await MakerManager (still needed for the full AccountInfo payload)
+        val relatedAccounts = mmDeferred.await()
+        val mmDoneMs = ms()
+        val accountInfo = relatedAccounts[username]
+
+        var whmcsStatusDoneMs = -1L
+        var whmcsRegdateDoneMs = -1L
+        if (accountInfo != null) {
+          val account =
+              if (accountInfo.isPrimaryAccount) accountInfo.primaryAccount
+              else accountInfo.addonAccounts.find { it.username == username }
+
+          account?.let {
+            val whmcsId = it.whmcsId
+
+            // Back-fill cache if it was a miss (e.g. new member added after startup)
+            if (cached == null) {
+              synchronized(whmcsAccountCache) {
+                whmcsAccountCache[username] =
+                    WhmcsAccountCacheEntry(whmcsId, accountInfo.isPrimaryAccount)
+              }
+            }
+
+            // Resolve WHMCS status: use already-running deferred if available, else fresh call
+            val accountStatus =
+                if (whmcsStatusDeferred != null) whmcsStatusDeferred.await()
+                else whmcsDataService.getAccountInfoMap(listOf(whmcsId))[whmcsId]
+            whmcsStatusDoneMs = ms()
+
+            if (accountStatus != null) {
+              accountInfo.wasActivePast90Days = accountStatus.wasActiveInRange
+              accountInfo.lastInactiveDate = accountStatus.lastInactiveDate?.toKotlinLocalDate()
+              accountInfo.regDate =
+                  if (accountInfo.isPrimaryAccount)
+                  // Use already-running deferred if available, else fresh call
+                  if (whmcsRegdateDeferred != null) whmcsRegdateDeferred.await()
+                  else whmcsDataService.getAccountRegdate(whmcsId)?.toKotlinLocalDate()
+                  else
+                      calculateMemberSince(adMember.whenCreated)?.let { createdInstant ->
+                        java.time.LocalDate.ofEpochDay(createdInstant.epochSeconds / 86_400)
+                            .toKotlinLocalDate()
+                      }
+              whmcsRegdateDoneMs = ms()
+            }
+          }
         }
+
+        val dbMember = dbDeferred.await()
+        val dbDoneMs = ms()
+        // TODO: compare DB and AD members and notify observers of any changes.
+        dbMember.firstName = adMember.givenName
+        dbMember.lastName = adMember.sn
+        dbMember.displayName = adMember.displayName
+        dbMember.personalEmail = adMember.mail
+        dbMember.phoneNumber =
+            getNormalizedPhoneNumber(adMember.telephoneNumber, adMember.sAMAccountName)
+        dbMember.badgeNumber = adMember.employeeID
+        dbMember.enabled = adMember.enabled
+        dbMember.memberSince = calculateMemberSince(accountInfo?.regDate)
+        dbMember.groups =
+            adMember.groups.map { group ->
+              DMSGroup(
+                  name = group.cn,
+                  description = null,
+                  distinguishedName = group.distinguishedName,
+                  objectGuid = group.objectGuid,
+                  membersListIncomplete = false,
+                  members = emptyList(),
+              )
+            }
+        dbMember.accountInfo = relatedAccounts[username]
+
+        // Refresh discourse avatar URL if needed
+        var avatarMs = -1L
+        if (refreshAvatar) {
+          val hasExistingAvatar = !dbMember.discourseAvatarUrl.isNullOrBlank()
+          if (hasExistingAvatar) {
+            // URL already present — fire-and-forget so response is not delayed
+            launch { refreshDiscourseAvatar(dbMember) }
+          } else {
+            // No URL yet — refresh synchronously so first response includes it
+            log.debug("Discourse avatar URL missing for ${dbMember.username}, refreshing...")
+            val avatarStartMs = ms()
+            dbMember.discourseAvatarUrl = refreshDiscourseAvatar(dbMember)
+            avatarMs = ms() - avatarStartMs
+          }
+        }
+
+        val totalMs = ms()
+        log.debug(
+            "getMemberByUsername($username) timings: total=${totalMs}ms, cacheHit=${cached != null} | " +
+                "ad=${adStartMs}→${adDoneMs}ms " +
+                "mm=${mmStartMs}→${mmDoneMs}ms " +
+                "db=${dbStartMs}→${dbDoneMs}ms " +
+                "whmcsStatus=${whmcsStatusStartMs}→${whmcsStatusDoneMs}ms " +
+                "whmcsRegdate=${whmcsRegdateStartMs}→${whmcsRegdateDoneMs}ms" +
+                if (avatarMs >= 0) " avatar=${avatarMs}ms" else "")
+
+        dbMember
       }
-    }
-
-    val dbMember = memberRepository.getMemberOrInsert(username, adMember.enabled)
-    // TODO: compare DB and AD members and notify observers of any changes.
-    dbMember.firstName = adMember.givenName
-    dbMember.lastName = adMember.sn
-    dbMember.displayName = adMember.displayName
-    dbMember.personalEmail = adMember.mail
-    dbMember.phoneNumber =
-        getNormalizedPhoneNumber(adMember.telephoneNumber, adMember.sAMAccountName)
-    dbMember.badgeNumber = adMember.employeeID
-    dbMember.enabled = adMember.enabled
-    dbMember.memberSince = calculateMemberSince(accountInfo?.regDate)
-    dbMember.groups =
-        adMember.groups.map { group ->
-          DMSGroup(
-              name = group.cn,
-              description = null,
-              distinguishedName = group.distinguishedName,
-              objectGuid = group.objectGuid,
-              membersListIncomplete = false,
-              members = emptyList(),
-          )
-        }
-    dbMember.accountInfo = relatedAccounts[username]
-
-    // Refresh discourse avatar URL if needed
-    if (refreshAvatar) {
-      log.debug("Discourse avatar URL missing for ${dbMember.username}, refreshing...")
-      dbMember.discourseAvatarUrl = refreshDiscourseAvatar(dbMember)
-    }
-
-    return dbMember
-  }
 
   /**
    * Fetches multiple members by their usernames in a single batch operation. This is optimized for
@@ -797,3 +909,6 @@ constructor(
     )
   }
 }
+
+/** Cached WHMCS account metadata for a username; populated at startup from MakerManager. */
+private data class WhmcsAccountCacheEntry(val whmcsId: Int, val isPrimaryAccount: Boolean)

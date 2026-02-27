@@ -3,6 +3,7 @@ package org.dallasmakerspace.plugins
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import kotlinx.coroutines.launch
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.plugins.swagger.*
 import io.ktor.server.request.*
@@ -63,8 +64,12 @@ fun Application.configureRouting() {
     val appConfig: AppConfig = DaggerAppComponent.create().getAppConfig()
     apiKey(appConfig, ApiKeyAuthProvider.X_API_KEY, apiKeyAuthProvider)
   }
+  // Eagerly initialize memberService so we can launch the WHMCS ID cache population
+  // before the first request arrives. All other services stay lazy (initialized on first use).
+  val memberService: MemberService = DaggerAppComponent.create().getMemberService()
+  launch { memberService.populateWhmcsAccountCache() }
+
   routing {
-    val memberService: MemberService by lazy { DaggerAppComponent.create().getMemberService() }
     val groupsService: GroupService by lazy { DaggerAppComponent.create().getGroupService() }
     val activityLogService: ActivityLogService by lazy {
       DaggerAppComponent.create().getActivityLogService()

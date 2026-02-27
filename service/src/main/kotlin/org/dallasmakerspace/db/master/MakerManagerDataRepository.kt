@@ -28,7 +28,8 @@ data class MakerManagerUserInfo(
     val whmcsUserId: Int,
     val adActive: Boolean,
     val phone: String?,
-    val badgeNumber: String?
+    val badgeNumber: String?,
+    val isPrimaryAccount: Boolean,
 )
 
 @Singleton
@@ -171,7 +172,7 @@ class MakerManagerDataRepository @Inject constructor() {
       val query =
           """
         SELECT u.id as makermanager_id, u.first_name, u.last_name, u.username, u.email, u.whmcs_user_id, u.ad_active,
-        REGEXP_REPLACE(u.phone, '[^0-9]+', '') as phone, b.number as badge_number
+        u.whmcs_real_user_id, REGEXP_REPLACE(u.phone, '[^0-9]+', '') as phone, b.number as badge_number
         FROM `dms-makermanager`.users u
         LEFT JOIN `dms-makermanager`.badges b ON u.id = b.user_id
         ORDER BY u.ad_active DESC, b.`number` DESC
@@ -192,7 +193,8 @@ class MakerManagerDataRepository @Inject constructor() {
                   whmcsUserId = resultSet.getInt("whmcs_user_id"),
                   adActive = resultSet.getInt("ad_active") == 1,
                   phone = resultSet.getString("phone"),
-                  badgeNumber = resultSet.getString("badge_number")))
+                  badgeNumber = resultSet.getString("badge_number"),
+                  isPrimaryAccount = resultSet.getObject("whmcs_real_user_id") == null))
         }
         users
       } ?: emptyList()
