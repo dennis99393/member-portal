@@ -50,7 +50,7 @@ constructor(
     // Compute flags before any service calls (userInfo already populated by base class)
     val currentUsername = userInfo["preferred_username"] as String?
     val isSelf = requestedUsername == currentUsername
-    val shouldFetchBadges = isSelf || isInfra
+    val isSelfOrInfra = isSelf || isInfra
 
     // Launch all calls in parallel immediately
     val memberDeferred = async { memberService.getMember(requestedUsername, session.sessionId) }
@@ -62,19 +62,8 @@ constructor(
         emptyList()
       }
     }
-    data class BadgeDeferreds(
-        val mm: kotlinx.coroutines.Deferred<String?>,
-        val ad: kotlinx.coroutines.Deferred<String?>,
-    )
-    val badgeDeferreds =
-        if (shouldFetchBadges)
-            BadgeDeferreds(
-                mm = async { memberService.getBadgeFromMakerManager(requestedUsername, session.sessionId) },
-                ad = async { memberService.getBadgeFromActiveDirectory(requestedUsername, session.sessionId) },
-            )
-        else null
 
-    // Await critical result; badge/events still running concurrently
+    // Await critical result; events still running concurrently
     val requestedMember = memberDeferred.await()
 
     val avatarUrl =
@@ -124,41 +113,8 @@ constructor(
         .firstOrNull { group -> group.name == voterRegistrationManager.getVotingMembersGroupName() }
         ?.apply { jsonMap["is_voting_member"] = "true" }
     jsonMap["is_self"] = isSelf.toString()
-    if (shouldFetchBadges) {
+    if (isSelfOrInfra) {
       requestedMember.personalEmail?.apply { jsonMap["personal_email"] = this as Any }
-
-      // Fetch badges from both sources separately
-      try {
-        val badgeMM = badgeDeferreds?.mm?.await()
-        val badgeAD = badgeDeferreds?.ad?.await()
-
-        // If both are null, fall back to member object's badge
-        if (badgeMM == null && badgeAD == null) {
-          requestedMember.badgeNumber?.let {
-            jsonMap["badge_number_mm"] = it
-            jsonMap["badge_number_ad"] = it
-          }
-        } else {
-          // Use fetched values (may be null individually)
-          badgeMM?.let { jsonMap["badge_number_mm"] = it }
-          badgeAD?.let { jsonMap["badge_number_ad"] = it }
-        }
-
-        // Check if AD badge needs fixing (< 10 digits)
-        val badgeToCheck = badgeAD ?: requestedMember.badgeNumber
-        if (badgeToCheck != null && badgeToCheck.length < 10) {
-          jsonMap["badge_needs_fix"] = true
-          jsonMap["badge_padded"] = badgeToCheck.padStart(10, '0')
-        }
-      } catch (e: Exception) {
-        log.warn("Failed to fetch badges for member: $requestedUsername", e)
-        // Fall back to badge from member object
-        requestedMember.badgeNumber?.apply {
-          jsonMap["badge_number_mm"] = this as Any
-          jsonMap["badge_number_ad"] = this as Any
-        }
-      }
-
       requestedMember.phoneNumber?.apply { jsonMap["phone_number"] = this as Any }
     }
     jsonMap["is_infra"] = isInfra

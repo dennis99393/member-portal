@@ -4,6 +4,8 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import javax.inject.Inject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
@@ -18,46 +20,64 @@ constructor(
 ) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
-  override suspend fun handleAuthenticated(call: ApplicationCall) {
-    if (!isInfra) {
-      call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Forbidden"))
-      return
-    }
-
+  override suspend fun handleAuthenticated(call: ApplicationCall) = coroutineScope {
     val requestedUsername =
         call.parameters["preferred_username"]
             ?: throw AuthException("No username found in url path")
 
+    val currentUsername = userInfo["preferred_username"] as String?
+    val isSelf = requestedUsername == currentUsername
+    val isSelfOrInfra = isSelf || isInfra
+
+    if (!isSelfOrInfra) {
+      call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Forbidden"))
+      return@coroutineScope
+    }
+
+    val debugInfoDeferred = if (isInfra) async { memberService.getDebugInfo(requestedUsername, session.sessionId) } else null
+    val badgeMMDeferred = async { memberService.getBadgeFromMakerManager(requestedUsername, session.sessionId) }
+    val badgeADDeferred = async { memberService.getBadgeFromActiveDirectory(requestedUsername, session.sessionId) }
+
     try {
-      val debugInfo = memberService.getDebugInfo(requestedUsername, session.sessionId)
-      if (debugInfo == null) {
-        call.respond(mapOf("status" to "empty"))
-        return
+      val result = mutableMapOf<String, Any>("status" to "ok")
+
+      val debugInfo = debugInfoDeferred?.await()
+      if (debugInfo != null) {
+        result["ad_account_enabled"] = debugInfo.adAccountEnabled
+        result["mm_ad_active"] = debugInfo.mmAdActive
+        result["whmcs_active"] = debugInfo.whmcsActive
+        debugInfo.daysInCurrentWhmcsStatus?.let { result["days_in_current_whmcs_status"] = it }
+        debugInfo.totalActiveDays?.let { days ->
+          result["total_active_days"] = days
+          result["total_active_duration"] = formatDurationFromDays(days)
+        }
+        if (debugInfo.timeline.isNotEmpty()) {
+          result["product_timeline"] =
+              debugInfo.timeline.map { entry ->
+                mapOf(
+                    "type" to entry.type.name,
+                    "start_date" to entry.startDate.toString(),
+                    "end_date" to (entry.endDate?.toString() ?: "Present"),
+                    "duration_days" to entry.durationDays,
+                )
+              }
+        }
       }
 
-      val result =
-          mutableMapOf<String, Any>(
-              "status" to "ok",
-              "ad_account_enabled" to debugInfo.adAccountEnabled,
-              "mm_ad_active" to debugInfo.mmAdActive,
-              "whmcs_active" to debugInfo.whmcsActive,
-          )
-      debugInfo.daysInCurrentWhmcsStatus?.let { result["days_in_current_whmcs_status"] = it }
-      debugInfo.totalActiveDays?.let { days ->
-        result["total_active_days"] = days
-        result["total_active_duration"] = formatDurationFromDays(days)
+      val badgeMM = badgeMMDeferred.await()
+      val badgeAD = badgeADDeferred.await()
+      if (badgeMM == null && badgeAD == null) {
+        // Both sources returned null — no badge data available from live fetch
+      } else {
+        badgeMM?.let { result["badge_number_mm"] = it }
+        badgeAD?.let { result["badge_number_ad"] = it }
       }
-      if (debugInfo.timeline.isNotEmpty()) {
-        result["product_timeline"] =
-            debugInfo.timeline.map { entry ->
-              mapOf(
-                  "type" to entry.type.name,
-                  "start_date" to entry.startDate.toString(),
-                  "end_date" to (entry.endDate?.toString() ?: "Present"),
-                  "duration_days" to entry.durationDays,
-              )
-            }
+      val badgeToCheck = badgeAD
+      if (badgeToCheck != null && badgeToCheck.length < 10) {
+        result["badge_needs_fix"] = true
+        result["badge_padded"] = badgeToCheck.padStart(10, '0')
       }
+
       call.respond(result)
     } catch (e: Exception) {
       log.warn("Failed to fetch debug info for member: $requestedUsername", e)

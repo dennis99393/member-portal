@@ -336,14 +336,6 @@
                         <div class="d-flex align-items-center mb-2">
                             <span>Phone number: <span class="ph-mask" th:text="${phone_number}"></span></span>
                         </div>
-                        <div class="d-flex align-items-center mb-2" th:if="${badge_number_mm}">
-                            <span>Badge  <span style="font-family:monospace">(MM)</span>: <span class="ph-mask"
-                                                                                                th:text="${badge_number_mm}"></span></span>
-                        </div>
-                        <div class="d-flex align-items-center mb-2" th:if="${badge_number_ad}">
-                            <span>Badge <span style="font-family:monospace">(AD)</span>: <span class="ph-mask"
-                                                                                               th:text="${badge_number_ad}"></span></span>
-                        </div>
                     </div>
                     </div><!-- end collapse -->
                 </div>
@@ -779,6 +771,13 @@
                         }
                     }
                     html += '</ul></div>';
+                }
+
+                if (data.badge_number_mm) {
+                    html += `<div class="d-flex align-items-center mb-2"><span>Badge <span style="font-family:monospace">(MM)</span>: <span class="ph-mask">${data.badge_number_mm}</span></span></div>`;
+                }
+                if (data.badge_number_ad) {
+                    html += `<div class="d-flex align-items-center mb-2"><span>Badge <span style="font-family:monospace">(AD)</span>: <span class="ph-mask">${data.badge_number_ad}</span></span></div>`;
                 }
 
                 container.innerHTML = html;
