@@ -71,9 +71,15 @@ class RoutesModule {
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
       memberService: MemberService,
+      memberServiceClient: MemberServiceClient,
       voterRegistrationManager: VoterRegistrationManager
   ): IRouteHandler =
-      ProfileHandler(loggerFactory, userInfoProvider, memberService, voterRegistrationManager)
+      ProfileHandler(
+          loggerFactory,
+          userInfoProvider,
+          memberService,
+          memberServiceClient,
+          voterRegistrationManager)
 
   @IntoMap
   @Provides

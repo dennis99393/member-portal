@@ -38,21 +38,21 @@
     <div class="featured-projects-header">
         <div>
             <h2 class="featured-projects-heading">Featured Projects</h2>
-            <p class="featured-projects-subtitle">Member creations from Show &amp; Tell</p>
+            <!--<p class="featured-projects-subtitle">Member creations from Show &amp; Tell</p>-->
         </div>
     </div>
     <div class="featured-projects-track-wrap">
         <button class="featured-scroll-btn featured-scroll-btn--left" aria-label="Scroll left">&#8249;</button>
-        <div class="featured-projects-row" id="featuredProjectsRow">
+        <div class="featured-projects-row">
             <a th:each="p : ${featured_projects}"
                th:href="${p.profileUrl}"
                class="featured-project-card">
                 <div class="featured-project-img-wrap">
                     <img th:src="${p.imageUrl}" th:alt="${p.memberDisplayName}"
                          class="featured-project-img" loading="lazy"/>
-                    <span th:if="${p.likeCount > 0}" class="featured-project-likes-badge">
+                    <!--<span th:if="${p.likeCount > 0}" class="featured-project-likes-badge">
                         &#10084; <span th:text="${p.likeCount}"></span>
-                    </span>
+                    </span>-->
                     <div class="featured-project-overlay">
                         <img th:if="${p.memberAvatarUrl != null and !#strings.isEmpty(p.memberAvatarUrl)}"
                              th:src="${p.memberAvatarUrl}" th:alt="${p.memberDisplayName}"
@@ -75,35 +75,5 @@
 <!-- App JS -->
 <script src="/static/js/app.js"></script>
 <script src="/static/js/dms-page-loader.js" defer></script>
-<script>
-(function () {
-    var row = document.getElementById('featuredProjectsRow');
-    if (!row) return;
-    var wrap = row.closest('.featured-projects-track-wrap');
-    var btnLeft = wrap.querySelector('.featured-scroll-btn--left');
-    var btnRight = wrap.querySelector('.featured-scroll-btn--right');
-    var STEP = 640;
-
-    function update() {
-        var atStart = row.scrollLeft <= 4;
-        var atEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
-        btnLeft.style.opacity = atStart ? '0' : '1';
-        btnLeft.style.pointerEvents = atStart ? 'none' : 'auto';
-        btnRight.style.opacity = atEnd ? '0' : '1';
-        btnRight.style.pointerEvents = atEnd ? 'none' : 'auto';
-        wrap.classList.toggle('fade-left', !atStart);
-        wrap.classList.toggle('fade-right', !atEnd);
-    }
-
-    btnLeft.addEventListener('click', function () {
-        row.scrollBy({ left: -STEP, behavior: 'smooth' });
-    });
-    btnRight.addEventListener('click', function () {
-        row.scrollBy({ left: STEP, behavior: 'smooth' });
-    });
-    row.addEventListener('scroll', update, { passive: true });
-    update();
-}());
-</script>
 </body>
 </html>

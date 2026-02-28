@@ -23,7 +23,7 @@ constructor(
     log.info("Handle request: ${call.request}")
 
     val featuredProjectsDeferred = async {
-      memberServiceClient.getFeaturedProjects(session.sessionId)
+      memberServiceClient.getFeaturedProjects(session.sessionId).shuffled()
     }
 
     val jsonMap: MutableMap<String, Any> = userInfo.toMutableMap()

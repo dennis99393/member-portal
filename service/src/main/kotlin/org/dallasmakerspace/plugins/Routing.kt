@@ -192,7 +192,11 @@ fun Application.configureRouting() {
         }
 
         get("/featured-projects") {
-          val projects = featuredProjectsService.getFeaturedProjects()
+          val username = call.request.queryParameters["username"]
+          val projects =
+              featuredProjectsService.getFeaturedProjects().let { all ->
+                if (username != null) all.filter { it.memberUsername == username } else all
+              }
           call.respond(ApiResponse(Status.SUCCESS, "Featured projects: ${projects.size}", projects))
         }
       }

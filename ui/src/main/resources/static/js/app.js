@@ -68,7 +68,34 @@ document.addEventListener("DOMContentLoaded", (event) => {
     if (shouldLoadSeasonalEffect()) {
         loadScript('/static/js/falling-effect-v2.js');
     }
+    initFeaturedProjectsScroll();
 });
+
+function initFeaturedProjectsScroll() {
+    document.querySelectorAll('.featured-projects-track-wrap').forEach(function (wrap) {
+        var row = wrap.querySelector('.featured-projects-row');
+        if (!row) return;
+        var btnLeft = wrap.querySelector('.featured-scroll-btn--left');
+        var btnRight = wrap.querySelector('.featured-scroll-btn--right');
+        var STEP = 640;
+
+        function update() {
+            var atStart = row.scrollLeft <= 4;
+            var atEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
+            btnLeft.style.opacity = atStart ? '0' : '1';
+            btnLeft.style.pointerEvents = atStart ? 'none' : 'auto';
+            btnRight.style.opacity = atEnd ? '0' : '1';
+            btnRight.style.pointerEvents = atEnd ? 'none' : 'auto';
+            wrap.classList.toggle('fade-left', !atStart);
+            wrap.classList.toggle('fade-right', !atEnd);
+        }
+
+        btnLeft.addEventListener('click', function () { row.scrollBy({ left: -STEP, behavior: 'smooth' }); });
+        btnRight.addEventListener('click', function () { row.scrollBy({ left: STEP, behavior: 'smooth' }); });
+        row.addEventListener('scroll', update, { passive: true });
+        update();
+    });
+}
 
 // Service Worker Registration
 if ('serviceWorker' in navigator) {

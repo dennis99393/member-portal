@@ -479,6 +479,41 @@
                 </div>
             </div>
 
+            <!-- Featured Projects card -->
+            <div th:if="${member_featured_projects != null and !#lists.isEmpty(member_featured_projects)}"
+                 class="dms-card shadow-sm mt-4"
+                 style="padding-left: 0; padding-right: 0; padding-bottom: 16px; --fp-fade-bg: #f8f9fa;">
+                <div style="padding: 0 24px;">
+                    <h4 class="card-title mt-3 mb-3 dms-card-title">Featured Projects</h4>
+                </div>
+                <div class="featured-projects-track-wrap">
+                    <button class="featured-scroll-btn featured-scroll-btn--left" aria-label="Scroll left">&#8249;</button>
+                    <div class="featured-projects-row">
+                        <a th:each="p : ${member_featured_projects}"
+                           th:href="${p.discourseTopicUrl}"
+                           target="_blank"
+                           class="featured-project-card">
+                            <div class="featured-project-img-wrap">
+                                <img th:src="${p.imageUrl}" th:alt="${p.memberDisplayName}"
+                                     class="featured-project-img" loading="lazy"/>
+                                <span th:if="${p.likeCount > 0}" class="featured-project-likes-badge">
+                                    &#10084; <span th:text="${p.likeCount}"></span>
+                                </span>
+                                <div class="featured-project-overlay">
+                                    <img th:if="${p.memberAvatarUrl != null and !#strings.isEmpty(p.memberAvatarUrl)}"
+                                         th:src="${p.memberAvatarUrl}" th:alt="${p.memberDisplayName}"
+                                         class="featured-project-avatar" loading="lazy"/>
+                                    <span th:if="${p.memberAvatarUrl == null or #strings.isEmpty(p.memberAvatarUrl)}"
+                                          class="featured-project-avatar-placeholder"></span>
+                                    <span class="featured-project-author" th:text="${p.memberDisplayName}"></span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <button class="featured-scroll-btn featured-scroll-btn--right" aria-label="Scroll right">&#8250;</button>
+                </div>
+            </div>
+
             <!-- Assigned groups card -->
             <div class="dms-card shadow-sm mt-4">
                 <div class="card-body pt-0 pb-4">
@@ -592,7 +627,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Bootstrap JS should be at the bottom of the body -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

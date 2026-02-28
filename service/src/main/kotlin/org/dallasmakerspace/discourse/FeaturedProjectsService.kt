@@ -98,7 +98,9 @@ constructor(
       // Fetch category page 0 to find recent "Show and Tell" monthly topics
       val categoryResponse =
           discourseApiClient.getCategoryTopics(
-              SHOW_AND_TELL_CATEGORY_SLUG, SHOW_AND_TELL_CATEGORY_ID)
+              SHOW_AND_TELL_CATEGORY_SLUG,
+              SHOW_AND_TELL_CATEGORY_ID,
+          )
       val recentTopics =
           categoryResponse.topicList.topics.filter { topic ->
             topic.title.startsWith("Show and Tell") &&
@@ -168,10 +170,12 @@ constructor(
                     imageUrl = imageUrl,
                     memberUsername = member.username,
                     memberDisplayName = member.displayName,
-                    memberAvatarUrl = member.discourseAvatarUrl
-                        ?.let { url ->
-                          val base = if (url.startsWith("//")) "https:$url" else
-                            if (url.startsWith("/")) "https://talk.dallasmakerspace.org$url" else url
+                    memberAvatarUrl =
+                        member.discourseAvatarUrl?.let { url ->
+                          val base =
+                              if (url.startsWith("//")) "https:$url"
+                              else if (url.startsWith("/")) "https://talk.dallasmakerspace.org$url"
+                              else url
                           base.replace("{size}", "40")
                         },
                     likeCount = post.resolvedLikeCount,

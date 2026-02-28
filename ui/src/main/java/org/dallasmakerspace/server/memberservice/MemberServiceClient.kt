@@ -372,24 +372,39 @@ constructor(
     return try {
       val apiHeaders = getApiHeaders(sessionId)
       val result = dmsHttpClient.get("$baseUrl/featured-projects", apiHeaders)
-      val data = result["data"] as? List<*> ?: return emptyList()
-      data.mapNotNull { item ->
-        val map = item as? Map<*, *> ?: return@mapNotNull null
-        FeaturedProject(
-            topicId = (map["topicId"] as? Number)?.toInt() ?: return@mapNotNull null,
-            postId = (map["postId"] as? Number)?.toInt() ?: return@mapNotNull null,
-            title = map["title"] as? String ?: return@mapNotNull null,
-            imageUrl = map["imageUrl"] as? String ?: return@mapNotNull null,
-            memberUsername = map["memberUsername"] as? String ?: return@mapNotNull null,
-            memberDisplayName = map["memberDisplayName"] as? String,
-            memberAvatarUrl = map["memberAvatarUrl"] as? String,
-            likeCount = (map["likeCount"] as? Number)?.toInt() ?: 0,
-            discourseTopicUrl = map["discourseTopicUrl"] as? String ?: return@mapNotNull null,
-        )
-      }
+      parseFeaturedProjectsData(result)
     } catch (ex: Exception) {
       log.warn("Failed to get featured projects", ex)
       emptyList()
+    }
+  }
+
+  suspend fun getFeaturedProjectsForMember(username: String, sessionId: String?): List<FeaturedProject> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/featured-projects?username=$username", apiHeaders)
+      parseFeaturedProjectsData(result)
+    } catch (ex: Exception) {
+      log.warn("Failed to get featured projects for member: $username", ex)
+      emptyList()
+    }
+  }
+
+  private fun parseFeaturedProjectsData(result: Map<String, Any>): List<FeaturedProject> {
+    val data = result["data"] as? List<*> ?: return emptyList()
+    return data.mapNotNull { item ->
+      val map = item as? Map<*, *> ?: return@mapNotNull null
+      FeaturedProject(
+          topicId = (map["topicId"] as? Number)?.toInt() ?: return@mapNotNull null,
+          postId = (map["postId"] as? Number)?.toInt() ?: return@mapNotNull null,
+          title = map["title"] as? String ?: return@mapNotNull null,
+          imageUrl = map["imageUrl"] as? String ?: return@mapNotNull null,
+          memberUsername = map["memberUsername"] as? String ?: return@mapNotNull null,
+          memberDisplayName = map["memberDisplayName"] as? String,
+          memberAvatarUrl = map["memberAvatarUrl"] as? String,
+          likeCount = (map["likeCount"] as? Number)?.toInt() ?: 0,
+          discourseTopicUrl = map["discourseTopicUrl"] as? String ?: return@mapNotNull null,
+      )
     }
   }
 
