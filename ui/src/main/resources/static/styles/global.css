@@ -191,8 +191,8 @@ div.error-details > p { color: #c1c1c1; }
 
 .featured-scroll-btn {
     position: absolute;
-    /* center on the 196px image: 6px row padding-top + 98px = 104px */
-    top: 104px;
+    /* center on the 147px image: 6px row padding-top + 73px = 79px */
+    top: 79px;
     transform: translateY(-50%);
     z-index: 2;
     width: 54px;
@@ -229,7 +229,7 @@ div.error-details > p { color: #c1c1c1; }
 }
 .featured-project-card {
     flex-shrink: 0;
-    width: 290px;
+    width: 218px;
     border-radius: 12px;
     overflow: hidden;
     background: #fff;
@@ -245,8 +245,8 @@ div.error-details > p { color: #c1c1c1; }
 }
 .featured-project-img-wrap {
     position: relative;
-    width: 290px;
-    height: 196px;
+    width: 218px;
+    height: 147px;
     overflow: hidden;
     background: #1a1a1a;
 }
@@ -308,4 +308,12 @@ div.error-details > p { color: #c1c1c1; }
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+.featured-project-skeleton {
+    background: #e0e0e0;
+    animation: fp-skeleton-pulse 1.5s ease-in-out infinite;
+}
+@keyframes fp-skeleton-pulse {
+    0%, 100% { background-color: #e0e0e0; }
+    50%       { background-color: #ececec; }
 }

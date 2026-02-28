@@ -34,9 +34,15 @@ constructor(
       return@coroutineScope
     }
 
-    val debugInfoDeferred = if (isInfra) async { memberService.getDebugInfo(requestedUsername, session.sessionId) } else null
-    val badgeMMDeferred = async { memberService.getBadgeFromMakerManager(requestedUsername, session.sessionId) }
-    val badgeADDeferred = async { memberService.getBadgeFromActiveDirectory(requestedUsername, session.sessionId) }
+    val debugInfoDeferred =
+        if (isInfra) async { memberService.getDebugInfo(requestedUsername, session.sessionId) }
+        else null
+    val badgeMMDeferred = async {
+      memberService.getBadgeFromMakerManager(requestedUsername, session.sessionId)
+    }
+    val badgeADDeferred = async {
+      memberService.getBadgeFromActiveDirectory(requestedUsername, session.sessionId)
+    }
 
     try {
       val result = mutableMapOf<String, Any>("status" to "ok")

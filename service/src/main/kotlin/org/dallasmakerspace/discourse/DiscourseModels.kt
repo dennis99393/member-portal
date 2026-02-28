@@ -74,7 +74,8 @@ data class DiscourseTopicPost(
     @SerialName("id") val id: Int,
     @SerialName("username") val username: String,
     @SerialName("like_count") val likeCount: Int = 0,
-    @SerialName("actions_summary") val actionsSummary: List<DiscoursePostActionSummary> = emptyList(),
+    @SerialName("actions_summary")
+    val actionsSummary: List<DiscoursePostActionSummary> = emptyList(),
     @SerialName("cooked") val cooked: String = "",
     @SerialName("created_at") val createdAt: String = "",
     @SerialName("post_number") val postNumber: Int = 1

@@ -4,7 +4,6 @@ import dagger.Component
 import io.ktor.server.application.*
 import javax.inject.Singleton
 import org.dallasmakerspace.askai.AskAiService
-import org.dallasmakerspace.discourse.FeaturedProjectsService
 import org.dallasmakerspace.askai.di.AskAiModule
 import org.dallasmakerspace.calendar.CalendarService
 import org.dallasmakerspace.core.AppConfig
@@ -16,6 +15,7 @@ import org.dallasmakerspace.cron.MemberRefreshCronJob
 import org.dallasmakerspace.cron.ShowAndTellCronJob
 import org.dallasmakerspace.dataviz.DataVizRouter
 import org.dallasmakerspace.dataviz.di.DataVizModule
+import org.dallasmakerspace.discourse.FeaturedProjectsService
 import org.dallasmakerspace.doorcontroller.DoorControllerService
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.GroupService

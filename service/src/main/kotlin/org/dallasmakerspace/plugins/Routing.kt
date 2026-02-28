@@ -3,7 +3,6 @@ package org.dallasmakerspace.plugins
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import kotlinx.coroutines.launch
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.plugins.swagger.*
 import io.ktor.server.request.*
@@ -12,9 +11,9 @@ import io.ktor.server.resources.patch
 import io.ktor.server.resources.post
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.dallasmakerspace.askai.AskAiService
-import org.dallasmakerspace.discourse.FeaturedProjectsService
 import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.apiKey
 import org.dallasmakerspace.auth.requireRole
@@ -27,6 +26,7 @@ import org.dallasmakerspace.cron.ShowAndTellCronJob
 import org.dallasmakerspace.cron.ShowAndTellCronJobParams
 import org.dallasmakerspace.dataviz.DataVizRouter
 import org.dallasmakerspace.di.DaggerAppComponent
+import org.dallasmakerspace.discourse.FeaturedProjectsService
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.GroupService
 import org.dallasmakerspace.members.MemberService
@@ -197,6 +197,17 @@ fun Application.configureRouting() {
               featuredProjectsService.getFeaturedProjects().let { all ->
                 if (username != null) all.filter { it.memberUsername == username } else all
               }
+          call.respond(ApiResponse(Status.SUCCESS, "Featured projects: ${projects.size}", projects))
+        }
+
+        get("/featured-projects/member/{username}") {
+          val username =
+              call.parameters["username"]
+                  ?: return@get call.respond(
+                      HttpStatusCode.BadRequest,
+                      ApiResponse(Status.ERROR, "Username is required", null),
+                  )
+          val projects = featuredProjectsService.getFeaturedProjectsForMember(username)
           call.respond(ApiResponse(Status.SUCCESS, "Featured projects: ${projects.size}", projects))
         }
       }

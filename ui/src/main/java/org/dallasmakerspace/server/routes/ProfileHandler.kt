@@ -19,7 +19,6 @@ import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
-import org.dallasmakerspace.server.memberservice.MemberServiceClient
 import org.dallasmakerspace.server.models.slug
 import org.dallasmakerspace.server.plugins.AuthException
 import org.dallasmakerspace.server.plugins.UserSession
@@ -31,7 +30,6 @@ constructor(
     loggerFactory: LoggerFactory,
     userInfoProvider: UserInfoProvider,
     private val memberService: MemberService,
-    private val memberServiceClient: MemberServiceClient,
     private val voterRegistrationManager: VoterRegistrationManager,
 ) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
@@ -39,8 +37,7 @@ constructor(
   companion object {
     private val CHICAGO_ZONE = ZoneId.of("America/Chicago")
     private val EVENT_INPUT_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-    private val EVENT_OUTPUT_FORMATTER =
-        DateTimeFormatter.ofPattern("EEE, MMM d, yyyy 'at' h:mm a")
+    private val EVENT_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("EEE, MMM d, yyyy 'at' h:mm a")
   }
 
   override suspend fun handleAuthenticated(call: ApplicationCall) = coroutineScope {
@@ -63,9 +60,6 @@ constructor(
         log.warn("Failed to fetch events for member: $requestedUsername", e)
         emptyList()
       }
-    }
-    val memberProjectsDeferred = async {
-      memberServiceClient.getFeaturedProjectsForMember(requestedUsername, session.sessionId)
     }
 
     // Await critical result; events still running concurrently
@@ -156,20 +150,6 @@ constructor(
                 "url" to "https://calendar.dallasmakerspace.org/events/view/${event.id}")
           }
       jsonMap["events_organized"] = formattedEvents
-    }
-
-    val memberProjects = memberProjectsDeferred.await()
-    if (memberProjects.isNotEmpty()) {
-      jsonMap["member_featured_projects"] =
-          memberProjects.map { project ->
-            mapOf(
-                "imageUrl" to project.imageUrl,
-                "memberDisplayName" to (project.memberDisplayName ?: project.memberUsername),
-                "memberAvatarUrl" to (project.memberAvatarUrl ?: ""),
-                "likeCount" to project.likeCount,
-                "discourseTopicUrl" to project.discourseTopicUrl,
-            )
-          }
     }
 
     setToastMessage(call, jsonMap, requestedMember, session)

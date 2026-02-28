@@ -23,6 +23,7 @@ import org.dallasmakerspace.server.routes.OfflineHandler
 import org.dallasmakerspace.server.routes.OidcCallbackHandler
 import org.dallasmakerspace.server.routes.PingHandler
 import org.dallasmakerspace.server.routes.ProfileDebugInfoHandler
+import org.dallasmakerspace.server.routes.ProfileFeaturedProjectsHandler
 import org.dallasmakerspace.server.routes.ProfileHandler
 import org.dallasmakerspace.server.routes.ProfileMeHandler
 import org.dallasmakerspace.server.routes.ReportHandler
@@ -71,15 +72,19 @@ class RoutesModule {
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
       memberService: MemberService,
-      memberServiceClient: MemberServiceClient,
       voterRegistrationManager: VoterRegistrationManager
   ): IRouteHandler =
-      ProfileHandler(
-          loggerFactory,
-          userInfoProvider,
-          memberService,
-          memberServiceClient,
-          voterRegistrationManager)
+      ProfileHandler(loggerFactory, userInfoProvider, memberService, voterRegistrationManager)
+
+  @IntoMap
+  @Provides
+  @StringKey("/profile/@{preferred_username}/featured-projects")
+  fun providesProfileFeaturedProjectsHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberServiceClient: MemberServiceClient,
+  ): IRouteHandler =
+      ProfileFeaturedProjectsHandler(loggerFactory, userInfoProvider, memberServiceClient)
 
   @IntoMap
   @Provides

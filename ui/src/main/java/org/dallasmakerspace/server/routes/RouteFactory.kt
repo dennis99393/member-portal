@@ -60,6 +60,7 @@ object RouteFactory {
     GROUPS("/groups/{group_slug}"),
     SEARCH_PRELOAD("/search-preload"),
     PROFILE_DEBUG_INFO("/profile/@{preferred_username}/debug-info"),
+    PROFILE_FEATURED_PROJECTS("/profile/@{preferred_username}/featured-projects"),
     REGISTER_VOTING("/profile/@{preferred_username}/register-voting"),
     UNREGISTER_VOTING("/profile/@{preferred_username}/unregister-voting"),
     REPORT("/reports/{path...}"),

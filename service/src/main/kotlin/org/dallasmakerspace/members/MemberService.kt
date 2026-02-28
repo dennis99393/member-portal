@@ -45,7 +45,8 @@ constructor(
   // Fallback cache with unlimited TTL - used only when API calls fail
   private val groupsFallbackCache = java.util.concurrent.ConcurrentHashMap<String, DMSGroup>()
 
-  // Cache of whmcsId + isPrimaryAccount per username; populated at startup via populateWhmcsAccountCache().
+  // Cache of whmcsId + isPrimaryAccount per username; populated at startup via
+  // populateWhmcsAccountCache().
   // Reads are unsynchronized (safe once stable); writes are synchronized.
   private val whmcsAccountCache = HashMap<String, WhmcsAccountCacheEntry>()
 
@@ -102,11 +103,10 @@ constructor(
             }
 
         var mmStartMs = -1L
-        val mmDeferred =
-            async {
-              mmStartMs = ms()
-              makerManagerDataService.getAccountInfoMap(listOf(username))
-            }
+        val mmDeferred = async {
+          mmStartMs = ms()
+          makerManagerDataService.getAccountInfoMap(listOf(username))
+        }
 
         var whmcsStatusStartMs = -1L
         val whmcsStatusDeferred =
@@ -135,11 +135,10 @@ constructor(
         val adDoneMs = ms()
 
         var dbStartMs = -1L
-        val dbDeferred =
-            async {
-              dbStartMs = ms()
-              memberRepository.getMemberOrInsert(username, adMember.enabled)
-            }
+        val dbDeferred = async {
+          dbStartMs = ms()
+          memberRepository.getMemberOrInsert(username, adMember.enabled)
+        }
 
         // Await MakerManager (still needed for the full AccountInfo payload)
         val relatedAccounts = mmDeferred.await()
@@ -177,7 +176,7 @@ constructor(
                   if (accountInfo.isPrimaryAccount)
                   // Use already-running deferred if available, else fresh call
                   if (whmcsRegdateDeferred != null) whmcsRegdateDeferred.await()
-                  else whmcsDataService.getAccountRegdate(whmcsId)?.toKotlinLocalDate()
+                      else whmcsDataService.getAccountRegdate(whmcsId)?.toKotlinLocalDate()
                   else
                       calculateMemberSince(adMember.whenCreated)?.let { createdInstant ->
                         java.time.LocalDate.ofEpochDay(createdInstant.epochSeconds / 86_400)

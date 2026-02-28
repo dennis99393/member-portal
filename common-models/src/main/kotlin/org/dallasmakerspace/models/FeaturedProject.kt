@@ -12,5 +12,6 @@ data class FeaturedProject(
     val memberDisplayName: String?,
     val memberAvatarUrl: String?,
     val likeCount: Int,
-    val discourseTopicUrl: String
+    val discourseTopicUrl: String,
+    val createdAt: String = "",
 )

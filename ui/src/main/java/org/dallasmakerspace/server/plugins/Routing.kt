@@ -29,6 +29,9 @@ fun Application.configureRouting() {
       get(RouteFactory.Paths.PROFILE_DEBUG_INFO.path) {
         RouteFactory.getHandler(call)?.handleBase(call)
       }
+      get(RouteFactory.Paths.PROFILE_FEATURED_PROJECTS.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
       get(RouteFactory.Paths.PROFILEME.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       get(RouteFactory.Paths.GROUPS.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       get(RouteFactory.Paths.SEARCH_PRELOAD.path) {

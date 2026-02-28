@@ -479,38 +479,39 @@
                 </div>
             </div>
 
-            <!-- Featured Projects card -->
-            <div th:if="${member_featured_projects != null and !#lists.isEmpty(member_featured_projects)}"
+            <!-- Featured Projects card (loaded async) -->
+            <div th:if="${discourse_username != null and !#strings.isEmpty(discourse_username)}"
+                 id="profileFeaturedProjects"
+                 th:attr="data-username=${preferred_username}, data-is-self=${is_self}"
                  class="dms-card shadow-sm mt-4"
                  style="padding-left: 0; padding-right: 0; padding-bottom: 16px; --fp-fade-bg: #f8f9fa;">
                 <div style="padding: 0 24px;">
                     <h4 class="card-title mt-3 mb-3 dms-card-title">Featured Projects</h4>
                 </div>
-                <div class="featured-projects-track-wrap">
-                    <button class="featured-scroll-btn featured-scroll-btn--left" aria-label="Scroll left">&#8249;</button>
+                <!-- Skeleton loading state -->
+                <div id="profileFeaturedProjectsLoading" class="featured-projects-track-wrap">
                     <div class="featured-projects-row">
-                        <a th:each="p : ${member_featured_projects}"
-                           th:href="${p.discourseTopicUrl}"
-                           target="_blank"
-                           class="featured-project-card">
-                            <div class="featured-project-img-wrap">
-                                <img th:src="${p.imageUrl}" th:alt="${p.memberDisplayName}"
-                                     class="featured-project-img" loading="lazy"/>
-                                <span th:if="${p.likeCount > 0}" class="featured-project-likes-badge">
-                                    &#10084; <span th:text="${p.likeCount}"></span>
-                                </span>
-                                <div class="featured-project-overlay">
-                                    <img th:if="${p.memberAvatarUrl != null and !#strings.isEmpty(p.memberAvatarUrl)}"
-                                         th:src="${p.memberAvatarUrl}" th:alt="${p.memberDisplayName}"
-                                         class="featured-project-avatar" loading="lazy"/>
-                                    <span th:if="${p.memberAvatarUrl == null or #strings.isEmpty(p.memberAvatarUrl)}"
-                                          class="featured-project-avatar-placeholder"></span>
-                                    <span class="featured-project-author" th:text="${p.memberDisplayName}"></span>
-                                </div>
-                            </div>
-                        </a>
+                        <div class="featured-project-card"><div class="featured-project-img-wrap featured-project-skeleton"></div></div>
+                        <div class="featured-project-card"><div class="featured-project-img-wrap featured-project-skeleton"></div></div>
+                        <div class="featured-project-card"><div class="featured-project-img-wrap featured-project-skeleton"></div></div>
+                        <div class="featured-project-card"><div class="featured-project-img-wrap featured-project-skeleton"></div></div>
                     </div>
+                </div>
+                <!-- Content (hidden until loaded) -->
+                <div id="profileFeaturedProjectsContent" class="featured-projects-track-wrap" style="display: none;">
+                    <button class="featured-scroll-btn featured-scroll-btn--left" aria-label="Scroll left">&#8249;</button>
+                    <div class="featured-projects-row"></div>
                     <button class="featured-scroll-btn featured-scroll-btn--right" aria-label="Scroll right">&#8250;</button>
+                </div>
+                <!-- Null state (self only, hidden until loaded with empty result) -->
+                <div id="profileFeaturedProjectsEmpty" style="display: none; padding: 8px 24px 4px;">
+                    <p style="color: #888; font-size: 0.9rem; margin: 0;">
+                        No featured projects yet.
+                        <a href="https://talk.dallasmakerspace.org/c/show-and-tell/49" target="_blank" rel="noopener" style="color: #888;">
+                            Share your work in Show &amp; Tell
+                        </a>
+                        and it'll appear here!
+                    </p>
                 </div>
             </div>
 
@@ -827,6 +828,57 @@
                 container.innerHTML = '<span class="text-danger small">Failed to load debug info.</span>';
             }
         }
+    })();
+</script>
+
+<!-- Featured Projects Async Loader -->
+<script>
+    (function() {
+        'use strict';
+        const section = document.getElementById('profileFeaturedProjects');
+        if (!section) return;
+        const username = section.dataset.username;
+        const isSelf = section.dataset.isSelf === 'true';
+        const loadingEl = document.getElementById('profileFeaturedProjectsLoading');
+        const contentEl = document.getElementById('profileFeaturedProjectsContent');
+        const emptyEl = document.getElementById('profileFeaturedProjectsEmpty');
+        const row = contentEl.querySelector('.featured-projects-row');
+
+        fetch('/profile/@' + username + '/featured-projects')
+            .then(function(resp) { return resp.ok ? resp.json() : []; })
+            .then(function(projects) {
+                loadingEl.style.display = 'none';
+                if (!projects || projects.length === 0) {
+                    if (isSelf) {
+                        emptyEl.style.display = '';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                    return;
+                }
+                row.innerHTML = projects.map(function(p) {
+                    var likeBadge = p.likeCount > 0
+                        ? '<span class="featured-project-likes-badge">\u2764 ' + p.likeCount + '</span>'
+                        : '';
+                    var avatar = p.memberAvatarUrl
+                        ? '<img src="' + escapeHtml(p.memberAvatarUrl) + '" class="featured-project-avatar" loading="lazy" alt=""/>'
+                        : '<span class="featured-project-avatar-placeholder"></span>';
+                    return '<a href="' + escapeHtml(p.discourseTopicUrl) + '" target="_blank" class="featured-project-card">'
+                        + '<div class="featured-project-img-wrap">'
+                        + '<img src="' + escapeHtml(p.imageUrl) + '" class="featured-project-img" loading="lazy" alt=""/>'
+                        + likeBadge
+                        + '<div class="featured-project-overlay">'
+                        + avatar
+                        + '<span class="featured-project-author">' + escapeHtml(p.memberDisplayName || '') + '</span>'
+                        + '</div></div></a>';
+                }).join('');
+                contentEl.style.display = '';
+                row.dispatchEvent(new Event('scroll'));
+            })
+            .catch(function() {
+                loadingEl.style.display = 'none';
+                section.style.display = 'none';
+            });
     })();
 </script>
 

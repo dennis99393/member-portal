@@ -379,13 +379,30 @@ constructor(
     }
   }
 
-  suspend fun getFeaturedProjectsForMember(username: String, sessionId: String?): List<FeaturedProject> {
+  suspend fun getFeaturedProjectsForMember(
+      username: String,
+      sessionId: String?
+  ): List<FeaturedProject> {
     return try {
       val apiHeaders = getApiHeaders(sessionId)
       val result = dmsHttpClient.get("$baseUrl/featured-projects?username=$username", apiHeaders)
       parseFeaturedProjectsData(result)
     } catch (ex: Exception) {
       log.warn("Failed to get featured projects for member: $username", ex)
+      emptyList()
+    }
+  }
+
+  suspend fun getFeaturedProjectsForMemberAsync(
+      username: String,
+      sessionId: String?
+  ): List<FeaturedProject> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/featured-projects/member/$username", apiHeaders)
+      parseFeaturedProjectsData(result)
+    } catch (ex: Exception) {
+      log.warn("Failed to get featured projects (async) for member: $username", ex)
       emptyList()
     }
   }

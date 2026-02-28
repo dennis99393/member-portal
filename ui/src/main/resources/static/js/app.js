@@ -77,6 +77,7 @@ function initFeaturedProjectsScroll() {
         if (!row) return;
         var btnLeft = wrap.querySelector('.featured-scroll-btn--left');
         var btnRight = wrap.querySelector('.featured-scroll-btn--right');
+        if (!btnLeft || !btnRight) return;
         var STEP = 640;
 
         function update() {
