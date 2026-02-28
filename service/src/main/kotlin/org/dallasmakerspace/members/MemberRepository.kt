@@ -203,4 +203,16 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
           .associateBy { it.username }
     }
   }
+
+  suspend fun getMembersByDiscourseUsernames(
+      discourseUsernames: List<String>
+  ): Map<String, DMSMember> {
+    if (discourseUsernames.isEmpty()) return emptyMap()
+    return suspendTransaction {
+      ProfileDAO.find { ProfileTable.discourseUsername inList discourseUsernames }
+          .map { daoToProfileModel(it) }
+          .filter { it.discourseUsername != null }
+          .associateBy { it.discourseUsername!! }
+    }
+  }
 }

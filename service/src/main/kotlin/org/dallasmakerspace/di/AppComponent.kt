@@ -4,6 +4,7 @@ import dagger.Component
 import io.ktor.server.application.*
 import javax.inject.Singleton
 import org.dallasmakerspace.askai.AskAiService
+import org.dallasmakerspace.discourse.FeaturedProjectsService
 import org.dallasmakerspace.askai.di.AskAiModule
 import org.dallasmakerspace.calendar.CalendarService
 import org.dallasmakerspace.core.AppConfig
@@ -74,4 +75,6 @@ interface AppComponent {
   fun getShortLinksService(): ShortLinksService
 
   fun getAskAiService(): AskAiService
+
+  fun getFeaturedProjectsService(): FeaturedProjectsService
 }

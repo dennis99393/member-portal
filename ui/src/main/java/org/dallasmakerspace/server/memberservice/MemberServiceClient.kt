@@ -13,6 +13,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withTimeout
 import org.dallasmakerspace.models.DMSGroup
 import org.dallasmakerspace.models.DMSMember
+import org.dallasmakerspace.models.FeaturedProject
 import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.DMSHttpClient
 import org.dallasmakerspace.server.common.logging.LoggerFactory
@@ -364,6 +365,31 @@ constructor(
     } catch (ex: Exception) {
       log.warn("Failed to get Ask AI by slug: $slug", ex)
       null
+    }
+  }
+
+  suspend fun getFeaturedProjects(sessionId: String?): List<FeaturedProject> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/featured-projects", apiHeaders)
+      val data = result["data"] as? List<*> ?: return emptyList()
+      data.mapNotNull { item ->
+        val map = item as? Map<*, *> ?: return@mapNotNull null
+        FeaturedProject(
+            topicId = (map["topicId"] as? Number)?.toInt() ?: return@mapNotNull null,
+            postId = (map["postId"] as? Number)?.toInt() ?: return@mapNotNull null,
+            title = map["title"] as? String ?: return@mapNotNull null,
+            imageUrl = map["imageUrl"] as? String ?: return@mapNotNull null,
+            memberUsername = map["memberUsername"] as? String ?: return@mapNotNull null,
+            memberDisplayName = map["memberDisplayName"] as? String,
+            memberAvatarUrl = map["memberAvatarUrl"] as? String,
+            likeCount = (map["likeCount"] as? Number)?.toInt() ?: 0,
+            discourseTopicUrl = map["discourseTopicUrl"] as? String ?: return@mapNotNull null,
+        )
+      }
+    } catch (ex: Exception) {
+      log.warn("Failed to get featured projects", ex)
+      emptyList()
     }
   }
 

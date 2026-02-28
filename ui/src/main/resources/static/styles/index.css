@@ -100,3 +100,167 @@
         gap: var(--gap-38xl);
     }
 }
+
+/* Featured Projects — horizontal scroll row */
+.featured-projects-section {
+    background: #f4f5f7;
+    padding: 28px 0 36px;
+    width: 100%;
+    margin-top: 4px;
+}
+.featured-projects-header {
+    padding: 0 28px 18px;
+}
+.featured-projects-heading {
+    font-size: 1.45rem;
+    font-weight: 800;
+    margin: 0 0 3px;
+    color: #111;
+    font-family: var(--link);
+}
+.featured-projects-subtitle {
+    font-size: 0.83rem;
+    color: #777;
+    margin: 0;
+}
+.featured-projects-track-wrap {
+    position: relative;
+}
+/* Fade masks — activated by JS-toggled classes */
+.featured-projects-track-wrap::before,
+.featured-projects-track-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.25s;
+}
+.featured-projects-track-wrap::before { left: 0;  background: linear-gradient(to right, #f4f5f7, transparent); }
+.featured-projects-track-wrap::after  { right: 0; background: linear-gradient(to left,  #f4f5f7, transparent); }
+.featured-projects-track-wrap.fade-left::before  { opacity: 1; }
+.featured-projects-track-wrap.fade-right::after  { opacity: 1; }
+
+.featured-scroll-btn {
+    position: absolute;
+    /* center on the 196px image: 6px row padding-top + 98px = 104px */
+    top: 104px;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: none;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.22);
+    font-size: 34px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    transition: opacity 0.2s, box-shadow 0.2s;
+    padding: 0 0 2px; /* compensate for glyph descender */
+}
+.featured-scroll-btn:hover {
+    box-shadow: 0 4px 18px rgba(0,0,0,0.28);
+}
+.featured-scroll-btn--left  { left: 8px;  opacity: 0; pointer-events: none; }
+.featured-scroll-btn--right { right: 8px; }
+
+.featured-projects-row {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 6px 28px 10px;
+    scrollbar-width: none;
+}
+.featured-projects-row::-webkit-scrollbar {
+    display: none;
+}
+.featured-project-card {
+    flex-shrink: 0;
+    width: 290px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.09);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.featured-project-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.16);
+}
+.featured-project-img-wrap {
+    position: relative;
+    width: 290px;
+    height: 196px;
+    overflow: hidden;
+    background: #1a1a1a;
+}
+.featured-project-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+.featured-project-card:hover .featured-project-img {
+    transform: scale(1.06);
+}
+.featured-project-likes-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.52);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #ff6b6b;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0.01em;
+}
+.featured-project-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 10px 9px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.72));
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.featured-project-avatar,
+.featured-project-avatar-placeholder {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    object-fit: cover;
+    display: block;
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+}
+.featured-project-avatar-placeholder {
+    background: rgba(255, 255, 255, 0.25);
+}
+.featured-project-author {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

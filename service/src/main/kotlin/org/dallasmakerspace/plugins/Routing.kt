@@ -14,6 +14,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.dallasmakerspace.askai.AskAiService
+import org.dallasmakerspace.discourse.FeaturedProjectsService
 import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.apiKey
 import org.dallasmakerspace.auth.requireRole
@@ -68,6 +69,11 @@ fun Application.configureRouting() {
   // before the first request arrives. All other services stay lazy (initialized on first use).
   val memberService: MemberService = DaggerAppComponent.create().getMemberService()
   launch { memberService.populateWhmcsAccountCache() }
+
+  // Eagerly initialize featuredProjectsService to trigger background cache fill on startup.
+  val featuredProjectsService: FeaturedProjectsService =
+      DaggerAppComponent.create().getFeaturedProjectsService()
+  featuredProjectsService.getFeaturedProjects()
 
   routing {
     val groupsService: GroupService by lazy { DaggerAppComponent.create().getGroupService() }
@@ -183,6 +189,11 @@ fun Application.configureRouting() {
                   "Debug info for ${debugInfoRequest.parent.username}",
                   debugInfo,
               ))
+        }
+
+        get("/featured-projects") {
+          val projects = featuredProjectsService.getFeaturedProjects()
+          call.respond(ApiResponse(Status.SUCCESS, "Featured projects: ${projects.size}", projects))
         }
       }
 

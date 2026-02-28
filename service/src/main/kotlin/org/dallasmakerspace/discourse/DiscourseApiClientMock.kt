@@ -69,4 +69,18 @@ class DiscourseApiClientMock @Inject constructor(loggerFactory: LoggerFactory) :
     log.info("Mocked searching topics with query: $query in category: $categoryId")
     return DiscourseSearchResponse(topics = emptyList(), posts = emptyList())
   }
+
+  override suspend fun getCategoryTopics(
+      categorySlug: String,
+      categoryId: Int,
+      page: Int
+  ): DiscourseCategoryResponse {
+    log.info("Mocked fetching category topics for: $categorySlug ($categoryId), page $page")
+    return DiscourseCategoryResponse()
+  }
+
+  override suspend fun getTopicPosts(topicId: Int): DiscourseTopicDetails {
+    log.info("Mocked fetching topic posts for topic: $topicId")
+    return DiscourseTopicDetails()
+  }
 }

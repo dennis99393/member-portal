@@ -46,4 +46,12 @@ interface IDiscourseApiClient {
    * @return DiscourseSearchResponse containing matching topics
    */
   suspend fun searchTopics(query: String, categoryId: Int? = null): DiscourseSearchResponse
+
+  suspend fun getCategoryTopics(
+      categorySlug: String,
+      categoryId: Int,
+      page: Int = 0
+  ): DiscourseCategoryResponse
+
+  suspend fun getTopicPosts(topicId: Int): DiscourseTopicDetails
 }

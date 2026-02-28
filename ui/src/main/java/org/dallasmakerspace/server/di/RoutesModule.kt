@@ -58,8 +58,9 @@ class RoutesModule {
   @StringKey("/")
   fun providesIndexHandler(
       loggerFactory: LoggerFactory,
-      userInfoProvider: UserInfoProvider
-  ): IRouteHandler = IndexHandler(loggerFactory, userInfoProvider)
+      userInfoProvider: UserInfoProvider,
+      memberServiceClient: MemberServiceClient,
+  ): IRouteHandler = IndexHandler(loggerFactory, userInfoProvider, memberServiceClient)
 
   @IntoMap @Provides @StringKey("/login") fun providesLoginHandler(): IRouteHandler = LoginHandler()
 

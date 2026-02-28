@@ -233,6 +233,66 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
     updateTopicStatus(topicId, status, pinned)
   }
 
+  override suspend fun getCategoryTopics(
+      categorySlug: String,
+      categoryId: Int,
+      page: Int
+  ): DiscourseCategoryResponse {
+    val apiKey = appConfig.requireStringProperty("app.discourse.apiKey")
+    val url = "$DISCOURSE_BASE_URL/c/$categorySlug/$categoryId.json?page=$page"
+    try {
+      val response =
+          getClient().use {
+            it.request(url) {
+              method = HttpMethod.Get
+              header("Api-Key", apiKey)
+              header("Api-Username", "system")
+            }
+          }
+      when (response.status) {
+        HttpStatusCode.OK -> {
+          log.debug("Successfully fetched category topics: $categorySlug ($categoryId)")
+          return json.decodeFromString<DiscourseCategoryResponse>(response.bodyAsText())
+        }
+        else ->
+            throw DiscourseApiException(
+                "Failed to fetch category topics for $categorySlug: ${response.status} - ${response.bodyAsText()}")
+      }
+    } catch (e: IOException) {
+      throw DiscourseApiException("Failed to fetch category topics for $categorySlug", e)
+    } catch (e: kotlinx.serialization.SerializationException) {
+      throw DiscourseApiException("Failed to parse category topics response for $categorySlug", e)
+    }
+  }
+
+  override suspend fun getTopicPosts(topicId: Int): DiscourseTopicDetails {
+    val apiKey = appConfig.requireStringProperty("app.discourse.apiKey")
+    val url = "$DISCOURSE_BASE_URL/t/$topicId.json"
+    try {
+      val response =
+          getClient().use {
+            it.request(url) {
+              method = HttpMethod.Get
+              header("Api-Key", apiKey)
+              header("Api-Username", "system")
+            }
+          }
+      when (response.status) {
+        HttpStatusCode.OK -> {
+          log.debug("Successfully fetched topic posts for topic: $topicId")
+          return json.decodeFromString<DiscourseTopicDetails>(response.bodyAsText())
+        }
+        else ->
+            throw DiscourseApiException(
+                "Failed to fetch topic posts for $topicId: ${response.status} - ${response.bodyAsText()}")
+      }
+    } catch (e: IOException) {
+      throw DiscourseApiException("Failed to fetch topic posts for $topicId", e)
+    } catch (e: kotlinx.serialization.SerializationException) {
+      throw DiscourseApiException("Failed to parse topic posts response for $topicId", e)
+    }
+  }
+
   override suspend fun searchTopics(query: String, categoryId: Int?): DiscourseSearchResponse {
     val baseUrl = DISCOURSE_BASE_URL
     val apiKey = appConfig.requireStringProperty("app.discourse.apiKey")
