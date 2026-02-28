@@ -1,7 +1,7 @@
 // Service Worker for Dallas Makerspace Member Portal
 // Version: 1.0.0
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const STATIC_CACHE = `dms-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dms-dynamic-${CACHE_VERSION}`;
 const MAX_CACHE_AGE_DAYS = 7;
@@ -90,10 +90,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets (CSS, JS, images, fonts): Cache First
+  // CSS and JS: Stale While Revalidate — serve cached immediately, refresh cache in background
+  if (
+    url.pathname.match(/\.(css|js)$/)
+  ) {
+    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE));
+    return;
+  }
+
+  // Other static assets (images, fonts, icons): Cache First — these rarely change
   if (
     url.pathname.startsWith('/static/') ||
-    url.pathname.match(/\.(css|js|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico)$/)
+    url.pathname.match(/\.(png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico)$/)
   ) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
     return;
