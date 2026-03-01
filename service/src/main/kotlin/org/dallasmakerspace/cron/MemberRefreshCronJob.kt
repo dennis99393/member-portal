@@ -3,8 +3,7 @@ package org.dallasmakerspace.cron
 import dagger.Reusable
 import javax.inject.Inject
 import kotlin.random.Random
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 import org.dallasmakerspace.activedirectory.ADUser
 import org.dallasmakerspace.activedirectory.ActiveDirectoryService
 import org.dallasmakerspace.core.LoggerFactory
@@ -98,7 +97,7 @@ constructor(
         log.error("Error processing batch: ${e.message}", e)
       }
       // Sleep for a bit between batches
-      withContext(Dispatchers.IO) { Thread.sleep(DELAY_BETWEEN_BATCHES_MILLIS) }
+      delay(DELAY_BETWEEN_BATCHES_MILLIS)
     }
 
     // Process avatar refreshes if enabled
@@ -123,7 +122,7 @@ constructor(
 
         // Rate limiting between avatar batches
         if (batchIndex < avatarBatches.size - 1) {
-          withContext(Dispatchers.IO) { Thread.sleep(AVATAR_DELAY_BETWEEN_BATCHES_MILLIS) }
+          delay(AVATAR_DELAY_BETWEEN_BATCHES_MILLIS)
         }
       }
     }
@@ -190,7 +189,7 @@ constructor(
         }
 
         // Rate limiting between individual avatar calls
-        withContext(Dispatchers.IO) { Thread.sleep(AVATAR_DELAY_BETWEEN_CALLS_MILLIS) }
+        delay(AVATAR_DELAY_BETWEEN_CALLS_MILLIS)
       } else {
         failed++
         log.warn("Member ${member.username} has null discourse username")

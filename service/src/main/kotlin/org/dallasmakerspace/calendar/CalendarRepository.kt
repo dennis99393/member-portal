@@ -1,6 +1,7 @@
 package org.dallasmakerspace.calendar
 
 import javax.inject.Inject
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.db.master.GenericRepository
@@ -43,16 +44,20 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
 
     log.debug("Fetching events organized by member: $username (limit: $limit)")
 
-    val result = genericRepository.getReportData(query)
+    val result = withTimeoutOrNull(1_500) { genericRepository.getReportData(query) }
+    if (result == null) {
+      log.warn("Timed out fetching events for member: $username")
+      return emptyList()
+    }
 
-    return result?.data?.map { row ->
+    return result.data.map { row ->
       val id = (row["id"] as? Number)?.toInt() ?: 0
       val name = row["name"]?.toString() ?: ""
       val eventStart = row["event_start_cst"]?.toString() ?: ""
       val status = row["status"]?.toString() ?: ""
 
       EventSummary(id = id, name = name, eventStart = eventStart, status = status)
-    } ?: emptyList()
+    }
   }
 
   /**

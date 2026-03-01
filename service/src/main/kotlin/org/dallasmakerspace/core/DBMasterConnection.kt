@@ -26,7 +26,8 @@ class DBMasterConnection @Inject constructor(val appConfig: AppConfig) {
               "maxIdleTime=600000&" +
               "serverTimezone=UTC&" +
               "autoReconnect=true&" +
-              "connectTimeout=10000"
+              "connectTimeout=10000&" +
+              "socketTimeout=5000"
     }
 
     db = Database.connect(dbUrl, user = dbUser, password = dbPassword)
