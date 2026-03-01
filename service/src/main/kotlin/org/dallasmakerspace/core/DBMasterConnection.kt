@@ -21,13 +21,13 @@ class DBMasterConnection @Inject constructor(val appConfig: AppConfig) {
       val separator = if (dbUrl.contains("?")) "&" else "?"
       dbUrl +=
           "$separator" +
-              "maxPoolSize=20&" +
-              "minPoolSize=5&" +
-              "maxIdleTime=600000&" +
+              "maxPoolSize=10&" +
+              "minPoolSize=1&" +
+              "maxIdleTime=60000&" +
               "serverTimezone=UTC&" +
               "autoReconnect=true&" +
-              "connectTimeout=10000&" +
-              "socketTimeout=5000"
+              "connectTimeout=3000&" +
+              "socketTimeout=30000"
     }
 
     db = Database.connect(dbUrl, user = dbUser, password = dbPassword)
