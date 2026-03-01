@@ -63,8 +63,8 @@ dependencies {
   implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
   implementation("com.unboundid:unboundid-ldapsdk:6.0.7") // LDAP Integration
-  implementation("com.ucasoft.ktor:ktor-simple-cache:0.+") // In memory cache
-  implementation("com.ucasoft.ktor:ktor-simple-memory-cache:0.+") // In memory cache
+  implementation("com.ucasoft.ktor:ktor-simple-cache:0.57.7") // In memory cache
+  implementation("com.ucasoft.ktor:ktor-simple-memory-cache:0.57.7") // In memory cache
   implementation("ch.qos.logback:logback-classic:$logbackVersion")
   implementation("org.codehaus.janino:janino:3.1.12") // For conditional logback config
   implementation("org.mariadb.jdbc:mariadb-java-client:3.4.0")
