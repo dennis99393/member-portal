@@ -94,6 +94,13 @@ function initFeaturedProjectsScroll() {
         btnLeft.addEventListener('click', function () { row.scrollBy({ left: -STEP, behavior: 'smooth' }); });
         btnRight.addEventListener('click', function () { row.scrollBy({ left: STEP, behavior: 'smooth' }); });
         row.addEventListener('scroll', update, { passive: true });
+
+        row.addEventListener('wheel', function (e) {
+            if (row.scrollWidth <= row.clientWidth) return;
+            e.preventDefault();
+            row.scrollBy({ left: e.deltaY !== 0 ? e.deltaY : e.deltaX, behavior: 'auto' });
+        }, { passive: false });
+
         update();
     });
 }

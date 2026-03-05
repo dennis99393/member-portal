@@ -178,7 +178,7 @@ div.error-details > p { color: #c1c1c1; }
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 80px;
+    width: 56px;
     pointer-events: none;
     z-index: 1;
     opacity: 0;
@@ -216,6 +216,9 @@ div.error-details > p { color: #c1c1c1; }
 }
 .featured-scroll-btn--left  { left: 8px;  opacity: 0; pointer-events: none; }
 .featured-scroll-btn--right { right: 8px; }
+@media (max-width: 768px) {
+    .featured-scroll-btn { display: none; }
+}
 
 .featured-projects-row {
     display: flex;
