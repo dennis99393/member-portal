@@ -13,6 +13,7 @@ class CalTrendsEvents @Inject constructor(genericRepository: GenericRepository) 
 
   override fun getQuery() =
       """
+SET STATEMENT max_statement_time=1.5 FOR
 SELECT
     CONCAT('Week ', all_possible_weeks.WeekNum) AS `Week#`,
 

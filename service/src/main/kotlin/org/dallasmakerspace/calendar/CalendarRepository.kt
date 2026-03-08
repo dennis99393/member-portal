@@ -52,7 +52,11 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
         try {
           genericRepository.getReportData(query)
         } catch (ex: Exception) {
-          log.warn("Timed out or failed fetching events for member: $username - ${ex.message}")
+          if (ex.isStatementTimeout()) {
+            log.warn("Query timed out fetching events for member: $username")
+          } else {
+            log.warn("Failed fetching events for member: $username - ${ex.message}")
+          }
           return emptyList()
         }
     if (result == null) {
@@ -79,6 +83,7 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
   suspend fun hasPrerequisiteEvents(groupName: String): Boolean {
     val query =
         """
+      SET STATEMENT max_statement_time=1.5 FOR
       SELECT EXISTS(
         SELECT 1
         FROM `dms-calendar`.events e
@@ -92,7 +97,17 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
 
     log.debug("Checking prerequisite events for group: $groupName")
 
-    val result = genericRepository.getReportData(query)
+    val result =
+        try {
+          genericRepository.getReportData(query)
+        } catch (ex: Exception) {
+          if (ex.isStatementTimeout()) {
+            log.warn("Query timed out checking prerequisite events for group: $groupName")
+          } else {
+            log.warn("Failed checking prerequisite events for group: $groupName - ${ex.message}")
+          }
+          return false
+        }
     val hasEvents = result?.data?.firstOrNull()?.get("has_events")
     return hasEvents == 1L || hasEvents == 1 || hasEvents == true
   }
@@ -113,6 +128,7 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
 
     val query =
         """
+      SET STATEMENT max_statement_time=1.5 FOR
       SELECT
           e.id,
           e.name,
@@ -131,7 +147,17 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
 
     log.debug("Fetching upcoming prerequisite events for ${groupNames.size} groups")
 
-    val result = genericRepository.getReportData(query)
+    val result =
+        try {
+          genericRepository.getReportData(query)
+        } catch (ex: Exception) {
+          if (ex.isStatementTimeout()) {
+            log.warn("Query timed out fetching upcoming prerequisite events")
+          } else {
+            log.warn("Failed fetching upcoming prerequisite events - ${ex.message}")
+          }
+          return emptyList()
+        }
 
     return result?.data?.map { row ->
       val id = (row["id"] as? Number)?.toInt() ?: 0
@@ -177,7 +203,11 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
         try {
           genericRepository.getReportData(query)
         } catch (ex: Exception) {
-          log.warn("Failed fetching attended event names for member: $username - ${ex.message}")
+          if (ex.isStatementTimeout()) {
+            log.warn("Query timed out fetching attended event names for member: $username")
+          } else {
+            log.warn("Failed fetching attended event names for member: $username - ${ex.message}")
+          }
           return emptyList()
         }
 
@@ -215,7 +245,11 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
         try {
           genericRepository.getReportData(query)
         } catch (ex: Exception) {
-          log.warn("Failed fetching attended organizers for member: $username - ${ex.message}")
+          if (ex.isStatementTimeout()) {
+            log.warn("Query timed out fetching attended organizers for member: $username")
+          } else {
+            log.warn("Failed fetching attended organizers for member: $username - ${ex.message}")
+          }
           return emptyList()
         }
 
@@ -262,7 +296,11 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
         try {
           genericRepository.getReportData(query)
         } catch (ex: Exception) {
-          log.warn("Failed fetching upcoming events by organizers - ${ex.message}")
+          if (ex.isStatementTimeout()) {
+            log.warn("Query timed out fetching upcoming events by organizers")
+          } else {
+            log.warn("Failed fetching upcoming events by organizers - ${ex.message}")
+          }
           return emptyList()
         }
 
@@ -326,7 +364,11 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
         try {
           genericRepository.getReportData(query)
         } catch (ex: Exception) {
-          log.warn("Failed fetching upcoming events by keywords - ${ex.message}")
+          if (ex.isStatementTimeout()) {
+            log.warn("Query timed out fetching upcoming events by keywords")
+          } else {
+            log.warn("Failed fetching upcoming events by keywords - ${ex.message}")
+          }
           return emptyList()
         }
 
@@ -346,6 +388,9 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
       )
     } ?: emptyList()
   }
+
+  private fun Exception.isStatementTimeout() =
+      message?.contains("max_statement_time exceeded") == true
 }
 
 /** Represents a summary of a calendar event. */

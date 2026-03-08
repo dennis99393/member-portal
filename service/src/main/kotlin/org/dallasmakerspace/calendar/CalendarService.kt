@@ -1,11 +1,7 @@
 package org.dallasmakerspace.calendar
 
 import javax.inject.Inject
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.withTimeout
 import org.dallasmakerspace.core.LoggerFactory
-
-private const val CALENDAR_QUERY_TIMEOUT_MS = 5_000L
 
 /** Service for calendar events operations. */
 class CalendarService
@@ -23,14 +19,7 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
    */
   suspend fun getEventsOrganizedByMember(username: String, limit: Int = 5): List<EventSummary> {
     log.info("Getting events organized by member: $username")
-    return try {
-      withTimeout(CALENDAR_QUERY_TIMEOUT_MS) {
-        calendarRepository.getEventsOrganizedByMember(username, limit)
-      }
-    } catch (e: TimeoutCancellationException) {
-      log.warn("Timed out getting events organized by member: $username, returning empty list")
-      emptyList()
-    }
+    return calendarRepository.getEventsOrganizedByMember(username, limit)
   }
 
   /**
@@ -41,14 +30,7 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
    */
   suspend fun hasPrerequisiteEvents(groupName: String): Boolean {
     log.info("Checking prerequisite events for group: $groupName")
-    return try {
-      withTimeout(CALENDAR_QUERY_TIMEOUT_MS) { calendarRepository.hasPrerequisiteEvents(groupName) }
-    } catch (e: TimeoutCancellationException) {
-      log.warn(
-          "Timed out checking prerequisite events for group: $groupName, assuming none available"
-      )
-      false
-    }
+    return calendarRepository.hasPrerequisiteEvents(groupName)
   }
 
   /**
@@ -59,14 +41,7 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
    */
   suspend fun getUpcomingPrerequisiteEvents(groupNames: List<String>): List<EventSummary> {
     log.info("Getting upcoming prerequisite events for ${groupNames.size} groups")
-    return try {
-      withTimeout(CALENDAR_QUERY_TIMEOUT_MS) {
-        calendarRepository.getUpcomingPrerequisiteEvents(groupNames)
-      }
-    } catch (e: TimeoutCancellationException) {
-      log.warn("Timed out getting upcoming prerequisite events, returning empty list")
-      emptyList()
-    }
+    return calendarRepository.getUpcomingPrerequisiteEvents(groupNames)
   }
 
   /**
@@ -78,14 +53,7 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
    */
   suspend fun getAttendedEventNames(username: String, limit: Int = 20): List<String> {
     log.info("Getting attended event names for: $username")
-    return try {
-      withTimeout(CALENDAR_QUERY_TIMEOUT_MS) {
-        calendarRepository.getAttendedEventNames(username, limit)
-      }
-    } catch (e: TimeoutCancellationException) {
-      log.warn("Timed out getting attended event names for: $username, returning empty list")
-      emptyList()
-    }
+    return calendarRepository.getAttendedEventNames(username, limit)
   }
 
   /**
@@ -100,14 +68,7 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
       limit: Int = 5,
   ): List<EventSummary> {
     log.info("Getting upcoming events by keywords: $keywords")
-    return try {
-      withTimeout(CALENDAR_QUERY_TIMEOUT_MS) {
-        calendarRepository.getUpcomingEventsByKeywords(keywords, limit)
-      }
-    } catch (e: TimeoutCancellationException) {
-      log.warn("Timed out getting upcoming events by keywords, returning empty list")
-      emptyList()
-    }
+    return calendarRepository.getUpcomingEventsByKeywords(keywords, limit)
   }
 
   /**
@@ -119,14 +80,7 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
    */
   suspend fun getAttendedOrganizers(username: String, limit: Int = 5): List<String> {
     log.info("Getting top attended organizers for: $username")
-    return try {
-      withTimeout(CALENDAR_QUERY_TIMEOUT_MS) {
-        calendarRepository.getAttendedOrganizers(username, limit)
-      }
-    } catch (e: TimeoutCancellationException) {
-      log.warn("Timed out getting attended organizers for: $username, returning empty list")
-      emptyList()
-    }
+    return calendarRepository.getAttendedOrganizers(username, limit)
   }
 
   /**
@@ -141,13 +95,6 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
       limit: Int = 4,
   ): List<EventSummary> {
     log.info("Getting upcoming events for ${organizers.size} organizers")
-    return try {
-      withTimeout(CALENDAR_QUERY_TIMEOUT_MS) {
-        calendarRepository.getUpcomingEventsByOrganizers(organizers, limit)
-      }
-    } catch (e: TimeoutCancellationException) {
-      log.warn("Timed out getting upcoming events by organizers, returning empty list")
-      emptyList()
-    }
+    return calendarRepository.getUpcomingEventsByOrganizers(organizers, limit)
   }
 }

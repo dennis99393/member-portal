@@ -12,6 +12,7 @@ class FirstEvents @Inject constructor(genericRepository: GenericRepository) :
 
   override fun getQuery() =
       """
+      SET STATEMENT max_statement_time=1.5 FOR
       WITH RelevantRegistrations AS (
           -- Step 1: only contacts created in the last 90 days, attended an event within 7 days of signup
           SELECT

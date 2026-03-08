@@ -58,6 +58,7 @@ constructor(
     // Build query with group name parameter (escaped for SQL)
     val query =
         """
+        SET STATEMENT max_statement_time=1.5 FOR
         SELECT
             e.id as event_id,
             e.name as event_name,
@@ -79,7 +80,22 @@ constructor(
 
     // Execute query and build response
     val startTime = System.currentTimeMillis()
-    val dbData = genericRepository.getReportData(query)
+    val dbData =
+        try {
+          genericRepository.getReportData(query)
+        } catch (ex: Exception) {
+          val errorMessage =
+              if (ex.message?.contains("max_statement_time exceeded") == true) {
+                "Query timed out (max_statement_time exceeded)"
+              } else {
+                "Query failed: ${ex.message}"
+              }
+          return DataVizResponse(
+              data = null,
+              dataFields = emptyList(),
+              metadata = mapOf("error" to errorMessage),
+          )
+        }
     val endTime = System.currentTimeMillis()
     val timeTaken = endTime - startTime
     val timeTakenInSec = String.format(Locale.US, "%.3f", timeTaken / 1000f)

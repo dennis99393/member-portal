@@ -34,7 +34,22 @@ abstract class SqlReport(private val genericRepository: GenericRepository) : Dat
 
   override suspend fun getData(params: Map<String, List<String>>): DataVizResponse {
     val startTime = System.currentTimeMillis()
-    val dbData = genericRepository.getReportData(getQuery().trimIndent())
+    val dbData =
+        try {
+          genericRepository.getReportData(getQuery().trimIndent())
+        } catch (ex: Exception) {
+          val errorMessage =
+              if (ex.message?.contains("max_statement_time exceeded") == true) {
+                "Query timed out (max_statement_time exceeded)"
+              } else {
+                "Query failed: ${ex.message}"
+              }
+          return DataVizResponse(
+              data = null,
+              dataFields = emptyList(),
+              metadata = mapOf("error" to errorMessage),
+          )
+        }
     val endTime = System.currentTimeMillis()
     val timeTaken = endTime - startTime
     val timeTakenInSec = String.format(Locale.US, "%.3f", timeTaken / MILLIS_IN_SECOND)

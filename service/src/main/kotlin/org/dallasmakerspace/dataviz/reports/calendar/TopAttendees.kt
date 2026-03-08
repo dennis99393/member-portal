@@ -23,6 +23,7 @@ constructor(
 
   override fun getQuery() =
       """
+      SET STATEMENT max_statement_time=1.5 FOR
       SELECT
           r.ad_username,
           COUNT(DISTINCT r.event_id) AS `Events Attended`
