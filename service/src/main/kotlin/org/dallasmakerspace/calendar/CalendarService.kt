@@ -45,7 +45,8 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
       withTimeout(CALENDAR_QUERY_TIMEOUT_MS) { calendarRepository.hasPrerequisiteEvents(groupName) }
     } catch (e: TimeoutCancellationException) {
       log.warn(
-          "Timed out checking prerequisite events for group: $groupName, assuming none available")
+          "Timed out checking prerequisite events for group: $groupName, assuming none available"
+      )
       false
     }
   }
@@ -64,6 +65,88 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
       }
     } catch (e: TimeoutCancellationException) {
       log.warn("Timed out getting upcoming prerequisite events, returning empty list")
+      emptyList()
+    }
+  }
+
+  /**
+   * Gets distinct event names that a member has attended, ordered by most recent first.
+   *
+   * @param username The AD username of the member.
+   * @param limit The maximum number of event names to return (default 20).
+   * @return A list of event name strings.
+   */
+  suspend fun getAttendedEventNames(username: String, limit: Int = 20): List<String> {
+    log.info("Getting attended event names for: $username")
+    return try {
+      withTimeout(CALENDAR_QUERY_TIMEOUT_MS) {
+        calendarRepository.getAttendedEventNames(username, limit)
+      }
+    } catch (e: TimeoutCancellationException) {
+      log.warn("Timed out getting attended event names for: $username, returning empty list")
+      emptyList()
+    }
+  }
+
+  /**
+   * Gets upcoming events whose names match any of the given keywords.
+   *
+   * @param keywords The list of keywords to search for in event names.
+   * @param limit The maximum number of events to return (default 5).
+   * @return A list of [EventSummary] objects for upcoming matching events.
+   */
+  suspend fun getUpcomingEventsByKeywords(
+      keywords: List<String>,
+      limit: Int = 5,
+  ): List<EventSummary> {
+    log.info("Getting upcoming events by keywords: $keywords")
+    return try {
+      withTimeout(CALENDAR_QUERY_TIMEOUT_MS) {
+        calendarRepository.getUpcomingEventsByKeywords(keywords, limit)
+      }
+    } catch (e: TimeoutCancellationException) {
+      log.warn("Timed out getting upcoming events by keywords, returning empty list")
+      emptyList()
+    }
+  }
+
+  /**
+   * Gets organizer usernames for events a member has attended, ranked by attendance frequency.
+   *
+   * @param username The AD username of the member.
+   * @param limit The maximum number of organizer usernames to return (default 5).
+   * @return A list of organizer AD usernames, highest-frequency first.
+   */
+  suspend fun getAttendedOrganizers(username: String, limit: Int = 5): List<String> {
+    log.info("Getting top attended organizers for: $username")
+    return try {
+      withTimeout(CALENDAR_QUERY_TIMEOUT_MS) {
+        calendarRepository.getAttendedOrganizers(username, limit)
+      }
+    } catch (e: TimeoutCancellationException) {
+      log.warn("Timed out getting attended organizers for: $username, returning empty list")
+      emptyList()
+    }
+  }
+
+  /**
+   * Gets upcoming events organized by any of the given organizer usernames.
+   *
+   * @param organizers The list of organizer AD usernames.
+   * @param limit The maximum number of events to return (default 4).
+   * @return A list of [EventSummary] objects for upcoming events.
+   */
+  suspend fun getUpcomingEventsByOrganizers(
+      organizers: List<String>,
+      limit: Int = 4,
+  ): List<EventSummary> {
+    log.info("Getting upcoming events for ${organizers.size} organizers")
+    return try {
+      withTimeout(CALENDAR_QUERY_TIMEOUT_MS) {
+        calendarRepository.getUpcomingEventsByOrganizers(organizers, limit)
+      }
+    } catch (e: TimeoutCancellationException) {
+      log.warn("Timed out getting upcoming events by organizers, returning empty list")
       emptyList()
     }
   }

@@ -210,7 +210,7 @@ constructor(
       path: String,
       sessionId: String?,
       username: String?,
-      body: Any
+      body: Any,
   ): Map<String, Any> {
     try {
       val apiHeaders = getApiHeaders(sessionId, username)
@@ -227,7 +227,7 @@ constructor(
       path: String,
       sessionId: String?,
       username: String?,
-      body: Any
+      body: Any,
   ): Map<String, Any> {
     try {
       val apiHeaders = getApiHeaders(sessionId, username)
@@ -243,7 +243,7 @@ constructor(
   suspend fun callBackendApiDelete(
       path: String,
       sessionId: String?,
-      username: String?
+      username: String?,
   ): Map<String, Any> {
     try {
       val apiHeaders = getApiHeaders(sessionId, username)
@@ -301,7 +301,7 @@ constructor(
 
   suspend fun getUpcomingPrerequisiteEvents(
       groupNames: List<String>,
-      sessionId: String?
+      sessionId: String?,
   ): List<EventSummary> {
     return try {
       val apiHeaders = getApiHeaders(sessionId)
@@ -329,7 +329,7 @@ constructor(
       sessionId: String?,
       question: String,
       username: String?,
-      forceRefresh: Boolean = false
+      forceRefresh: Boolean = false,
   ): Map<String, Any?> {
     try {
       val apiHeaders = getApiHeaders(sessionId, username)
@@ -386,7 +386,7 @@ constructor(
 
   suspend fun getFeaturedProjectsForMember(
       username: String,
-      sessionId: String?
+      sessionId: String?,
   ): List<FeaturedProject> {
     return try {
       val apiHeaders = getApiHeaders(sessionId)
@@ -400,7 +400,7 @@ constructor(
 
   suspend fun getFeaturedProjectsForMemberAsync(
       username: String,
-      sessionId: String?
+      sessionId: String?,
   ): List<FeaturedProject> {
     return try {
       val apiHeaders = getApiHeaders(sessionId)
@@ -442,6 +442,98 @@ constructor(
     }
   }
 
+  suspend fun getAttendedOrganizers(username: String, sessionId: String?): List<String> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result =
+          dmsHttpClient.get(
+              "$baseUrl/members/$username/attended-organizers",
+              apiHeaders,
+              DMSHttpClient.SHORT_TIMEOUT_MS,
+          )
+      (result["data"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    } catch (ex: Exception) {
+      log.warn("Failed to get attended organizers for: $username", ex)
+      emptyList()
+    }
+  }
+
+  suspend fun getUpcomingEventsByOrganizers(
+      organizers: List<String>,
+      sessionId: String?,
+  ): List<EventSummary> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result =
+          dmsHttpClient.post(
+              "$baseUrl/calendar/upcoming-events-by-organizers",
+              apiHeaders,
+              organizers,
+              DMSHttpClient.SHORT_TIMEOUT_MS,
+          )
+      val data = result["data"] as? List<*> ?: return emptyList()
+      data.map { eventMap ->
+        val event = eventMap as Map<*, *>
+        EventSummary(
+            id = (event["id"] as Number).toInt(),
+            name = event["name"] as String,
+            eventStart = event["eventStart"] as String,
+            status = event["status"] as String,
+            organizerUsername = event["organizerUsername"] as? String,
+        )
+      }
+    } catch (ex: Exception) {
+      log.warn("Failed to get upcoming events by organizers", ex)
+      emptyList()
+    }
+  }
+
+  suspend fun getAttendedEventNames(username: String, sessionId: String?): List<String> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result =
+          dmsHttpClient.get(
+              "$baseUrl/members/$username/attended-event-names",
+              apiHeaders,
+              DMSHttpClient.SHORT_TIMEOUT_MS,
+          )
+      (result["data"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    } catch (ex: Exception) {
+      log.warn("Failed to get attended event names for: $username", ex)
+      emptyList()
+    }
+  }
+
+  suspend fun getUpcomingEventsByKeywords(
+      keywords: List<String>,
+      sessionId: String?,
+  ): List<EventSummary> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result =
+          dmsHttpClient.post(
+              "$baseUrl/calendar/upcoming-events-by-keywords",
+              apiHeaders,
+              keywords,
+              DMSHttpClient.SHORT_TIMEOUT_MS,
+          )
+      val data = result["data"] as? List<*> ?: return emptyList()
+      data.map { eventMap ->
+        val event = eventMap as Map<*, *>
+        EventSummary(
+            id = (event["id"] as Number).toInt(),
+            name = event["name"] as String,
+            eventStart = event["eventStart"] as String,
+            status = event["status"] as String,
+            organizerUsername = event["organizerUsername"] as? String,
+        )
+      }
+    } catch (ex: Exception) {
+      log.warn("Failed to get upcoming events by keywords", ex)
+      emptyList()
+    }
+  }
+
   suspend fun getBadgeFromMakerManager(username: String, sessionId: String?): String? {
     return try {
       val apiHeaders = getApiHeaders(sessionId)
@@ -466,7 +558,7 @@ constructor(
 
   suspend fun getDebugInfo(
       username: String,
-      sessionId: String?
+      sessionId: String?,
   ): org.dallasmakerspace.models.MemberDebugInfo? {
     return try {
       val apiHeaders = getApiHeaders(sessionId)
@@ -490,7 +582,8 @@ constructor(
                     },
                 startDate = kotlinx.datetime.LocalDate.parse(startDate),
                 endDate = endDate?.let { kotlinx.datetime.LocalDate.parse(it) },
-                durationDays = durationDays)
+                durationDays = durationDays,
+            )
           } ?: emptyList()
 
       org.dallasmakerspace.models.MemberDebugInfo(
@@ -510,7 +603,7 @@ constructor(
   suspend fun resolveShortLink(
       path: String,
       sessionId: String?,
-      username: String?
+      username: String?,
   ): ShortLinkResult {
     val client = HttpClient(CIO) { followRedirects = false }
     val apiHeaders = getApiHeaders(sessionId, username)

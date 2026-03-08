@@ -101,3 +101,257 @@
     }
 }
 
+/* ── Suggested Events Widget ── */
+.suggested-events-section {
+    margin: 2rem 0;
+}
+
+.suggested-events-heading {
+    font-size: 1.45rem;
+    font-weight: 800;
+    margin: 0 0 16px;
+    color: #111;
+    font-family: var(--link);
+}
+
+/* Single-column list; two columns on wider screens */
+.suggested-events-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+
+@media screen and (min-width: 700px) {
+    .suggested-events-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.suggested-event-card {
+    min-width: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid #e8ecf0;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    background: #fff;
+    transition: background-color 0.15s;
+}
+
+.suggested-event-card:hover {
+    background-color: #f8f9fa;
+}
+
+/* Date badge */
+.suggested-event-date-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    background: #eff6ff;
+    border-radius: 8px;
+    line-height: 1;
+    gap: 0.05rem;
+}
+
+.suggested-event-badge-month {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #3b82f6;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.suggested-event-badge-day {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1.1;
+    font-family: var(--link);
+}
+
+/* Info */
+.suggested-event-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.suggested-event-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #111;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.suggested-event-meta {
+    font-size: 0.78rem;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Chevron */
+.suggested-event-chevron {
+    color: #cbd5e1;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.suggested-events-empty {
+    color: #888;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+/* Shimmer skeleton */
+.suggested-event-skeleton {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid #e8ecf0;
+    border-radius: 8px;
+}
+
+.shimmer-badge {
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    border-radius: 8px;
+}
+
+.shimmer-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+@keyframes shimmer-sweep {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+}
+
+.shimmer-line {
+    border-radius: 4px;
+    background: linear-gradient(90deg, #eee 25%, #f8f8f8 50%, #eee 75%);
+    background-size: 800px 100%;
+    animation: shimmer-sweep 1.4s infinite linear;
+}
+
+.shimmer-title {
+    height: 13px;
+    width: 65%;
+}
+
+.shimmer-meta {
+    height: 11px;
+    width: 42%;
+}
+
+.shimmer-organizer {
+    width: 30%;
+}
+
+/* Source badge on each event card (visible in profile debug widget) */
+.suggested-event-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.suggested-source-badge {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.suggested-source-organizer {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.suggested-source-keyword {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.suggested-source-fallback {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+/* Profile debug widget — <details> element */
+.suggested-debug-widget > summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+}
+
+.suggested-debug-widget > summary::-webkit-details-marker {
+    display: none;
+}
+
+.suggested-debug-summary::after {
+    content: ' ›';
+    color: #aaa;
+    font-size: 1rem;
+}
+
+.suggested-debug-widget[open] > summary .suggested-debug-summary::after {
+    content: ' ‹';
+}
+
+/* Debug info panel shown above the event cards */
+.suggested-debug-panel {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.8rem;
+    color: #444;
+    margin-top: 0.75rem;
+}
+
+.suggested-debug-row {
+    margin-bottom: 0.2rem;
+}
+
+.suggested-debug-row:last-child {
+    margin-bottom: 0;
+}
+
+.suggested-debug-label {
+    font-weight: 600;
+    margin-right: 0.35rem;
+}
+
+.suggested-debug-reason {
+    margin-top: 0.4rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid #dee2e6;
+    color: #666;
+    font-style: italic;
+}
+

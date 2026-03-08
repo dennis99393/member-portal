@@ -158,6 +158,20 @@ fun Application.configureRouting() {
               ))
         }
 
+        /** Attended event names - requires member:read since it's member data * */
+        get<Members.DMSMember.AttendedEventNames> { resource ->
+          val names =
+              calendarService.getAttendedEventNames(resource.parent.username, resource.limit)
+          call.respond(mapOf("data" to names))
+        }
+
+        /** Attended organizers ranked by frequency - requires member:read * */
+        get<Members.DMSMember.AttendedOrganizers> { resource ->
+          val organizers =
+              calendarService.getAttendedOrganizers(resource.parent.username, resource.limit)
+          call.respond(mapOf("data" to organizers))
+        }
+
         /** Badge operations - get badge from MakerManager * */
         get<Members.DMSMember.BadgeMM> { badgeRequest ->
           val badge = memberService.getBadgeFromMakerManager(badgeRequest.parent.username)
@@ -315,6 +329,30 @@ fun Application.configureRouting() {
                   Status.SUCCESS,
                   "Upcoming prerequisite events for ${groupNames.size} groups",
                   events))
+        }
+
+        post("/calendar/upcoming-events-by-keywords") {
+          val keywords = call.receive<List<String>>()
+          if (keywords.size > 20) {
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ApiResponse(Status.ERROR, "Too many keywords (max 20)", null))
+            return@post
+          }
+          val events = calendarService.getUpcomingEventsByKeywords(keywords, limit = 5)
+          call.respond(mapOf("data" to events))
+        }
+
+        post("/calendar/upcoming-events-by-organizers") {
+          val organizers = call.receive<List<String>>()
+          if (organizers.size > 10) {
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ApiResponse(Status.ERROR, "Too many organizers (max 10)", null))
+            return@post
+          }
+          val events = calendarService.getUpcomingEventsByOrganizers(organizers, limit = 2)
+          call.respond(mapOf("data" to events))
         }
       }
 

@@ -32,6 +32,7 @@ import org.dallasmakerspace.server.routes.ShortLinkDetailsHandler
 import org.dallasmakerspace.server.routes.ShortLinkRedirectHandler
 import org.dallasmakerspace.server.routes.ShortLinksAdminHandler
 import org.dallasmakerspace.server.routes.ShortLinksHandler
+import org.dallasmakerspace.server.routes.SuggestedEventsHandler
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 
 @Module
@@ -197,6 +198,15 @@ class RoutesModule {
   fun providesActionTrackingHandler(
       loggerFactory: LoggerFactory,
   ): IRouteHandler = ActionTrackingHandler(loggerFactory)
+
+  @IntoMap
+  @Provides
+  @StringKey("/api/suggested-events")
+  fun providesSuggestedEventsHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService,
+  ): IRouteHandler = SuggestedEventsHandler(loggerFactory, userInfoProvider, memberService)
 
   @IntoMap
   @Provides

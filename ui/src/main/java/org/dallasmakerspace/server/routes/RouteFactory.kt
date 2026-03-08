@@ -72,6 +72,7 @@ object RouteFactory {
     COMMITTEES("/committees"),
     COMMITTEE_DETAIL("/committees/{committee_slug}"),
     ACTION_TRACK("/api/track"),
+    SUGGESTED_EVENTS("/api/suggested-events"),
     ASK_AI("/ask-ai"),
     MANIFEST("/manifest.json"),
     OFFLINE("/offline"),

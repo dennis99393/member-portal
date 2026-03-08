@@ -35,38 +35,158 @@
 <!-- Featured Projects Row -->
 <section th:if="${featured_projects != null and !#lists.isEmpty(featured_projects)}"
          class="featured-projects-section">
-    <div class="featured-projects-header">
-        <div>
-            <h2 class="featured-projects-heading">Featured Projects</h2>
-            <!--<p class="featured-projects-subtitle">Member creations from Show &amp; Tell</p>-->
+    <div class="container">
+        <div class="featured-projects-header">
+            <div>
+                <h2 class="featured-projects-heading">Featured Projects</h2>
+                <!--<p class="featured-projects-subtitle">Member creations from Show &amp; Tell</p>-->
+            </div>
         </div>
-    </div>
-    <div class="featured-projects-track-wrap">
-        <button class="featured-scroll-btn featured-scroll-btn--left" aria-label="Scroll left">&#8249;</button>
-        <div class="featured-projects-row">
-            <a th:each="p : ${featured_projects}"
-               th:href="${p.profileUrl}"
-               class="featured-project-card">
-                <div class="featured-project-img-wrap">
-                    <img th:src="${p.imageUrl}" th:alt="${p.memberDisplayName}"
-                         class="featured-project-img" loading="lazy"/>
-                    <!--<span th:if="${p.likeCount > 0}" class="featured-project-likes-badge">
-                        &#10084; <span th:text="${p.likeCount}"></span>
-                    </span>-->
-                    <div class="featured-project-overlay">
-                        <img th:if="${p.memberAvatarUrl != null and !#strings.isEmpty(p.memberAvatarUrl)}"
-                             th:src="${p.memberAvatarUrl}" th:alt="${p.memberDisplayName}"
-                             class="featured-project-avatar" loading="lazy"/>
-                        <span th:if="${p.memberAvatarUrl == null or #strings.isEmpty(p.memberAvatarUrl)}"
-                              class="featured-project-avatar-placeholder"></span>
-                        <span class="featured-project-author" th:text="${p.memberDisplayName}"></span>
+        <div class="featured-projects-track-wrap">
+            <button class="featured-scroll-btn featured-scroll-btn--left" aria-label="Scroll left">&#8249;</button>
+            <div class="featured-projects-row">
+                <a th:each="p : ${featured_projects}"
+                   th:href="${p.profileUrl}"
+                   class="featured-project-card">
+                    <div class="featured-project-img-wrap">
+                        <img th:src="${p.imageUrl}" th:alt="${p.memberDisplayName}"
+                             class="featured-project-img" loading="lazy"/>
+                        <!--<span th:if="${p.likeCount > 0}" class="featured-project-likes-badge">
+                            &#10084; <span th:text="${p.likeCount}"></span>
+                        </span>-->
+                        <div class="featured-project-overlay">
+                            <img th:if="${p.memberAvatarUrl != null and !#strings.isEmpty(p.memberAvatarUrl)}"
+                                 th:src="${p.memberAvatarUrl}" th:alt="${p.memberDisplayName}"
+                                 class="featured-project-avatar" loading="lazy"/>
+                            <span th:if="${p.memberAvatarUrl == null or #strings.isEmpty(p.memberAvatarUrl)}"
+                                  class="featured-project-avatar-placeholder"></span>
+                            <span class="featured-project-author" th:text="${p.memberDisplayName}"></span>
+                        </div>
                     </div>
-                </div>
-            </a>
+                </a>
+            </div>
+            <button class="featured-scroll-btn featured-scroll-btn--right" aria-label="Scroll right">&#8250;</button>
         </div>
-        <button class="featured-scroll-btn featured-scroll-btn--right" aria-label="Scroll right">&#8250;</button>
     </div>
 </section>
+
+<!-- Suggested Events Widget -->
+<section class="suggested-events-section">
+    <div class="container">
+        <div class="suggested-events-header">
+            <h2 class="suggested-events-heading">Suggested Events For You</h2>
+        </div>
+
+        <!-- Shimmer skeleton shown while loading -->
+        <div id="suggestedEventsSkeleton" class="suggested-events-grid">
+            <div class="suggested-event-skeleton">
+                <div class="shimmer-line shimmer-badge"></div>
+                <div class="shimmer-body">
+                    <div class="shimmer-line shimmer-title"></div>
+                    <div class="shimmer-line shimmer-meta"></div>
+                </div>
+            </div>
+            <div class="suggested-event-skeleton">
+                <div class="shimmer-line shimmer-badge"></div>
+                <div class="shimmer-body">
+                    <div class="shimmer-line shimmer-title"></div>
+                    <div class="shimmer-line shimmer-meta"></div>
+                </div>
+            </div>
+            <div class="suggested-event-skeleton">
+                <div class="shimmer-line shimmer-badge"></div>
+                <div class="shimmer-body">
+                    <div class="shimmer-line shimmer-title"></div>
+                    <div class="shimmer-line shimmer-meta"></div>
+                </div>
+            </div>
+            <div class="suggested-event-skeleton">
+                <div class="shimmer-line shimmer-badge"></div>
+                <div class="shimmer-body">
+                    <div class="shimmer-line shimmer-title"></div>
+                    <div class="shimmer-line shimmer-meta"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content shown after fetch -->
+        <div id="suggestedEventsContent" class="suggested-events-grid" style="display:none;"></div>
+
+        <!-- Null state -->
+        <p id="suggestedEventsEmpty" class="suggested-events-empty" style="display:none;">No upcoming events to suggest
+            right now.</p>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/api/suggested-events')
+            .then(function (res) { return res.ok ? res.json() : Promise.reject(res.status); })
+            .then(function (data) {
+            var events = data.events || [];
+            document.getElementById('suggestedEventsSkeleton').style.display = 'none';
+            if (!events || events.length === 0) {
+                document.getElementById('suggestedEventsEmpty').style.display = '';
+                return;
+            }
+            var container = document.getElementById('suggestedEventsContent');
+            events.forEach(function (ev) {
+                var card = document.createElement('a');
+                card.href = (ev.url && /^https:\/\//i.test(ev.url)) ? ev.url : '#';
+                card.className = 'suggested-event-card';
+                card.target = '_blank';
+                card.rel = 'noopener noreferrer';
+                // Parse "Wed, Mar 11, 2026 at 6:30 PM" → month/day/time
+                var parsed = parseEventDate(ev.eventStart || '');
+                var org = ev.organizer || {};
+                var metaParts = [];
+                if (parsed.time) metaParts.push(parsed.time);
+                if (org.displayName || org.username) metaParts.push(org.displayName || org.username);
+                card.innerHTML =
+                '<div class="suggested-event-date-badge">' +
+                '<span class="suggested-event-badge-month">' + escapeHtml(parsed.month) + '</span>' +
+                '<span class="suggested-event-badge-day">' + escapeHtml(parsed.day) + '</span>' +
+                '</div>' +
+                '<div class="suggested-event-info">' +
+                '<span class="suggested-event-name">' + escapeHtml(ev.name) + '</span>' +
+                '<span class="suggested-event-meta">' + escapeHtml(metaParts.join(' \u2022 ')) + '</span>' +
+                '</div>' +
+                '<span class="suggested-event-chevron">&#8250;</span>';
+                container.appendChild(card);
+            });
+            container.style.display = '';
+        })
+            .catch(function () {
+            document.getElementById('suggestedEventsSkeleton').style.display = 'none';
+            // Silently hide on error — no broken layout
+        });
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // Parse "Wed, Mar 11, 2026 at 6:30 PM" → { month:"MAR", day:"11", time:"6:30 PM" }
+        function parseEventDate(dateStr) {
+            try {
+                var parts = dateStr.split(', ');
+                var monthDay = (parts[1] || '').split(' ');
+                var timePart = (parts[2] || '').split(' at ');
+                return {
+                    month: (monthDay[0] || '').toUpperCase(),
+                    day: monthDay[1] || '',
+                    time: timePart[1] || ''
+                };
+            } catch (e) {
+                return { month: '', day: '', time: dateStr };
+            }
+        }
+    });
+</script>
 
 <!-- Bootstrap JS should be at the bottom of the body -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

@@ -305,42 +305,91 @@
                          aria-expanded="false" aria-controls="debugInfoContent">
                         <h4 class="card-title mb-0 dms-card-title">Debug Info</h4>
                         <span class="text-sm text-danger ms-2">[Infra only]</span>
-                        <span class="material-symbols-outlined ms-auto text-muted" id="debugToggleIcon">expand_more</span>
+                        <span class="material-symbols-outlined ms-auto text-muted"
+                              id="debugToggleIcon">expand_more</span>
                     </div>
                     <div class="collapse" id="debugInfoContent" th:attr="data-username=${preferred_username}">
-                    <div class="mt-4">
-                        <!-- Async-loaded debug info (AD, MM, WHMCS) -->
-                        <div id="debugInfoDynamic">
-                            <div class="text-muted small">
-                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                                Loading...
+                        <div class="mt-4">
+                            <!-- Async-loaded debug info (AD, MM, WHMCS) -->
+                            <div id="debugInfoDynamic">
+                                <div class="text-muted small">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status"
+                                          aria-hidden="true"></span>
+                                    Loading...
+                                </div>
                             </div>
-                        </div>
 
-                        <hr class="my-3">
-                        <div class="d-flex align-items-center mb-2" th:if="${whmcs_id}">
-                            <span>WhmcsId: <span class="ph-mask" th:text="${whmcs_id}"></span></span>
-                        </div>
-                        <div class="d-flex align-items-center mb-2">
-                            <span>isPrimaryAccount: <span th:text="${is_primary_account}"></span></span>
-                        </div>
-                        <div class="d-flex align-items-center mb-2">
-                            <span>wasActivePast90Days: <span th:text="${was_active_past_90_days}"></span></span>
-                        </div>
-                        <div class="d-flex align-items-center mb-2" th:unless="${was_active_past_90_days}">
+                            <hr class="my-3">
+                            <div class="d-flex align-items-center mb-2" th:if="${whmcs_id}">
+                                <span>WhmcsId: <span class="ph-mask" th:text="${whmcs_id}"></span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <span>isPrimaryAccount: <span th:text="${is_primary_account}"></span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <span>wasActivePast90Days: <span th:text="${was_active_past_90_days}"></span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2" th:unless="${was_active_past_90_days}">
                                 <span>lastInactiveDate: <span
                                         th:text="|${last_inactive_date} (${days_since_last_inactive})|"></span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <span>Personal email: <span class="ph-mask" th:text="${personal_email}"></span></span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <span>Phone number: <span class="ph-mask" th:text="${phone_number}"></span></span>
+                            </div>
                         </div>
-                        <div class="d-flex align-items-center mb-2">
-                            <span>Personal email: <span class="ph-mask" th:text="${personal_email}"></span></span>
-                        </div>
-                        <div class="d-flex align-items-center mb-2">
-                            <span>Phone number: <span class="ph-mask" th:text="${phone_number}"></span></span>
-                        </div>
-                    </div>
                     </div><!-- end collapse -->
                 </div>
             </div>
+
+
+            <!-- Suggested Events Debug Widget (infra only) -->
+            <details id="profileSuggestedDetails" class="card shadow-sm overflow-hidden mt-4 suggested-debug-widget"
+                     th:if="${is_infra}">
+                <summary class="card-body pt-3 pb-3 suggested-debug-summary">
+                    <span class="fw-semibold">Suggested Events</span>
+                    <span class="text-sm text-danger ms-2">[Infra only]</span>
+                    <span class="text-muted small ms-2" th:text="'for @' + ${preferred_username}"></span>
+                </summary>
+                <div class="card-body pt-0">
+                    <!-- Debug info panel -->
+                    <div id="profileSuggestedDebug" class="suggested-debug-panel" style="display:none;"></div>
+
+                    <!-- Shimmer skeleton -->
+                    <div id="profileSuggestedSkeleton" class="suggested-events-grid mt-3">
+                        <div class="suggested-event-skeleton">
+                            <div class="shimmer-line shimmer-title"></div>
+                            <div class="shimmer-line shimmer-meta"></div>
+                            <div class="shimmer-line shimmer-meta shimmer-organizer"></div>
+                        </div>
+                        <div class="suggested-event-skeleton">
+                            <div class="shimmer-line shimmer-title"></div>
+                            <div class="shimmer-line shimmer-meta"></div>
+                            <div class="shimmer-line shimmer-meta shimmer-organizer"></div>
+                        </div>
+                        <div class="suggested-event-skeleton">
+                            <div class="shimmer-line shimmer-title"></div>
+                            <div class="shimmer-line shimmer-meta"></div>
+                            <div class="shimmer-line shimmer-meta shimmer-organizer"></div>
+                        </div>
+                        <div class="suggested-event-skeleton">
+                            <div class="shimmer-line shimmer-title"></div>
+                            <div class="shimmer-line shimmer-meta"></div>
+                            <div class="shimmer-line shimmer-meta shimmer-organizer"></div>
+                        </div>
+                    </div>
+
+                    <!-- Event cards -->
+                    <div id="profileSuggestedContent" class="suggested-events-grid mt-3" style="display:none;"></div>
+
+                    <!-- Null state -->
+                    <p id="profileSuggestedEmpty" class="suggested-events-empty" style="display:none;">No upcoming
+                        events to suggest.</p>
+                </div>
+            </details>
+
         </div>
         <div class="col-md-8">
             <!-- Linked accounts card -->
@@ -491,23 +540,34 @@
                 <!-- Skeleton loading state -->
                 <div id="profileFeaturedProjectsLoading" class="featured-projects-track-wrap">
                     <div class="featured-projects-row">
-                        <div class="featured-project-card"><div class="featured-project-img-wrap featured-project-skeleton"></div></div>
-                        <div class="featured-project-card"><div class="featured-project-img-wrap featured-project-skeleton"></div></div>
-                        <div class="featured-project-card"><div class="featured-project-img-wrap featured-project-skeleton"></div></div>
-                        <div class="featured-project-card"><div class="featured-project-img-wrap featured-project-skeleton"></div></div>
+                        <div class="featured-project-card">
+                            <div class="featured-project-img-wrap featured-project-skeleton"></div>
+                        </div>
+                        <div class="featured-project-card">
+                            <div class="featured-project-img-wrap featured-project-skeleton"></div>
+                        </div>
+                        <div class="featured-project-card">
+                            <div class="featured-project-img-wrap featured-project-skeleton"></div>
+                        </div>
+                        <div class="featured-project-card">
+                            <div class="featured-project-img-wrap featured-project-skeleton"></div>
+                        </div>
                     </div>
                 </div>
                 <!-- Content (hidden until loaded) -->
                 <div id="profileFeaturedProjectsContent" class="featured-projects-track-wrap" style="display: none;">
-                    <button class="featured-scroll-btn featured-scroll-btn--left" aria-label="Scroll left">&#8249;</button>
+                    <button class="featured-scroll-btn featured-scroll-btn--left" aria-label="Scroll left">&#8249;
+                    </button>
                     <div class="featured-projects-row"></div>
-                    <button class="featured-scroll-btn featured-scroll-btn--right" aria-label="Scroll right">&#8250;</button>
+                    <button class="featured-scroll-btn featured-scroll-btn--right" aria-label="Scroll right">&#8250;
+                    </button>
                 </div>
                 <!-- Null state (self only, hidden until loaded with empty result) -->
                 <div id="profileFeaturedProjectsEmpty" style="display: none; padding: 8px 24px 4px;">
                     <p style="color: #888; font-size: 0.9rem; margin: 0;">
                         No featured projects yet.
-                        <a href="https://talk.dallasmakerspace.org/c/show-and-tell/49" target="_blank" rel="noopener" style="color: #888;">
+                        <a href="https://talk.dallasmakerspace.org/c/show-and-tell/49" target="_blank" rel="noopener"
+                           style="color: #888;">
                             Share your work in Show &amp; Tell
                         </a>
                         and it'll appear here!
@@ -847,38 +907,140 @@
         fetch('/profile/@' + username + '/featured-projects')
             .then(function(resp) { return resp.ok ? resp.json() : []; })
             .then(function(projects) {
-                loadingEl.style.display = 'none';
-                if (!projects || projects.length === 0) {
-                    if (isSelf) {
-                        emptyEl.style.display = '';
-                    } else {
-                        section.style.display = 'none';
-                    }
+            loadingEl.style.display = 'none';
+            if (!projects || projects.length === 0) {
+                if (isSelf) {
+                    emptyEl.style.display = '';
+                } else {
+                    section.style.display = 'none';
+                }
+                return;
+            }
+            row.innerHTML = projects.map(function(p) {
+                var likeBadge = p.likeCount > 0
+                    ? '<span class="featured-project-likes-badge">\u2764 ' + p.likeCount + '</span>'
+                    : '';
+                var avatar = p.memberAvatarUrl
+                    ? '<img src="' + escapeHtml(p.memberAvatarUrl) + '" class="featured-project-avatar" loading="lazy" alt=""/>'
+                    : '<span class="featured-project-avatar-placeholder"></span>';
+                return '<a href="' + escapeHtml(p.discourseTopicUrl) + '" target="_blank" class="featured-project-card">'
+                + '<div class="featured-project-img-wrap">'
+                + '<img src="' + escapeHtml(p.imageUrl) + '" class="featured-project-img" loading="lazy" alt=""/>'
+                + likeBadge
+                + '<div class="featured-project-overlay">'
+                + avatar
+                + '<span class="featured-project-author">' + escapeHtml(p.memberDisplayName || '') + '</span>'
+                + '</div></div></a>';
+            }).join('');
+            contentEl.style.display = '';
+            row.dispatchEvent(new Event('scroll'));
+        })
+            .catch(function() {
+            loadingEl.style.display = 'none';
+            section.style.display = 'none';
+        });
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+    })();
+</script>
+
+<!-- Suggested Events Debug Widget (infra only) -->
+<script th:if="${is_infra}" th:inline="javascript">
+    (function() {
+        'use strict';
+
+        const username = /*[[${preferred_username}]]*/ '';
+
+        const skeleton = document.getElementById('profileSuggestedSkeleton');
+        const content  = document.getElementById('profileSuggestedContent');
+        const empty    = document.getElementById('profileSuggestedEmpty');
+        const debugPanel = document.getElementById('profileSuggestedDebug');
+
+        // Lazy-load when the <details> is first opened
+        const details = document.getElementById('profileSuggestedDetails');
+        if (!details) return;
+
+        let loaded = false;
+        details.addEventListener('toggle', function() {
+            if (!details.open || loaded) return;
+
+            fetch('/api/suggested-events?username=' + encodeURIComponent(username))
+                .then(function(res) { return res.ok ? res.json() : Promise.reject(res.status); })
+                .then(function(data) {
+                loaded = true;
+                skeleton.style.display = 'none';
+                var events = data.events || [];
+                var debug  = data.debug  || {};
+
+                // Debug panel
+                var organizers = (debug.organizers || []).join(', ') || '—';
+                var keywords   = (debug.keywords   || []).join(', ') || '—';
+                var reason     = debug.reason || '';
+                var fallback   = debug.fallbackUsed ? 'Yes' : 'No';
+                var cached    = debug.cached ? '<span class="text-success">Yes (served from cache)</span>' : 'No';
+                debugPanel.innerHTML =
+                '<div class="suggested-debug-row"><span class="suggested-debug-label">Cached:</span> ' + cached + '</div>' +
+                '<div class="suggested-debug-row"><span class="suggested-debug-label">Organizer signals:</span> ' + escapeHtml(organizers) + '</div>' +
+                '<div class="suggested-debug-row"><span class="suggested-debug-label">Keyword signals:</span> ' + escapeHtml(keywords) + '</div>' +
+                '<div class="suggested-debug-row"><span class="suggested-debug-label">Fallback used:</span> ' + fallback + '</div>' +
+                '<div class="suggested-debug-row suggested-debug-reason">' + escapeHtml(reason) + '</div>';
+                debugPanel.style.display = '';
+
+                if (!events.length) {
+                    empty.style.display = '';
                     return;
                 }
-                row.innerHTML = projects.map(function(p) {
-                    var likeBadge = p.likeCount > 0
-                        ? '<span class="featured-project-likes-badge">\u2764 ' + p.likeCount + '</span>'
-                        : '';
-                    var avatar = p.memberAvatarUrl
-                        ? '<img src="' + escapeHtml(p.memberAvatarUrl) + '" class="featured-project-avatar" loading="lazy" alt=""/>'
-                        : '<span class="featured-project-avatar-placeholder"></span>';
-                    return '<a href="' + escapeHtml(p.discourseTopicUrl) + '" target="_blank" class="featured-project-card">'
-                        + '<div class="featured-project-img-wrap">'
-                        + '<img src="' + escapeHtml(p.imageUrl) + '" class="featured-project-img" loading="lazy" alt=""/>'
-                        + likeBadge
-                        + '<div class="featured-project-overlay">'
-                        + avatar
-                        + '<span class="featured-project-author">' + escapeHtml(p.memberDisplayName || '') + '</span>'
-                        + '</div></div></a>';
-                }).join('');
-                contentEl.style.display = '';
-                row.dispatchEvent(new Event('scroll'));
+
+                events.forEach(function(ev) {
+                    var sourceClass = 'suggested-source-' + (ev.source || 'keyword');
+                    var sourceLabel = (ev.source || 'keyword').charAt(0).toUpperCase() + (ev.source || 'keyword').slice(1);
+                    var org = ev.organizer || {};
+                    var organizerHtml = '';
+                    if (org.username) {
+                        var safeAvatarUrl = (org.avatarUrl && /^https:\/\//i.test(org.avatarUrl)) ? org.avatarUrl : '';
+                        var avatarHtml = safeAvatarUrl
+                            ? '<img src="' + escapeHtml(safeAvatarUrl) + '" class="suggested-event-organizer-avatar" alt="" loading="lazy"/>'
+                            : '';
+                        organizerHtml =
+                        '<span class="suggested-event-organizer">' +
+                        avatarHtml +
+                        '<span class="suggested-event-organizer-name">' + escapeHtml(org.displayName || org.username) + '</span>' +
+                        '<span class="suggested-event-organizer-handle">@' + escapeHtml(org.username) + '</span>' +
+                        '</span>';
+                    }
+                    var card = document.createElement('a');
+                    card.href = (ev.url && /^https:\/\//i.test(ev.url)) ? ev.url : '#';
+                    card.className = 'suggested-event-card';
+                    card.target = '_blank';
+                    card.rel = 'noopener noreferrer';
+                    card.innerHTML =
+                    '<div class="suggested-event-card-top">' +
+                    '<span class="suggested-event-name">' + escapeHtml(ev.name) + '</span>' +
+                    '<span class="suggested-source-badge ' + sourceClass + '">' + sourceLabel + '</span>' +
+                    '</div>' +
+                    '<span class="suggested-event-date">' + escapeHtml(ev.eventStart) + '</span>' +
+                    organizerHtml;
+                    content.appendChild(card);
+                });
+                content.style.display = '';
             })
-            .catch(function() {
-                loadingEl.style.display = 'none';
-                section.style.display = 'none';
+                .catch(function() {
+                skeleton.style.display = 'none';
+                empty.style.display = '';
             });
+        });
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
     })();
 </script>
 

@@ -202,6 +202,28 @@ constructor(
     return memberServiceClient.submitAskAiFeedback(sessionId, cacheId, isHelpful)
   }
 
+  suspend fun getAttendedOrganizers(username: String, sessionId: String?): List<String> {
+    return memberServiceClient.getAttendedOrganizers(username, sessionId)
+  }
+
+  suspend fun getUpcomingEventsByOrganizers(
+      organizers: List<String>,
+      sessionId: String?
+  ): List<EventSummary> {
+    return memberServiceClient.getUpcomingEventsByOrganizers(organizers, sessionId)
+  }
+
+  suspend fun getAttendedEventNames(username: String, sessionId: String?): List<String> {
+    return memberServiceClient.getAttendedEventNames(username, sessionId)
+  }
+
+  suspend fun getUpcomingEventsByKeywords(
+      keywords: List<String>,
+      sessionId: String?
+  ): List<EventSummary> {
+    return memberServiceClient.getUpcomingEventsByKeywords(keywords, sessionId)
+  }
+
   suspend fun getBadgeFromMakerManager(username: String, sessionId: String?): String? {
     return memberServiceClient.getBadgeFromMakerManager(username, sessionId)
   }

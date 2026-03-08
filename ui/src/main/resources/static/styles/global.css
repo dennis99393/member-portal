@@ -152,9 +152,10 @@ div.error-details > p { color: #c1c1c1; }
     padding: 28px 0 36px;
     width: 100%;
     margin-top: 32px;
+    overflow-x: hidden;
 }
 .featured-projects-header {
-    padding: 0 28px 18px;
+    padding: 0 0 18px;
 }
 .featured-projects-heading {
     font-size: 1.45rem;
@@ -224,7 +225,7 @@ div.error-details > p { color: #c1c1c1; }
     display: flex;
     gap: 16px;
     overflow-x: auto;
-    padding: 6px 28px 10px;
+    padding: 6px 0px 10px;
     scrollbar-width: none;
 }
 .featured-projects-row::-webkit-scrollbar {
