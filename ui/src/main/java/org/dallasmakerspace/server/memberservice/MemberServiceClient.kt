@@ -263,7 +263,12 @@ constructor(
   ): List<EventSummary> {
     try {
       val apiHeaders = getApiHeaders(sessionId)
-      val result = dmsHttpClient.get("$baseUrl/members/$username/events?limit=$limit", apiHeaders)
+      val result =
+          dmsHttpClient.get(
+              "$baseUrl/members/$username/events?limit=$limit",
+              apiHeaders,
+              DMSHttpClient.SHORT_TIMEOUT_MS,
+          )
       val data =
           result["data"] as List<*>?
               ?: throw MemberServiceException("data attribute missing required")

@@ -20,13 +20,18 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
   private val log = loggerFactory.create(javaClass)
   private val objectMapper = jacksonObjectMapper()
 
-  private fun getClient() =
+  companion object {
+    const val DEFAULT_TIMEOUT_MS: Long = 120_000 // 120 seconds for long-running reports
+    const val SHORT_TIMEOUT_MS: Long = 2_500 // 2.5 seconds for non-essential calls
+  }
+
+  private fun getClient(timeoutMs: Long = DEFAULT_TIMEOUT_MS) =
       HttpClient(CIO) {
         engine {
           endpoint {
             keepAliveTime = 10_000
             maxConnectionsPerRoute = 100
-            requestTimeout = 120_000 // 120 seconds for long-running reports
+            requestTimeout = timeoutMs
             connectTimeout = 10_000
             connectAttempts = 2
           }
@@ -38,8 +43,12 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
         }
       }
 
-  suspend fun get(url: String, customHeaders: StringValues): Map<String, Any> {
-    val resp = getClient().use { it.get(url) { headers { appendAll(customHeaders) } } }
+  suspend fun get(
+      url: String,
+      customHeaders: StringValues,
+      timeoutMs: Long = DEFAULT_TIMEOUT_MS,
+  ): Map<String, Any> {
+    val resp = getClient(timeoutMs).use { it.get(url) { headers { appendAll(customHeaders) } } }
     if (resp.status.isSuccess()) {
       return resp.body<Map<String, Any>>()
     } else {
@@ -63,9 +72,14 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
     }
   }
 
-  suspend fun post(url: String, authHeaders: StringValues, payload: Any): Map<String, Any> {
+  suspend fun post(
+      url: String,
+      authHeaders: StringValues,
+      payload: Any,
+      timeoutMs: Long = DEFAULT_TIMEOUT_MS,
+  ): Map<String, Any> {
     val resp =
-        getClient().use {
+        getClient(timeoutMs).use {
           it.post {
             url(url)
             headers { appendAll(authHeaders) }
@@ -82,9 +96,14 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
     }
   }
 
-  suspend fun patch(url: String, authHeaders: StringValues, payload: Any): Map<String, Any> {
+  suspend fun patch(
+      url: String,
+      authHeaders: StringValues,
+      payload: Any,
+      timeoutMs: Long = DEFAULT_TIMEOUT_MS,
+  ): Map<String, Any> {
     val resp =
-        getClient().use {
+        getClient(timeoutMs).use {
           it.patch {
             url(url)
             headers { appendAll(authHeaders) }
@@ -101,9 +120,13 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
     }
   }
 
-  suspend fun delete(url: String, authHeaders: StringValues): Map<String, Any> {
+  suspend fun delete(
+      url: String,
+      authHeaders: StringValues,
+      timeoutMs: Long = DEFAULT_TIMEOUT_MS,
+  ): Map<String, Any> {
     val resp =
-        getClient().use {
+        getClient(timeoutMs).use {
           it.delete {
             url(url)
             headers { appendAll(authHeaders) }
@@ -118,9 +141,14 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
     }
   }
 
-  suspend fun delete(url: String, authHeaders: StringValues, payload: Any) {
+  suspend fun delete(
+      url: String,
+      authHeaders: StringValues,
+      payload: Any,
+      timeoutMs: Long = DEFAULT_TIMEOUT_MS,
+  ) {
     val resp =
-        getClient().use {
+        getClient(timeoutMs).use {
           it.delete {
             url(url)
             headers { appendAll(authHeaders) }

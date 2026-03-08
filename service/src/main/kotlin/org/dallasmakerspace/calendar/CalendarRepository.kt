@@ -1,7 +1,6 @@
 package org.dallasmakerspace.calendar
 
 import javax.inject.Inject
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.db.master.GenericRepository
@@ -21,8 +20,13 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
    * @return A list of [EventSummary] objects.
    */
   suspend fun getEventsOrganizedByMember(username: String, limit: Int = 5): List<EventSummary> {
+    // Use MariaDB server-side statement timeout (1.5s) so the DB kills the query and frees the
+    // JDBC connection. withTimeoutOrNull does NOT work here because blocking JDBC calls on
+    // Dispatchers.IO are not responsive to coroutine cancellation, which exhausts the connection
+    // pool under load.
     val query =
         """
+      SET STATEMENT max_statement_time=1.5 FOR
       SELECT * FROM (
         SELECT
             e.id,
@@ -44,9 +48,15 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
 
     log.debug("Fetching events organized by member: $username (limit: $limit)")
 
-    val result = withTimeoutOrNull(1_500) { genericRepository.getReportData(query) }
+    val result =
+        try {
+          genericRepository.getReportData(query)
+        } catch (ex: Exception) {
+          log.warn("Timed out or failed fetching events for member: $username - ${ex.message}")
+          return emptyList()
+        }
     if (result == null) {
-      log.warn("Timed out fetching events for member: $username")
+      log.warn("No results fetching events for member: $username")
       return emptyList()
     }
 
