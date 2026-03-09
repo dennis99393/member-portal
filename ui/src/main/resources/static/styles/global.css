@@ -225,7 +225,7 @@ div.error-details > p { color: #c1c1c1; }
     display: flex;
     gap: 16px;
     overflow-x: auto;
-    padding: 6px 0px 10px;
+    padding: 6px 28px 10px;
     scrollbar-width: none;
 }
 .featured-projects-row::-webkit-scrollbar {
