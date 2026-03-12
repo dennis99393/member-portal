@@ -9,7 +9,7 @@ import io.ktor.util.pipeline.*
 import java.io.IOException
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import org.dallasmakerspace.server.common.logging.ElasticsearchClientManager
 import org.dallasmakerspace.server.di.DaggerAppComponent
 import org.slf4j.MDC
@@ -48,7 +48,7 @@ suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) 
           "userAgent" to request.userAgent(),
       )
 
-  withContext(Dispatchers.IO) {
+  call.application.launch(Dispatchers.IO) {
     try {
       client.index { i -> i.index("logs").document(logEntry) }
     } catch (e: IOException) {

@@ -47,9 +47,14 @@ object ElasticsearchClientManager {
 
     @Suppress("MagicNumber")
     val restClientBuilder: RestClientBuilder =
-        RestClient.builder(HttpHost(esHost, 9200, "https")).setHttpClientConfigCallback {
-          httpClientBuilder
-        }
+        RestClient.builder(HttpHost(esHost, 9200, "https"))
+            .setHttpClientConfigCallback { httpClientBuilder }
+            .setRequestConfigCallback { requestConfigBuilder ->
+              requestConfigBuilder
+                  .setConnectTimeout(3000)
+                  .setSocketTimeout(10_000)
+                  .setConnectionRequestTimeout(3000)
+            }
 
     val restClient = restClientBuilder.build()
     val transport = RestClientTransport(restClient, JacksonJsonpMapper())
