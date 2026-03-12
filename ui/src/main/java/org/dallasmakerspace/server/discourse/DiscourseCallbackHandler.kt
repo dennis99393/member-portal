@@ -113,6 +113,7 @@ constructor(
         call.sessions.set(session)
         // Redirect back to profile page
         call.respondRedirect("/profile/@$username", permanent = false)
+        return
       }
       throw DiscourseException("Access token is empty")
     }
