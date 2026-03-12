@@ -48,7 +48,7 @@ constructor(
    */
   @Suppress("TooGenericExceptionCaught", "SwallowedException")
   suspend fun readRecentSwipes(): BadgeSwipesResult {
-    log.info("Reading badge swipes from all controllers")
+    log.debug("Reading badge swipes from all controllers")
 
     val allEvents = mutableListOf<BadgeSwipeEvent>()
     val errors = mutableListOf<String>()
@@ -77,7 +77,7 @@ constructor(
                     }
 
                 allEvents.addAll(updatedEvents)
-                log.info("Retrieved ${events.size} swipe events from ${controller.name}")
+                log.debug("Retrieved ${events.size} swipe events from ${controller.name}")
               } catch (e: Exception) {
                 log.error("Failed to read swipes from ${controller.name}", e)
                 val errorMsg = "${controller.name}: ${e.javaClass.simpleName} - ${e.message}"
@@ -91,7 +91,7 @@ constructor(
     // Sort events by timestamp (most recent first)
     val sortedEvents = allEvents.sortedByDescending { it.timestamp }
 
-    log.info("Retrieved total of ${sortedEvents.size} swipe events from all controllers")
+    log.debug("Retrieved total of ${sortedEvents.size} swipe events from all controllers")
 
     return BadgeSwipesResult(events = sortedEvents, errors = errors)
   }
@@ -108,7 +108,7 @@ constructor(
   suspend fun persistEvents(events: List<BadgeSwipeEvent>): Int {
     if (events.isEmpty()) return 0
 
-    log.info("Persisting ${events.size} badge swipe events to database")
+    log.debug("Persisting ${events.size} badge swipe events to database")
 
     try {
       // Build map of badge numbers to their swipe dates for batch user ID lookup
@@ -196,10 +196,23 @@ constructor(
             }
           }
 
+      // Filter out events already in the database by comparing against max known dbindex per slot
+      val controllerIds = doorEvents.map { it.controllerId }.distinct()
+      val maxBySlot = doorEventsRepository.getMaxDbindexPerSlot(controllerIds)
+      val newEvents =
+          doorEvents.filter { event ->
+            val maxSeen = maxBySlot[Pair(event.controllerId, event.slotNumber)]
+            maxSeen == null || event.dbindex > maxSeen
+          }
+      log.debug(
+          "Deduplication: ${doorEvents.size - newEvents.size} already-persisted events filtered, " +
+              "${newEvents.size} new")
+
       // Batch insert events
-      val insertedCount = doorEventsRepository.insertEvents(doorEvents)
-      log.info(
-          "Successfully persisted $insertedCount/${validEvents.size} events to database (${events.size} total retrieved)")
+      val insertedCount = doorEventsRepository.insertEvents(newEvents)
+      log.debug(
+          "Successfully persisted $insertedCount/${newEvents.size} new events " +
+              "(${events.size} total retrieved)")
       return insertedCount
     } catch (e: Exception) {
       log.error("Failed to persist events: ${e.message}", e)

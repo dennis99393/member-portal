@@ -57,6 +57,35 @@ class DoorEventsRepository @Inject constructor() {
   }
 
   /**
+   * Returns the max dbindex seen per (controllerId, slotNumber) for the given controller IDs. Used
+   * to filter out already-persisted events before inserting.
+   *
+   * @param controllerIds List of controller database IDs to query
+   * @return Map of (controllerId, slotNumber) -> max dbindex
+   */
+  suspend fun getMaxDbindexPerSlot(controllerIds: List<Int>): Map<Pair<Int, Int>, Int> {
+    if (controllerIds.isEmpty()) return emptyMap()
+
+    val idList = controllerIds.joinToString(",")
+    val sql =
+        "SELECT controllerId, slotNumber, MAX(dbindex) AS maxDbindex " +
+            "FROM `AccessControl`.`events` " +
+            "WHERE controllerId IN ($idList) " +
+            "GROUP BY controllerId, slotNumber"
+
+    return suspendTransaction {
+      val result = mutableMapOf<Pair<Int, Int>, Int>()
+      exec(sql) { rs ->
+        while (rs.next()) {
+          val key = Pair(rs.getInt("controllerId"), rs.getInt("slotNumber"))
+          result[key] = rs.getInt("maxDbindex")
+        }
+      }
+      result
+    }
+  }
+
+  /**
    * Insert a single door event into the database Uses INSERT IGNORE to skip duplicate events based
    * on the unique constraint
    *
