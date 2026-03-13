@@ -9,6 +9,8 @@ import io.ktor.util.pipeline.*
 import java.io.IOException
 import java.time.Instant
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.dallasmakerspace.server.common.logging.ElasticsearchClientManager
 import org.dallasmakerspace.server.di.DaggerAppComponent
@@ -21,9 +23,18 @@ fun Application.configureElasticsearch() {
     intercept(ApplicationCallPipeline.Monitoring) {
       logToElasticsearch(this.call, ElasticsearchClientManager.client)
     }
+
+    // Background coroutine to retry queued entries
+    launch(Dispatchers.IO) {
+      while (isActive) {
+        delay(ElasticsearchClientManager.RETRY_INTERVAL_MS)
+        ElasticsearchClientManager.processRetryQueue()
+      }
+    }
   }
 }
 
+@Suppress("SwallowedException")
 suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) {
   val request = call.request
   val response = call.response
@@ -48,14 +59,11 @@ suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) 
           "userAgent" to request.userAgent(),
       )
 
-  if (!ElasticsearchClientManager.isAvailable()) return
-
   call.application.launch(Dispatchers.IO) {
     try {
       client.index { i -> i.index("logs").document(logEntry) }
-      ElasticsearchClientManager.recordSuccess()
     } catch (e: IOException) {
-      ElasticsearchClientManager.recordFailure()
+      ElasticsearchClientManager.enqueueForRetry(logEntry)
     }
   }
 }

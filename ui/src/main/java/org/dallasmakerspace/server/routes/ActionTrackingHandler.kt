@@ -50,15 +50,12 @@ class ActionTrackingHandler @Inject constructor(loggerFactory: LoggerFactory) : 
       // Respond immediately, then log asynchronously
       call.respond(HttpStatusCode.NoContent)
 
-      if (ElasticsearchClientManager.isAvailable()) {
-        call.application.launch(Dispatchers.IO) {
-          try {
-            log.debug("Logging user action to Elasticsearch: $logEntry")
-            ElasticsearchClientManager.client.index { i -> i.index("logs").document(logEntry) }
-            ElasticsearchClientManager.recordSuccess()
-          } catch (e: IOException) {
-            ElasticsearchClientManager.recordFailure()
-          }
+      call.application.launch(Dispatchers.IO) {
+        try {
+          log.debug("Logging user action to Elasticsearch: $logEntry")
+          ElasticsearchClientManager.client.index { i -> i.index("logs").document(logEntry) }
+        } catch (e: IOException) {
+          ElasticsearchClientManager.enqueueForRetry(logEntry)
         }
       }
     } catch (e: Exception) {
