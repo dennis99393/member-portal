@@ -48,11 +48,14 @@ suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) 
           "userAgent" to request.userAgent(),
       )
 
+  if (!ElasticsearchClientManager.isAvailable()) return
+
   call.application.launch(Dispatchers.IO) {
     try {
       client.index { i -> i.index("logs").document(logEntry) }
+      ElasticsearchClientManager.recordSuccess()
     } catch (e: IOException) {
-      ElasticsearchClientManager.log.error("Failed to log to Elasticsearch", e)
+      ElasticsearchClientManager.recordFailure()
     }
   }
 }

@@ -11,7 +11,7 @@ import java.io.IOException
 import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import org.dallasmakerspace.server.common.logging.ElasticsearchClientManager
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.plugins.UserSession
@@ -19,7 +19,7 @@ import org.dallasmakerspace.server.plugins.UserSession
 class ActionTrackingHandler @Inject constructor(loggerFactory: LoggerFactory) : IRouteHandler {
   private val log = loggerFactory.create(javaClass)
 
-  @Suppress("TooGenericExceptionCaught")
+  @Suppress("TooGenericExceptionCaught", "SwallowedException")
   override suspend fun handle(call: ApplicationCall) {
     if (call.request.httpMethod != HttpMethod.Post) {
       call.respond(HttpStatusCode.MethodNotAllowed)
@@ -50,12 +50,15 @@ class ActionTrackingHandler @Inject constructor(loggerFactory: LoggerFactory) : 
       // Respond immediately, then log asynchronously
       call.respond(HttpStatusCode.NoContent)
 
-      withContext(Dispatchers.IO) {
-        try {
-          log.debug("Logging user action to Elasticsearch: $logEntry")
-          ElasticsearchClientManager.client.index { i -> i.index("logs").document(logEntry) }
-        } catch (e: IOException) {
-          log.error("Failed to log user action to Elasticsearch", e)
+      if (ElasticsearchClientManager.isAvailable()) {
+        call.application.launch(Dispatchers.IO) {
+          try {
+            log.debug("Logging user action to Elasticsearch: $logEntry")
+            ElasticsearchClientManager.client.index { i -> i.index("logs").document(logEntry) }
+            ElasticsearchClientManager.recordSuccess()
+          } catch (e: IOException) {
+            ElasticsearchClientManager.recordFailure()
+          }
         }
       }
     } catch (e: Exception) {
