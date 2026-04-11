@@ -6,6 +6,8 @@ import javax.inject.Singleton
 import org.dallasmakerspace.askai.AskAiService
 import org.dallasmakerspace.askai.di.AskAiModule
 import org.dallasmakerspace.calendar.CalendarService
+import org.dallasmakerspace.config.ConfigOverrideService
+import org.dallasmakerspace.config.di.ConfigModule
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.core.DBMasterConnection
 import org.dallasmakerspace.core.DBMemberPortalConnection
@@ -33,6 +35,7 @@ import org.dallasmakerspace.webhook.di.WebhookModule
             ActiveDirectoryModule::class,
             AskAiModule::class,
             CalendarModule::class,
+            ConfigModule::class,
             DiscourseModule::class,
             DoorControllerModule::class,
             MembersModule::class,
@@ -77,4 +80,6 @@ interface AppComponent {
   fun getAskAiService(): AskAiService
 
   fun getFeaturedProjectsService(): FeaturedProjectsService
+
+  fun getConfigOverrideService(): ConfigOverrideService
 }

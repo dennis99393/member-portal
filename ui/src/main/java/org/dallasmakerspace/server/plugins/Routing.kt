@@ -99,6 +99,9 @@ fun Application.configureRouting() {
       post("/ask-ai/feedback") {
         RouteFactory.getHandler(RouteFactory.Paths.ASK_AI.path)?.handleBase(call)
       }
+      get(RouteFactory.Paths.CONFIG_ADMIN.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
     }
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handleBase(call) }

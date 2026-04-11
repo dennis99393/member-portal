@@ -48,9 +48,9 @@
                         <ul class="list-unstyled mb-0">
                             <li th:each="admin : ${administrators}" class="mb-2">
                                 <span th:if="${admin.isGroup}">
-                                    <dms-group-pill
-                                            th:attr="name=${admin.name},slug=${admin.slug}">
-                                    </dms-group-pill>
+                                        <dms-group-pill
+                                                th:attr="name=${admin.name},slug=${admin.slug}">
+                                        </dms-group-pill>
                                 </span>
                                 <a th:unless="${admin.isGroup}"
                                    th:href="${admin.link}"

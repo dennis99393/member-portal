@@ -48,11 +48,13 @@
                                    data-bs-toggle="dropdown"
                                    data-bs-auto-close="outside" aria-expanded="false">Officers</a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="/groups/logistics+committee+chair">Logistics Committee Chair</a></li>
+                                    <li><a class="dropdown-item" href="/groups/logistics+committee+chair">Logistics
+                                        Committee Chair</a></li>
                                     <li><a class="dropdown-item" href="/groups/president">President</a></li>
                                     <li><a class="dropdown-item" href="/groups/treasurer">Treasurer</a></li>
                                     <li><a class="dropdown-item" href="/groups/secretary">Secretary</a></li>
-                                    <li><a class="dropdown-item" href="/groups/infrastructure+committee+chair">Infrastructure Committee Chair</a></li>
+                                    <li><a class="dropdown-item" href="/groups/infrastructure+committee+chair">Infrastructure
+                                        Committee Chair</a></li>
                                 </ul>
                             </li>
                             <!-- Board of Directors -->
@@ -67,7 +69,8 @@
                            data-bs-auto-close="outside" aria-expanded="false">Resources</a>
                         <ul class="dropdown-menu">
                             <!-- Reports nested dropdown -->
-                            <li class="dropend" th:if="${@org.dallasmakerspace.server.reports.ReportGraph@getRoot() != null}">
+                            <li class="dropend"
+                                th:if="${@org.dallasmakerspace.server.reports.ReportGraph@getRoot() != null}">
                                 <a class="dropdown-item dropdown-toggle" href="javascript:void(0)"
                                    data-bs-toggle="dropdown"
                                    data-bs-auto-close="outside" aria-expanded="false">Reports</a>
@@ -76,7 +79,8 @@
                                             th:each="reportNode : ${@org.dallasmakerspace.server.reports.ReportGraph@getRoot().getVisibleChildren()}">
                                         <!-- Disabled item if no children - this is for WIP reports -->
                                         <li th:if="${reportNode.children == null || reportNode.getVisibleChildren().empty}">
-                                            <a class="dropdown-item disabled" th:href="'/reports/' + ${reportNode.urlSlug}"
+                                            <a class="dropdown-item disabled"
+                                               th:href="'/reports/' + ${reportNode.urlSlug}"
                                                th:text="${reportNode.name}"></a>
                                         </li>
 
@@ -111,6 +115,20 @@
                             <!-- Ask-AI -->
                             <li>
                                 <a class="dropdown-item" href="/ask-ai">Ask-AI</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="javascript:void(0)" role="button"
+                           data-bs-toggle="dropdown"
+                           data-bs-auto-close="outside" aria-expanded="false">About</a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="https://github.com/Dallas-Makerspace/member-portal"
+                                   target="_blank">GitHub Source</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/admin/config">Site Config</a>
                             </li>
                         </ul>
                     </li>

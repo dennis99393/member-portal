@@ -600,6 +600,44 @@ constructor(
     }
   }
 
+  suspend fun getConfigValue(key: String, sessionId: String?): String? {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/config/$key", apiHeaders)
+      val data = result["data"] as? Map<*, *> ?: return null
+      data["currentValue"] as? String
+    } catch (ex: Exception) {
+      log.warn("Failed to get config value for key: $key", ex)
+      null
+    }
+  }
+
+  suspend fun getConfigList(sessionId: String?): List<Map<String, Any?>> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/config", apiHeaders)
+      val data = result["data"] as? List<*> ?: return emptyList()
+      @Suppress("UNCHECKED_CAST")
+      data as List<Map<String, Any?>>
+    } catch (ex: Exception) {
+      log.warn("Failed to get config list", ex)
+      emptyList()
+    }
+  }
+
+  suspend fun getConfigHistory(key: String, sessionId: String?): List<Map<String, Any?>> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/config/$key/history", apiHeaders)
+      val data = result["data"] as? List<*> ?: return emptyList()
+      @Suppress("UNCHECKED_CAST")
+      data as List<Map<String, Any?>>
+    } catch (ex: Exception) {
+      log.warn("Failed to get config history for key: $key", ex)
+      emptyList()
+    }
+  }
+
   suspend fun resolveShortLink(
       path: String,
       sessionId: String?,

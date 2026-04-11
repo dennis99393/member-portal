@@ -76,6 +76,7 @@ object RouteFactory {
     ASK_AI("/ask-ai"),
     MANIFEST("/manifest.json"),
     OFFLINE("/offline"),
+    CONFIG_ADMIN("/admin/config"),
   }
 }
 

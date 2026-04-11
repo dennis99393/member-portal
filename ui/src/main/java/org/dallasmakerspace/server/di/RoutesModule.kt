@@ -12,6 +12,7 @@ import org.dallasmakerspace.server.memberservice.MemberServiceClient
 import org.dallasmakerspace.server.routes.ActionTrackingHandler
 import org.dallasmakerspace.server.routes.AskAiHandler
 import org.dallasmakerspace.server.routes.BackendApiHandler
+import org.dallasmakerspace.server.routes.ConfigAdminHandler
 import org.dallasmakerspace.server.routes.CommitteeDetailHandler
 import org.dallasmakerspace.server.routes.CommitteesHandler
 import org.dallasmakerspace.server.routes.GroupsHandler
@@ -73,9 +74,16 @@ class RoutesModule {
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
       memberService: MemberService,
-      voterRegistrationManager: VoterRegistrationManager
+      voterRegistrationManager: VoterRegistrationManager,
+      memberServiceClient: MemberServiceClient,
   ): IRouteHandler =
-      ProfileHandler(loggerFactory, userInfoProvider, memberService, voterRegistrationManager)
+      ProfileHandler(
+          loggerFactory,
+          userInfoProvider,
+          memberService,
+          voterRegistrationManager,
+          memberServiceClient,
+      )
 
   @IntoMap
   @Provides
@@ -229,4 +237,13 @@ class RoutesModule {
   @StringKey("/offline")
   fun providesOfflineHandler(loggerFactory: LoggerFactory): IRouteHandler =
       OfflineHandler(loggerFactory)
+
+  @IntoMap
+  @Provides
+  @StringKey("/admin/config")
+  fun providesConfigAdminHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberServiceClient: MemberServiceClient,
+  ): IRouteHandler = ConfigAdminHandler(loggerFactory, userInfoProvider, memberServiceClient)
 }

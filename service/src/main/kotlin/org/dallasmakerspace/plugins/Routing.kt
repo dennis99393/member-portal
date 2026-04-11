@@ -17,6 +17,8 @@ import org.dallasmakerspace.askai.AskAiService
 import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.apiKey
 import org.dallasmakerspace.auth.requireRole
+import org.dallasmakerspace.config.ConfigOverrideService
+import org.dallasmakerspace.config.routing.configRoutes
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.cron.DoorSwipesCronJob
 import org.dallasmakerspace.cron.DoorSwipesCronJobParams
@@ -74,6 +76,10 @@ fun Application.configureRouting() {
   val featuredProjectsService: FeaturedProjectsService =
       DaggerAppComponent.create().getFeaturedProjectsService()
   featuredProjectsService.getFeaturedProjects()
+
+  val configOverrideService: ConfigOverrideService =
+      DaggerAppComponent.create().getConfigOverrideService()
+  launch { configOverrideService.warmCache() }
 
   routing {
     val groupsService: GroupService by lazy { DaggerAppComponent.create().getGroupService() }
@@ -774,6 +780,9 @@ fun Application.configureRouting() {
           }
         }
       }
+
+      /** Config override operations * */
+      configRoutes(configOverrideService)
     }
 
     post("/webhook/*") {
