@@ -1,5 +1,6 @@
 package org.dallasmakerspace.server.routes
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
@@ -18,6 +19,11 @@ constructor(
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun handleAuthenticated(call: ApplicationCall) {
+    if (!isInfra) {
+      call.respond(HttpStatusCode.Forbidden)
+      return
+    }
+
     val username = userInfo["preferred_username"] as String? ?: ""
     val configList = memberServiceClient.getConfigList(session.sessionId)
 

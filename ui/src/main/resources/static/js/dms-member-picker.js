@@ -50,9 +50,14 @@ class DmsMemberPicker extends HTMLElement {
   }
 
   connectedCallback() {
+    this._outsideClickHandler = (e) => this.handleOutsideClick(e);
     this.render();
     this.setupEventListeners();
     this.fetchMembers();
+  }
+
+  disconnectedCallback() {
+    document.removeEventListener('click', this._outsideClickHandler);
   }
 
   render() {
@@ -260,8 +265,8 @@ class DmsMemberPicker extends HTMLElement {
     input.addEventListener('keydown', (e) => this.handleKeydown(e));
     addButton.addEventListener('click', () => this.handleAddMembers());
 
-    // Close dropdown on outside click
-    document.addEventListener('click', (e) => this.handleOutsideClick(e));
+    // Close dropdown on outside click (stored as named handler so disconnectedCallback can remove it)
+    document.addEventListener('click', this._outsideClickHandler);
   }
 
   async fetchMembers() {
@@ -539,6 +544,7 @@ class DmsMemberPicker extends HTMLElement {
     const statusMessage = this.shadowRoot.querySelector('.status-message');
 
     addButton.disabled = true;
+    statusMessage.className = 'status-message';
     statusMessage.textContent = '';
 
     const usernames = this.selectedMembers.map(m => m.username);

@@ -716,6 +716,9 @@ constructor(
     val now = java.time.LocalDateTime.now(java.time.ZoneOffset.UTC)
 
     val actorProfile = actorUsername?.let { runCatching { getMemberByUsername(it) }.getOrNull() }
+    if (actorUsername != null && actorProfile == null) {
+      log.warn("Could not resolve actor profile for '$actorUsername'; group history will be skipped")
+    }
 
     memberUsernames.forEach { username ->
       val memberProfile = runCatching { getMemberByUsername(username) }.getOrNull()
@@ -731,7 +734,16 @@ constructor(
       }
     }
 
-    activeDirectoryService.addUsersToGroup(memberUsernames, groupname)
+    try {
+      activeDirectoryService.addUsersToGroup(memberUsernames, groupname)
+    } catch (e: Exception) {
+      log.error(
+          "AD call failed after PORTAL history records were written for group '$groupname'. " +
+              "Members $memberUsernames were not actually added. Manual reconciliation may be needed.",
+          e,
+      )
+      throw e
+    }
 
     memberUsernames.forEach { username ->
       if (actorUsername != null) {
@@ -766,6 +778,9 @@ constructor(
     val now = java.time.LocalDateTime.now(java.time.ZoneOffset.UTC)
 
     val actorProfile = actorUsername?.let { runCatching { getMemberByUsername(it) }.getOrNull() }
+    if (actorUsername != null && actorProfile == null) {
+      log.warn("Could not resolve actor profile for '$actorUsername'; group history will be skipped")
+    }
 
     memberUsernames.forEach { username ->
       val memberProfile = runCatching { getMemberByUsername(username) }.getOrNull()
@@ -781,7 +796,16 @@ constructor(
       }
     }
 
-    activeDirectoryService.removeUsersFromGroup(memberUsernames, groupname)
+    try {
+      activeDirectoryService.removeUsersFromGroup(memberUsernames, groupname)
+    } catch (e: Exception) {
+      log.error(
+          "AD call failed after PORTAL history records were written for group '$groupname'. " +
+              "Members $memberUsernames were not actually removed. Manual reconciliation may be needed.",
+          e,
+      )
+      throw e
+    }
 
     memberUsernames.forEach { username ->
       if (actorUsername != null) {

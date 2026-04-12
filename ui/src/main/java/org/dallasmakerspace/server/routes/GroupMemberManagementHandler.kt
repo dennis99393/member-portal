@@ -71,7 +71,7 @@ constructor(
       }
       HttpMethod.Delete -> {
         val username =
-            call.parameters["username"]
+            call.parameters["username"]?.takeIf { it.isNotBlank() }
                 ?: run {
                   call.respond(HttpStatusCode.BadRequest, ApiResponse(false, "Missing username"))
                   return
