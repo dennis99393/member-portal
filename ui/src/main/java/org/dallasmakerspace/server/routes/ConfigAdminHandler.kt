@@ -29,7 +29,6 @@ constructor(
                 "is_infra" to isInfra,
                 "config_list" to configList,
             ),
-        )
-    )
+        ))
   }
 }

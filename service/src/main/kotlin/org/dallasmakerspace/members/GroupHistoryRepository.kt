@@ -166,6 +166,7 @@ class GroupHistoryRepository @Inject constructor() {
       groupId: Int,
       actionType: ActionType,
       eventTimestamp: java.time.LocalDateTime,
+      source: String = "AD_WEBHOOK",
   ): GroupHistory = suspendTransaction {
     val historyDao =
         GroupHistoryDAO.new {
@@ -175,6 +176,7 @@ class GroupHistoryRepository @Inject constructor() {
           this.actionType = actionType.value
           this.eventTimestamp = eventTimestamp
           this.created = LocalDateTime.now()
+          this.changeSource = source
         }
 
     // Fetch the complete record with joined data
@@ -223,5 +225,23 @@ class GroupHistoryRepository @Inject constructor() {
           .id
           .value
     }
+  }
+
+  suspend fun hasPortalInitiatedRecord(
+      memberId: Int,
+      groupId: Int,
+      actionType: ActionType,
+      windowStart: java.time.LocalDateTime,
+      windowEnd: java.time.LocalDateTime,
+  ): Boolean = suspendTransaction {
+    GroupHistoryTable.select {
+          (GroupHistoryTable.memberId eq memberId) and
+              (GroupHistoryTable.groupId eq groupId) and
+              (GroupHistoryTable.actionType eq actionType.value) and
+              (GroupHistoryTable.changeSource eq "PORTAL") and
+              (GroupHistoryTable.eventTimestamp greaterEq windowStart) and
+              (GroupHistoryTable.eventTimestamp lessEq windowEnd)
+        }
+        .count() > 0
   }
 }

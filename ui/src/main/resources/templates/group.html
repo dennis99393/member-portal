@@ -123,11 +123,24 @@
                     <h4 class="card-title mt-3 mb-4 dms-card-title">Members Assigned <span th:if="${members}"
                                                                                            th:text="'(' + ${#lists.size(members)} + ' active)'"></span>
                     </h4>
+                    <!-- Member management UI - only shown when feature is enabled and user has admin role -->
+                    <div th:if="${canManageMembers}" class="mb-4">
+                        <dms-member-picker
+                            th:attr="group-slug=${slug},excluded-usernames=${memberUsernamesJson}">
+                        </dms-member-picker>
+                    </div>
                     <div class="card-text">
                         <div th:if="${members}" class="member-list"
                              style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
                             <div th:each="member : ${members}" class="member-item"
-                                 style="padding: 10px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; overflow: hidden;">
+                                 style="padding: 10px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; overflow: hidden; position: relative;">
+                                <button th:if="${canManageMembers}"
+                                        class="dms-remove-member-btn btn btn-sm p-0"
+                                        th:attr="data-username=${member.username},data-group-slug=${slug}"
+                                        title="Remove member"
+                                        style="position: absolute; top: 6px; right: 6px; color: #adb5bd; background: none; border: none; line-height: 1; z-index: 1;">
+                                    <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+                                </button>
                                 <dms-member-card
                                         th:attr="username=${member.username},displayName=${member.displayName},avatarUrl=${member.avatarUrl}"
                                         state="mini">
@@ -158,6 +171,37 @@
 <script src="/static/js/dms-member-card.js" type="module"></script>
 <script src="/static/js/dms-group-pill.js" type="module"></script>
 <script src="/static/js/dms-relative-date.js" type="module"></script>
+<script src="/static/js/dms-member-picker.js" type="module"></script>
 <script src="/static/js/dms-page-loader.js" defer></script>
+<style th:if="${canManageMembers}">
+.dms-remove-member-btn:hover { color: #dc3545 !important; }
+.dms-remove-member-btn:hover .material-symbols-outlined { color: #dc3545; }
+</style>
+<script th:if="${canManageMembers}">
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.dms-remove-member-btn');
+    if (!btn) return;
+    const username = btn.dataset.username;
+    const groupSlug = btn.dataset.groupSlug;
+    if (!confirm('Remove ' + username + ' from this group?')) return;
+    btn.disabled = true;
+    btn.querySelector('.material-symbols-outlined').textContent = 'hourglass_empty';
+    fetch('/groups/' + groupSlug + '/members/' + username, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+    }).then(function(r) {
+        if (r.ok) { window.location.reload(); }
+        else { r.text().then(function(t) {
+            alert('Failed to remove member: ' + t);
+            btn.disabled = false;
+            btn.querySelector('.material-symbols-outlined').textContent = 'delete';
+        }); }
+    }).catch(function(err) {
+        alert('Error: ' + err);
+        btn.disabled = false;
+        btn.querySelector('.material-symbols-outlined').textContent = 'delete';
+    });
+});
+</script>
 </body>
 </html>

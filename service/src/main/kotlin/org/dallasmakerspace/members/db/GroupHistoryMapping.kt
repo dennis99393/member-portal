@@ -25,6 +25,7 @@ object GroupHistoryTable : IdTable<Int>("group_history") {
   val actionType = integer("action_type")
   val eventTimestamp = datetime("event_timestamp")
   val created = datetime("created")
+  val changeSource = varchar("source", 20).default("AD_WEBHOOK")
 
   override val id: Column<EntityID<Int>>
     get() = idColumn
@@ -39,6 +40,7 @@ class GroupHistoryDAO(id: EntityID<Int>) : Entity<Int>(id) {
   var actionType by GroupHistoryTable.actionType
   var eventTimestamp by GroupHistoryTable.eventTimestamp
   var created by GroupHistoryTable.created
+  var changeSource by GroupHistoryTable.changeSource
 }
 
 /** Column aliases to handle joins for profile references */

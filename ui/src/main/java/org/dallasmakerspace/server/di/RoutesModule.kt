@@ -12,9 +12,10 @@ import org.dallasmakerspace.server.memberservice.MemberServiceClient
 import org.dallasmakerspace.server.routes.ActionTrackingHandler
 import org.dallasmakerspace.server.routes.AskAiHandler
 import org.dallasmakerspace.server.routes.BackendApiHandler
-import org.dallasmakerspace.server.routes.ConfigAdminHandler
 import org.dallasmakerspace.server.routes.CommitteeDetailHandler
 import org.dallasmakerspace.server.routes.CommitteesHandler
+import org.dallasmakerspace.server.routes.ConfigAdminHandler
+import org.dallasmakerspace.server.routes.GroupMemberManagementHandler
 import org.dallasmakerspace.server.routes.GroupsHandler
 import org.dallasmakerspace.server.routes.IRouteHandler
 import org.dallasmakerspace.server.routes.IndexHandler
@@ -123,8 +124,28 @@ class RoutesModule {
   fun providesGroupHandler(
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
-      memberService: MemberService
-  ): IRouteHandler = GroupsHandler(loggerFactory, userInfoProvider, memberService)
+      memberService: MemberService,
+      memberServiceClient: MemberServiceClient,
+  ): IRouteHandler =
+      GroupsHandler(loggerFactory, userInfoProvider, memberService, memberServiceClient)
+
+  @IntoMap
+  @Provides
+  @StringKey("/groups/{group_slug}/members")
+  fun providesGroupMemberManagementHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService,
+  ): IRouteHandler = GroupMemberManagementHandler(loggerFactory, userInfoProvider, memberService)
+
+  @IntoMap
+  @Provides
+  @StringKey("/groups/{group_slug}/members/{username}")
+  fun providesGroupMemberRemoveHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService,
+  ): IRouteHandler = GroupMemberManagementHandler(loggerFactory, userInfoProvider, memberService)
 
   @IntoMap
   @Provides

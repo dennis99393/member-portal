@@ -145,17 +145,18 @@ constructor(
     jsonMap["elections_url"] = requireNotNull(electionsUrlDeferred.await())
     val events = eventsDeferred.await()
     if (events.isNotEmpty()) {
-      val formattedEvents = events.map { event ->
-        mapOf(
-            "id" to event.id,
-            "name" to event.name,
-            "eventStart" to formatEventDate(event.eventStart),
-            "eventStartRaw" to event.eventStart,
-            "status" to event.status,
-            "isUpcoming" to isUpcomingEvent(event.eventStart),
-            "url" to "https://calendar.dallasmakerspace.org/events/view/${event.id}",
-        )
-      }
+      val formattedEvents =
+          events.map { event ->
+            mapOf(
+                "id" to event.id,
+                "name" to event.name,
+                "eventStart" to formatEventDate(event.eventStart),
+                "eventStartRaw" to event.eventStart,
+                "status" to event.status,
+                "isUpcoming" to isUpcomingEvent(event.eventStart),
+                "url" to "https://calendar.dallasmakerspace.org/events/view/${event.id}",
+            )
+          }
       jsonMap["events_organized"] = formattedEvents
     }
 
@@ -188,8 +189,7 @@ constructor(
           "Successfully linked LinkedIn ${requestedMember.linkedinUsername} to your profile."
     } else if (session.isVoterRegistrationSuccess) {
       log.info(
-          "Setting toast message for ${requestedMember.username} successful voter registration"
-      )
+          "Setting toast message for ${requestedMember.username} successful voter registration")
       call.sessions.set(session.copy(isVoterRegistrationSuccess = false))
       jsonMap["toast_message"] = "Successfully registered to vote. May take few min to take effect."
     }

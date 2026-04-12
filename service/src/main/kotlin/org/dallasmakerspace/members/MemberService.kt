@@ -706,11 +706,48 @@ constructor(
     }
   }
 
-  suspend fun addMembersToGroup(memberUsernames: List<String>, groupslug: String) {
+  suspend fun addMembersToGroup(
+      memberUsernames: List<String>,
+      groupslug: String,
+      actorUsername: String? = null,
+  ) {
     val groupname = Groups.getNameFromSlug(groupslug)
+    val groupId = groupHistoryRepository.getOrCreateGroup(groupname)
+    val now = java.time.LocalDateTime.now(java.time.ZoneOffset.UTC)
+
+    val actorProfile = actorUsername?.let { runCatching { getMemberByUsername(it) }.getOrNull() }
+
+    memberUsernames.forEach { username ->
+      val memberProfile = runCatching { getMemberByUsername(username) }.getOrNull()
+      if (memberProfile != null && actorProfile != null) {
+        groupHistoryRepository.insertGroupHistory(
+            actorId = actorProfile.id,
+            memberId = memberProfile.id,
+            groupId = groupId,
+            actionType = org.dallasmakerspace.models.ActionType.ADD_USER,
+            eventTimestamp = now,
+            source = "PORTAL",
+        )
+      }
+    }
+
     activeDirectoryService.addUsersToGroup(memberUsernames, groupname)
-    if (groupname == voterRegistrationManager.getVotingMembersGroupName()) {
-      memberUsernames.forEach { username ->
+
+    memberUsernames.forEach { username ->
+      if (actorUsername != null) {
+        activityLogService.insertActivityLogEntry(
+            actorUsername = actorUsername,
+            subjectUsername = username,
+            event = ActivityLogEvent.GROUP_MEMBER_ADDED,
+            attributes = """{"groupName":"$groupname"}""",
+        )
+      } else {
+        activityLogService.insertActivityLogEntry(
+            subjectUsername = username,
+            event = ActivityLogEvent.GROUP_MEMBER_ADDED,
+        )
+      }
+      if (groupname == voterRegistrationManager.getVotingMembersGroupName()) {
         activityLogService.insertActivityLogEntry(
             subjectUsername = username,
             event = ActivityLogEvent.ADD_TO_VOTING_MEMBERS_GROUP,
@@ -719,11 +756,48 @@ constructor(
     }
   }
 
-  suspend fun removeMembersToGroup(memberUsernames: List<String>, groupslug: String) {
+  suspend fun removeMembersToGroup(
+      memberUsernames: List<String>,
+      groupslug: String,
+      actorUsername: String? = null,
+  ) {
     val groupname = Groups.getNameFromSlug(groupslug)
+    val groupId = groupHistoryRepository.getOrCreateGroup(groupname)
+    val now = java.time.LocalDateTime.now(java.time.ZoneOffset.UTC)
+
+    val actorProfile = actorUsername?.let { runCatching { getMemberByUsername(it) }.getOrNull() }
+
+    memberUsernames.forEach { username ->
+      val memberProfile = runCatching { getMemberByUsername(username) }.getOrNull()
+      if (memberProfile != null && actorProfile != null) {
+        groupHistoryRepository.insertGroupHistory(
+            actorId = actorProfile.id,
+            memberId = memberProfile.id,
+            groupId = groupId,
+            actionType = org.dallasmakerspace.models.ActionType.REMOVE_USER,
+            eventTimestamp = now,
+            source = "PORTAL",
+        )
+      }
+    }
+
     activeDirectoryService.removeUsersFromGroup(memberUsernames, groupname)
-    if (groupname == voterRegistrationManager.getVotingMembersGroupName()) {
-      memberUsernames.forEach { username ->
+
+    memberUsernames.forEach { username ->
+      if (actorUsername != null) {
+        activityLogService.insertActivityLogEntry(
+            actorUsername = actorUsername,
+            subjectUsername = username,
+            event = ActivityLogEvent.GROUP_MEMBER_REMOVED,
+            attributes = """{"groupName":"$groupname"}""",
+        )
+      } else {
+        activityLogService.insertActivityLogEntry(
+            subjectUsername = username,
+            event = ActivityLogEvent.GROUP_MEMBER_REMOVED,
+        )
+      }
+      if (groupname == voterRegistrationManager.getVotingMembersGroupName()) {
         activityLogService.insertActivityLogEntry(
             subjectUsername = username,
             event = ActivityLogEvent.REMOVE_FROM_VOTING_MEMBERS_GROUP,

@@ -170,9 +170,19 @@ constructor(
     }
   }
 
-  suspend fun addToGroup(sessionId: String?, username: String, groupName: String) {
+  suspend fun addToGroup(
+      sessionId: String?,
+      username: String,
+      groupName: String,
+      actorUsername: String? = null,
+  ) {
     try {
-      val apiHeaders = getApiHeaders(sessionId)
+      val baseHeaders = getApiHeaders(sessionId)
+      val apiHeaders =
+          StringValues.build {
+            baseHeaders.forEach { key, values -> values.forEach { value -> append(key, value) } }
+            actorUsername?.let { append("X-Actor-Username", it) }
+          }
       dmsHttpClient.patch("$baseUrl/groups/$groupName/add", apiHeaders, username)
     } catch (ex: Exception) {
       log.error("Failed to add $username to group: $groupName", ex)
@@ -180,9 +190,19 @@ constructor(
     }
   }
 
-  suspend fun removeFromGroup(sessionId: String?, username: String, groupName: String) {
+  suspend fun removeFromGroup(
+      sessionId: String?,
+      username: String,
+      groupName: String,
+      actorUsername: String? = null,
+  ) {
     try {
-      val apiHeaders = getApiHeaders(sessionId)
+      val baseHeaders = getApiHeaders(sessionId)
+      val apiHeaders =
+          StringValues.build {
+            baseHeaders.forEach { key, values -> values.forEach { value -> append(key, value) } }
+            actorUsername?.let { append("X-Actor-Username", it) }
+          }
       dmsHttpClient.delete("$baseUrl/groups/$groupName/add", apiHeaders, username)
     } catch (ex: Exception) {
       log.error("Failed to remove $username from group: $groupName", ex)
@@ -635,6 +655,18 @@ constructor(
     } catch (ex: Exception) {
       log.warn("Failed to get config history for key: $key", ex)
       emptyList()
+    }
+  }
+
+  suspend fun getFeatureFlag(key: String, sessionId: String?): Boolean {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result: Map<String, Any> = dmsHttpClient.get("$baseUrl/config/$key", apiHeaders)
+      val data = result["data"] as? Map<*, *>
+      (data?.get("currentValue") as? String)?.toBoolean() ?: false
+    } catch (ex: Exception) {
+      log.warn("Failed to get feature flag $key, defaulting to false", ex)
+      false
     }
   }
 

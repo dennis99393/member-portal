@@ -22,7 +22,9 @@ object RouteFactory {
     // Replace "@.*" with "@{preferred_username}"
     return path
         .replace("@[a-zA-Z0-9_-]*".toRegex(), "@{preferred_username}")
-        .replace("/groups/.*".toRegex(), "/groups/{group_slug}")
+        .replace("/groups/[^/]+/members/[^/]+".toRegex(), "/groups/{group_slug}/members/{username}")
+        .replace("/groups/[^/]+/members".toRegex(), "/groups/{group_slug}/members")
+        .replace("/groups/[^/]+$".toRegex(), "/groups/{group_slug}")
         .replace("/reports.*".toRegex(), "/reports/{path...}")
         .replace("/backend-api/.*".toRegex(), "/backend-api/{path...}")
         .replace(
@@ -58,6 +60,8 @@ object RouteFactory {
     LINKEDIN_CALLBACK("/linkedin-callback"),
     STATIC("/static"),
     GROUPS("/groups/{group_slug}"),
+    GROUP_MEMBERS("/groups/{group_slug}/members"),
+    GROUP_MEMBER_DETAIL("/groups/{group_slug}/members/{username}"),
     SEARCH_PRELOAD("/search-preload"),
     PROFILE_DEBUG_INFO("/profile/@{preferred_username}/debug-info"),
     PROFILE_FEATURED_PROJECTS("/profile/@{preferred_username}/featured-projects"),

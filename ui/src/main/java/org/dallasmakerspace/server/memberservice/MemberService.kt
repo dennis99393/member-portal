@@ -150,6 +150,28 @@ constructor(
     )
   }
 
+  suspend fun addToGroup(
+      sessionId: String?,
+      username: String,
+      groupSlug: String,
+      actorUsername: String? = null,
+  ) {
+    memberServiceClient.addToGroup(sessionId, username, groupSlug, actorUsername)
+  }
+
+  suspend fun removeFromGroup(
+      sessionId: String?,
+      username: String,
+      groupSlug: String,
+      actorUsername: String? = null,
+  ) {
+    memberServiceClient.removeFromGroup(sessionId, username, groupSlug, actorUsername)
+  }
+
+  suspend fun getFeatureFlag(key: String, sessionId: String?): Boolean {
+    return memberServiceClient.getFeatureFlag(key, sessionId)
+  }
+
   suspend fun callBackendApi(path: String, sessionId: String?) =
       memberServiceClient.callBackendApi(path, sessionId)
 

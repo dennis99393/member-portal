@@ -48,7 +48,8 @@ object ElasticsearchClientManager {
     }
 
     if (failed == 0) {
-      log.info("Elasticsearch retry flushed ${toRetry.size} queued entr${if (toRetry.size == 1) "y" else "ies"}")
+      log.info(
+          "Elasticsearch retry flushed ${toRetry.size} queued entr${if (toRetry.size == 1) "y" else "ies"}")
     } else if (retryQueue.size >= ERROR_THRESHOLD) {
       log.error(
           "Elasticsearch retry: $failed/${toRetry.size} entries still failing, ${retryQueue.size} total queued")

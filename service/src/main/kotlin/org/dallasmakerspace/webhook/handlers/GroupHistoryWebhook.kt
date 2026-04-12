@@ -47,7 +47,6 @@ constructor(
       val memberUsername = adUsers[0].sAMAccountName
       val actorUsername = event.Subject.UserName
       val groupName = event.TargetGroup.Name
-      val actionType = ActionType.fromEventId(event.EventId)
 
       // Get actor and member IDs from the memberService
       val actorProfile =
@@ -69,15 +68,28 @@ constructor(
       // Get or create the group record
       val groupId = groupHistoryRepository.getOrCreateGroup(groupName)
 
-      // Parse the timestamp
-      val eventTime =
+      // Parse the event timestamp early for the deduplication window
+      val eventTimeParsed =
           LocalDateTime.parse(
               event.TimeCreated.substring(0, 19).replace('T', ' '),
               DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
+      val deduplicationWindowMinutes = 15L
+      val windowStart = eventTimeParsed.minusMinutes(deduplicationWindowMinutes)
+      val windowEnd = eventTimeParsed.plusMinutes(2)
+
+      val actionTypeParsed = ActionType.fromEventId(event.EventId)
+
+      if (groupHistoryRepository.hasPortalInitiatedRecord(
+          memberProfile.id, groupId, actionTypeParsed, windowStart, windowEnd)) {
+        logger.info(
+            "Suppressing AD webhook for $memberUsername→$groupName: matched portal-initiated record within ${deduplicationWindowMinutes}min window")
+        return WebhookResult(true, "Deduplicated: matched portal-initiated record")
+      }
+
       // Save to database with IDs instead of usernames
       groupHistoryRepository.insertGroupHistory(
-          actorProfile.id, memberProfile.id, groupId, actionType, eventTime)
+          actorProfile.id, memberProfile.id, groupId, actionTypeParsed, eventTimeParsed)
 
       WebhookResult(true, "Successfully processed group history event")
     } catch (e: Exception) {

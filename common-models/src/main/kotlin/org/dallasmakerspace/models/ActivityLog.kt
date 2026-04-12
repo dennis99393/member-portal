@@ -36,6 +36,10 @@ enum class ActivityLogEvent(val value: Int) {
 
   /** Badge management events * */
   FIX_BADGE_LENGTH_AD(12),
+
+  /** Group membership events */
+  GROUP_MEMBER_ADDED(13),
+  GROUP_MEMBER_REMOVED(14),
 }
 
 @Suppress("MagicNumber")

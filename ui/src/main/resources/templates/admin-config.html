@@ -239,6 +239,10 @@
                 <div class="mb-3">
                     <label for="editNewValue" class="form-label">New Value</label>
                     <input type="text" class="form-control font-monospace" id="editNewValue" autocomplete="off">
+                    <div class="form-check form-switch mt-2" id="editBooleanToggleWrapper" style="display:none;">
+                        <input class="form-check-input" type="checkbox" role="switch" id="editBooleanToggle">
+                        <label class="form-check-label" for="editBooleanToggle" id="editBooleanLabel">Disabled</label>
+                    </div>
                     <div class="form-text text-warning" id="editSensitiveHint" style="display:none;">
                         <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">visibility_off</span>
                         This is a sensitive value. The current value is not displayed.
@@ -413,9 +417,26 @@
             document.getElementById('editDefaultValue').textContent = defaultValue || '(empty)';
 
             var newValueInput = document.getElementById('editNewValue');
-            newValueInput.value = currentIsSensitive ? '' : currentValue;
-            newValueInput.type = currentType === 'INTEGER' ? 'number' : 'text';
-            newValueInput.placeholder = currentIsSensitive ? 'Enter new value (current hidden)' : '';
+            var boolToggleWrapper = document.getElementById('editBooleanToggleWrapper');
+            var boolToggle = document.getElementById('editBooleanToggle');
+            var boolLabel = document.getElementById('editBooleanLabel');
+
+            if (currentType === 'BooleanType') {
+                newValueInput.style.display = 'none';
+                boolToggleWrapper.style.display = 'block';
+                var isTrue = currentValue === 'true';
+                boolToggle.checked = isTrue;
+                boolLabel.textContent = isTrue ? 'Enabled' : 'Disabled';
+                boolToggle.onchange = function () {
+                    boolLabel.textContent = boolToggle.checked ? 'Enabled' : 'Disabled';
+                };
+            } else {
+                newValueInput.style.display = '';
+                boolToggleWrapper.style.display = 'none';
+                newValueInput.value = currentIsSensitive ? '' : currentValue;
+                newValueInput.type = 'text';
+                newValueInput.placeholder = currentIsSensitive ? 'Enter new value (current hidden)' : '';
+            }
 
             document.getElementById('editSensitiveHint').style.display = currentIsSensitive ? 'block' : 'none';
             document.getElementById('editReason').value = '';
@@ -432,7 +453,9 @@
         });
 
         document.getElementById('saveConfigBtn').addEventListener('click', function () {
-            var newValue = document.getElementById('editNewValue').value.trim();
+            var newValue = currentType === 'BooleanType'
+                ? (document.getElementById('editBooleanToggle').checked ? 'true' : 'false')
+                : document.getElementById('editNewValue').value.trim();
             var reason = document.getElementById('editReason').value.trim();
             var alertEl = document.getElementById('editConfigAlert');
 

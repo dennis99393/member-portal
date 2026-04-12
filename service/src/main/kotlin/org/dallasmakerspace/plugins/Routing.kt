@@ -18,6 +18,7 @@ import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.apiKey
 import org.dallasmakerspace.auth.requireRole
 import org.dallasmakerspace.config.ConfigOverrideService
+import org.dallasmakerspace.config.ConfigRegistry
 import org.dallasmakerspace.config.routing.configRoutes
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.cron.DoorSwipesCronJob
@@ -365,27 +366,39 @@ fun Application.configureRouting() {
       /** Group operations - WRITE * */
       requireRole("group:write") {
         patch<Groups.DMSGroup.Add> { groupRequested ->
-          // Update group ...
+          if (!configOverrideService.get(ConfigRegistry.GROUP_MEMBER_MANAGEMENT_ENABLED)) {
+            call.respond(
+                HttpStatusCode.Forbidden,
+                ApiResponse(Status.ERROR, "Group member management feature is not enabled", null))
+            return@patch
+          }
+          val actorUsername = call.request.headers["X-Actor-Username"]
           val memberUsername = call.receive<String>()
           val groupslug = groupRequested.parent.groupslug
-          memberService.addMembersToGroup(listOf(memberUsername), groupslug)
+          memberService.addMembersToGroup(listOf(memberUsername), groupslug, actorUsername)
           call.respond(
               ApiResponse(
                   Status.SUCCESS,
-                  "Added member to $groupslug updated: $memberUsername",
+                  "Added member to $groupslug: $memberUsername",
                   null,
               ))
         }
 
         delete<Groups.DMSGroup.Add> { groupRequested ->
-          // Update group ...
+          if (!configOverrideService.get(ConfigRegistry.GROUP_MEMBER_MANAGEMENT_ENABLED)) {
+            call.respond(
+                HttpStatusCode.Forbidden,
+                ApiResponse(Status.ERROR, "Group member management feature is not enabled", null))
+            return@delete
+          }
+          val actorUsername = call.request.headers["X-Actor-Username"]
           val memberUsername = call.receive<String>()
           val groupslug = groupRequested.parent.groupslug
-          memberService.removeMembersToGroup(listOf(memberUsername), groupslug)
+          memberService.removeMembersToGroup(listOf(memberUsername), groupslug, actorUsername)
           call.respond(
               ApiResponse(
                   Status.SUCCESS,
-                  "Removed member to $groupslug updated: $memberUsername",
+                  "Removed member from $groupslug: $memberUsername",
                   null,
               ))
         }

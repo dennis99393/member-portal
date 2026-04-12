@@ -99,7 +99,11 @@ fun Application.configureRouting() {
       post("/ask-ai/feedback") {
         RouteFactory.getHandler(RouteFactory.Paths.ASK_AI.path)?.handleBase(call)
       }
-      get(RouteFactory.Paths.CONFIG_ADMIN.path) {
+      get(RouteFactory.Paths.CONFIG_ADMIN.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      post(RouteFactory.Paths.GROUP_MEMBERS.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
+      delete(RouteFactory.Paths.GROUP_MEMBER_DETAIL.path) {
         RouteFactory.getHandler(call)?.handleBase(call)
       }
     }

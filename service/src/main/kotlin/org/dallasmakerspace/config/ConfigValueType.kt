@@ -9,5 +9,7 @@ sealed class ConfigValueType {
 
   object DateType : ConfigValueType()
 
+  object BooleanType : ConfigValueType()
+
   data class ComplexType<T>(val serializer: KSerializer<T>) : ConfigValueType()
 }

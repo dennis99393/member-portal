@@ -163,6 +163,7 @@ constructor(
     return when (val type = configKey.type) {
       is ConfigValueType.StringType -> value as String
       is ConfigValueType.IntType -> (value as Int).toString()
+      is ConfigValueType.BooleanType -> (value as Boolean).toString()
       is ConfigValueType.DateType -> (value as LocalDate).toString()
       is ConfigValueType.ComplexType<*> -> {
         val serializer = (type as ConfigValueType.ComplexType<T>).serializer
@@ -176,6 +177,7 @@ constructor(
     return when (val type = configKey.type) {
       is ConfigValueType.StringType -> raw as T
       is ConfigValueType.IntType -> raw.toInt() as T
+      is ConfigValueType.BooleanType -> raw.toBoolean() as T
       is ConfigValueType.DateType -> LocalDate.parse(raw) as T
       is ConfigValueType.ComplexType<*> -> {
         val serializer = (type as ConfigValueType.ComplexType<T>).serializer

@@ -10,6 +10,7 @@ import org.dallasmakerspace.models.ActorDisplayResolver
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
+import org.dallasmakerspace.server.memberservice.MemberServiceClient
 import org.dallasmakerspace.server.models.getNameFromSlug
 import org.dallasmakerspace.server.models.getSlugFromName
 import org.dallasmakerspace.server.models.isGroupDN
@@ -22,6 +23,7 @@ constructor(
     loggerFactory: LoggerFactory,
     userInfoProvider: UserInfoProvider,
     private val memberService: MemberService,
+    private val memberServiceClient: MemberServiceClient,
 ) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
   private val log = loggerFactory.create(javaClass)
 
@@ -36,9 +38,17 @@ constructor(
     val hasPrerequisiteClassesDeferred = async {
       memberService.hasPrerequisiteClasses(requestedGroupSlug, session.sessionId)
     }
+    val featureEnabledDeferred = async {
+      memberServiceClient.getFeatureFlag("groups.member-management-enabled", session.sessionId)
+    }
 
     val requestedGroup = groupDeferred.await()
     val hasPrerequisiteClasses = hasPrerequisiteClassesDeferred.await()
+    val featureEnabled = featureEnabledDeferred.await()
+
+    // Check feature flag and user role
+    val canManageMembers = featureEnabled && isInfra
+    val actorUsername = userInfo["preferred_username"] as? String
 
     log.debug("Group: {}", requestedGroup)
     val jsonMap: MutableMap<String, Any> =
@@ -46,6 +56,9 @@ constructor(
             "name" to requestedGroupName,
             "slug" to requestedGroupSlug,
             "hasPrerequisiteClasses" to hasPrerequisiteClasses,
+            "canManageMembers" to canManageMembers,
+            "actorUsername" to (actorUsername ?: ""),
+            "memberUsernamesJson" to "[]",
         )
     if (requestedGroup.members.isNotEmpty()) {
       // Create a map of username to most recent timestamp from history
@@ -84,8 +97,13 @@ constructor(
                 )
               }
 
+      // Generate JSON array string for excluded usernames
+      val memberUsernamesJson =
+          requestedGroup.members.joinToString(",", "[", "]") { "\"${it.username}\"" }
+
       jsonMap["members"] = processedMembers
       jsonMap["memberlist_incomplete"] = requestedGroup.membersListIncomplete
+      jsonMap["memberUsernamesJson"] = memberUsernamesJson
     }
 
     // Process administrators
