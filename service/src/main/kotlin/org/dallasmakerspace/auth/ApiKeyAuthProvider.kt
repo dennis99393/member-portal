@@ -34,9 +34,9 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
 
     val loadedClients =
         (0 until clientCount).mapNotNull { i ->
-          val name = System.getenv("API_CLIENT_${i}_NAME")
-          val key = System.getenv("API_CLIENT_${i}_KEY")
-          val roleName = System.getenv("API_CLIENT_${i}_ROLE")
+          val name = System.getenv("API_CLIENT_${i}_NAME")?.trim()
+          val key = System.getenv("API_CLIENT_${i}_KEY")?.trim()
+          val roleName = System.getenv("API_CLIENT_${i}_ROLE")?.trim()
 
           when {
             name.isNullOrBlank() -> {
@@ -66,9 +66,9 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
     loadedClients.ifEmpty {
       log.warn("No API clients loaded from environment variables, using fallback configuration")
       try {
-        val fallbackName = appConfig.requireStringProperty("app.api.fallback.name")
-        val fallbackKey = appConfig.requireStringProperty("app.api.fallback.key")
-        val fallbackRoleName = appConfig.requireStringProperty("app.api.fallback.role")
+        val fallbackName = appConfig.requireStringProperty("app.api.fallback.name").trim()
+        val fallbackKey = appConfig.requireStringProperty("app.api.fallback.key").trim()
+        val fallbackRoleName = appConfig.requireStringProperty("app.api.fallback.role").trim()
         val fallbackRole = Role.fromName(fallbackRoleName)
         val fallbackPermissions = fallbackRole?.permissions ?: emptySet()
 
