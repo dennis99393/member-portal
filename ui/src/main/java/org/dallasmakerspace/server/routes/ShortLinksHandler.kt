@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
 import javax.inject.Inject
+import org.dallasmakerspace.server.auth.Permission
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.logging.LoggerFactory
@@ -27,19 +28,18 @@ constructor(
     val username = userInfo["preferred_username"] as String?
     val displayName = userInfo["name"] as String?
     val isDevelopmentMode = appConfig.isDevelopmentMode()
-    val canAccessAdmin = isInfra && isDevelopmentMode
+    val canAccessAdmin = authz.can(Permission.MANAGE_SHORTLINKS.name) && isDevelopmentMode
 
-    // Build context for template
-    val jsonMap =
-        mutableMapOf<String, Any>(
-            "username" to (username ?: ""),
-            "display_name" to (displayName ?: ""),
-            "can_access_admin" to canAccessAdmin,
-            "is_development_mode" to isDevelopmentMode,
-            "is_infra" to isInfra,
-            "is_officer" to isOfficer)
-
-    // Respond with Thymeleaf template
-    call.respond(ThymeleafContent("short-links", jsonMap))
+    call.respond(
+        ThymeleafContent(
+            "short-links",
+            mapOf(
+                "username" to (username ?: ""),
+                "display_name" to (displayName ?: ""),
+                "can_access_admin" to canAccessAdmin,
+                "is_development_mode" to isDevelopmentMode,
+                "authz" to authz,
+            ),
+        ))
   }
 }

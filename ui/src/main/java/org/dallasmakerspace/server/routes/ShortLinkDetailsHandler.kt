@@ -22,7 +22,6 @@ constructor(
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun handleAuthenticated(call: ApplicationCall) {
-    // Get link ID from path parameter
     val linkId = call.parameters["id"]?.toIntOrNull()
 
     if (linkId == null) {
@@ -34,16 +33,15 @@ constructor(
     val username = userInfo["preferred_username"] as String?
     val displayName = userInfo["name"] as String?
 
-    // Build context for template
-    val jsonMap =
-        mutableMapOf<String, Any>(
-            "username" to (username ?: ""),
-            "display_name" to (displayName ?: ""),
-            "link_id" to linkId,
-            "is_infra" to isInfra,
-            "is_officer" to isOfficer)
-
-    // Respond with Thymeleaf template
-    call.respond(ThymeleafContent("short-link-details", jsonMap))
+    call.respond(
+        ThymeleafContent(
+            "short-link-details",
+            mapOf(
+                "username" to (username ?: ""),
+                "display_name" to (displayName ?: ""),
+                "link_id" to linkId,
+                "authz" to authz,
+            ),
+        ))
   }
 }

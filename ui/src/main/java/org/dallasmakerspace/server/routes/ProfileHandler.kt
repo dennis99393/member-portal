@@ -16,6 +16,7 @@ import kotlinx.datetime.format
 import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.toJavaInstant
 import org.dallasmakerspace.models.DMSMember
+import org.dallasmakerspace.server.auth.Permission
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
@@ -51,7 +52,8 @@ constructor(
     // Compute flags before any service calls (userInfo already populated by base class)
     val currentUsername = userInfo["preferred_username"] as String?
     val isSelf = requestedUsername == currentUsername
-    val isSelfOrInfra = isSelf || isInfra
+    val canManageMembers = authz.can(Permission.MANAGE_MEMBERS.name)
+    val isSelfOrAdmin = isSelf || canManageMembers
 
     // Launch all calls in parallel immediately
     val memberDeferred = async { memberService.getMember(requestedUsername, session.sessionId) }
@@ -118,11 +120,11 @@ constructor(
         .firstOrNull { group -> group.name == voterRegistrationManager.getVotingMembersGroupName() }
         ?.apply { jsonMap["is_voting_member"] = "true" }
     jsonMap["is_self"] = isSelf.toString()
-    if (isSelfOrInfra) {
+    if (isSelfOrAdmin) {
       requestedMember.personalEmail?.apply { jsonMap["personal_email"] = this as Any }
       requestedMember.phoneNumber?.apply { jsonMap["phone_number"] = this as Any }
     }
-    jsonMap["is_infra"] = isInfra
+    jsonMap["authz"] = authz
     jsonMap["is_voter_registration_test_mode_enabled"] =
         VoterRegistrationManager.IS_VOTER_REGISTRATION_TEST_MODE_ENABLED
     requestedMember.accountInfo?.apply {

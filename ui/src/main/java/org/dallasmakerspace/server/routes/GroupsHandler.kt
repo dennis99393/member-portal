@@ -7,6 +7,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import org.dallasmakerspace.models.ActorDisplayResolver
+import org.dallasmakerspace.server.auth.Permission
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
@@ -47,7 +48,7 @@ constructor(
     val featureEnabled = featureEnabledDeferred.await()
 
     // Check feature flag and user role
-    val canManageMembers = featureEnabled && isInfra
+    val canManageMembers = featureEnabled && authz.can(Permission.MANAGE_GROUPS.name)
     val actorUsername = userInfo["preferred_username"] as? String
 
     log.debug("Group: {}", requestedGroup)

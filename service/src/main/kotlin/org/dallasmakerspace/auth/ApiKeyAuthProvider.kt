@@ -13,7 +13,7 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
 
   private val log = LoggerFactory.getLogger(ApiKeyAuthProvider::class.java)
 
-  data class ApiKeyPrincipal(val key: String, val client: String, val roles: Set<String>) :
+  data class ApiKeyPrincipal(val key: String, val client: String, val permissions: Set<Permission>) :
       Principal
 
   private val apiClientHeaderName: String =
@@ -21,11 +21,8 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
   private val apiKeyHeaderName: String =
       requireNotNull(authConfig.apiKeyHeaderName) { "authConfig.apiKeyHeaderName" }
 
-  // Data class to hold API client configuration
-  private data class ApiClientConfig(val name: String, val key: String, val roles: Set<String>)
+  private data class ApiClientConfig(val name: String, val key: String, val permissions: Set<Permission>)
 
-  // Load API clients from indexed environment variables
-  // Format: API_CLIENT_0_NAME, API_CLIENT_0_KEY, API_CLIENT_0_ROLES, etc.
   private val apiClients: List<ApiClientConfig> = run {
     val clientCount =
         try {
@@ -39,7 +36,7 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
         (0 until clientCount).mapNotNull { i ->
           val name = System.getenv("API_CLIENT_${i}_NAME")
           val key = System.getenv("API_CLIENT_${i}_KEY")
-          val rolesString = System.getenv("API_CLIENT_${i}_ROLES")
+          val roleName = System.getenv("API_CLIENT_${i}_ROLE")
 
           when {
             name.isNullOrBlank() -> {
@@ -51,43 +48,34 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
               null
             }
             else -> {
-              val roles =
-                  rolesString?.split(",")?.map { it.trim() }?.filter { it.isNotBlank() }?.toSet()
-                      ?: emptySet()
+              val role = roleName?.let { Role.fromName(it) }
+              val permissions = role?.permissions ?: emptySet()
 
-              if (roles.isEmpty()) {
-                log.warn("No roles configured for client '$name' (API_CLIENT_${i}_ROLES)")
+              if (permissions.isEmpty()) {
+                log.warn("No role configured for client '$name' (API_CLIENT_${i}_ROLE)")
               } else {
                 log.info(
-                    "Loaded client '$name' with ${roles.size} role(s): ${roles.joinToString(", ")}")
+                    "Loaded client '$name' with role '${role?.name}' (${permissions.size} permission(s))")
               }
 
-              ApiClientConfig(name, key, roles)
+              ApiClientConfig(name, key, permissions)
             }
           }
         }
 
-    // If no clients were loaded from env vars, use fallback from config (for local dev)
     loadedClients.ifEmpty {
       log.warn("No API clients loaded from environment variables, using fallback configuration")
       try {
         val fallbackName = appConfig.requireStringProperty("app.api.fallback.name")
         val fallbackKey = appConfig.requireStringProperty("app.api.fallback.key")
-        val fallbackRoles =
-            appConfig
-                .requireStringProperty("app.api.fallback.roles")
-                .split(",")
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
-                .toSet()
+        val fallbackRoleName = appConfig.requireStringProperty("app.api.fallback.role")
+        val fallbackRole = Role.fromName(fallbackRoleName)
+        val fallbackPermissions = fallbackRole?.permissions ?: emptySet()
 
         log.info(
-            "Loaded fallback client '$fallbackName' with ${fallbackRoles.size} role(s): ${
-            fallbackRoles.joinToString(
-              ", "
-            )
-          }")
-        listOf(ApiClientConfig(fallbackName, fallbackKey, fallbackRoles))
+            "Loaded fallback client '$fallbackName' with role '$fallbackRoleName' " +
+                "(${fallbackPermissions.size} permission(s))")
+        listOf(ApiClientConfig(fallbackName, fallbackKey, fallbackPermissions))
       } catch (e: Exception) {
         log.error("Failed to load fallback client configuration: ${e.message}")
         emptyList()
@@ -96,7 +84,7 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
   }
 
   private val mapClientsToApiKeys = apiClients.associate { it.name to it.key }
-  private val mapClientsToRoles = apiClients.associate { it.name to it.roles }
+  private val mapClientsToPermissions = apiClients.associate { it.name to it.permissions }
 
   private val challengeFunction = authConfig.challengeFunction
 
@@ -120,11 +108,10 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
                       "Key prefix: ${maskApiKey(it)}, Client: '$apiClient'")
               return@let null
             }
-            // Create principal with client name and roles
-            val roles = mapClientsToRoles[apiClient] ?: emptySet()
+            val permissions = mapClientsToPermissions[apiClient] ?: emptySet()
             log.info(
-                "Authentication successful for client: '$apiClient' with ${roles.size} role(s)")
-            ApiKeyPrincipal(it, apiClient, roles)
+                "Authentication successful for client: '$apiClient' with ${permissions.size} permission(s)")
+            ApiKeyPrincipal(it, apiClient, permissions)
           }
         }
 
@@ -140,11 +127,9 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
             AuthenticationFailedCause.NoCredentials
           }
           apiClient == null -> {
-            // Already logged above in the let block
             AuthenticationFailedCause.NoCredentials
           }
           principal == null -> {
-            // Already logged above in the let block
             AuthenticationFailedCause.InvalidCredentials
           }
           else -> null
@@ -152,7 +137,6 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
     if (cause != null) {
       context.challenge(authScheme, cause) { challenge, call ->
         challengeFunction(call)
-
         challenge.complete()
       }
     }
@@ -161,19 +145,10 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
     }
   }
 
-  /**
-   * Masks an API key for safe logging by showing only the first 4 characters. Example:
-   * "my-secret-key-123" becomes "my-s***"
-   */
   private fun maskApiKey(key: String): String {
-    return if (key.length <= 4) {
-      "***"
-    } else {
-      "${key.take(4)}***"
-    }
+    return if (key.length <= 4) "***" else "${key.take(4)}***"
   }
 
-  /** Api key auth configuration. */
   class Configuration internal constructor(name: String?) : Config(name) {
 
     internal lateinit var authenticationFunction: ApiKeyAuthenticationFunction
@@ -182,25 +157,16 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
       call.respond(HttpStatusCode.Unauthorized)
     }
 
-    /** Name of the scheme used when challenge fails, see [AuthenticationContext.challenge]. */
     var authScheme: String = "apiKey"
 
-    /** Name of the header that will be used as a source for the api key. */
     var apiKeyHeaderName: String = X_API_KEY
 
-    /** Name of the header that will be used as a source for the api client. */
     var apiClientHeaderName: String = X_API_CLIENT
 
-    /**
-     * Sets a validation function that will check given API key retrieved from [apiKeyHeaderName]
-     * instance and return [Principal], or null if credential does not correspond to an
-     * authenticated principal.
-     */
     fun validate(body: suspend ApplicationCall.(String) -> Principal?) {
       authenticationFunction = body
     }
 
-    /** A response to send back if authentication failed. */
     fun challenge(body: ApiKeyAuthChallengeFunction) {
       challengeFunction = body
     }
@@ -212,7 +178,6 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
   }
 }
 
-/** Installs API Key authentication mechanism. */
 fun AuthenticationConfig.apiKey(
     appConfig: AppConfig,
     name: String? = null,
@@ -223,8 +188,6 @@ fun AuthenticationConfig.apiKey(
   register(provider)
 }
 
-/** Alias for function signature that is invoked when verifying header. */
 typealias ApiKeyAuthenticationFunction = suspend ApplicationCall.(String) -> Principal?
 
-/** Alias for function signature that is called when authentication fails. */
 typealias ApiKeyAuthChallengeFunction = suspend (ApplicationCall) -> Unit

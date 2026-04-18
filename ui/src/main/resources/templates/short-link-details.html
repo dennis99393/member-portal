@@ -157,7 +157,7 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     const linkId = /*[[${link_id}]]*/ 0;
-    const isInfra = /*[[${is_infra}]]*/ false;
+    const isInfra = /*[[${authz.can('MANAGE_SHORTLINKS')}]]*/ false;
     /*]]>*/
 
     let linkData = null;

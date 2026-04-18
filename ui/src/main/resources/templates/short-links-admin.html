@@ -217,10 +217,10 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     window.shortLinksConfig = {
-        canManageNamespaces: /*[[${can_manage_namespaces}]]*/ false,
-        canManageAnyLink: /*[[${can_manage_any_link}]]*/ false,
-        isInfra: /*[[${is_infra}]]*/ false,
-        isOfficer: /*[[${is_officer}]]*/ false,
+        canManageNamespaces: /*[[${authz.can('MANAGE_SHORTLINKS')}]]*/ false,
+        canManageAnyLink: /*[[${authz.can('MANAGE_SHORTLINKS')}]]*/ false,
+        isInfra: /*[[${authz.can('MANAGE_SHORTLINKS')}]]*/ false,
+        isOfficer: false,
         username: /*[[${username}]]*/ ''
     };
     /*]]>*/

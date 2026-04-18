@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import java.util.concurrent.*
 import javax.inject.Inject
+import org.dallasmakerspace.server.auth.Permission
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
@@ -57,7 +58,7 @@ constructor(
                     "discourseUsername" to it.discourseUsername,
                     "avatarUrl" to avatarUrl,
                     "type" to "member")
-            if (isInfra) {
+            if (authz.can(Permission.MANAGE_MEMBERS.name)) {
               record["badgeNumber"] = it.badgeNumber
               record["personalEmail"] = it.personalEmail
               record["phoneNumber"] = it.phoneNumber

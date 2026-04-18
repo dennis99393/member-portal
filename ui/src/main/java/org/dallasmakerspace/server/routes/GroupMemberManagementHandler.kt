@@ -7,6 +7,7 @@ import io.ktor.server.response.*
 import javax.inject.Inject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.dallasmakerspace.server.auth.Permission
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
@@ -26,10 +27,7 @@ constructor(
   @Serializable data class ApiResponse(val success: Boolean, val message: String)
 
   override suspend fun handleAuthenticated(call: ApplicationCall) {
-    if (!isInfra) {
-      call.respond(HttpStatusCode.Forbidden, ApiResponse(false, "Insufficient permissions"))
-      return
-    }
+    if (!call.require(Permission.MANAGE_GROUPS)) return
 
     val groupSlug =
         call.parameters["group_slug"]

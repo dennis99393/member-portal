@@ -4,14 +4,15 @@ import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.dallasmakerspace.auth.requireRole
+import org.dallasmakerspace.auth.Permission
+import org.dallasmakerspace.auth.authorize
 import org.dallasmakerspace.config.ConfigOverrideService
 import org.dallasmakerspace.config.ConfigRegistry
 import org.dallasmakerspace.plugins.ApiResponse
 import org.dallasmakerspace.plugins.Status
 
 fun Route.configRoutes(configOverrideService: ConfigOverrideService) {
-  requireRole("config:read") {
+  authorize(Permission.MANAGE_CONFIG) {
     get("/config") {
       val values = configOverrideService.getCurrentValues()
       call.respond(ApiResponse(Status.SUCCESS, "Config values: ${values.size}", values))
@@ -53,7 +54,7 @@ fun Route.configRoutes(configOverrideService: ConfigOverrideService) {
     }
   }
 
-  requireRole("config:write") {
+  authorize(Permission.MANAGE_CONFIG) {
     patch("/config/{key}") {
       val key =
           call.parameters["key"]

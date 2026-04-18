@@ -1,9 +1,13 @@
 package org.dallasmakerspace.server.routes
 
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
+import org.dallasmakerspace.server.auth.Authz
+import org.dallasmakerspace.server.auth.Permission
+import org.dallasmakerspace.server.auth.Role
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.HttpException
 import org.dallasmakerspace.server.common.logging.LoggerFactory
@@ -13,7 +17,7 @@ import org.dallasmakerspace.server.plugins.UserSession
 /**
  * Base class for handlers that require authentication. Assumes the route is wrapped in
  * authenticate("auth_session") in Routing.kt. Provides common authenticated request context
- * (session, userInfo, authorization flags).
+ * (session, userInfo, authorization).
  */
 abstract class AuthenticatedHandler(
     protected val loggerFactory: LoggerFactory,
@@ -22,22 +26,17 @@ abstract class AuthenticatedHandler(
 
   protected lateinit var session: UserSession
   protected lateinit var userInfo: Map<String, Any>
-  protected var isInfra = false
-  protected var isBoard = false
-  protected var isOfficer = false
+  protected lateinit var authz: Authz
 
   final override suspend fun handle(call: ApplicationCall) {
     val log = loggerFactory.create(javaClass)
 
-    // Get session (guaranteed to exist by auth_session authentication)
     session = call.sessions.get<UserSession>() ?: throw AuthException("No session found")
 
-    // Fetch user info from OAuth provider
     try {
       userInfo = userInfoProvider.getUserInfo(session.accessToken!!)
     } catch (e: HttpException) {
       if (e.message?.contains("401") == true) {
-        // Token expired or invalid - clear session and redirect to login
         log.warn("Access token expired or invalid, redirecting to login")
         call.sessions.clear<UserSession>()
         val currentUri = call.request.uri
@@ -48,21 +47,22 @@ abstract class AuthenticatedHandler(
       throw e
     }
 
-    // Extract authorization flags from groups
     val userGroups = (userInfo["groups"] as? List<*>) ?: emptyList<String>()
-    isInfra = userGroups.contains("/Infrastructure")
-    isBoard = userGroups.contains("/Board")
-    isOfficer =
-        userGroups.contains("/Logistics Committee Chair") ||
-            userGroups.contains("/President") ||
-            userGroups.contains("/Treasurer") ||
-            userGroups.contains("/Secretary") ||
-            userGroups.contains("/Infrastructure Committee Chair")
+    val permissions = Role.fromKeycloakGroups(userGroups).flatMap { it.permissions }.toSet()
+    authz = Authz(permissions)
 
-    // Delegate to subclass
     handleAuthenticated(call)
   }
 
-  /** Handle the authenticated request. Session and userInfo are already populated. */
+  /** Responds with 403 Forbidden if the authenticated user lacks the given permission. */
+  protected suspend fun ApplicationCall.require(permission: Permission): Boolean {
+    if (!authz.can(permission.name)) {
+      respond(HttpStatusCode.Forbidden)
+      return false
+    }
+    return true
+  }
+
+  /** Handle the authenticated request. Session, userInfo, and authz are already populated. */
   protected abstract suspend fun handleAuthenticated(call: ApplicationCall)
 }

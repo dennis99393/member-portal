@@ -6,6 +6,7 @@ import io.ktor.server.response.*
 import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.dallasmakerspace.server.auth.Permission
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
@@ -27,15 +28,16 @@ constructor(
 
     val currentUsername = userInfo["preferred_username"] as String?
     val isSelf = requestedUsername == currentUsername
-    val isSelfOrInfra = isSelf || isInfra
+    val canManageMembers = authz.can(Permission.MANAGE_MEMBERS.name)
+    val isSelfOrAdmin = isSelf || canManageMembers
 
-    if (!isSelfOrInfra) {
+    if (!isSelfOrAdmin) {
       call.respond(HttpStatusCode.Forbidden, mapOf("error" to "Forbidden"))
       return@coroutineScope
     }
 
     val debugInfoDeferred =
-        if (isInfra) async { memberService.getDebugInfo(requestedUsername, session.sessionId) }
+        if (canManageMembers) async { memberService.getDebugInfo(requestedUsername, session.sessionId) }
         else null
     val badgeMMDeferred = async {
       memberService.getBadgeFromMakerManager(requestedUsername, session.sessionId)

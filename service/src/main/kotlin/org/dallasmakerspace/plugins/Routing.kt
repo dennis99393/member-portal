@@ -15,8 +15,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.dallasmakerspace.askai.AskAiService
 import org.dallasmakerspace.auth.ApiKeyAuthProvider
+import org.dallasmakerspace.auth.Permission
 import org.dallasmakerspace.auth.apiKey
-import org.dallasmakerspace.auth.requireRole
+import org.dallasmakerspace.auth.authorize
 import org.dallasmakerspace.config.ConfigOverrideService
 import org.dallasmakerspace.config.ConfigRegistry
 import org.dallasmakerspace.config.routing.configRoutes
@@ -121,8 +122,8 @@ fun Application.configureRouting() {
 
     authenticate(ApiKeyAuthProvider.X_API_KEY) {
 
-      /** Member profile operations - READ * */
-      requireRole("member:read") {
+      /** Member profile operations * */
+      authorize(Permission.MANAGE_MEMBERS) {
         get<Members> { members ->
           val loggedInDays = members.loggedInDays
           // Use the new getAllMembers method instead of getMembersLoggedInDays
@@ -233,8 +234,8 @@ fun Application.configureRouting() {
         }
       }
 
-      /** Member profile operations - WRITE * */
-      requireRole("member:write") {
+      /** Member profile write operations * */
+      authorize(Permission.MANAGE_MEMBERS) {
         patch<Members.DMSMember.Update> { update ->
           // Update member ...
           val updatedMember = call.receive<Members.DMSMember>()
@@ -303,8 +304,8 @@ fun Application.configureRouting() {
         }
       }
 
-      /** Group operations - READ * */
-      requireRole("group:read") {
+      /** Group operations * */
+      authorize(Permission.MANAGE_GROUPS) {
         get<Groups> {
           val groupsList = groupsService.getAllGroups()
           call.respond(ApiResponse(Status.SUCCESS, "All groups: ${groupsList.size}", groupsList))
@@ -363,8 +364,8 @@ fun Application.configureRouting() {
         }
       }
 
-      /** Group operations - WRITE * */
-      requireRole("group:write") {
+      /** Group write operations * */
+      authorize(Permission.MANAGE_GROUPS) {
         patch<Groups.DMSGroup.Add> { groupRequested ->
           if (!configOverrideService.get(ConfigRegistry.GROUP_MEMBER_MANAGEMENT_ENABLED)) {
             call.respond(
@@ -405,7 +406,7 @@ fun Application.configureRouting() {
       }
 
       /** Badge lookup operations * */
-      requireRole("badge:read") {
+      authorize(Permission.MANAGE_BADGES) {
         get<BadgeLookup> {
           val member = memberService.getMemberByBadgeNumber(it.badgeNumber)
           call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
@@ -413,7 +414,7 @@ fun Application.configureRouting() {
       }
 
       /** Administrative cron operations * */
-      requireRole("cron:execute") {
+      authorize(Permission.EXECUTE_CRON) {
         get("/cron/member-refresh") {
           // Get query string param for isRunningInShadowMode
           val isRunningInShadowMode =
@@ -438,9 +439,8 @@ fun Application.configureRouting() {
         }
       }
 
-      /** Data visualization reports * */
-      requireRole("dataviz:read") {
-        get("/data-viz/*") {
+      /** Data visualization reports — accessible to all authenticated clients * */
+      get("/data-viz/*") {
           val method = call.request.path().substringAfter("/data-viz/")
 
           // Check for cache override in query parameter (e.g., ?cache=0 to bypass cache)
@@ -461,10 +461,9 @@ fun Application.configureRouting() {
           val respone = dataVizRouter.route(method, params)
           call.respond(ApiResponse(Status.SUCCESS, "Backend API $method", respone))
         }
-      }
 
-      /** Short Links Routes - requires authentication * */
-      requireRole("shortlinks:read") {
+      /** Short Links Routes * */
+      authorize(Permission.MANAGE_SHORTLINKS) {
         get<ShortLinksResource.Namespaces> {
           val namespaces = shortLinksService.getAllNamespaces()
           call.respond(ApiResponse(Status.SUCCESS, "Namespaces retrieved", namespaces))
@@ -516,7 +515,7 @@ fun Application.configureRouting() {
         }
       }
 
-      requireRole("shortlinks:write") {
+      authorize(Permission.MANAGE_SHORTLINKS) {
         post("/short-links/namespaces/create") {
           val request = call.receive<CreateNamespaceRequest>()
           val username = call.request.headers["X-Username"]
@@ -729,7 +728,7 @@ fun Application.configureRouting() {
       }
 
       /** Ask AI - Question Answering */
-      requireRole("askai:read") {
+      authorize(Permission.USE_ASKAI) {
         post("/ask-ai") {
           val request = call.receive<AskAiRequest>()
           val username = call.request.headers["X-Username"]
@@ -780,7 +779,7 @@ fun Application.configureRouting() {
       }
 
       /** Activity Log Webhook - Authenticated * */
-      requireRole("activity:write") {
+      authorize(Permission.MANAGE_MEMBERS) {
         post("/webhook-auth/activity-log") {
           val body = call.receiveText()
 

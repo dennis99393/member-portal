@@ -12,7 +12,7 @@
     </div>
 
     <!-- Report content - ONLY shown to authorized users -->
-    <div th:if="${is_infra}">
+    <div th:if="${authz.can('MANAGE_MEMBERS')}">
         <!-- Data visualizer component -->
         <dms-data-visualizer
                 id="badge-validation-ad-visualizer"

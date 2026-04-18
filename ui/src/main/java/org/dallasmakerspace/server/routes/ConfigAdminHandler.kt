@@ -1,10 +1,10 @@
 package org.dallasmakerspace.server.routes
 
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
 import javax.inject.Inject
+import org.dallasmakerspace.server.auth.Permission
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberServiceClient
@@ -19,10 +19,7 @@ constructor(
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun handleAuthenticated(call: ApplicationCall) {
-    if (!isInfra) {
-      call.respond(HttpStatusCode.Forbidden)
-      return
-    }
+    if (!call.require(Permission.MANAGE_CONFIG)) return
 
     val username = userInfo["preferred_username"] as String? ?: ""
     val configList = memberServiceClient.getConfigList(session.sessionId)
@@ -32,7 +29,7 @@ constructor(
             "admin-config",
             mapOf(
                 "username" to username,
-                "is_infra" to isInfra,
+                "authz" to authz,
                 "config_list" to configList,
             ),
         ))

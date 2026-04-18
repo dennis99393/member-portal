@@ -284,7 +284,7 @@
                                     <span>Badge: <span class="ph-mask" th:text="${badge_number_ad}"></span></span>
                                 </div>
 
-                                <div th:if="${badge_needs_fix and is_infra}" class="d-flex align-items-center mb-3">
+                                <div th:if="${badge_needs_fix and authz.can('MANAGE_MEMBERS')}" class="d-flex align-items-center mb-3">
                                     <button class="btn btn-sm btn-warning" id="fixBadgeBtn"
                                             th:attr="data-username=${preferred_username},data-padded=${badge_padded}">
                                         <span class="material-symbols-outlined"
@@ -298,7 +298,7 @@
                 </div>
             </div>
             <!-- Debug info card -->
-            <div class="card shadow-sm overflow-hidden mt-4" style="margin: auto;" th:if="${is_infra}">
+            <div class="card shadow-sm overflow-hidden mt-4" style="margin: auto;" th:if="${authz.can('MANAGE_MEMBERS')}">
                 <div class="card-body pt-0">
                     <div class="d-flex align-items-center mt-4" style="cursor:pointer;"
                          data-bs-toggle="collapse" data-bs-target="#debugInfoContent"
@@ -347,7 +347,7 @@
 
             <!-- Suggested Events Debug Widget (infra only) -->
             <details id="profileSuggestedDetails" class="card shadow-sm overflow-hidden mt-4 suggested-debug-widget"
-                     th:if="${is_infra}">
+                     th:if="${authz.can('MANAGE_MEMBERS')}">
                 <summary class="card-body pt-3 pb-3 suggested-debug-summary">
                     <span class="fw-semibold">Suggested Events</span>
                     <span class="text-sm text-danger ms-2">[Infra only]</span>
@@ -470,7 +470,7 @@
 
             <!-- Voting Rights card -->
             <div class="dms-card shadow-sm mt-4"
-                 th:if="${(is_self and !is_voter_registration_test_mode_enabled) or (is_infra)}">
+                 th:if="${(is_self and !is_voter_registration_test_mode_enabled) or authz.can('MANAGE_MEMBERS')}">
                 <div class="card-body pt-0 pb-4">
                     <h4 class="card-title mt-3 mb-4 dms-card-title">Voting Rights</h4><span th:if="${!is_self}"
                                                                                             class="text-sm text-danger">[Member View for testing - Infra only]</span>
@@ -767,7 +767,7 @@
 </script>
 
 <!-- Initialize Bootstrap tooltips -->
-<script th:if="${is_infra}">
+<script th:if="${authz.can('MANAGE_MEMBERS')}">
     (function() {
         'use strict';
         // Defer tooltip initialization to avoid forced reflow during initial paint
@@ -950,7 +950,7 @@
 </script>
 
 <!-- Suggested Events Debug Widget (infra only) -->
-<script th:if="${is_infra}" th:inline="javascript">
+<script th:if="${authz.can('MANAGE_MEMBERS')}" th:inline="javascript">
     (function() {
         'use strict';
 
@@ -1045,7 +1045,7 @@
 </script>
 
 <!-- Fix Badge Script -->
-<script th:if="${badge_needs_fix and is_infra}">
+<script th:if="${badge_needs_fix and authz.can('MANAGE_MEMBERS')}">
     (function() {
         'use strict';
 

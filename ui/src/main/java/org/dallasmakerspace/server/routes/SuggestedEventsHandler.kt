@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.dallasmakerspace.server.auth.Permission
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
@@ -41,7 +42,7 @@ constructor(
       // Infra members can pass ?username= to inspect suggestions for any member.
       // Guard against blank value (e.g. empty ?username= param) — fall back to session user.
       val targetUsername =
-          if (isInfra)
+          if (authz.can(Permission.MANAGE_MEMBERS.name))
               call.request.queryParameters["username"]?.takeIf { it.isNotBlank() }
                   ?: sessionUsername
           else sessionUsername

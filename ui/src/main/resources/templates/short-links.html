@@ -68,7 +68,7 @@
                     <h1 class="mt-4 mb-2">Popular Short Links</h1>
                     <p class="text-muted">Discover the most-used Dallas Makerspace branded short URLs</p>
                 </div>
-                <div th:if="${is_infra}">
+                <div th:if="${authz.can('MANAGE_SHORTLINKS')}">
                     <a th:if="${is_development_mode}" href="/short-links/admin" class="btn btn-primary">
                         <span class="material-symbols-outlined" style="font-size: 20px; vertical-align: middle; margin-right: 5px;">settings</span>
                         Manage Links
