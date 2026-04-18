@@ -23,6 +23,7 @@ constructor(
   private data class CachedEntry(
       val rawValue: String,
       val isReset: Boolean,
+      val infraOnly: Boolean,
       val cachedAt: Long,
   )
 
@@ -39,30 +40,40 @@ constructor(
     log.info("Warming config override cache")
     val allCurrent = repository.getAllCurrent()
     allCurrent.forEach { (key, dao) ->
-      cache[key] = CachedEntry(dao.configValue, dao.isReset, System.currentTimeMillis())
+      cache[key] =
+          CachedEntry(dao.configValue, dao.isReset, dao.infraOnly, System.currentTimeMillis())
     }
     log.info("Config override cache warmed with ${allCurrent.size} entries")
   }
 
   @Suppress("UNCHECKED_CAST")
-  suspend fun <T> get(configKey: ConfigKey<T>): T {
+  suspend fun <T> get(configKey: ConfigKey<T>, isInfraUser: Boolean = false): T {
     val cached = cache[configKey.key]
     if (cached != null && System.currentTimeMillis() - cached.cachedAt < cacheTtlMs) {
       if (cached.isReset) return configKey.defaultValue
+      if (cached.infraOnly && !isInfraUser) return configKey.defaultValue
       return deserialize(cached.rawValue, configKey)
     }
 
     val dao = repository.getCurrent(configKey.key)
     if (dao != null) {
-      cache[configKey.key] = CachedEntry(dao.configValue, dao.isReset, System.currentTimeMillis())
+      cache[configKey.key] =
+          CachedEntry(dao.configValue, dao.isReset, dao.infraOnly, System.currentTimeMillis())
       if (dao.isReset) return configKey.defaultValue
+      if (dao.infraOnly && !isInfraUser) return configKey.defaultValue
       return deserialize(dao.configValue, configKey)
     }
 
     return configKey.defaultValue
   }
 
-  suspend fun <T> set(configKey: ConfigKey<T>, value: T, changedBy: String, reason: String) {
+  suspend fun <T> set(
+      configKey: ConfigKey<T>,
+      value: T,
+      changedBy: String,
+      reason: String,
+      infraOnly: Boolean = false
+  ) {
     configKey.validators.forEach { validator ->
       val result = validator.validate(value)
       if (!result.valid) {
@@ -80,12 +91,14 @@ constructor(
         changedBy = changedBy,
         reason = reason,
         isReset = false,
+        infraOnly = infraOnly,
     )
 
     cache.remove(configKey.key)
 
     val displayValue = if (configKey.sensitive) "***" else serialized
-    log.info("Config key '${configKey.key}' set to '$displayValue' by $changedBy (reason: $reason)")
+    log.info(
+        "Config key '${configKey.key}' set to '$displayValue' by $changedBy (reason: $reason, infraOnly: $infraOnly)")
   }
 
   suspend fun <T> resetToDefault(configKey: ConfigKey<T>, changedBy: String, reason: String) {
@@ -135,6 +148,7 @@ constructor(
           lastChangedBy = dao?.changedBy,
           lastChangedAt = lastChangedAt,
           lastChangeReason = dao?.changeReason,
+          infraOnly = isOverridden && (dao?.infraOnly ?: false),
       )
     }
   }
@@ -149,13 +163,19 @@ constructor(
     }
   }
 
-  suspend fun setRaw(key: String, rawValue: String, changedBy: String, reason: String) {
+  suspend fun setRaw(
+      key: String,
+      rawValue: String,
+      changedBy: String,
+      reason: String,
+      infraOnly: Boolean = false
+  ) {
     @Suppress("UNCHECKED_CAST")
     val configKey =
         ConfigRegistry.ALL.find { it.key == key } as? ConfigKey<Any>
             ?: throw IllegalArgumentException("Unknown config key: $key")
     val typedValue = deserialize(rawValue, configKey)
-    set(configKey, typedValue, changedBy, reason)
+    set(configKey, typedValue, changedBy, reason, infraOnly)
   }
 
   @Suppress("UNCHECKED_CAST")
@@ -202,6 +222,7 @@ constructor(
         changeReason = dao.changeReason,
         changedAt = formatTimestamp(dao),
         isReset = dao.isReset,
+        infraOnly = dao.infraOnly,
     )
   }
 }

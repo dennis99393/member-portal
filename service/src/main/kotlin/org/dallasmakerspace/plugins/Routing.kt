@@ -367,13 +367,14 @@ fun Application.configureRouting() {
       /** Group write operations * */
       authorize(Permission.MANAGE_GROUPS) {
         patch<Groups.DMSGroup.Add> { groupRequested ->
-          if (!configOverrideService.get(ConfigRegistry.GROUP_MEMBER_MANAGEMENT_ENABLED)) {
+          val actorUsername = call.request.headers["X-Actor-Username"]
+          val isInfra = actorUsername?.let { memberService.isUserInInfraGroup(it) } ?: false
+          if (!configOverrideService.get(ConfigRegistry.GROUP_MEMBER_MANAGEMENT_ENABLED, isInfra)) {
             call.respond(
                 HttpStatusCode.Forbidden,
                 ApiResponse(Status.ERROR, "Group member management feature is not enabled", null))
             return@patch
           }
-          val actorUsername = call.request.headers["X-Actor-Username"]
           val memberUsername = call.receive<String>()
           val groupslug = groupRequested.parent.groupslug
           memberService.addMembersToGroup(listOf(memberUsername), groupslug, actorUsername)
@@ -386,13 +387,14 @@ fun Application.configureRouting() {
         }
 
         delete<Groups.DMSGroup.Add> { groupRequested ->
-          if (!configOverrideService.get(ConfigRegistry.GROUP_MEMBER_MANAGEMENT_ENABLED)) {
+          val actorUsername = call.request.headers["X-Actor-Username"]
+          val isInfra = actorUsername?.let { memberService.isUserInInfraGroup(it) } ?: false
+          if (!configOverrideService.get(ConfigRegistry.GROUP_MEMBER_MANAGEMENT_ENABLED, isInfra)) {
             call.respond(
                 HttpStatusCode.Forbidden,
                 ApiResponse(Status.ERROR, "Group member management feature is not enabled", null))
             return@delete
           }
-          val actorUsername = call.request.headers["X-Actor-Username"]
           val memberUsername = call.receive<String>()
           val groupslug = groupRequested.parent.groupslug
           memberService.removeMembersToGroup(listOf(memberUsername), groupslug, actorUsername)
@@ -441,26 +443,26 @@ fun Application.configureRouting() {
 
       /** Data visualization reports — accessible to all authenticated clients * */
       get("/data-viz/*") {
-          val method = call.request.path().substringAfter("/data-viz/")
+        val method = call.request.path().substringAfter("/data-viz/")
 
-          // Check for cache override in query parameter (e.g., ?cache=0 to bypass cache)
-          val bypassCache = call.request.queryParameters["cache"] == "0"
+        // Check for cache override in query parameter (e.g., ?cache=0 to bypass cache)
+        val bypassCache = call.request.queryParameters["cache"] == "0"
 
-          if (bypassCache) {
-            // Skip cache for this request
-            call.response.headers.append("Cache-Control", "no-cache")
-          }
-
-          val params =
-              call.request.queryParameters
-                  .names()
-                  .filter { it != "cache" } // Exclude cache parameter from report params
-                  .associateWith { paramName ->
-                    call.request.queryParameters.getAll(paramName) ?: emptyList()
-                  }
-          val respone = dataVizRouter.route(method, params)
-          call.respond(ApiResponse(Status.SUCCESS, "Backend API $method", respone))
+        if (bypassCache) {
+          // Skip cache for this request
+          call.response.headers.append("Cache-Control", "no-cache")
         }
+
+        val params =
+            call.request.queryParameters
+                .names()
+                .filter { it != "cache" } // Exclude cache parameter from report params
+                .associateWith { paramName ->
+                  call.request.queryParameters.getAll(paramName) ?: emptyList()
+                }
+        val respone = dataVizRouter.route(method, params)
+        call.respond(ApiResponse(Status.SUCCESS, "Backend API $method", respone))
+      }
 
       /** Short Links Routes * */
       authorize(Permission.MANAGE_SHORTLINKS) {

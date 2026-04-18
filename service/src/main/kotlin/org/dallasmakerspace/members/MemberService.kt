@@ -717,7 +717,8 @@ constructor(
 
     val actorProfile = actorUsername?.let { runCatching { getMemberByUsername(it) }.getOrNull() }
     if (actorUsername != null && actorProfile == null) {
-      log.warn("Could not resolve actor profile for '$actorUsername'; group history will be skipped")
+      log.warn(
+          "Could not resolve actor profile for '$actorUsername'; group history will be skipped")
     }
 
     memberUsernames.forEach { username ->
@@ -779,7 +780,8 @@ constructor(
 
     val actorProfile = actorUsername?.let { runCatching { getMemberByUsername(it) }.getOrNull() }
     if (actorUsername != null && actorProfile == null) {
-      log.warn("Could not resolve actor profile for '$actorUsername'; group history will be skipped")
+      log.warn(
+          "Could not resolve actor profile for '$actorUsername'; group history will be skipped")
     }
 
     memberUsernames.forEach { username ->
@@ -901,6 +903,17 @@ constructor(
     } catch (e: Exception) {
       log.error("Failed to get badge from Active Directory for $username", e)
       null
+    }
+  }
+
+  fun isUserInInfraGroup(username: String): Boolean {
+    return try {
+      activeDirectoryService.getMemberByUsername(username).groups.any {
+        it.cn == org.dallasmakerspace.groups.Constants.INFRASTRUCTURE
+      }
+    } catch (e: Exception) {
+      log.warn("Could not check infra group membership for '$username', defaulting to false", e)
+      false
     }
   }
 

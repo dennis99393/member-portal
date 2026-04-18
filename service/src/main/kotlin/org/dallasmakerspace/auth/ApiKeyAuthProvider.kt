@@ -13,15 +13,22 @@ class ApiKeyAuthProvider internal constructor(appConfig: AppConfig, authConfig: 
 
   private val log = LoggerFactory.getLogger(ApiKeyAuthProvider::class.java)
 
-  data class ApiKeyPrincipal(val key: String, val client: String, val permissions: Set<Permission>) :
-      Principal
+  data class ApiKeyPrincipal(
+      val key: String,
+      val client: String,
+      val permissions: Set<Permission>
+  ) : Principal
 
   private val apiClientHeaderName: String =
       requireNotNull(authConfig.apiClientHeaderName) { "authConfig.apiClientHeaderName" }
   private val apiKeyHeaderName: String =
       requireNotNull(authConfig.apiKeyHeaderName) { "authConfig.apiKeyHeaderName" }
 
-  private data class ApiClientConfig(val name: String, val key: String, val permissions: Set<Permission>)
+  private data class ApiClientConfig(
+      val name: String,
+      val key: String,
+      val permissions: Set<Permission>
+  )
 
   private val apiClients: List<ApiClientConfig> = run {
     val clientCount =

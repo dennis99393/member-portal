@@ -12,6 +12,7 @@ data class ConfigOverrideEntry(
     val changeReason: String,
     val changedAt: String,
     val isReset: Boolean,
+    val infraOnly: Boolean,
 )
 
 @Serializable
@@ -28,4 +29,5 @@ data class ConfigCurrentValue(
     val lastChangedBy: String?,
     val lastChangedAt: String?,
     val lastChangeReason: String?,
+    val infraOnly: Boolean,
 )

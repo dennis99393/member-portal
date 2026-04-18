@@ -168,6 +168,9 @@
                                 <td>
                                         <span th:if="${config['isOverridden']}"
                                               class="badge bg-warning text-dark">Overridden</span>
+                                    <span th:if="${config['isOverridden'] and config['infraOnly']}"
+                                          class="badge bg-info text-dark ms-1"
+                                          title="Override only applies to Infrastructure group members">Infra Only</span>
                                     <span th:if="${!config['isOverridden']}"
                                           class="badge bg-light text-secondary border">Default</span>
                                 </td>
@@ -189,7 +192,8 @@
                                                     th:data-default="${config['sensitive'] ? '' : (config['defaultValue'] != null ? config['defaultValue'] : '')}"
                                                     th:data-overridden="${config['isOverridden']}"
                                                     th:data-sensitive="${config['sensitive']}"
-                                                    th:data-description="${config['description'] != null ? config['description'] : ''}">
+                                                    th:data-description="${config['description'] != null ? config['description'] : ''}"
+                                                    th:data-infra-only="${config['infraOnly']}">
                                                 <span class="btn-icon-label">
                                                     <span class="material-symbols-outlined">edit</span>
                                                     <span class="d-none d-lg-inline">Edit</span>
@@ -246,6 +250,15 @@
                     <div class="form-text text-warning" id="editSensitiveHint" style="display:none;">
                         <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">visibility_off</span>
                         This is a sensitive value. The current value is not displayed.
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="editInfraOnly">
+                        <label class="form-check-label" for="editInfraOnly">
+                            Infrastructure only
+                            <span class="text-muted small d-block">Override applies only to members of the Infrastructure group (for dogfooding new features).</span>
+                        </label>
                     </div>
                 </div>
                 <div class="mb-3">
@@ -355,6 +368,7 @@
         var currentType = 'STRING';
         var currentIsOverridden = false;
         var currentIsSensitive = false;
+        var currentInfraOnly = false;
 
         // ---- Filtering ----
         var filterText = document.getElementById('filterText');
@@ -401,7 +415,10 @@
             var defaultValue = btn.getAttribute('data-default') || '';
             currentIsOverridden = btn.getAttribute('data-overridden') === 'true';
             currentIsSensitive = btn.getAttribute('data-sensitive') === 'true';
+            currentInfraOnly = btn.getAttribute('data-infra-only') === 'true';
             var description = btn.getAttribute('data-description') || '';
+
+            document.getElementById('editInfraOnly').checked = currentInfraOnly;
 
             document.getElementById('editConfigModalLabel').textContent = 'Edit: ' + currentKey;
             document.getElementById('editConfigKey').textContent = currentKey;
@@ -466,10 +483,11 @@
             saveBtn.disabled = true;
             saveBtn.textContent = 'Saving…';
 
+            var infraOnly = document.getElementById('editInfraOnly').checked;
             fetch('/backend-api/config/' + encodeURIComponent(currentKey), {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ value: newValue, reason: reason })
+                body: JSON.stringify({ value: newValue, reason: reason, infraOnly: String(infraOnly) })
             })
                 .then(function (resp) {
                 if (!resp.ok) { return resp.text().then(function (t) { throw new Error(t || resp.statusText); }); }
@@ -551,7 +569,7 @@
                         '<td class="small text-nowrap">' + escHtml(entry.changedBy || '—') + '</td>' +
                         '<td class="small font-monospace" style="word-break:break-all;max-width:260px;">' + escHtml(entry.value || '(empty)') + '</td>' +
                         '<td class="small">' + escHtml(entry.changeReason || '—') + '</td>' +
-                        '<td class="text-center">' + (entry.isReset ? '<span class="badge bg-secondary">&#x21A9; Reset</span>' : '<span class="badge bg-primary">Edit</span>') + '</td>';
+                        '<td class="text-center">' + (entry.isReset ? '<span class="badge bg-secondary">&#x21A9; Reset</span>' : '<span class="badge bg-primary">Edit</span>') + (entry.infraOnly ? ' <span class="badge bg-info text-dark">Infra Only</span>' : '') + '</td>';
                         tbody.appendChild(tr);
                     });
                 }

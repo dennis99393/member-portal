@@ -14,6 +14,7 @@ object ConfigOverrideTable : LongIdTable("config_overrides") {
   val changeReason = varchar("change_reason", 500)
   val changedAt = datetime("changed_at")
   val isReset = bool("is_reset").default(false)
+  val infraOnly = bool("infra_only").default(false)
 }
 
 class ConfigOverrideDAO(id: EntityID<Long>) : LongEntity(id) {
@@ -26,4 +27,5 @@ class ConfigOverrideDAO(id: EntityID<Long>) : LongEntity(id) {
   var changeReason by ConfigOverrideTable.changeReason
   var changedAt by ConfigOverrideTable.changedAt
   var isReset by ConfigOverrideTable.isReset
+  var infraOnly by ConfigOverrideTable.infraOnly
 }

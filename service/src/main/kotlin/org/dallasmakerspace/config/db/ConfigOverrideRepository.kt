@@ -31,6 +31,7 @@ class ConfigOverrideRepository @Inject constructor(loggerFactory: LoggerFactory)
         .associateBy { it.configKey }
   }
 
+  @Suppress("LongParameterList")
   suspend fun append(
       key: String,
       value: String,
@@ -38,6 +39,7 @@ class ConfigOverrideRepository @Inject constructor(loggerFactory: LoggerFactory)
       changedBy: String,
       reason: String,
       isReset: Boolean = false,
+      infraOnly: Boolean = false,
   ): ConfigOverrideDAO = suspendTransaction {
     ConfigOverrideDAO.new {
       configKey = key
@@ -47,6 +49,7 @@ class ConfigOverrideRepository @Inject constructor(loggerFactory: LoggerFactory)
       changeReason = reason
       changedAt = LocalDateTime.now(ZoneOffset.UTC)
       this.isReset = isReset
+      this.infraOnly = infraOnly
     }
   }
 }

@@ -37,7 +37,8 @@ constructor(
     }
 
     val debugInfoDeferred =
-        if (canManageMembers) async { memberService.getDebugInfo(requestedUsername, session.sessionId) }
+        if (canManageMembers)
+            async { memberService.getDebugInfo(requestedUsername, session.sessionId) }
         else null
     val badgeMMDeferred = async {
       memberService.getBadgeFromMakerManager(requestedUsername, session.sessionId)

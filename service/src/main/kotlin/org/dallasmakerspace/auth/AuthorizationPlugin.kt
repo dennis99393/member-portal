@@ -9,60 +9,65 @@ import io.ktor.util.*
 
 class AuthorizationPlugin(private val requiredPermissions: Set<Permission>) {
 
-    class Configuration {
-        internal val requiredPermissions = mutableSetOf<Permission>()
+  class Configuration {
+    internal val requiredPermissions = mutableSetOf<Permission>()
 
-        fun permission(p: Permission) { requiredPermissions.add(p) }
-        fun permissions(vararg p: Permission) { requiredPermissions.addAll(p) }
+    fun permission(p: Permission) {
+      requiredPermissions.add(p)
     }
 
-    companion object Plugin : BaseRouteScopedPlugin<Configuration, AuthorizationPlugin> {
+    fun permissions(vararg p: Permission) {
+      requiredPermissions.addAll(p)
+    }
+  }
 
-        override val key = AttributeKey<AuthorizationPlugin>("Authorization")
+  companion object Plugin : BaseRouteScopedPlugin<Configuration, AuthorizationPlugin> {
 
-        override fun install(
-            pipeline: ApplicationCallPipeline,
-            configure: Configuration.() -> Unit,
-        ): AuthorizationPlugin {
-            val config = Configuration().apply(configure)
-            val plugin = AuthorizationPlugin(config.requiredPermissions.toSet())
+    override val key = AttributeKey<AuthorizationPlugin>("Authorization")
 
-            pipeline.intercept(ApplicationCallPipeline.Call) {
-                val principal = call.principal<ApiKeyAuthProvider.ApiKeyPrincipal>()
+    override fun install(
+        pipeline: ApplicationCallPipeline,
+        configure: Configuration.() -> Unit,
+    ): AuthorizationPlugin {
+      val config = Configuration().apply(configure)
+      val plugin = AuthorizationPlugin(config.requiredPermissions.toSet())
 
-                if (principal == null) {
-                    call.respond(HttpStatusCode.Unauthorized, "Authentication required")
-                    finish()
-                    return@intercept
-                }
+      pipeline.intercept(ApplicationCallPipeline.Call) {
+        val principal = call.principal<ApiKeyAuthProvider.ApiKeyPrincipal>()
 
-                val hasPermission = plugin.requiredPermissions.any { it in principal.permissions }
-
-                if (!hasPermission) {
-                    call.respond(
-                        HttpStatusCode.Forbidden,
-                        "Client '${principal.client}' lacks required permissions: " +
-                            plugin.requiredPermissions.joinToString(", "),
-                    )
-                    finish()
-                    return@intercept
-                }
-            }
-
-            return plugin
+        if (principal == null) {
+          call.respond(HttpStatusCode.Unauthorized, "Authentication required")
+          finish()
+          return@intercept
         }
+
+        val hasPermission = plugin.requiredPermissions.any { it in principal.permissions }
+
+        if (!hasPermission) {
+          call.respond(
+              HttpStatusCode.Forbidden,
+              "Client '${principal.client}' lacks required permissions: " +
+                  plugin.requiredPermissions.joinToString(", "),
+          )
+          finish()
+          return@intercept
+        }
+      }
+
+      return plugin
     }
+  }
 }
 
 fun Route.authorize(vararg permissions: Permission, build: Route.() -> Unit): Route {
-    val authorizedRoute =
-        createChild(
-            object : RouteSelector() {
-                override suspend fun evaluate(context: RoutingResolveContext, segmentIndex: Int) =
-                    RouteSelectorEvaluation.Constant
-            })
+  val authorizedRoute =
+      createChild(
+          object : RouteSelector() {
+            override suspend fun evaluate(context: RoutingResolveContext, segmentIndex: Int) =
+                RouteSelectorEvaluation.Constant
+          })
 
-    authorizedRoute.install(AuthorizationPlugin) { permissions(*permissions) }
-    authorizedRoute.apply(build)
-    return authorizedRoute
+  authorizedRoute.install(AuthorizationPlugin) { permissions(*permissions) }
+  authorizedRoute.apply(build)
+  return authorizedRoute
 }

@@ -91,11 +91,12 @@ fun Route.configRoutes(configOverrideService: ConfigOverrideService) {
       }
 
       val changedBy = call.request.headers["X-Username"] ?: "unknown"
+      val infraOnly = body["infraOnly"]?.toBoolean() ?: false
 
       try {
         // setRaw handles deserialization from string then validates via the ConfigKey's validators.
         // This works for all ConfigValueType variants via the sealed class dispatch.
-        configOverrideService.setRaw(key, rawValue, changedBy, reason)
+        configOverrideService.setRaw(key, rawValue, changedBy, reason, infraOnly)
         call.respond(ApiResponse(Status.SUCCESS, "Config key '$key' updated", null))
       } catch (e: IllegalArgumentException) {
         call.respond(
