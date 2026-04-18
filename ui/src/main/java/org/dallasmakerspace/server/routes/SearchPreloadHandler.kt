@@ -57,6 +57,7 @@ constructor(
                     "username" to it.username,
                     "discourseUsername" to it.discourseUsername,
                     "avatarUrl" to avatarUrl,
+                    "enabled" to it.enabled,
                     "type" to "member")
             if (authz.can(Permission.MANAGE_MEMBERS.name)) {
               record["badgeNumber"] = it.badgeNumber

@@ -196,6 +196,23 @@ class DmsMemberPicker extends HTMLElement {
           pointer-events: none;
         }
 
+        .dropdown-list li.disabled-member {
+          opacity: 0.55;
+          cursor: default;
+        }
+
+        .disabled-badge {
+          font-size: 10px;
+          font-weight: 600;
+          color: #fff;
+          background-color: #dc3545;
+          border-radius: 3px;
+          padding: 1px 5px;
+          flex-shrink: 0;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+        }
+
         .loading-text {
           padding: 12px 15px;
           font-style: italic;
@@ -235,6 +252,10 @@ class DmsMemberPicker extends HTMLElement {
 
         .error-message {
           color: #dc3545;
+        }
+
+        .hint-message {
+          color: #5f6368;
         }
       </style>
 
@@ -301,7 +322,13 @@ class DmsMemberPicker extends HTMLElement {
   }
 
   handleInputChange() {
+    const statusMessage = this.shadowRoot.querySelector('.status-message');
+    if (statusMessage.textContent) {
+      statusMessage.className = 'status-message';
+      statusMessage.textContent = '';
+    }
     this.filterAndDisplayResults();
+    this.updateAddButtonState();
   }
 
   filterAndDisplayResults() {
@@ -317,7 +344,7 @@ class DmsMemberPicker extends HTMLElement {
     const selectedUsernames = new Set(this.selectedMembers.map(m => m.username));
     const excludedSet = new Set(this.excludedUsernames);
 
-    // Filter members
+    // Filter members (include disabled members so they can be shown with a visual indicator)
     this.filteredResults = this.allMembers.filter(member => {
       // Skip already selected members
       if (selectedUsernames.has(member.username)) return false;
@@ -353,6 +380,9 @@ class DmsMemberPicker extends HTMLElement {
     this.filteredResults.forEach((member, index) => {
       const li = document.createElement('li');
       li.dataset.index = index;
+      if (!member.enabled) {
+        li.classList.add('disabled-member');
+      }
 
       // Create a mini member card-like display
       const memberDiv = document.createElement('div');
@@ -415,6 +445,13 @@ class DmsMemberPicker extends HTMLElement {
       infoDiv.appendChild(usernameDiv);
       infoDiv.appendChild(displayNameDiv);
       memberDiv.appendChild(infoDiv);
+
+      if (!member.enabled) {
+        const badge = document.createElement('span');
+        badge.className = 'disabled-badge';
+        badge.textContent = 'Disabled';
+        memberDiv.appendChild(badge);
+      }
 
       li.appendChild(memberDiv);
       li.addEventListener('click', () => this.selectMember(member));
@@ -491,6 +528,16 @@ class DmsMemberPicker extends HTMLElement {
   }
 
   selectMember(member) {
+    if (!member.enabled) {
+      const input = this.shadowRoot.querySelector('.search-input');
+      input.value = '';
+      const statusMessage = this.shadowRoot.querySelector('.status-message');
+      statusMessage.className = 'status-message error-message';
+      statusMessage.textContent = `Cannot add @${member.username}: this account is disabled. Please choose an active member.`;
+      this.hideDropdown();
+      this.updateAddButtonState();
+      return;
+    }
     this.selectedMembers.push(member);
     const input = this.shadowRoot.querySelector('.search-input');
     input.value = '';
@@ -531,9 +578,24 @@ class DmsMemberPicker extends HTMLElement {
       inputContainer.insertBefore(chip, input);
     });
 
-    // Update Add button state
+    this.updateAddButtonState();
+  }
+
+  updateAddButtonState() {
     const addButton = this.shadowRoot.querySelector('.add-button');
-    addButton.disabled = this.selectedMembers.length === 0;
+    const input = this.shadowRoot.querySelector('.search-input');
+    const statusMessage = this.shadowRoot.querySelector('.status-message');
+    const hasUnresolvedText = input.value.trim().length > 0;
+
+    addButton.disabled = this.selectedMembers.length === 0 || hasUnresolvedText;
+
+    if (hasUnresolvedText && this.selectedMembers.length > 0 && !statusMessage.classList.contains('error-message')) {
+      statusMessage.className = 'status-message hint-message';
+      statusMessage.textContent = 'Pick a member from the dropdown to add them, or clear the search field.';
+    } else if (!hasUnresolvedText && statusMessage.classList.contains('hint-message')) {
+      statusMessage.className = 'status-message';
+      statusMessage.textContent = '';
+    }
   }
 
   async handleAddMembers() {
