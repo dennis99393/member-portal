@@ -104,6 +104,9 @@ fun Application.configureRouting() {
       get(RouteFactory.Paths.REMOTE_ACCESS_CONNECT.path) {
         RouteFactory.getHandler(call)?.handleBase(call)
       }
+      post(RouteFactory.Paths.REMOTE_ACCESS_DISCONNECT.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
       post(RouteFactory.Paths.GROUP_MEMBERS.path) {
         RouteFactory.getHandler(call)?.handleBase(call)
       }

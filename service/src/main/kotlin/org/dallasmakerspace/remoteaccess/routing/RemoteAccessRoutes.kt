@@ -1,5 +1,6 @@
 package org.dallasmakerspace.remoteaccess.routing
 
+import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.dallasmakerspace.plugins.ApiResponse
@@ -11,5 +12,16 @@ fun Route.remoteAccessRoutes(remoteAccessService: RemoteAccessService) {
     val categories = remoteAccessService.getCategories()
     call.respond(
         ApiResponse(Status.SUCCESS, "Remote access categories: ${categories.size}", categories))
+  }
+
+  delete("/remote-access/active-connections/{activeConnectionId}") {
+    val identifier =
+        call.parameters["activeConnectionId"]
+            ?: run {
+              call.respond(HttpStatusCode.BadRequest)
+              return@delete
+            }
+    remoteAccessService.killActiveConnection(identifier)
+    call.respond(ApiResponse(Status.SUCCESS, "Killed active connection", emptyMap<String, Any>()))
   }
 }

@@ -77,6 +77,14 @@
                             <!-- In use -->
                             <button th:if="${machine.inUse}"
                                     class="btn btn-secondary btn-sm w-100" disabled>In Use</button>
+                            <!-- Kill session (infra only) -->
+                            <button th:if="${canKillConnections && machine.inUse}"
+                                    th:data-connection-id="${machine.connectionId}"
+                                    th:data-occupant="${machine.occupantUsername}"
+                                    class="btn btn-danger btn-sm w-100 mt-1 kill-btn">
+                                <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">power_off</span>
+                                Kill Session
+                            </button>
                             <!-- No access -->
                             <button th:if="${!category.userHasAccess && !machine.inUse}"
                                     class="btn btn-outline-secondary btn-sm w-100" disabled
@@ -100,5 +108,18 @@
 <script src="/static/js/app.js"></script>
 <!-- Page Loader (REQUIRED for all pages) -->
 <script src="/static/js/dms-page-loader.js" defer></script>
+<script>
+    document.querySelectorAll('.kill-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id = this.dataset.connectionId;
+            var who = this.dataset.occupant || 'this user';
+            if (!confirm('Force disconnect ' + who + ' from this machine?')) return;
+            btn.disabled = true;
+            fetch('/remote-access/disconnect/' + id, {method: 'POST', credentials: 'same-origin'})
+                .then(function () { location.reload(); })
+                .catch(function (e) { alert('Failed: ' + e); btn.disabled = false; });
+        });
+    });
+</script>
 </body>
 </html>

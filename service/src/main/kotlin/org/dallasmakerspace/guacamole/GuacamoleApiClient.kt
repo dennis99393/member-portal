@@ -128,4 +128,18 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : IG
       throw GuacamoleApiException("Failed to fetch Guacamole active connections", e)
     }
   }
+
+  override suspend fun killActiveConnection(identifier: String) {
+    val token = getToken()
+    val response =
+        newClient().use { client ->
+          client.delete("$baseUrl/api/session/data/postgresql/activeConnections/$identifier") {
+            header("Guacamole-Token", token)
+          }
+        }
+    if (!response.status.isSuccess()) {
+      throw GuacamoleApiException(
+          "Failed to kill active connection $identifier: ${response.status} - ${response.bodyAsText()}")
+    }
+  }
 }

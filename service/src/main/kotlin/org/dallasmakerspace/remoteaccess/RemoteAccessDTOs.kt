@@ -10,6 +10,7 @@ data class RemoteAccessMachineDTO(
     val inUse: Boolean,
     val occupantUsername: String?,
     val sessionStartEpochMs: Long?,
+    val activeConnectionId: String?,
 )
 
 @Serializable

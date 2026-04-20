@@ -4,4 +4,6 @@ interface IGuacamoleApiClient {
   suspend fun getConnections(): List<GuacamoleConnection>
 
   suspend fun getActiveConnections(): List<GuacamoleActiveConnection>
+
+  suspend fun killActiveConnection(identifier: String)
 }

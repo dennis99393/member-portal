@@ -18,6 +18,10 @@ constructor(
 ) {
   private val log = loggerFactory.create(javaClass)
 
+  suspend fun killActiveConnection(identifier: String) {
+    guacamoleApiClient.killActiveConnection(identifier)
+  }
+
   suspend fun getCategories(): List<RemoteAccessCategoryDTO> = coroutineScope {
     val connectionsDeferred = async {
       try {
@@ -65,6 +69,7 @@ constructor(
                   inUse = inUse,
                   occupantUsername = firstSession?.username,
                   sessionStartEpochMs = firstSession?.startDate,
+                  activeConnectionId = firstSession?.identifier,
               )
             }
           }

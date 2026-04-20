@@ -10,6 +10,7 @@ import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.memberservice.MemberServiceClient
 import org.dallasmakerspace.server.remoteaccess.RemoteAccessConnectHandler
+import org.dallasmakerspace.server.remoteaccess.RemoteAccessDisconnectHandler
 import org.dallasmakerspace.server.remoteaccess.RemoteAccessHandler
 import org.dallasmakerspace.server.routes.ActionTrackingHandler
 import org.dallasmakerspace.server.routes.AskAiHandler
@@ -288,4 +289,14 @@ class RoutesModule {
       memberServiceClient: MemberServiceClient,
   ): IRouteHandler =
       RemoteAccessConnectHandler(loggerFactory, userInfoProvider, memberServiceClient)
+
+  @IntoMap
+  @Provides
+  @StringKey("/remote-access/disconnect/{connectionId}")
+  fun providesRemoteAccessDisconnectHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberServiceClient: MemberServiceClient,
+  ): IRouteHandler =
+      RemoteAccessDisconnectHandler(loggerFactory, userInfoProvider, memberServiceClient)
 }

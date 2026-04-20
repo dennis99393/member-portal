@@ -36,6 +36,8 @@ object RouteFactory {
         .replace("/go/.*".toRegex(), "/go/{path...}")
         .replace("/committees/[^/]+".toRegex(), "/committees/{committee_slug}")
         .replace("/remote-access/connect/[^/]+".toRegex(), "/remote-access/connect/{connectionId}")
+        .replace(
+            "/remote-access/disconnect/[^/]+".toRegex(), "/remote-access/disconnect/{connectionId}")
   }
 
   fun getHandler(path: String): IRouteHandler? {
@@ -84,6 +86,7 @@ object RouteFactory {
     CONFIG_ADMIN("/admin/config"),
     REMOTE_ACCESS("/remote-access"),
     REMOTE_ACCESS_CONNECT("/remote-access/connect/{connectionId}"),
+    REMOTE_ACCESS_DISCONNECT("/remote-access/disconnect/{connectionId}"),
   }
 }
 

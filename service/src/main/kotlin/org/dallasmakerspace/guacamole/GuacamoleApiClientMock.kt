@@ -29,4 +29,8 @@ class GuacamoleApiClientMock @Inject constructor(loggerFactory: LoggerFactory) :
             startDate = System.currentTimeMillis() - 300_000L,
         ))
   }
+
+  override suspend fun killActiveConnection(identifier: String) {
+    log.info("Mock: killActiveConnection identifier=$identifier")
+  }
 }

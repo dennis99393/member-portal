@@ -717,4 +717,16 @@ constructor(
       emptyList()
     }
   }
+
+  suspend fun killActiveConnection(activeConnectionId: String, sessionId: String?): Boolean {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      dmsHttpClient.delete(
+          "$baseUrl/remote-access/active-connections/$activeConnectionId", apiHeaders)
+      true
+    } catch (ex: Exception) {
+      log.warn("Failed to kill active connection $activeConnectionId", ex)
+      false
+    }
+  }
 }
