@@ -3,7 +3,6 @@ package org.dallasmakerspace.server.remoteaccess
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import io.ktor.server.thymeleaf.*
 import javax.inject.Inject
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
@@ -31,9 +30,7 @@ constructor(
     RemoteAccessFeatureFlag.update(featureEnabled)
 
     if (!featureEnabled) {
-      call.respond(
-          HttpStatusCode.Forbidden,
-          ThymeleafContent("remote-access-denied", mapOf("reason" to "disabled")))
+      call.respond(HttpStatusCode.Forbidden)
       return
     }
 
@@ -49,9 +46,7 @@ constructor(
         }
 
     if (matchingCategory == null) {
-      call.respond(
-          HttpStatusCode.NotFound,
-          ThymeleafContent("remote-access-denied", mapOf("reason" to "unknown-connection")))
+      call.respond(HttpStatusCode.NotFound)
       return
     }
 
@@ -61,27 +56,11 @@ constructor(
             userGroups.any { it.trimStart('/') == requiredAdGroup.trimStart('/') }
 
     if (!userHasAccess) {
-      call.respond(
-          HttpStatusCode.Forbidden,
-          ThymeleafContent(
-              "remote-access-denied",
-              mapOf("reason" to "forbidden", "requiredAdGroup" to requiredAdGroup)))
+      call.respond(HttpStatusCode.Forbidden)
       return
     }
 
     val guacClientId = GuacamoleClientId.encode(connectionId)
-    @Suppress("UNCHECKED_CAST")
-    val machines = (matchingCategory["machines"] as? List<Map<String, Any?>>) ?: emptyList()
-    val machine = machines.firstOrNull { it["connectionId"] as? String == connectionId }
-    val machineName = machine?.get("displayName") as? String ?: connectionId
-
-    call.respond(
-        ThymeleafContent(
-            "remote-access-connect",
-            mapOf(
-                "guacClientId" to guacClientId,
-                "machineName" to machineName,
-                "connectionId" to connectionId,
-            )))
+    call.respondRedirect("/guacamole/#/client/$guacClientId")
   }
 }

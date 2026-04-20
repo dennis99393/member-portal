@@ -69,6 +69,7 @@
                             <!-- Available and user has access -->
                             <a th:if="${category.userHasAccess && !machine.inUse}"
                                th:href="'/remote-access/connect/' + ${machine.connectionId}"
+                               target="_blank"
                                class="btn btn-primary btn-sm w-100">
                                 <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">login</span>
                                 Connect
