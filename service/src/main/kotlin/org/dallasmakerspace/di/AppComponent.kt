@@ -22,6 +22,7 @@ import org.dallasmakerspace.doorcontroller.DoorControllerService
 import org.dallasmakerspace.members.ActivityLogService
 import org.dallasmakerspace.members.GroupService
 import org.dallasmakerspace.members.MemberService
+import org.dallasmakerspace.remoteaccess.RemoteAccessService
 import org.dallasmakerspace.shortlinks.ShortLinksService
 import org.dallasmakerspace.smartwaiver.SmartwaiverModule
 import org.dallasmakerspace.webhook.WebhookRouter
@@ -37,6 +38,7 @@ import org.dallasmakerspace.webhook.di.WebhookModule
             CalendarModule::class,
             ConfigModule::class,
             DiscourseModule::class,
+            GuacamoleModule::class,
             DoorControllerModule::class,
             MembersModule::class,
             DataVizModule::class,
@@ -82,4 +84,6 @@ interface AppComponent {
   fun getFeaturedProjectsService(): FeaturedProjectsService
 
   fun getConfigOverrideService(): ConfigOverrideService
+
+  fun getRemoteAccessService(): RemoteAccessService
 }

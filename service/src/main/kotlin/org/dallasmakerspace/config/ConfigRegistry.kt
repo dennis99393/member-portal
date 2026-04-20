@@ -20,9 +20,59 @@ object ConfigRegistry {
           type = ConfigValueType.BooleanType,
       )
 
+  val REMOTE_ACCESS_ENABLED =
+      ConfigKey(
+          key = "remote-access.enabled",
+          description = "Enable the Remote Access feature (VM connections via Guacamole)",
+          category = "Remote Access",
+          defaultValue = false,
+          type = ConfigValueType.BooleanType,
+      )
+
+  val REMOTE_ACCESS_JUMP_SERVER_CONNECTION_IDS =
+      ConfigKey(
+          key = "remote-access.jump-server.connection-ids",
+          description = "Comma-separated Guacamole connection IDs for the Jump Server category",
+          category = "Remote Access",
+          defaultValue = "2,3,4",
+          type = ConfigValueType.StringType,
+      )
+
+  val REMOTE_ACCESS_JUMP_SERVER_AD_GROUP =
+      ConfigKey(
+          key = "remote-access.jump-server.ad-group",
+          description = "AD group required for Jump Server access (blank = all members)",
+          category = "Remote Access",
+          defaultValue = "",
+          type = ConfigValueType.StringType,
+      )
+
+  val REMOTE_ACCESS_MASTERCAM_CONNECTION_IDS =
+      ConfigKey(
+          key = "remote-access.mastercam.connection-ids",
+          description = "Comma-separated Guacamole connection IDs for the MasterCam category",
+          category = "Remote Access",
+          defaultValue = "1",
+          type = ConfigValueType.StringType,
+      )
+
+  val REMOTE_ACCESS_MASTERCAM_AD_GROUP =
+      ConfigKey(
+          key = "remote-access.mastercam.ad-group",
+          description = "AD group required for MasterCam access (blank = all members)",
+          category = "Remote Access",
+          defaultValue = "",
+          type = ConfigValueType.StringType,
+      )
+
   val ALL: List<ConfigKey<*>> =
       listOf(
           VOTING_ELECTIONS_URL,
           GROUP_MEMBER_MANAGEMENT_ENABLED,
+          REMOTE_ACCESS_ENABLED,
+          REMOTE_ACCESS_JUMP_SERVER_CONNECTION_IDS,
+          REMOTE_ACCESS_JUMP_SERVER_AD_GROUP,
+          REMOTE_ACCESS_MASTERCAM_CONNECTION_IDS,
+          REMOTE_ACCESS_MASTERCAM_AD_GROUP,
       )
 }

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en-US" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="initial-scale=1, width=device-width"/>
+
+    <!-- PWA Meta Tags -->
+    <th:block th:replace="~{fragments/pwa-meta :: pwa-meta}"></th:block>
+
+    <link rel="stylesheet" href="/static/styles/global.css"/>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&display=swap">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>Remote Access - DMS Member Portal</title>
+    <style>
+        .machine-card { transition: box-shadow 0.2s; }
+        .machine-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.15) !important; }
+        .status-badge-free { background-color: #198754; }
+        .status-badge-inuse { background-color: #dc3545; }
+        .protocol-icon { font-size: 1.4rem; color: #6c757d; }
+        .category-header { border-left: 4px solid #0b9cc9; padding-left: 0.75rem; }
+    </style>
+</head>
+<body>
+<header class="top-nav" th:replace="~{fragments/header :: header}"></header>
+<div class="container pb-5 mt-4">
+    <h1 class="mb-1">Remote Access</h1>
+    <p class="text-muted mb-4">Connect to Dallas Makerspace virtual machines and workstations.</p>
+
+    <div th:if="${categories == null || categories.isEmpty()}" class="alert alert-warning">
+        No remote access categories are currently configured.
+    </div>
+
+    <div th:each="category : ${categories}" class="mb-5">
+        <h2 class="category-header mb-1" th:text="${category.displayName}">Category</h2>
+        <p class="text-muted mb-3" th:text="${category.description}"></p>
+
+        <div th:if="${!category.userHasAccess}" class="alert alert-warning d-flex align-items-center mb-3">
+            <span class="material-symbols-outlined me-2">lock</span>
+            <span>
+                Access requires membership in the
+                <strong th:text="${category.requiredAdGroup}"></strong> group.
+                Contact Infrastructure to request access.
+            </span>
+        </div>
+
+        <div class="row g-3">
+            <div th:each="machine : ${category.machines}" class="col-sm-6 col-md-4 col-lg-3">
+                <div class="card machine-card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex align-items-start mb-2">
+                            <span class="material-symbols-outlined protocol-icon me-2"
+                                  th:text="${machine.protocol == 'ssh' ? 'terminal' : 'desktop_windows'}">desktop_windows</span>
+                            <h6 class="card-title mb-0 flex-grow-1" th:text="${machine.displayName}">Machine</h6>
+                        </div>
+
+                        <div class="mb-3">
+                            <span th:if="${!machine.inUse}"
+                                  class="badge status-badge-free text-white">Available</span>
+                            <span th:if="${machine.inUse}"
+                                  class="badge status-badge-inuse text-white"
+                                  th:text="'In use by ' + ${machine.occupantUsername}">In use</span>
+                        </div>
+
+                        <div class="mt-auto">
+                            <!-- Available and user has access -->
+                            <a th:if="${category.userHasAccess && !machine.inUse}"
+                               th:href="'/remote-access/connect/' + ${machine.connectionId}"
+                               class="btn btn-primary btn-sm w-100">
+                                <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">login</span>
+                                Connect
+                            </a>
+                            <!-- In use -->
+                            <button th:if="${machine.inUse}"
+                                    class="btn btn-secondary btn-sm w-100" disabled>In Use</button>
+                            <!-- No access -->
+                            <button th:if="${!category.userHasAccess && !machine.inUse}"
+                                    class="btn btn-outline-secondary btn-sm w-100" disabled
+                                    th:title="'Requires: ' + ${category.requiredAdGroup}">
+                                <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">lock</span>
+                                Connect
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+<!-- App JS -->
+<script src="/static/js/app.js"></script>
+<!-- Page Loader (REQUIRED for all pages) -->
+<script src="/static/js/dms-page-loader.js" defer></script>
+</body>
+</html>

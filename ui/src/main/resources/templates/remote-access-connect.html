@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en-US" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="initial-scale=1, width=device-width"/>
+    <title th:text="${machineName} + ' - Remote Access'">Remote Access - DMS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+        #guac-frame { width: 100vw; height: 100vh; border: none; display: block; }
+    </style>
+</head>
+<body>
+<iframe id="guac-frame"
+        th:src="'/guacamole/#/client/' + ${guacClientId}"
+        allowfullscreen></iframe>
+
+<script th:inline="javascript">
+    var frame = document.getElementById('guac-frame');
+    var clientId = /*[[${guacClientId}]]*/ '';
+
+    function injectHomeHide(doc) {
+        try {
+            var style = doc.createElement('style');
+            style.textContent =
+                '.home-button { display: none !important; }' +
+                'button[title="Home"] { display: none !important; }' +
+                '.menu .home-button { display: none !important; }';
+            (doc.head || doc.documentElement).appendChild(style);
+        } catch (e) { /* cross-origin guard */ }
+    }
+
+    frame.addEventListener('load', function () {
+        try {
+            var doc = frame.contentDocument || frame.contentWindow.document;
+            injectHomeHide(doc);
+            // MutationObserver for AngularJS async render
+            var observer = new MutationObserver(function () { injectHomeHide(doc); });
+            observer.observe(doc.documentElement, { childList: true, subtree: true });
+        } catch (e) { /* cross-origin guard */ }
+    });
+</script>
+</body>
+</html>

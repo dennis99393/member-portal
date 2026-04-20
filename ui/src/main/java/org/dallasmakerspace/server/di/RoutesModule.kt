@@ -9,6 +9,8 @@ import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.memberservice.MemberServiceClient
+import org.dallasmakerspace.server.remoteaccess.RemoteAccessConnectHandler
+import org.dallasmakerspace.server.remoteaccess.RemoteAccessHandler
 import org.dallasmakerspace.server.routes.ActionTrackingHandler
 import org.dallasmakerspace.server.routes.AskAiHandler
 import org.dallasmakerspace.server.routes.BackendApiHandler
@@ -267,4 +269,23 @@ class RoutesModule {
       userInfoProvider: UserInfoProvider,
       memberServiceClient: MemberServiceClient,
   ): IRouteHandler = ConfigAdminHandler(loggerFactory, userInfoProvider, memberServiceClient)
+
+  @IntoMap
+  @Provides
+  @StringKey("/remote-access")
+  fun providesRemoteAccessHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberServiceClient: MemberServiceClient,
+  ): IRouteHandler = RemoteAccessHandler(loggerFactory, userInfoProvider, memberServiceClient)
+
+  @IntoMap
+  @Provides
+  @StringKey("/remote-access/connect/{connectionId}")
+  fun providesRemoteAccessConnectHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberServiceClient: MemberServiceClient,
+  ): IRouteHandler =
+      RemoteAccessConnectHandler(loggerFactory, userInfoProvider, memberServiceClient)
 }

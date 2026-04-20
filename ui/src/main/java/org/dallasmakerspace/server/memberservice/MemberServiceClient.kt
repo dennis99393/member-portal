@@ -704,4 +704,17 @@ constructor(
       client.close()
     }
   }
+
+  suspend fun getRemoteAccessCategories(sessionId: String?): List<Map<String, Any?>> {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/remote-access/categories", apiHeaders)
+      val data = result["data"] as? List<*> ?: return emptyList()
+      @Suppress("UNCHECKED_CAST")
+      data as List<Map<String, Any?>>
+    } catch (ex: Exception) {
+      log.warn("Failed to get remote access categories", ex)
+      emptyList()
+    }
+  }
 }

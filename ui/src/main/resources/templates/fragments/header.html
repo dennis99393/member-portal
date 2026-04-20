@@ -108,6 +108,10 @@
                                            target="_blank">Suggest a report</a></li>
                                 </ul>
                             </li>
+                            <!-- Remote Access -->
+                            <li th:if="${T(org.dallasmakerspace.server.remoteaccess.RemoteAccessFeatureFlag).isEnabled()}">
+                                <a class="dropdown-item" href="/remote-access">Remote Access</a>
+                            </li>
                             <!-- Short-Links -->
                             <li>
                                 <a class="dropdown-item" href="/short-links">Short-Links</a>

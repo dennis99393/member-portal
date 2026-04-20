@@ -1,0 +1,7 @@
+package org.dallasmakerspace.guacamole
+
+interface IGuacamoleApiClient {
+  suspend fun getConnections(): List<GuacamoleConnection>
+
+  suspend fun getActiveConnections(): List<GuacamoleActiveConnection>
+}

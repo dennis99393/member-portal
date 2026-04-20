@@ -39,6 +39,7 @@ import org.dallasmakerspace.members.db.suspendTransaction
 import org.dallasmakerspace.models.AskAiFeedbackRequest
 import org.dallasmakerspace.models.AskAiRequest
 import org.dallasmakerspace.models.NamespaceOwnerType
+import org.dallasmakerspace.remoteaccess.routing.remoteAccessRoutes
 import org.dallasmakerspace.routing.*
 import org.dallasmakerspace.routing.BadgeLookup
 import org.dallasmakerspace.routing.Groups
@@ -797,6 +798,10 @@ fun Application.configureRouting() {
 
       /** Config override operations * */
       configRoutes(configOverrideService)
+
+      /** Remote Access — Guacamole VM categories and occupancy * */
+      val remoteAccessService by lazy { DaggerAppComponent.create().getRemoteAccessService() }
+      remoteAccessRoutes(remoteAccessService)
     }
 
     post("/webhook/*") {
