@@ -13,6 +13,7 @@ import org.dallasmakerspace.server.common.HttpException
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.plugins.AuthException
 import org.dallasmakerspace.server.plugins.UserSession
+import org.dallasmakerspace.server.remoteaccess.RemoteAccessFeatureFlag
 
 /**
  * Base class for handlers that require authentication. Assumes the route is wrapped in
@@ -50,6 +51,8 @@ abstract class AuthenticatedHandler(
     val userGroups = (userInfo["groups"] as? List<*>) ?: emptyList<String>()
     val permissions = Role.fromKeycloakGroups(userGroups).flatMap { it.permissions }.toSet()
     authz = Authz(permissions)
+
+    RemoteAccessFeatureFlag.refreshIfStale(session.sessionId)
 
     handleAuthenticated(call)
   }

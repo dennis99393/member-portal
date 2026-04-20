@@ -17,6 +17,10 @@ constructor(
     private val memberServiceClient: MemberServiceClient,
 ) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
 
+  init {
+    RemoteAccessFeatureFlag.setClient(memberServiceClient)
+  }
+
   override suspend fun handleAuthenticated(call: ApplicationCall) {
     val featureEnabled =
         memberServiceClient.getFeatureFlag("remote-access.enabled", session.sessionId)

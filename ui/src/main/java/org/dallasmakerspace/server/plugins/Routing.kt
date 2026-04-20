@@ -100,6 +100,10 @@ fun Application.configureRouting() {
         RouteFactory.getHandler(RouteFactory.Paths.ASK_AI.path)?.handleBase(call)
       }
       get(RouteFactory.Paths.CONFIG_ADMIN.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.REMOTE_ACCESS.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.REMOTE_ACCESS_CONNECT.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
       post(RouteFactory.Paths.GROUP_MEMBERS.path) {
         RouteFactory.getHandler(call)?.handleBase(call)
       }
