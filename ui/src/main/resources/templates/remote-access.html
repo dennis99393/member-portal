@@ -112,7 +112,7 @@
     // Reload machine state when user returns to this tab (e.g. after a Guacamole session)
     var lastLoad = Date.now();
     document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible' && Date.now() - lastLoad > 10000) {
+        if (document.visibilityState === 'visible' && Date.now() - lastLoad > 2000) {
             location.reload();
         }
     });
