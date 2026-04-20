@@ -34,6 +34,11 @@ on:
         description: 'Docker container name'
         required: true
         type: string
+      additional_networks:
+        description: 'Space-separated list of additional Docker networks to connect after start (optional)'
+        required: false
+        type: string
+        default: ''
 
 env:
   REGISTRY: ghcr.io
@@ -188,6 +193,15 @@ jobs:
             ${{ env.REGISTRY }}/${{ inputs.image_name }}:latest
 
           echo "Deployment complete!"
+
+      - name: Connect to additional networks
+        if: ${{ inputs.additional_networks != '' }}
+        shell: bash
+        run: |
+          for network in ${{ inputs.additional_networks }}; do
+            echo "Connecting ${{ inputs.container_name }} to network: $network"
+            docker network connect "$network" "${{ inputs.container_name }}" || true
+          done
 
       - name: Wait for container to start
         shell: bash
