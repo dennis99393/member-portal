@@ -109,6 +109,14 @@
 <!-- Page Loader (REQUIRED for all pages) -->
 <script src="/static/js/dms-page-loader.js" defer></script>
 <script>
+    // Reload machine state when user returns to this tab (e.g. after a Guacamole session)
+    var lastLoad = Date.now();
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible' && Date.now() - lastLoad > 10000) {
+            location.reload();
+        }
+    });
+
     document.querySelectorAll('.kill-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var id = this.dataset.connectionId;
