@@ -26,7 +26,7 @@ constructor(
     val isInfraUser = authz.can(Permission.MANAGE_CONFIG.name)
     val featureEnabled =
         memberServiceClient.getFeatureFlag("remote-access.enabled", session.sessionId, isInfraUser)
-    RemoteAccessFeatureFlag.update(featureEnabled)
+    RemoteAccessFeatureFlag.update(featureEnabled, isInfraUser)
 
     if (!featureEnabled) {
       call.respond(ThymeleafContent("remote-access-denied", mapOf("reason" to "disabled")))

@@ -109,7 +109,7 @@
                                 </ul>
                             </li>
                             <!-- Remote Access -->
-                            <li th:if="${@org.dallasmakerspace.server.remoteaccess.RemoteAccessFeatureFlag@isEnabled()}">
+                            <li th:if="${remoteAccessEnabled}">
                                 <a class="dropdown-item" href="/remote-access">Remote Access</a>
                             </li>
                             <!-- Short-Links -->

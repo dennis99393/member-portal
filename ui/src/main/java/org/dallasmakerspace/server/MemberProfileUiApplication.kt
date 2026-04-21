@@ -5,6 +5,7 @@ import io.ktor.server.netty.Netty
 import org.dallasmakerspace.server.common.PostHogConfig
 import org.dallasmakerspace.server.common.TrustManager
 import org.dallasmakerspace.server.di.DaggerAppComponent
+import org.dallasmakerspace.server.plugins.configureCommonModel
 import org.dallasmakerspace.server.plugins.configureElasticsearch
 import org.dallasmakerspace.server.plugins.configureHttp
 import org.dallasmakerspace.server.plugins.configureMonitoring
@@ -25,6 +26,7 @@ fun main() {
 
   embeddedServer(Netty, port = portStr.toInt(), host = "0.0.0.0") {
         configureTemplating()
+        configureCommonModel()
         configureHttp()
         configureSessions()
         configureSessionEnrichment() // Must run after Sessions/Auth but before Monitoring

@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
+import io.ktor.util.*
 import org.dallasmakerspace.server.auth.Authz
 import org.dallasmakerspace.server.auth.Permission
 import org.dallasmakerspace.server.auth.Role
@@ -24,6 +25,9 @@ abstract class AuthenticatedHandler(
     protected val loggerFactory: LoggerFactory,
     private val userInfoProvider: UserInfoProvider,
 ) : IRouteHandler {
+  companion object {
+    val IS_INFRA_USER_KEY = AttributeKey<Boolean>("isInfraUser")
+  }
 
   protected lateinit var session: UserSession
   protected lateinit var userInfo: Map<String, Any>
@@ -52,7 +56,9 @@ abstract class AuthenticatedHandler(
     val permissions = Role.fromKeycloakGroups(userGroups).flatMap { it.permissions }.toSet()
     authz = Authz(permissions)
 
-    RemoteAccessFeatureFlag.refreshIfStale(session.sessionId)
+    val isInfraUser = authz.can(Permission.MANAGE_CONFIG.name)
+    call.attributes.put(IS_INFRA_USER_KEY, isInfraUser)
+    RemoteAccessFeatureFlag.refreshIfStale(session.sessionId, isInfraUser)
 
     handleAuthenticated(call)
   }
