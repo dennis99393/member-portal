@@ -6,6 +6,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.dallasmakerspace.auth.Permission
 import org.dallasmakerspace.auth.authorize
+import org.dallasmakerspace.config.ConfigKey
 import org.dallasmakerspace.config.ConfigOverrideService
 import org.dallasmakerspace.config.ConfigRegistry
 import org.dallasmakerspace.plugins.ApiResponse
@@ -25,14 +26,25 @@ fun Route.configRoutes(configOverrideService: ConfigOverrideService) {
                   HttpStatusCode.BadRequest,
                   ApiResponse(Status.ERROR, "Key is required", null),
               )
+      val isInfraUser = call.request.queryParameters["isInfraUser"]?.toBoolean() ?: false
+      @Suppress("UNCHECKED_CAST")
+      val configKey =
+          ConfigRegistry.ALL.find { it.key == key }
+              ?: return@get call.respond(
+                  HttpStatusCode.NotFound,
+                  ApiResponse(Status.ERROR, "Config key not found: $key", null),
+              )
+      val resolvedValue = configOverrideService.get(configKey as ConfigKey<Any>, isInfraUser)
       val values = configOverrideService.getCurrentValues()
-      val value =
+      val metadata =
           values.find { it.key == key }
               ?: return@get call.respond(
                   HttpStatusCode.NotFound,
                   ApiResponse(Status.ERROR, "Config key not found: $key", null),
               )
-      call.respond(ApiResponse(Status.SUCCESS, "Config value for $key", value))
+      val responseValue =
+          metadata.copy(currentValue = configOverrideService.serialize(resolvedValue, configKey))
+      call.respond(ApiResponse(Status.SUCCESS, "Config value for $key", responseValue))
     }
 
     get("/config/{key}/history") {

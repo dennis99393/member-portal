@@ -658,10 +658,15 @@ constructor(
     }
   }
 
-  suspend fun getFeatureFlag(key: String, sessionId: String?): Boolean {
+  suspend fun getFeatureFlag(
+      key: String,
+      sessionId: String?,
+      isInfraUser: Boolean = false
+  ): Boolean {
     return try {
       val apiHeaders = getApiHeaders(sessionId)
-      val result: Map<String, Any> = dmsHttpClient.get("$baseUrl/config/$key", apiHeaders)
+      val url = "$baseUrl/config/$key" + if (isInfraUser) "?isInfraUser=true" else ""
+      val result: Map<String, Any> = dmsHttpClient.get(url, apiHeaders)
       val data = result["data"] as? Map<*, *>
       (data?.get("currentValue") as? String)?.toBoolean() ?: false
     } catch (ex: Exception) {

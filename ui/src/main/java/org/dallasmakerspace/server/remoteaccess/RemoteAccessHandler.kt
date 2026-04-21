@@ -23,8 +23,9 @@ constructor(
   }
 
   override suspend fun handleAuthenticated(call: ApplicationCall) {
+    val isInfraUser = authz.can(Permission.MANAGE_CONFIG.name)
     val featureEnabled =
-        memberServiceClient.getFeatureFlag("remote-access.enabled", session.sessionId)
+        memberServiceClient.getFeatureFlag("remote-access.enabled", session.sessionId, isInfraUser)
     RemoteAccessFeatureFlag.update(featureEnabled)
 
     if (!featureEnabled) {

@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import javax.inject.Inject
+import org.dallasmakerspace.server.auth.Permission
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberServiceClient
@@ -25,8 +26,9 @@ constructor(
               return
             }
 
+    val isInfraUser = authz.can(Permission.MANAGE_CONFIG.name)
     val featureEnabled =
-        memberServiceClient.getFeatureFlag("remote-access.enabled", session.sessionId)
+        memberServiceClient.getFeatureFlag("remote-access.enabled", session.sessionId, isInfraUser)
     RemoteAccessFeatureFlag.update(featureEnabled)
 
     if (!featureEnabled) {
