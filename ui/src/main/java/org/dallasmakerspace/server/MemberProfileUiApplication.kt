@@ -27,8 +27,8 @@ fun main() {
   TrustManager.disableSSLCertificateChecking()
 
   embeddedServer(Netty, port = portStr.toInt(), host = "0.0.0.0") {
-        configureTemplating()
         configureCommonModel(memberServiceClient)
+        configureTemplating()
         configureHttp()
         configureSessions()
         configureSessionEnrichment() // Must run after Sessions/Auth but before Monitoring
