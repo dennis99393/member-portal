@@ -210,6 +210,26 @@ constructor(
     }
   }
 
+  suspend fun registerVoting(sessionId: String?, username: String) {
+    try {
+      val apiHeaders = getApiHeaders(sessionId)
+      dmsHttpClient.patch("$baseUrl/voter-registration/$username", apiHeaders, "")
+    } catch (ex: Exception) {
+      log.error("Failed to register $username for voting", ex)
+      throw MemberServiceException("Failed to register $username for voting", ex)
+    }
+  }
+
+  suspend fun unregisterVoting(sessionId: String?, username: String) {
+    try {
+      val apiHeaders = getApiHeaders(sessionId)
+      dmsHttpClient.delete("$baseUrl/voter-registration/$username", apiHeaders)
+    } catch (ex: Exception) {
+      log.error("Failed to unregister $username from voting", ex)
+      throw MemberServiceException("Failed to unregister $username from voting", ex)
+    }
+  }
+
   /**
    * Call the backend API with the given path, sessionId, and username. This is just a proxy for the
    * backend API, it will just pass the parameters through and return the response as a String.

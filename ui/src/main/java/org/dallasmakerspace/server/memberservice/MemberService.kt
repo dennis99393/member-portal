@@ -7,15 +7,11 @@ import org.dallasmakerspace.server.common.HttpException
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.models.EventSummary
 import org.dallasmakerspace.server.models.SearchPreloadResponse
-import org.dallasmakerspace.server.models.getSlugFromName
-import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
-
 class MemberService
 @Inject
 constructor(
     loggerFactory: LoggerFactory,
     private val memberServiceClient: MemberServiceClient,
-    private val votingRegistrationManager: VoterRegistrationManager,
 ) {
   private val log = loggerFactory.create(javaClass)
 
@@ -135,19 +131,11 @@ constructor(
   }
 
   suspend fun registerVoting(sessionId: String?, username: String) {
-    memberServiceClient.addToGroup(
-        sessionId,
-        username,
-        getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()),
-    )
+    memberServiceClient.registerVoting(sessionId, username)
   }
 
   suspend fun unregisterVoting(sessionId: String?, username: String) {
-    memberServiceClient.removeFromGroup(
-        sessionId,
-        username,
-        getSlugFromName(votingRegistrationManager.getVotingMembersGroupName()),
-    )
+    memberServiceClient.unregisterVoting(sessionId, username)
   }
 
   suspend fun addToGroup(

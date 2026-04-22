@@ -406,6 +406,37 @@ fun Application.configureRouting() {
                   null,
               ))
         }
+
+        /** Voter registration — not gated by GROUP_MEMBER_MANAGEMENT_ENABLED */
+        patch("/voter-registration/{username}") {
+          val username =
+              call.parameters["username"]
+                  ?: return@patch call.respond(
+                      HttpStatusCode.BadRequest,
+                      ApiResponse(Status.ERROR, "Username is required", null),
+                  )
+          val actorUsername = call.request.headers["X-Actor-Username"]
+          val groupname =
+              org.dallasmakerspace.voterregistration.VoterRegistrationManager()
+                  .getVotingMembersGroupName()
+          memberService.addMembersToGroup(listOf(username), groupname, actorUsername)
+          call.respond(ApiResponse(Status.SUCCESS, "Registered $username for voting", null))
+        }
+
+        delete("/voter-registration/{username}") {
+          val username =
+              call.parameters["username"]
+                  ?: return@delete call.respond(
+                      HttpStatusCode.BadRequest,
+                      ApiResponse(Status.ERROR, "Username is required", null),
+                  )
+          val actorUsername = call.request.headers["X-Actor-Username"]
+          val groupname =
+              org.dallasmakerspace.voterregistration.VoterRegistrationManager()
+                  .getVotingMembersGroupName()
+          memberService.removeMembersToGroup(listOf(username), groupname, actorUsername)
+          call.respond(ApiResponse(Status.SUCCESS, "Unregistered $username from voting", null))
+        }
       }
 
       /** Badge lookup operations * */
