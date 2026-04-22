@@ -6,6 +6,7 @@ import javax.inject.Singleton
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.logging.LoggerFactory
+import org.dallasmakerspace.server.memberservice.MemberServiceClient
 
 @Singleton
 @Component(
@@ -24,4 +25,6 @@ interface AppComponent {
   fun getLoggerFactory(): LoggerFactory
 
   fun getUserInfoProvider(): UserInfoProvider
+
+  fun getMemberServiceClient(): MemberServiceClient
 }

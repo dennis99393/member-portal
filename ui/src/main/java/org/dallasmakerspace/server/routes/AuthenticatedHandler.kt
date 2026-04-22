@@ -14,7 +14,6 @@ import org.dallasmakerspace.server.common.HttpException
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.plugins.AuthException
 import org.dallasmakerspace.server.plugins.UserSession
-import org.dallasmakerspace.server.remoteaccess.RemoteAccessFeatureFlag
 
 /**
  * Base class for handlers that require authentication. Assumes the route is wrapped in
@@ -58,7 +57,6 @@ abstract class AuthenticatedHandler(
 
     val isInfraUser = authz.can(Permission.MANAGE_CONFIG.name)
     call.attributes.put(IS_INFRA_USER_KEY, isInfraUser)
-    RemoteAccessFeatureFlag.refreshIfStale(session.sessionId, isInfraUser)
 
     handleAuthenticated(call)
   }

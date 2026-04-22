@@ -16,7 +16,9 @@ import org.dallasmakerspace.server.plugins.configureStatusPages
 import org.dallasmakerspace.server.plugins.configureTemplating
 
 fun main() {
-  val appConfig = DaggerAppComponent.create().getAppConfig()
+  val appComponent = DaggerAppComponent.create()
+  val appConfig = appComponent.getAppConfig()
+  val memberServiceClient = appComponent.getMemberServiceClient()
   PostHogConfig.initialize(appConfig)
   val portStr = appConfig.requireStringProperty("ktor.deployment.port")
 
@@ -26,7 +28,7 @@ fun main() {
 
   embeddedServer(Netty, port = portStr.toInt(), host = "0.0.0.0") {
         configureTemplating()
-        configureCommonModel()
+        configureCommonModel(memberServiceClient)
         configureHttp()
         configureSessions()
         configureSessionEnrichment() // Must run after Sessions/Auth but before Monitoring

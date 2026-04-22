@@ -18,15 +18,10 @@ constructor(
     private val memberServiceClient: MemberServiceClient,
 ) : AuthenticatedHandler(loggerFactory, userInfoProvider) {
 
-  init {
-    RemoteAccessFeatureFlag.setClient(memberServiceClient)
-  }
-
   override suspend fun handleAuthenticated(call: ApplicationCall) {
     val isInfraUser = authz.can(Permission.MANAGE_CONFIG.name)
     val featureEnabled =
         memberServiceClient.getFeatureFlag("remote-access.enabled", session.sessionId, isInfraUser)
-    RemoteAccessFeatureFlag.update(featureEnabled, isInfraUser)
 
     if (!featureEnabled) {
       call.respond(ThymeleafContent("remote-access-denied", mapOf("reason" to "disabled")))
