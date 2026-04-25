@@ -1,4 +1,10 @@
 http:
+  routers:
+    ui:
+      rule: "PathPrefix(`/`)"
+      entryPoints:
+        - web
+      service: ui-weighted
   services:
     ui-weighted:
       weighted:

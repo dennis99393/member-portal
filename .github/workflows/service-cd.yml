@@ -16,8 +16,8 @@ jobs:
     uses: ./.github/workflows/common-cd.yml
     with:
       component: service
-      port: "8081"
       internal_port: "8081"
+      healthcheck_path: /health/ready
       env_file_path: ~/member-profile/actions-runner-service/.env.service
       image_name: dallas-makerspace/member-portal/service
       package_name: member-portal/service

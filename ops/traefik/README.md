@@ -3,7 +3,7 @@
 Traefik is the reverse proxy fronting the UI and service containers. It is **not managed by CI** — it is brought up once
 manually on the host and treated as infrastructure alongside the docker networks.
 
-nginx sits in front and proxies `:80` → `:8000` on the docker host. Traefik listens on `:8000` and handles
+nginx sits in front and proxies `:443` → `:8080` on the docker host. Traefik listens on `:8080` and handles
 blue-green traffic splitting internally via Docker network DNS — containers do not bind host ports.
 
 ## Host layout

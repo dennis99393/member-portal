@@ -1,7 +1,7 @@
 name: Common CD Workflow
 
 # This common workflow deploys member portal components to production
-# Features: Gradle caching, Trivy security scanning, basic health checks, semantic versioning
+# Features: Gradle caching, Trivy security scanning, blue-green zero-downtime deploy
 
 on:
   workflow_call:
@@ -10,12 +10,12 @@ on:
         description: 'Component name (service or ui)'
         required: true
         type: string
-      port:
-        description: 'External port to expose'
-        required: true
-        type: string
       internal_port:
         description: 'Internal container port'
+        required: true
+        type: string
+      healthcheck_path:
+        description: 'HTTP path on internal_port for readiness probe'
         required: true
         type: string
       env_file_path:
@@ -35,7 +35,7 @@ on:
         required: true
         type: string
       additional_networks:
-        description: 'Space-separated list of additional Docker networks to connect after start (optional)'
+        description: 'Space-separated list of additional Docker networks to connect with alias during cutover (optional)'
         required: false
         type: string
         default: ''
@@ -176,73 +176,193 @@ jobs:
         run: |
           docker pull ${{ env.REGISTRY }}/${{ inputs.image_name }}:latest
 
-      # Deploy container (simple stop/recreate approach)
-      - name: Deploy container
-        id: deploy
+      - name: Determine deploy colors
         shell: bash
         run: |
-          echo "Stopping old container..."
-          docker stop ${{ inputs.container_name }} || true
-          docker rm ${{ inputs.container_name }} || true
-
-          echo "Starting new container..."
-          docker run -d --restart unless-stopped --network member-portal \
-            --env-file ${{ inputs.env_file_path }} \
-            --name ${{ inputs.container_name }} \
-            -p ${{ inputs.port }}:${{ inputs.internal_port }} \
-            ${{ env.REGISTRY }}/${{ inputs.image_name }}:latest
-
-          echo "Deployment complete!"
-
-      - name: Connect to additional networks
-        if: ${{ inputs.additional_networks != '' }}
-        shell: bash
-        run: |
-          for network in ${{ inputs.additional_networks }}; do
-            echo "Connecting ${{ inputs.container_name }} to network: $network"
-            docker network connect "$network" "${{ inputs.container_name }}" || true
-          done
-
-      - name: Wait for container to start
-        shell: bash
-        run: |
-          echo "Waiting for container to be ready..."
-          sleep 10
-
-      - name: Basic health check
-        shell: bash
-        continue-on-error: true
-        run: |
-          echo "Checking if container is running..."
-          docker ps --filter "name=${{ inputs.container_name }}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-
-          echo "Container logs (last 20 lines):"
-          docker logs ${{ inputs.container_name }} --tail 20
-
-      - name: Verify deployment
-        shell: bash
-        run: |
-          echo "Verifying deployment status..."
-          if docker ps --filter "name=${{ inputs.container_name }}" --format "{{.Names}}" | grep -q "${{ inputs.container_name }}"; then
-            echo "✓ Container is running"
-            docker ps --filter "name=${{ inputs.container_name }}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+          STATE_FILE="/opt/portal/state/${{ inputs.component }}.live"
+          if [ -f "$STATE_FILE" ]; then
+            LIVE=$(cat "$STATE_FILE")
           else
-            echo "✗ Container is not running!"
-            exit 1
+            LIVE=$(docker ps \
+              --filter "label=portal.component=${{ inputs.component }}" \
+              --format '{{index .Labels "portal.color"}}' | head -1)
           fi
+
+          if [ -z "$LIVE" ]; then
+            LIVE="none"
+            NEW="blue"
+          elif [ "$LIVE" = "blue" ]; then
+            NEW="green"
+          else
+            NEW="blue"
+          fi
+
+          echo "LIVE=$LIVE"   >> "$GITHUB_ENV"
+          echo "NEW=$NEW"     >> "$GITHUB_ENV"
+          echo "NEW_NAME=${{ inputs.container_name }}-${NEW}" >> "$GITHUB_ENV"
+          echo "OLD_NAME=${{ inputs.container_name }}-${LIVE}" >> "$GITHUB_ENV"
+          echo "Deploying $NEW (candidate) — current live: $LIVE"
+
+      - name: Start candidate container
+        shell: bash
+        run: |
+          if [ "${{ inputs.component }}" = "ui" ]; then
+            TRAEFIK_LABELS="\
+              --label traefik.enable=true \
+              --label traefik.http.services.ui-${NEW}.loadbalancer.server.port=${{ inputs.internal_port }} \
+              --label traefik.http.services.ui-${NEW}.loadbalancer.healthcheck.path=${{ inputs.healthcheck_path }} \
+              --label traefik.http.services.ui-${NEW}.loadbalancer.healthcheck.interval=5s \
+              --label traefik.http.services.ui-${NEW}.loadbalancer.healthcheck.timeout=2s"
+          else
+            TRAEFIK_LABELS=""
+          fi
+
+          docker run -d --restart unless-stopped --network member-portal \
+            --env-file "${{ inputs.env_file_path }}" \
+            --name "$NEW_NAME" \
+            --label "portal.component=${{ inputs.component }}" \
+            --label "portal.color=$NEW" \
+            $TRAEFIK_LABELS \
+            "${{ env.REGISTRY }}/${{ inputs.image_name }}:latest"
+
+          echo "Started $NEW_NAME"
+
+      - name: Wait for readiness
+        shell: bash
+        run: |
+          echo "Waiting for $NEW_NAME to become ready..."
+          for i in $(seq 1 30); do
+            if docker exec "$NEW_NAME" wget -qO- --timeout=2 \
+                "http://127.0.0.1:${{ inputs.internal_port }}${{ inputs.healthcheck_path }}" \
+                > /dev/null 2>&1; then
+              echo "Ready after $((i * 2))s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Container failed to become ready in 60s — dumping logs:"
+          docker logs "$NEW_NAME" --tail 100
+          exit 1
+
+      - name: Cutover traffic to new container
+        shell: bash
+        run: |
+          EXTRA_NETWORKS="${{ inputs.additional_networks }}"
+
+          if [ "${{ inputs.component }}" = "ui" ]; then
+            cp /opt/traefik/dynamic/ui-weights.yml /opt/traefik/dynamic/ui-weights.yml.bak
+
+            if [ "$NEW" = "blue" ]; then OTHER="green"; else OTHER="blue"; fi
+
+            cat > /tmp/ui-weights-new.yml <<EOF
+          http:
+            routers:
+              ui:
+                rule: "PathPrefix(\`/\`)"
+                entryPoints:
+                  - web
+                service: ui-weighted
+            services:
+              ui-weighted:
+                weighted:
+                  services:
+                    - name: "ui-${NEW}@docker"
+                      weight: 100
+                    - name: "ui-${OTHER}@docker"
+                      weight: 0
+          EOF
+            mv /tmp/ui-weights-new.yml /opt/traefik/dynamic/ui-weights.yml
+            echo "Traffic shifted to ui-${NEW}@docker (Traefik reloads within ~1s)"
+          else
+            # Reconnect to member-portal with the network alias (brief disconnect/reconnect)
+            docker network disconnect member-portal "$NEW_NAME"
+            docker network connect --alias member-profile-service member-portal "$NEW_NAME"
+
+            # Connect additional networks with alias
+            if [ -n "$EXTRA_NETWORKS" ]; then
+              for network in $EXTRA_NETWORKS; do
+                docker network connect --alias member-profile-service "$network" "$NEW_NAME"
+              done
+            fi
+
+            # Disconnect old from all networks
+            if [ "$LIVE" != "none" ]; then
+              docker network disconnect member-portal "$OLD_NAME" || true
+              if [ -n "$EXTRA_NETWORKS" ]; then
+                for network in $EXTRA_NETWORKS; do
+                  docker network disconnect "$network" "$OLD_NAME" || true
+                done
+              fi
+            fi
+
+            echo "Service alias member-profile-service transferred to $NEW"
+          fi
+
+      - name: Persist live color
+        shell: bash
+        run: |
+          mkdir -p /opt/portal/state
+          echo "$NEW" > /opt/portal/state/${{ inputs.component }}.live
+          echo "${{ inputs.component }} live = $NEW"
+
+      - name: Drain and remove old container
+        shell: bash
+        run: |
+          if [ "$LIVE" = "none" ]; then
+            echo "First deploy — no old container to drain"
+            exit 0
+          fi
+          echo "Draining $OLD_NAME for 30s..."
+          sleep 30
+          docker update --restart=no "$OLD_NAME" || true
+          docker stop --time 30 "$OLD_NAME" || true
+          docker rm "$OLD_NAME" || true
+          echo "Removed $OLD_NAME"
+
+      - name: Rollback on failure
+        if: failure()
+        shell: bash
+        run: |
+          if [ -z "$NEW_NAME" ]; then
+            echo "Colors were not determined — nothing to roll back"
+            exit 0
+          fi
+
+          echo "Deploy failed — rolling back..."
+          EXTRA_NETWORKS="${{ inputs.additional_networks }}"
+
+          docker update --restart=no "$NEW_NAME" 2>/dev/null || true
+          docker stop "$NEW_NAME" 2>/dev/null || true
+          docker rm "$NEW_NAME" 2>/dev/null || true
+
+          if [ "${{ inputs.component }}" = "ui" ]; then
+            if [ -f /opt/traefik/dynamic/ui-weights.yml.bak ]; then
+              mv /opt/traefik/dynamic/ui-weights.yml.bak /opt/traefik/dynamic/ui-weights.yml
+              echo "UI weights restored"
+            fi
+          else
+            if [ "$LIVE" != "none" ]; then
+              docker network connect --alias member-profile-service member-portal "$OLD_NAME" 2>/dev/null || true
+              if [ -n "$EXTRA_NETWORKS" ]; then
+                for network in $EXTRA_NETWORKS; do
+                  docker network connect --alias member-profile-service "$network" "$OLD_NAME" 2>/dev/null || true
+                done
+              fi
+            fi
+          fi
+
+          echo "Rollback complete — $OLD_NAME should still be serving"
 
       - name: Cleanup old Docker images
         shell: bash
         continue-on-error: true
         run: |
           echo "Cleaning up old Docker images..."
-          # Remove old images for this specific image, keeping only the latest
           docker images "${{ env.REGISTRY }}/${{ inputs.image_name }}" --format "{{.ID}} {{.Tag}}" | \
             grep -v "latest" | \
             awk '{print $1}' | \
             xargs -r docker rmi || true
 
-          # Remove dangling images (untagged)
           docker image prune -f
 
           echo "Cleanup complete. Current images:"

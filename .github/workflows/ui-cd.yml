@@ -16,8 +16,8 @@ jobs:
     uses: ./.github/workflows/common-cd.yml
     with:
       component: ui
-      port: "8080"
       internal_port: "8000"
+      healthcheck_path: /readyz
       env_file_path: ~/member-profile/actions-runner-service/.env.ui
       image_name: dallas-makerspace/member-portal/ui
       package_name: member-portal/ui
