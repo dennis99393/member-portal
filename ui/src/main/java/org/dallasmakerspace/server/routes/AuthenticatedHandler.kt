@@ -51,6 +51,15 @@ abstract class AuthenticatedHandler(
       throw e
     }
 
+    if (!userInfo.containsKey("groups")) {
+      // Token was issued before the groups scope was requested; re-authenticate transparently.
+      log.info("Session missing groups claim — clearing session to re-authenticate")
+      call.sessions.clear<UserSession>()
+      val encodedUri = java.net.URLEncoder.encode(call.request.uri, "UTF-8")
+      call.respondRedirect("${RouteFactory.Paths.LOGIN.path}?redirectUrl=$encodedUri")
+      return
+    }
+
     val userGroups = (userInfo["groups"] as? List<*>) ?: emptyList<String>()
     val permissions = Role.fromKeycloakGroups(userGroups).flatMap { it.permissions }.toSet()
     authz = Authz(permissions)
