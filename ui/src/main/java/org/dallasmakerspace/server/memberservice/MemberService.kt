@@ -7,6 +7,7 @@ import org.dallasmakerspace.server.common.HttpException
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.models.EventSummary
 import org.dallasmakerspace.server.models.SearchPreloadResponse
+
 class MemberService
 @Inject
 constructor(
@@ -186,7 +187,7 @@ constructor(
 
   suspend fun getUpcomingPrerequisiteEvents(
       groupNames: List<String>,
-      sessionId: String?
+      sessionId: String?,
   ): List<EventSummary> {
     return memberServiceClient.getUpcomingPrerequisiteEvents(groupNames, sessionId)
   }
@@ -218,7 +219,7 @@ constructor(
 
   suspend fun getUpcomingEventsByOrganizers(
       organizers: List<String>,
-      sessionId: String?
+      sessionId: String?,
   ): List<EventSummary> {
     return memberServiceClient.getUpcomingEventsByOrganizers(organizers, sessionId)
   }
@@ -229,7 +230,7 @@ constructor(
 
   suspend fun getUpcomingEventsByKeywords(
       keywords: List<String>,
-      sessionId: String?
+      sessionId: String?,
   ): List<EventSummary> {
     return memberServiceClient.getUpcomingEventsByKeywords(keywords, sessionId)
   }
@@ -244,7 +245,7 @@ constructor(
 
   suspend fun getDebugInfo(
       username: String,
-      sessionId: String?
+      sessionId: String?,
   ): org.dallasmakerspace.models.MemberDebugInfo? {
     return memberServiceClient.getDebugInfo(username, sessionId)
   }

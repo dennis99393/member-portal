@@ -25,6 +25,7 @@ dependencies {
   implementation("io.ktor", "ktor-serialization-gson-jvm", ktorVersion)
   implementation("io.ktor", "ktor-serialization-jackson", ktorVersion)
   implementation("io.ktor", "ktor-server-auth", ktorVersion)
+  implementation("io.ktor", "ktor-server-sessions", ktorVersion)
   implementation("io.ktor:ktor-server-caching-headers:$ktorVersion")
   implementation("io.ktor:ktor-server-compression:$ktorVersion")
   implementation("io.ktor:ktor-server-content-negotiation-jvm")

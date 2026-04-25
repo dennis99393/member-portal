@@ -20,6 +20,20 @@ fun Application.configureStatusPages() {
           status = status,
           ThymeleafContent("error404", mapOf("message" to "Sorry! Page was not found.")))
     }
+    exception<SessionTooLargeException> { call, _ ->
+      call.respond(
+          status = HttpStatusCode.BadRequest,
+          ThymeleafContent(
+              "error5xx",
+              mapOf(
+                  "message" to
+                      "Sign-in failed: your account has too many group memberships to fit in a session cookie. " +
+                          "Please contact an administrator.",
+                  "cause" to "",
+                  "sessionid" to "N/A",
+                  "userid" to "N/A",
+                  "sso_profile_url" to ssoProfileUrl)))
+    }
     exception<Throwable> { call, cause ->
       val session =
           try {

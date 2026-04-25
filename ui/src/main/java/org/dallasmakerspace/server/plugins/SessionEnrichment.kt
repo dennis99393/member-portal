@@ -30,9 +30,7 @@ val SessionEnrichmentPlugin =
               call.sessions.set(session.copy(userId = userId))
             }
           } catch (e: HttpException) {
-            log.error("Failed to enrich session with user info", e)
-            // Clear invalid session
-            call.sessions.clear<UserSession>()
+            log.warn("Failed to enrich session with user info, skipping enrichment: ${e.message}")
           } catch (e: Exception) {
             log.error("Unexpected error enriching session", e)
           }
