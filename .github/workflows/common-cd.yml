@@ -185,7 +185,7 @@ jobs:
           else
             LIVE=$(docker ps \
               --filter "label=portal.component=${{ inputs.component }}" \
-              --format '{{index .Labels "portal.color"}}' | head -1)
+              --format '{{.Label "portal.color"}}' | head -1)
           fi
 
           if [ -z "$LIVE" ]; then
