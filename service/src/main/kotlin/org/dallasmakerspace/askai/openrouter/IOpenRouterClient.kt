@@ -51,4 +51,10 @@ interface IOpenRouterClient {
       messages: List<ChatMessage>,
       jsonMode: Boolean = false
   ): LlmResult<String>
+
+  /**
+   * Estimate the cost in USD for a given number of input and output tokens. Each implementation
+   * uses the pricing for its own provider and model.
+   */
+  fun estimateCost(inputTokens: Int, outputTokens: Int): Double
 }

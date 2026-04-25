@@ -100,6 +100,8 @@ ${searchResults.take(3).mapIndexed { idx, it -> "- According to «${idx + 1}», 
         modelName = "mock-model")
   }
 
+  override fun estimateCost(inputTokens: Int, outputTokens: Int): Double = 0.0
+
   private fun generateMockSearchQueries(question: String): List<String> {
     // Extract key terms from the question
     val stopWords =

@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.multibindings.ElementsIntoSet
 import javax.inject.Singleton
 import org.dallasmakerspace.askai.AskAiConfig
+import org.dallasmakerspace.askai.bedrock.BedrockClient
 import org.dallasmakerspace.askai.confluence.ConfluenceApiClient
 import org.dallasmakerspace.askai.confluence.ConfluenceApiClientMock
 import org.dallasmakerspace.askai.confluence.IConfluenceApiClient
@@ -27,12 +28,13 @@ class AskAiModule {
   fun provideOpenRouterClient(
       appConfig: AppConfig,
       loggerFactory: LoggerFactory
-  ): IOpenRouterClient =
-      if (useMockServices(appConfig)) {
-        OpenRouterClientMock(loggerFactory)
-      } else {
-        OpenRouterClient(appConfig, loggerFactory)
-      }
+  ): IOpenRouterClient {
+    if (useMockServices(appConfig)) return OpenRouterClientMock(loggerFactory)
+    return when (appConfig.getStringProperty("app.llm.provider", "openrouter")) {
+      "bedrock" -> BedrockClient(appConfig, loggerFactory)
+      else -> OpenRouterClient(appConfig, loggerFactory)
+    }
+  }
 
   @Provides
   fun provideConfluenceApiClient(

@@ -68,6 +68,8 @@ dependencies {
   implementation("ch.qos.logback:logback-classic:$logbackVersion")
   implementation("org.codehaus.janino:janino:3.1.12") // For conditional logback config
   implementation("org.mariadb.jdbc:mariadb-java-client:3.4.0")
+  // AWS Bedrock
+  implementation("software.amazon.awssdk:bedrockruntime:2.28.3")
   // Elasticsearch logging
   implementation("co.elastic.clients:elasticsearch-java:8.14.3")
   implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")

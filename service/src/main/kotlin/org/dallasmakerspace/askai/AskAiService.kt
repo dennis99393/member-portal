@@ -140,11 +140,15 @@ constructor(
     // Mask PII in the question before sending to LLM
     val maskedQuestion = piiMasker.mask(question)
 
-    val topCachedQuestions = cacheRepository.getTopQuestions(limit = config.topQuestionsLimit)
-    // Mask PII in cached questions before sending to LLM
+    // Skip cached questions when force-refreshing — passing them causes the LLM to return a
+    // semantic match with empty searchQueries, leaving us with no search phrases to use.
     val maskedCachedQuestions =
-        topCachedQuestions.map { entry ->
-          entry.copy(questionText = piiMasker.mask(entry.questionText))
+        if (forceRefresh) {
+          emptyList()
+        } else {
+          cacheRepository.getTopQuestions(limit = config.topQuestionsLimit).map { entry ->
+            entry.copy(questionText = piiMasker.mask(entry.questionText))
+          }
         }
 
     val classificationLlmResult =
@@ -396,10 +400,6 @@ constructor(
     )
   }
 
-  /**
-   * Calculate estimated cost based on token usage. Pricing: $0.1 per million input tokens, $0.4 per
-   * million output tokens (based on google/gemini-2.5-flash-lite-preview-09-2025 pricing).
-   */
   private fun calculateEstimatedCost(
       classificationUsage: TokenUsage?,
       answerUsage: TokenUsage?,
@@ -407,11 +407,7 @@ constructor(
     val inputTokens = (classificationUsage?.promptTokens ?: 0) + (answerUsage?.promptTokens ?: 0)
     val outputTokens =
         (classificationUsage?.completionTokens ?: 0) + (answerUsage?.completionTokens ?: 0)
-
-    val inputCost = inputTokens * COST_PER_INPUT_TOKEN
-    val outputCost = outputTokens * COST_PER_OUTPUT_TOKEN
-
-    return inputCost + outputCost
+    return openRouterClient.estimateCost(inputTokens, outputTokens)
   }
 
   /**
@@ -480,12 +476,6 @@ constructor(
     return block() // Last attempt without catch
   }
 
-  companion object {
-    // Pricing: $0.1 per million input tokens = $0.0000001 per token
-    private const val COST_PER_INPUT_TOKEN = 0.0000001
-    // Pricing: $0.4 per million output tokens = $0.0000004 per token
-    private const val COST_PER_OUTPUT_TOKEN = 0.0000004
-  }
 }
 
 /** Summary of a cached question for display in the UI. */
