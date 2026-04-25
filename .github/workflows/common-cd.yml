@@ -217,8 +217,9 @@ jobs:
             TRAEFIK_LABELS=""
           fi
 
+          ENV_FILE=$(eval echo "${{ inputs.env_file_path }}")
           docker run -d --restart unless-stopped --network member-portal \
-            --env-file "${{ inputs.env_file_path }}" \
+            --env-file "$ENV_FILE" \
             --name "$NEW_NAME" \
             --label "portal.component=${{ inputs.component }}" \
             --label "portal.color=$NEW" \
