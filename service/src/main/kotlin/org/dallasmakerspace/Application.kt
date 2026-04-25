@@ -5,9 +5,11 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import org.dallasmakerspace.core.logging.TrustManager
 import org.dallasmakerspace.di.DaggerAppComponent
+import org.dallasmakerspace.plugins.HealthState
 import org.dallasmakerspace.plugins.configureDatabase
 import org.dallasmakerspace.plugins.configureElasticsearch
 import org.dallasmakerspace.plugins.configureHTTP
+import org.dallasmakerspace.plugins.configureHealth
 import org.dallasmakerspace.plugins.configureMonitoring
 import org.dallasmakerspace.plugins.configureRouting
 import org.dallasmakerspace.plugins.configureSerialization
@@ -21,13 +23,19 @@ fun main() {
   // TODO: remove this
   TrustManager.disableSSLCertificateChecking()
 
-  embeddedServer(Netty, port = portStr.toInt(), host = "0.0.0.0") {
+  val server = embeddedServer(Netty, port = portStr.toInt(), host = "0.0.0.0") {
+        configureHealth()
         configureSerialization()
         configureMonitoring()
         configureHTTP()
         configureDatabase()
         configureRouting()
         configureElasticsearch()
+        HealthState.markReady()
       }
-      .start(wait = true)
+  Runtime.getRuntime().addShutdownHook(Thread {
+    Thread.sleep(15_000)
+    server.stop(gracePeriodMillis = 10_000, timeoutMillis = 30_000)
+  })
+  server.start(wait = true)
 }
