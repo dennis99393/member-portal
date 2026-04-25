@@ -1,0 +1,25 @@
+entryPoints:
+  web:
+    address: ":8000"
+  traefik:
+    address: ":8082"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: member-portal
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+api:
+  dashboard: true
+  insecure: true   # dashboard only binds to 127.0.0.1:8082 — see docker-compose
+
+log:
+  level: INFO
+
+accessLog: {}
+
+ping: {}
