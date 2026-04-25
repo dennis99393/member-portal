@@ -73,7 +73,7 @@ private fun getOAuthServerSettings(
       requestMethod = HttpMethod.Post,
       clientId = settings.clientId,
       clientSecret = settings.clientSecret,
-      defaultScopes = listOf("openid", "profile", "email", "groups"),
+      defaultScopes = listOf("openid", "profile", "email"),
       onStateCreated = { call, state ->
         // saves new state with redirect url value
         call.request.queryParameters["redirectUrl"]?.let { RouteFactory.redirects[state] = it }
