@@ -1,5 +1,6 @@
 package org.dallasmakerspace.calendar
 
+import java.time.LocalDateTime
 import javax.inject.Inject
 import org.dallasmakerspace.core.LoggerFactory
 
@@ -96,5 +97,25 @@ constructor(private val calendarRepository: CalendarRepository, loggerFactory: L
   ): List<EventSummary> {
     log.info("Getting upcoming events for ${organizers.size} organizers")
     return calendarRepository.getUpcomingEventsByOrganizers(organizers, limit)
+  }
+
+  /**
+   * Gets events whose names match any of the given keywords within a UTC time window. Covers both
+   * past and future events so callers can answer questions about recent or upcoming occurrences.
+   *
+   * @param keywords Keywords to match against event names.
+   * @param windowStartUtc Start of the search window (UTC).
+   * @param windowEndUtc End of the search window (UTC).
+   * @param limit Maximum number of events to return.
+   * @return Matching events ordered by start time ascending.
+   */
+  suspend fun getEventsByKeywords(
+      keywords: List<String>,
+      windowStartUtc: LocalDateTime,
+      windowEndUtc: LocalDateTime,
+      limit: Int,
+  ): List<EventSummary> {
+    log.info("Getting events by keywords: $keywords in window [$windowStartUtc, $windowEndUtc]")
+    return calendarRepository.getEventsByKeywords(keywords, windowStartUtc, windowEndUtc, limit)
   }
 }

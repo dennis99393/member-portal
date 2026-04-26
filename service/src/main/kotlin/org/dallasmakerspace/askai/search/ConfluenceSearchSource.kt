@@ -124,6 +124,9 @@ constructor(
 
     log.debug("[ConfluenceSearch] Page: '$title', snippet length: ${snippet.length}")
 
+    val category =
+        if (isMeetingNote(title)) SearchResult.MEETING_NOTES else SearchResult.OFFICIAL_DOCS
+
     return SearchResult(
         title = title,
         snippet = snippet,
@@ -131,6 +134,7 @@ constructor(
         source = getName(),
         relevanceScore = null,
         hasExtractableContent = true,
+        sourceCategory = category,
     )
   }
 
@@ -184,7 +188,7 @@ constructor(
       if (textContent.isBlank()) {
         "[No text content available]"
       } else {
-        textContent.take(500) // Larger snippet since we fetched full content
+        textContent.take(1500) // Larger snippet since we fetched full content
       }
     } catch (e: Exception) {
       log.error("[ConfluenceSearch] Failed to fetch content $contentId: ${e.message}")
@@ -227,6 +231,13 @@ constructor(
         .replace(Regex("@@@endhl@@@"), "")
         .replace(Regex("\\s+"), " ") // Normalize whitespace
         .trim()
-        .take(300) // Limit snippet length
+        .take(600) // Limit snippet length
+  }
+
+  private fun isMeetingNote(title: String): Boolean {
+    return Regex("""(?i)meeting[-\s]\d{4}|minutes[-\s]\d{4}|(?i)\d{4}[-\s]meeting""")
+        .containsMatchIn(title) ||
+        Regex("""(?i)^.*(meeting|minutes).*$""").matches(title) &&
+            Regex("""\d{4}""").containsMatchIn(title)
   }
 }

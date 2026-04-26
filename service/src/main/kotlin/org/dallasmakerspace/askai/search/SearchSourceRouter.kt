@@ -20,12 +20,13 @@ class SearchSourceRouter
 @Inject
 constructor(
     searchSourceSet: Set<@JvmSuppressWildcards SearchSource>,
-    loggerFactory: LoggerFactory
+    loggerFactory: LoggerFactory,
 ) {
   private val log = loggerFactory.create(javaClass)
   private val sourceMap: Map<String, SearchSource> = searchSourceSet.associateBy { it.getName() }
-  private val sourcePriorities: Map<String, Int> =
-      searchSourceSet.associate { it.getName() to it.getPriority() }
+  private val sourcePriorities: Map<String, Int> = searchSourceSet.associate {
+    it.getName() to it.getPriority()
+  }
 
   init {
     val sourceInfo =

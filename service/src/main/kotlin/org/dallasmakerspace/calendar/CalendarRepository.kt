@@ -1,9 +1,14 @@
 package org.dallasmakerspace.calendar
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlinx.serialization.Serializable
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.db.master.GenericRepository
+
+private val SQL_TIMESTAMP_FORMAT: DateTimeFormatter =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
 /** Repository for calendar events data. */
 class CalendarRepository
@@ -389,6 +394,91 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
     } ?: emptyList()
   }
 
+  /**
+   * Fetches events whose names match any of the given keywords within a UTC time window. Searches
+   * both past and future events so callers can ask about recent or upcoming occurrences.
+   *
+   * Uses MariaDB server-side `max_statement_time=1.5` to cap execution. Do NOT wrap with
+   * `withTimeout` — blocking JDBC ignores coroutine cancellation and leaks the connection pool.
+   *
+   * @param keywords Keywords to match case-insensitively against event names.
+   * @param windowStartUtc Start of the search window (UTC).
+   * @param windowEndUtc End of the search window (UTC).
+   * @param limit Maximum number of events to return.
+   * @return Matching events ordered by start time ascending, or empty list on timeout/error.
+   */
+  @Suppress("TooGenericExceptionCaught", "ReturnCount")
+  suspend fun getEventsByKeywords(
+      keywords: List<String>,
+      windowStartUtc: LocalDateTime,
+      windowEndUtc: LocalDateTime,
+      limit: Int,
+  ): List<EventSummary> {
+    if (keywords.isEmpty()) {
+      return emptyList()
+    }
+
+    val startStr = windowStartUtc.format(SQL_TIMESTAMP_FORMAT)
+    val endStr = windowEndUtc.format(SQL_TIMESTAMP_FORMAT)
+
+    val orClause =
+        keywords.joinToString(" OR ") { kw ->
+          val escaped =
+              kw.replace("'", "''").replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+          "LOWER(e.name) LIKE '%$escaped%' ESCAPE '\\\\'"
+        }
+
+    val query =
+        """
+      SET STATEMENT max_statement_time=1.5 FOR
+      SELECT
+          e.id,
+          e.name,
+          CONVERT_TZ(e.event_start, '+00:00', 'America/Chicago') AS event_start_cst,
+          UNIX_TIMESTAMP(e.event_start) * 1000 AS event_start_utc_ms,
+          e.status,
+          c.ad_username AS organizer_username
+      FROM `dms-calendar`.events e
+      LEFT JOIN `dms-calendar`.contacts c ON e.contact_id = c.id
+      WHERE e.event_start BETWEEN '$startStr' AND '$endStr'
+        AND ($orClause)
+      ORDER BY e.event_start ASC
+      LIMIT $limit
+    """
+
+    log.debug("Fetching events by ${keywords.size} keywords in window [$startStr, $endStr] (limit: $limit)")
+
+    val result =
+        try {
+          genericRepository.getReportData(query)
+        } catch (ex: Exception) {
+          if (ex.isStatementTimeout()) {
+            log.warn("Query timed out fetching events by keywords")
+          } else {
+            log.warn("Failed fetching events by keywords - ${ex.message}")
+          }
+          return emptyList()
+        }
+
+    return result?.data?.map { row ->
+      val id = (row["id"] as? Number)?.toInt() ?: 0
+      val name = row["name"]?.toString() ?: ""
+      val eventStart = row["event_start_cst"]?.toString() ?: ""
+      val eventStartUtcMs = (row["event_start_utc_ms"] as? Number)?.toLong()
+      val status = row["status"]?.toString() ?: ""
+      val organizerUsername = row["organizer_username"]?.toString()
+
+      EventSummary(
+          id = id,
+          name = name,
+          eventStart = eventStart,
+          eventStartUtcMs = eventStartUtcMs,
+          status = status,
+          organizerUsername = organizerUsername,
+      )
+    } ?: emptyList()
+  }
+
   private fun Exception.isStatementTimeout() =
       message?.contains("max_statement_time exceeded") == true
 }
@@ -401,4 +491,5 @@ data class EventSummary(
     val eventStart: String,
     val status: String,
     val organizerUsername: String? = null,
+    val eventStartUtcMs: Long? = null,
 )

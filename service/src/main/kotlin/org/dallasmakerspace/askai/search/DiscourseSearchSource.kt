@@ -49,6 +49,7 @@ constructor(private val discourseClient: IDiscourseApiClient, loggerFactory: Log
                 url = "$DISCOURSE_BASE_URL/t/${topic.slug}/${topic.id}",
                 source = getName(),
                 relevanceScore = null,
+                sourceCategory = SearchResult.TALK_FORUM,
             ))
       }
 
