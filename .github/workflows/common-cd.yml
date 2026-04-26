@@ -206,6 +206,8 @@ jobs:
       - name: Start candidate container
         shell: bash
         run: |
+          EXTRA_NETWORKS="${{ inputs.additional_networks }}"
+
           if [ "${{ inputs.component }}" = "ui" ]; then
             TRAEFIK_LABELS="\
               --label traefik.enable=true \
@@ -213,18 +215,31 @@ jobs:
               --label traefik.http.services.ui-${NEW}.loadbalancer.healthcheck.path=${{ inputs.healthcheck_path }} \
               --label traefik.http.services.ui-${NEW}.loadbalancer.healthcheck.interval=5s \
               --label traefik.http.services.ui-${NEW}.loadbalancer.healthcheck.timeout=2s"
+            NETWORK_FLAGS="--network member-portal"
           else
             TRAEFIK_LABELS=""
+            # Bake alias into docker run so it survives container restarts.
+            # docker network connect --alias is lost on restart; --network-alias is not.
+            NETWORK_FLAGS="--network member-portal --network-alias member-profile-service"
           fi
 
           ENV_FILE=$(eval echo "${{ inputs.env_file_path }}")
-          docker run -d --restart unless-stopped --network member-portal \
+          docker run -d --restart unless-stopped \
+            $NETWORK_FLAGS \
             --env-file "$ENV_FILE" \
             --name "$NEW_NAME" \
             --label "portal.component=${{ inputs.component }}" \
             --label "portal.color=$NEW" \
             $TRAEFIK_LABELS \
             "${{ env.REGISTRY }}/${{ inputs.image_name }}:latest"
+
+          # Connect service to additional networks with alias at start time
+          # (so the alias persists on restart, same as member-portal above)
+          if [ "${{ inputs.component }}" != "ui" ] && [ -n "$EXTRA_NETWORKS" ]; then
+            for network in $EXTRA_NETWORKS; do
+              docker network connect --alias member-profile-service "$network" "$NEW_NAME"
+            done
+          fi
 
           echo "Started $NEW_NAME"
 
@@ -271,18 +286,8 @@ jobs:
             mv /tmp/ui-weights-new.yml /opt/traefik/dynamic/ui-weights.yml
             echo "Traffic shifted to ui-${NEW}@docker (Traefik reloads within ~1s)"
           else
-            # Reconnect to member-portal with the network alias (brief disconnect/reconnect)
-            docker network disconnect member-portal "$NEW_NAME"
-            docker network connect --alias member-profile-service member-portal "$NEW_NAME"
-
-            # Connect additional networks with alias
-            if [ -n "$EXTRA_NETWORKS" ]; then
-              for network in $EXTRA_NETWORKS; do
-                docker network connect --alias member-profile-service "$network" "$NEW_NAME"
-              done
-            fi
-
-            # Disconnect old from all networks
+            # New container already has the alias on all networks from the start step.
+            # Just take the old container off the network so it stops serving.
             if [ "$LIVE" != "none" ]; then
               docker network disconnect member-portal "$OLD_NAME" || true
               if [ -n "$EXTRA_NETWORKS" ]; then
