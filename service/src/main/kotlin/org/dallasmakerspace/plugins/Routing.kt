@@ -11,8 +11,10 @@ import io.ktor.server.resources.patch
 import io.ktor.server.resources.post
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.utils.io.writeStringUtf8
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.dallasmakerspace.askai.AskAiService
 import org.dallasmakerspace.auth.ApiKeyAuthProvider
 import org.dallasmakerspace.auth.Permission
@@ -38,6 +40,7 @@ import org.dallasmakerspace.members.db.ProfileDAO
 import org.dallasmakerspace.members.db.suspendTransaction
 import org.dallasmakerspace.models.AskAiFeedbackRequest
 import org.dallasmakerspace.models.AskAiRequest
+import org.dallasmakerspace.models.AskAiStreamResult
 import org.dallasmakerspace.models.NamespaceOwnerType
 import org.dallasmakerspace.remoteaccess.routing.remoteAccessRoutes
 import org.dallasmakerspace.routing.*
@@ -66,19 +69,20 @@ fun Application.configureRouting() {
     // Actual validation is done in the provider, this can be refactored away
     validate { null }
   }
-  install(Authentication) {
-    val appConfig: AppConfig = DaggerAppComponent.create().getAppConfig()
-    apiKey(appConfig, ApiKeyAuthProvider.X_API_KEY, apiKeyAuthProvider)
-  }
+  val appConfig: AppConfig = DaggerAppComponent.create().getAppConfig()
+  install(Authentication) { apiKey(appConfig, ApiKeyAuthProvider.X_API_KEY, apiKeyAuthProvider) }
   // Eagerly initialize memberService so we can launch the WHMCS ID cache population
   // before the first request arrives. All other services stay lazy (initialized on first use).
   val memberService: MemberService = DaggerAppComponent.create().getMemberService()
   launch { memberService.populateWhmcsAccountCache() }
 
   // Eagerly initialize featuredProjectsService to trigger background cache fill on startup.
+  // Skip in development mode to avoid hammering the Discourse server on every hot-reload.
   val featuredProjectsService: FeaturedProjectsService =
       DaggerAppComponent.create().getFeaturedProjectsService()
-  featuredProjectsService.getFeaturedProjects()
+  if (!appConfig.requireBooleanProperty("ktor.development")) {
+    featuredProjectsService.getFeaturedProjects()
+  }
 
   val configOverrideService: ConfigOverrideService =
       DaggerAppComponent.create().getConfigOverrideService()
@@ -417,7 +421,8 @@ fun Application.configureRouting() {
                   )
           val actorUsername = call.request.headers["X-Actor-Username"]
           val groupname =
-              org.dallasmakerspace.voterregistration.VoterRegistrationManager()
+              org.dallasmakerspace.voterregistration
+                  .VoterRegistrationManager()
                   .getVotingMembersGroupName()
           memberService.addMembersToGroup(listOf(username), groupname, actorUsername)
           call.respond(ApiResponse(Status.SUCCESS, "Registered $username for voting", null))
@@ -432,7 +437,8 @@ fun Application.configureRouting() {
                   )
           val actorUsername = call.request.headers["X-Actor-Username"]
           val groupname =
-              org.dallasmakerspace.voterregistration.VoterRegistrationManager()
+              org.dallasmakerspace.voterregistration
+                  .VoterRegistrationManager()
                   .getVotingMembersGroupName()
           memberService.removeMembersToGroup(listOf(username), groupname, actorUsername)
           call.respond(ApiResponse(Status.SUCCESS, "Unregistered $username from voting", null))
@@ -770,6 +776,47 @@ fun Application.configureRouting() {
           val response =
               askAiService.ask(request.question, username = username, forceRefresh = forceRefresh)
           call.respond(ApiResponse(Status.SUCCESS, "Question answered", response))
+        }
+
+        get("/ask-ai/stream") {
+          val question =
+              call.request.queryParameters["question"]
+                  ?: return@get call.respond(
+                      HttpStatusCode.BadRequest,
+                      ApiResponse(Status.ERROR, "Missing question parameter", null),
+                  )
+          val username =
+              call.request.headers["X-Username"]
+                  ?: return@get call.respond(
+                      HttpStatusCode.BadRequest,
+                      ApiResponse(Status.ERROR, "Missing X-Username header", null),
+                  )
+
+          val forceRefresh = call.request.queryParameters["refresh"]?.toBoolean() ?: false
+
+          call.response.header("Cache-Control", "no-cache")
+          call.response.header("X-Accel-Buffering", "no")
+
+          call.respondBytesWriter(contentType = ContentType.Text.EventStream) {
+            try {
+              val result =
+                  askAiService.askStream(question, username, forceRefresh) { token ->
+                    val escaped = token.replace("\n", "\\n")
+                    writeStringUtf8("data: $escaped\n\n")
+                    flush()
+                  }
+              val sourcesJson = Json.encodeToString(result.sources)
+              writeStringUtf8("event: sources\ndata: $sourcesJson\n\n")
+              flush()
+              val doneJson = Json.encodeToString(AskAiStreamResult.serializer(), result)
+              writeStringUtf8("event: done\ndata: $doneJson\n\n")
+              flush()
+            } catch (e: Exception) {
+              log.error("Streaming error for question: $question", e)
+              writeStringUtf8("event: error\ndata: An error occurred\n\n")
+              flush()
+            }
+          }
         }
 
         get("/ask-ai/sources") {

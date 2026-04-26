@@ -11,7 +11,22 @@ data class OpenRouterChatRequest(
     val temperature: Double = 0.7,
     @SerialName("max_tokens") val maxTokens: Int = 2048,
     @SerialName("response_format") val responseFormat: ResponseFormat? = null,
+    val stream: Boolean = false,
 )
+
+/** A single chunk in a streaming chat completion response. */
+@Serializable
+data class OpenRouterStreamChunk(
+    val choices: List<StreamChoice> = emptyList(),
+)
+
+@Serializable
+data class StreamChoice(
+    val delta: StreamDelta = StreamDelta(),
+    @SerialName("finish_reason") val finishReason: String? = null,
+)
+
+@Serializable data class StreamDelta(val content: String? = null)
 
 @Serializable data class ChatMessage(val role: String, val content: String)
 

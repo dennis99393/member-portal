@@ -7,6 +7,7 @@ import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.utils.io.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.serialization.json.Json
@@ -14,9 +15,11 @@ import okio.IOException
 import org.dallasmakerspace.askai.AbstractLlmClient
 import org.dallasmakerspace.core.AppConfig
 import org.dallasmakerspace.core.LoggerFactory
+import org.dallasmakerspace.models.SearchResult
 import org.dallasmakerspace.models.TokenUsage
 
 private const val REQUEST_TIMEOUT_MS = 60000L
+private const val STREAM_SOCKET_TIMEOUT_MS = 300_000L
 
 @Singleton
 class OpenRouterClient
@@ -41,6 +44,20 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) :
         requestTimeoutMillis = REQUEST_TIMEOUT_MS
         connectTimeoutMillis = REQUEST_TIMEOUT_MS
         socketTimeoutMillis = REQUEST_TIMEOUT_MS
+      }
+      install(Logging) {
+        logger = Logger.DEFAULT
+        level = LogLevel.INFO
+      }
+    }
+  }
+
+  private val streamingClient: HttpClient by lazy {
+    HttpClient(CIO) {
+      install(HttpTimeout) {
+        requestTimeoutMillis = Long.MAX_VALUE
+        connectTimeoutMillis = REQUEST_TIMEOUT_MS
+        socketTimeoutMillis = STREAM_SOCKET_TIMEOUT_MS
       }
       install(Logging) {
         logger = Logger.DEFAULT
@@ -108,6 +125,43 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) :
     } catch (e: kotlinx.serialization.SerializationException) {
       throw OpenRouterApiException("Failed to parse OpenRouter response", e)
     }
+  }
+
+  @Suppress("TooGenericExceptionCaught")
+  override suspend fun generateAnswerStream(
+      question: String,
+      searchResults: List<SearchResult>,
+      onToken: suspend (String) -> Unit,
+  ) {
+    val messages = buildAnswerMessages(question, searchResults)
+    val request = OpenRouterChatRequest(model = model, messages = messages, stream = true)
+    val requestBody = json.encodeToString(OpenRouterChatRequest.serializer(), request)
+
+    streamingClient
+        .preparePost("$baseUrl/chat/completions") {
+          header("Authorization", "Bearer $apiKey")
+          header("HTTP-Referer", "https://portal.dallasmakerspace.org")
+          header("X-Title", "Dallas Makerspace Member Portal")
+          contentType(ContentType.Application.Json)
+          setBody(requestBody)
+        }
+        .execute { response ->
+          val channel = response.bodyAsChannel()
+          while (!channel.isClosedForRead) {
+            val line = channel.readUTF8Line() ?: break
+            if (!line.startsWith("data: ")) continue
+            val data = line.removePrefix("data: ")
+            if (data == "[DONE]") break
+            try {
+              val chunk = json.decodeFromString<OpenRouterStreamChunk>(data)
+              chunk.choices.firstOrNull()?.delta?.content
+                  ?.takeIf { it.isNotEmpty() }
+                  ?.let { onToken(it) }
+            } catch (e: Exception) {
+              log.debug("Skipped malformed stream chunk: ${e.message}")
+            }
+          }
+        }
   }
 }
 

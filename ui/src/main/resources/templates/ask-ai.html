@@ -136,15 +136,6 @@
             border-radius: 8px;
             margin-bottom: 1rem;
         }
-        .loading-spinner {
-            display: none;
-        }
-        .loading .loading-spinner {
-            display: inline-block;
-        }
-        .loading .submit-text {
-            display: none;
-        }
         .popular-questions-chips {
             margin-top: 1.5rem;
         }
@@ -233,6 +224,20 @@
             cursor: not-allowed;
             opacity: 0.6;
         }
+        .spinner-phrases {
+            display: flex;
+            align-items: center;
+            margin-top: 1rem;
+            height: 2.625rem; /* same height as submit button so layout doesn't shift */
+        }
+        .spinner-phrase-text {
+            color: #6c757d;
+            font-style: italic;
+            transition: opacity 0.3s ease;
+        }
+        .spinner-phrase-text.fading {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
@@ -253,11 +258,12 @@
                           required
                           th:text="${question}"></textarea>
                 <button type="submit" class="btn btn-primary submit-btn" id="submitBtn">
-                    <span class="submit-text">Ask Question</span>
-                    <span class="loading-spinner spinner-border spinner-border-sm" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </span>
+                    Ask Question
                 </button>
+                <div id="spinnerPhrases" class="spinner-phrases" style="display:none">
+                    <span class="spinner-border spinner-border-sm text-primary me-2" role="status" aria-hidden="true"></span>
+                    <span id="spinnerPhraseText" class="spinner-phrase-text"></span>
+                </div>
             </form>
 
             <!-- Recent Questions as subtle chips (shown when no answer displayed) -->
@@ -276,8 +282,92 @@
                 </div>
             </div>
 
+            <!-- Streaming answer section: always in DOM, shown/hidden by JS -->
+            <div id="stream-answer-section" style="display:none">
+                <div class="answer-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0">Answer</h3>
+                        <div class="d-flex align-items-center gap-2" id="stream-answer-header-right" style="display:none">
+                            <span class="asked-by" id="stream-asked-by"></span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary refresh-btn"
+                                    id="stream-refresh-btn" style="display:none"
+                                    onclick="refreshStreamAnswer()">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    <div class="answer-content" id="stream-answer-content"></div>
+                    <div class="feedback-section" style="display:none">
+                        <span class="text-muted me-2">Was this helpful?</span>
+                        <button type="button" class="btn btn-outline-success feedback-btn" onclick="sendFeedback(true, 'stream-feedbackStatus')">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2.144 2.144 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a9.84 9.84 0 0 0-.443.05 9.365 9.365 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111L8.864.046z"/>
+                            </svg>
+                            Yes
+                        </button>
+                        <button type="button" class="btn btn-outline-danger feedback-btn" onclick="sendFeedback(false, 'stream-feedbackStatus')">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8.864 15.674c-.956.24-1.843-.484-1.908-1.42-.072-1.05-.23-2.015-.428-2.59-.125-.36-.479-1.012-1.04-1.638-.557-.624-1.282-1.179-2.131-1.41C2.685 8.432 2 7.85 2 7V3c0-.845.682-1.464 1.448-1.546 1.07-.113 1.564-.415 2.068-.723l.048-.029c.272-.166.578-.349.97-.484C6.931.08 7.395 0 8 0h3.5c.937 0 1.599.478 1.934 1.064.164.287.254.607.254.913 0 .152-.023.312-.077.464.201.262.38.577.488.9.11.33.172.762.004 1.15.069.13.12.268.159.403.077.27.113.567.113.856 0 .289-.036.586-.113.856-.035.12-.076.237-.138.362.133.358.197.714.197 1.04 0 .613-.168 1.153-.458 1.563.134.182.252.372.352.559.165.311.197.64.197.91 0 .37-.098.773-.342 1.09-.29.38-.702.606-1.088.657-.358.044-.663.048-.848.048H8z"/>
+                            </svg>
+                            No
+                        </button>
+                        <span id="stream-feedbackStatus" class="ms-2 text-muted" style="display: none;"></span>
+                    </div>
+                    <div class="metadata-section" style="display:none">
+                        <button class="btn btn-sm btn-outline-secondary" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#streamMetadataCollapse">
+                            Show Metadata
+                        </button>
+                        <div class="collapse" id="streamMetadataCollapse">
+                            <div class="metadata-content">
+                                <div class="metadata-row">
+                                    <span class="metadata-label">Response Time</span>
+                                    <span id="stream-meta-response-time">N/A</span>
+                                </div>
+                                <div class="metadata-row">
+                                    <span class="metadata-label">From Cache</span>
+                                    <span id="stream-meta-from-cache">No</span>
+                                </div>
+                                <div class="metadata-row" id="stream-meta-source-breakdown-row" style="display:none">
+                                    <span class="metadata-label">Source Breakdown</span>
+                                    <span id="stream-meta-source-breakdown"></span>
+                                </div>
+                                <div class="metadata-row" id="stream-meta-search-queries-row" style="display:none">
+                                    <span class="metadata-label">Search Queries</span>
+                                    <span id="stream-meta-search-queries"></span>
+                                </div>
+                                <div class="metadata-row" id="stream-meta-classification-tokens-row" style="display:none">
+                                    <span class="metadata-label">Classification Tokens</span>
+                                    <span id="stream-meta-classification-tokens"></span>
+                                </div>
+                                <div class="metadata-row" id="stream-meta-answer-tokens-row" style="display:none">
+                                    <span class="metadata-label">Answer Tokens</span>
+                                    <span id="stream-meta-answer-tokens"></span>
+                                </div>
+                                <div class="metadata-row" id="stream-meta-cost-row" style="display:none">
+                                    <span class="metadata-label">Estimated Cost</span>
+                                    <span id="stream-meta-cost"></span>
+                                </div>
+                                <div class="metadata-row" id="stream-meta-model-row" style="display:none">
+                                    <span class="metadata-label">Model</span>
+                                    <span id="stream-meta-model"></span>
+                                </div>
+                                <div class="metadata-row" id="stream-meta-slug-row" style="display:none">
+                                    <span class="metadata-label">Shareable URL</span>
+                                    <span>
+                                        <a id="stream-meta-slug-link" href="#">—</a>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="copyShareableUrl()">Copy</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Streaming sources section: always in DOM, shown/hidden by JS -->
+            <div id="stream-sources-section" class="sources-section" style="display:none"></div>
+
             <!-- Answer Section -->
-            <div th:if="${answer}" class="answer-section">
+            <div th:if="${answer}" id="server-answer-section" class="answer-section">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h3 class="mb-0">Answer</h3>
                     <div class="d-flex align-items-center gap-2">
@@ -382,12 +472,14 @@
                 </div>
             </div>
 
-            <!-- Hidden fields for slug and cacheId to use in JavaScript -->
+            <!-- Hidden fields for slug, cacheId, current user, and feature flags -->
             <input type="hidden" id="answerSlug" th:if="${slug != null}" th:value="${slug}"/>
             <input type="hidden" id="answerCacheId" th:if="${cacheId != null}" th:value="${cacheId}"/>
+            <input type="hidden" id="currentUsername" th:value="${preferred_username}"/>
+            <input type="hidden" id="devModeFlag" th:value="${isDevelopmentMode}"/>
 
             <!-- Sources Section -->
-            <div th:if="${sources != null and !#lists.isEmpty(sources)}" class="sources-section" id="sources-section">
+            <div th:if="${sources != null and !#lists.isEmpty(sources)}" id="server-sources-section" class="sources-section">
                 <h4>Sources</h4>
                 <div class="list-group">
                     <a th:each="source, iterStat : ${sources}"
@@ -441,6 +533,51 @@
 <script src="/static/js/dms-member-card.js" type="module"></script>
 <script src="/static/js/dms-page-loader.js" defer></script>
 <script>
+    const SPINNER_PHRASES = [
+        'Firing up Big Thunder…',
+        'Checking the Talk forum…',
+        'Getting your badge authorized…',
+        'Consulting the stewards…',
+        'Searching 36,000 sq ft of knowledge…',
+        'Queuing up the CNC job…',
+        'Waiting for laser cooldown…',
+        'Asking Donner and Blitzen…',
+        'Scheduling a SIG meeting…',
+        'Reviewing committee notes from last Sunday…',
+    ];
+
+    let spinnerInterval = null;
+
+    function showSpinnerPhrases() {
+        const submitBtn = document.getElementById('submitBtn');
+        const phrasesEl = document.getElementById('spinnerPhrases');
+        const phraseText = document.getElementById('spinnerPhraseText');
+        submitBtn.style.display = 'none';
+        let idx = Math.floor(Math.random() * SPINNER_PHRASES.length);
+        phraseText.textContent = SPINNER_PHRASES[idx];
+        phrasesEl.style.display = '';
+        spinnerInterval = setInterval(function() {
+            phraseText.classList.add('fading');
+            setTimeout(function() {
+                let next;
+                do { next = Math.floor(Math.random() * SPINNER_PHRASES.length); } while (next === idx);
+                idx = next;
+                phraseText.textContent = SPINNER_PHRASES[idx];
+                phraseText.classList.remove('fading');
+            }, 300);
+        }, 2500);
+    }
+
+    function hideSpinnerPhrases() {
+        clearInterval(spinnerInterval);
+        spinnerInterval = null;
+        const submitBtn = document.getElementById('submitBtn');
+        const phrasesEl = document.getElementById('spinnerPhrases');
+        phrasesEl.style.display = 'none';
+        submitBtn.style.display = '';
+        submitBtn.disabled = false;
+    }
+
     // Render markdown content and update URL
     document.addEventListener('DOMContentLoaded', function() {
         const answerContent = document.getElementById('answerContent');
@@ -464,15 +601,210 @@
             }
         }
 
-        // Add loading state to form
+        // Intercept form submission for SSE streaming
         const form = document.getElementById('askForm');
         const submitBtn = document.getElementById('submitBtn');
         if (form && submitBtn) {
-            form.addEventListener('submit', function() {
-                submitBtn.classList.add('loading');
-                submitBtn.disabled = true;
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const textarea = form.querySelector('textarea[name="question"]');
+                const question = textarea.value.trim();
+                if (!question) return;
+
+                showSpinnerPhrases();
+
+                // Hide chips and server-rendered sections, show streaming sections
+                const chips = document.querySelector('.popular-questions-chips');
+                if (chips) chips.style.display = 'none';
+
+                const serverAnswer = document.getElementById('server-answer-section');
+                if (serverAnswer) serverAnswer.style.display = 'none';
+                const serverSources = document.getElementById('server-sources-section');
+                if (serverSources) serverSources.style.display = 'none';
+
+                const streamSection = document.getElementById('stream-answer-section');
+                const streamContent = document.getElementById('stream-answer-content');
+                const streamSources = document.getElementById('stream-sources-section');
+
+                streamSection.style.display = '';
+                streamContent.innerHTML = '';
+                streamSources.style.display = 'none';
+                streamSources.innerHTML = '';
+
+                // Hide header-right, feedback, and metadata until new answer arrives
+                document.getElementById('stream-answer-header-right').style.display = 'none';
+                streamSection.querySelector('.feedback-section').style.display = 'none';
+                streamSection.querySelector('.metadata-section').style.display = 'none';
+
+                // Reset feedback state for next answer
+                const streamFbStatus = document.getElementById('stream-feedbackStatus');
+                streamFbStatus.style.display = 'none';
+                streamFbStatus.textContent = '';
+                streamSection.querySelectorAll('.feedback-btn').forEach(btn => {
+                    btn.disabled = false;
+                    btn.classList.remove('disabled');
+                });
+                document.getElementById('stream-meta-response-time').textContent = 'N/A';
+                document.getElementById('stream-meta-from-cache').textContent = 'No';
+                document.getElementById('stream-meta-slug-row').style.display = 'none';
+                document.getElementById('stream-meta-source-breakdown-row').style.display = 'none';
+                document.getElementById('stream-meta-search-queries-row').style.display = 'none';
+                document.getElementById('stream-meta-classification-tokens-row').style.display = 'none';
+                document.getElementById('stream-meta-answer-tokens-row').style.display = 'none';
+                document.getElementById('stream-meta-cost-row').style.display = 'none';
+                document.getElementById('stream-meta-model-row').style.display = 'none';
+                const refreshBtnReset = document.getElementById('stream-refresh-btn');
+                if (refreshBtnReset) refreshBtnReset.style.display = 'none';
+
+                let fullAnswer = '';
+
+                const isRefresh = form.dataset.refresh === 'true';
+                const streamUrl = '/ask-ai/stream?question=' + encodeURIComponent(question) + (isRefresh ? '&refresh=true' : '');
+                const evtSource = new EventSource(streamUrl);
+
+                evtSource.onmessage = function(event) {
+                    fullAnswer += event.data.replace(/\\n/g, '\n');
+                    streamContent.innerHTML = marked.parse(fullAnswer).replace(/«(\d+)»/g, function(match, num) {
+                        return '<span class="source-ref" title="Jump to source ' + num + '" onclick="scrollToSource(' + num + ')">[' + num + ']</span>';
+                    });
+                };
+
+                evtSource.addEventListener('sources', function(event) {
+                    try {
+                        const sources = JSON.parse(event.data);
+                        if (sources.length > 0) {
+                            const items = sources.map(function(s, i) {
+                                const badgeClass = s.source === 'wiki' ? 'bg-success' : 'bg-info';
+                                return '<a href="' + s.url + '" target="_blank" id="source-' + (i + 1) + '" class="list-group-item list-group-item-action source-link">' +
+                                    '<span class="source-number">' + (i + 1) + '</span>' +
+                                    '<span class="badge source-badge ' + badgeClass + '">' + s.source + '</span>' +
+                                    '<span class="source-title">' + s.title + '</span>' +
+                                    '</a>';
+                            }).join('');
+                            streamSources.innerHTML = '<h4>Sources</h4><div class="list-group">' + items + '</div>';
+                            streamSources.style.display = '';
+                        }
+                    } catch (err) { /* ignore */ }
+                });
+
+                evtSource.addEventListener('done', function(event) {
+                    evtSource.close();
+                    hideSpinnerPhrases();
+                    if (window.mockCompletePage) window.mockCompletePage();
+
+                    // Keep question in textarea
+                    textarea.value = question;
+
+                    // Show "Asked by" in header
+                    const currentUsername = document.getElementById('currentUsername')?.value;
+                    if (currentUsername) {
+                        const askedByEl = document.getElementById('stream-asked-by');
+                        askedByEl.innerHTML = 'Asked by <dms-member-card username="' + currentUsername + '" state="inline"></dms-member-card>';
+                        document.getElementById('stream-answer-header-right').style.display = '';
+                    }
+
+                    // Reveal feedback and metadata now that answer is complete
+                    streamSection.querySelector('.feedback-section').style.display = '';
+                    streamSection.querySelector('.metadata-section').style.display = '';
+
+                    try {
+                        const data = JSON.parse(event.data);
+
+                        if (data.responseTimeMs) {
+                            document.getElementById('stream-meta-response-time').textContent = data.responseTimeMs + ' ms';
+                        }
+
+                        document.getElementById('stream-meta-from-cache').textContent = data.fromCache ? 'Yes' : 'No';
+
+                        const isDevMode = document.getElementById('devModeFlag')?.value === 'true';
+                        if (data.fromCache && isDevMode) {
+                            const refreshBtn = document.getElementById('stream-refresh-btn');
+                            if (refreshBtn) refreshBtn.style.display = '';
+                        }
+
+                        const meta = data.metadata;
+                        if (meta) {
+                            if (meta.sourceBreakdown && Object.keys(meta.sourceBreakdown).length > 0) {
+                                const bd = Object.entries(meta.sourceBreakdown).map(([k, v]) => k + ': ' + v).join(', ');
+                                document.getElementById('stream-meta-source-breakdown').textContent = bd;
+                                document.getElementById('stream-meta-source-breakdown-row').style.display = '';
+                            }
+                            if (meta.searchQueries && meta.searchQueries.length > 0) {
+                                document.getElementById('stream-meta-search-queries').textContent = meta.searchQueries.join('; ');
+                                document.getElementById('stream-meta-search-queries-row').style.display = '';
+                            }
+                            if (meta.classificationTokens) {
+                                const ct = meta.classificationTokens;
+                                document.getElementById('stream-meta-classification-tokens').textContent =
+                                    ct.totalTokens + ' (prompt: ' + ct.promptTokens + ', completion: ' + ct.completionTokens + ')';
+                                document.getElementById('stream-meta-classification-tokens-row').style.display = '';
+                            }
+                            if (meta.answerTokens) {
+                                const at = meta.answerTokens;
+                                document.getElementById('stream-meta-answer-tokens').textContent =
+                                    at.totalTokens + ' (prompt: ' + at.promptTokens + ', completion: ' + at.completionTokens + ')';
+                                document.getElementById('stream-meta-answer-tokens-row').style.display = '';
+                            }
+                            if (meta.estimatedCostUsd != null) {
+                                document.getElementById('stream-meta-cost').textContent = '$' + meta.estimatedCostUsd.toFixed(4);
+                                document.getElementById('stream-meta-cost-row').style.display = '';
+                            }
+                            if (meta.modelName) {
+                                document.getElementById('stream-meta-model').textContent = meta.modelName;
+                                document.getElementById('stream-meta-model-row').style.display = '';
+                            }
+                        }
+
+                        if (data.slug) {
+                            const newUrl = '/ask-ai/q/' + data.slug;
+                            if (window.location.pathname !== newUrl) {
+                                window.history.pushState({ slug: data.slug }, '', newUrl);
+                            }
+                            const slugLink = document.getElementById('stream-meta-slug-link');
+                            slugLink.href = newUrl;
+                            slugLink.textContent = newUrl;
+                            document.getElementById('stream-meta-slug-row').style.display = '';
+                        }
+
+                        if (data.cacheId) {
+                            let cacheInput = document.getElementById('answerCacheId');
+                            if (!cacheInput) {
+                                cacheInput = document.createElement('input');
+                                cacheInput.type = 'hidden';
+                                cacheInput.id = 'answerCacheId';
+                                document.body.appendChild(cacheInput);
+                            }
+                            cacheInput.value = data.cacheId;
+                        }
+                    } catch (err) { /* ignore parse errors */ }
+                });
+
+                evtSource.addEventListener('error', function() {
+                    evtSource.close();
+                    hideSpinnerPhrases();
+                    if (window.mockCompletePage) window.mockCompletePage();
+                });
+
+                evtSource.onerror = function() {
+                    evtSource.close();
+                    hideSpinnerPhrases();
+                    if (window.mockCompletePage) window.mockCompletePage();
+                    if (!fullAnswer) {
+                        streamContent.textContent = 'An error occurred. Please try again.';
+                    }
+                };
             });
         }
+
+        // Toggle "Show/Hide Metadata" button text on Bootstrap collapse events
+        ['streamMetadataCollapse', 'metadataCollapse'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const btn = document.querySelector('[data-bs-target="#' + id + '"]');
+            if (!btn) return;
+            el.addEventListener('show.bs.collapse', function() { btn.textContent = 'Hide Metadata'; });
+            el.addEventListener('hide.bs.collapse', function() { btn.textContent = 'Show Metadata'; });
+        });
 
         // Handle back/forward navigation - reload the page to show correct state
         window.addEventListener('popstate', function() {
@@ -504,8 +836,8 @@
     }
 
     // Send feedback
-    function sendFeedback(isHelpful) {
-        const statusEl = document.getElementById('feedbackStatus');
+    function sendFeedback(isHelpful, statusId) {
+        const statusEl = document.getElementById(statusId || 'feedbackStatus');
         const cacheIdEl = document.getElementById('answerCacheId');
         const cacheId = cacheIdEl ? parseInt(cacheIdEl.value, 10) : null;
 
@@ -558,17 +890,15 @@
 
     // Copy shareable URL to clipboard
     function copyShareableUrl() {
-        const urlEl = document.getElementById('shareableUrl');
-        if (urlEl) {
-            const fullUrl = window.location.origin + urlEl.getAttribute('href');
-            navigator.clipboard.writeText(fullUrl).then(() => {
-                // Show brief feedback
-                const btn = event.target;
+        const fullUrl = window.location.origin + window.location.pathname;
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            const btn = event.target.closest('button');
+            if (btn) {
                 const originalText = btn.textContent;
                 btn.textContent = 'Copied!';
                 setTimeout(() => { btn.textContent = originalText; }, 1500);
-            });
-        }
+            }
+        });
     }
 
     // Scroll to source when clicking numbered reference
@@ -580,6 +910,21 @@
             targetEl.style.backgroundColor = '#fff3cd';
             setTimeout(() => { targetEl.style.backgroundColor = ''; }, 2000);
         }
+    }
+
+    // Refresh streaming answer by re-submitting via SSE with refresh=true (dev mode only)
+    function refreshStreamAnswer() {
+        const textarea = document.querySelector('.question-input');
+        if (!textarea || !textarea.value.trim()) return;
+
+        // Simulate a form submit with refresh flag by temporarily patching the EventSource URL
+        const form = document.getElementById('askForm');
+        if (!form) return;
+
+        // Set a flag that the submit handler can pick up
+        form.dataset.refresh = 'true';
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        delete form.dataset.refresh;
     }
 
     // Refresh answer by forcing a live API call (dev mode only)

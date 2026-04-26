@@ -213,6 +213,14 @@ constructor(
     return memberServiceClient.submitAskAiFeedback(sessionId, cacheId, isHelpful)
   }
 
+  suspend fun streamAskAi(
+      sessionId: String?,
+      username: String?,
+      question: String,
+      forceRefresh: Boolean,
+      onChunk: suspend (String) -> Unit,
+  ) = memberServiceClient.streamAskAi(sessionId, username, question, forceRefresh, onChunk)
+
   suspend fun getAttendedOrganizers(username: String, sessionId: String?): List<String> {
     return memberServiceClient.getAttendedOrganizers(username, sessionId)
   }

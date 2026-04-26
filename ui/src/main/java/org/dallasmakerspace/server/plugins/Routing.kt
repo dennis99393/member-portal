@@ -93,6 +93,9 @@ fun Application.configureRouting() {
       }
       get(RouteFactory.Paths.ASK_AI.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       post(RouteFactory.Paths.ASK_AI.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get("/ask-ai/stream") {
+        RouteFactory.getHandler(RouteFactory.Paths.ASK_AI.path)?.handleBase(call)
+      }
       get("/ask-ai/q/{slug}") {
         RouteFactory.getHandler(RouteFactory.Paths.ASK_AI.path)?.handleBase(call)
       }

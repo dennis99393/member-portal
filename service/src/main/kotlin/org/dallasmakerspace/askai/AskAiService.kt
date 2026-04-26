@@ -8,13 +8,17 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
+import org.dallasmakerspace.askai.bedrock.IEmbeddingClient
 import org.dallasmakerspace.askai.db.AskAiCacheRepository
 import org.dallasmakerspace.askai.openrouter.IOpenRouterClient
+import org.dallasmakerspace.askai.search.RelevanceScorer
 import org.dallasmakerspace.askai.search.SearchSourceRouter
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.members.MemberRepository
+import org.dallasmakerspace.models.AskAiCacheEntry
 import org.dallasmakerspace.models.AskAiMetadata
 import org.dallasmakerspace.models.AskAiResponse
+import org.dallasmakerspace.models.AskAiStreamResult
 import org.dallasmakerspace.models.SourceLink
 import org.dallasmakerspace.models.TokenUsage
 
@@ -35,6 +39,7 @@ data class AskAiConfig(
     val searchTimeoutSeconds: Long = 5,
     val llmRetryAttempts: Int = 3,
     val earlyStopThreshold: Int = 10,
+    val monthlyBudgetUsd: Double = 12.0,
 )
 
 /**
@@ -66,6 +71,12 @@ data class RequestMetrics(
  * 4. LLM #2: Generate answer from search results
  * 5. Cache the result for future use
  */
+private const val EMBEDDING_SIMILARITY_THRESHOLD = 0.88
+private const val MS_PER_SECOND = 1000L
+private const val PER_SOURCE_DEDUP_CAP = 5
+private const val EMBEDDING_CACHE_RECENT_LIMIT = 100
+
+@Suppress("TooManyFunctions", "LongParameterList")
 @Singleton
 class AskAiService
 @Inject
@@ -76,6 +87,7 @@ constructor(
     private val memberRepository: MemberRepository,
     private val piiMasker: PiiMasker,
     private val config: AskAiConfig,
+    private val embeddingClient: IEmbeddingClient,
     loggerFactory: LoggerFactory,
 ) {
   private val log = loggerFactory.create(javaClass)
@@ -90,6 +102,7 @@ constructor(
    * @return AskAiResponse containing the answer, sources, and cache status
    * @throws IllegalArgumentException if username is not provided
    */
+  @Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException")
   suspend fun ask(
       question: String,
       memberId: Int? = null,
@@ -120,10 +133,10 @@ constructor(
         log.info(
             "Found exact cache match for question (id=${exactMatch.id}, requestId=${metrics.requestId}, responseTime=${metrics.responseTimeMs}ms)")
         cacheRepository.incrementHitCount(exactMatch.id)
-        // Reorder sources so cited ones appear first
-        val orderedSources = reorderSourcesByCitation(exactMatch.answerText, exactMatch.sources)
+        val (rewrittenAnswer, orderedSources) =
+            reorderSourcesByCitation(exactMatch.answerText, exactMatch.sources)
         return AskAiResponse(
-            answer = exactMatch.answerText,
+            answer = rewrittenAnswer,
             sources = orderedSources,
             fromCache = true,
             slug = exactMatch.slug,
@@ -140,16 +153,49 @@ constructor(
     // Mask PII in the question before sending to LLM
     val maskedQuestion = piiMasker.mask(question)
 
-    // Skip cached questions when force-refreshing — passing them causes the LLM to return a
-    // semantic match with empty searchQueries, leaving us with no search phrases to use.
-    val maskedCachedQuestions =
-        if (forceRefresh) {
-          emptyList()
-        } else {
-          cacheRepository.getTopQuestions(limit = config.topQuestionsLimit).map { entry ->
-            entry.copy(questionText = piiMasker.mask(entry.questionText))
-          }
-        }
+    // Embedding-based semantic cache match (skip on refresh — result would be discarded anyway)
+    val embeddingMatch = if (!forceRefresh) findEmbeddingCacheMatch(maskedQuestion) else null
+    if (embeddingMatch != null) {
+      metrics.cacheHit = true
+      metrics.cacheType = "embedding"
+      metrics.responseTimeMs = Duration.between(metrics.startTime, Instant.now()).toMillis()
+      log.info(
+          "Found embedding cache match (id=${embeddingMatch.id}, requestId=${metrics.requestId})")
+      cacheRepository.incrementHitCount(embeddingMatch.id)
+      val (rewrittenAnswer, orderedSources) =
+          reorderSourcesByCitation(embeddingMatch.answerText, embeddingMatch.sources)
+      return AskAiResponse(
+          answer = rewrittenAnswer,
+          sources = orderedSources,
+          fromCache = true,
+          slug = embeddingMatch.slug,
+          cacheId = embeddingMatch.id,
+          askedByUsername = embeddingMatch.askedByUsername,
+          metadata = embeddingMatch.metadata,
+      )
+    }
+
+    // Budget guard: check monthly spend before any LLM calls (cache hits bypass this)
+    if (config.monthlyBudgetUsd > 0.0) {
+      val monthlySpend = cacheRepository.getMonthlySpendUsd()
+      if (monthlySpend >= config.monthlyBudgetUsd) {
+        log.warn(
+            "Monthly LLM budget exceeded (spent=\$${String.format("%.2f", monthlySpend)}, " +
+                "budget=\$${String.format("%.2f", config.monthlyBudgetUsd)})")
+        return AskAiResponse(
+            answer =
+                "The monthly Ask DMS AI budget has been reached. Please try again next month or " +
+                    "post your question in the [Ask Dallas Makerspace]" +
+                    "(https://talk.dallasmakerspace.org/c/ask-dallas-makerspace/82) forum.",
+            sources = emptyList(),
+            fromCache = false,
+        )
+      }
+    }
+
+    // Embeddings now handle cache matching; always pass emptyList() so classify focuses on
+    // generating search queries rather than semantic matching.
+    val maskedCachedQuestions = emptyList<AskAiCacheEntry>()
 
     val classificationLlmResult =
         retryWithBackoff(config.llmRetryAttempts) {
@@ -170,10 +216,10 @@ constructor(
           log.info(
               "LLM found semantic cache match (id=${cachedEntry.id}, requestId=${metrics.requestId}, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)")
           cacheRepository.incrementHitCount(cachedEntry.id)
-          // Reorder sources so cited ones appear first
-          val orderedSources = reorderSourcesByCitation(cachedEntry.answerText, cachedEntry.sources)
+          val (rewrittenAnswer, orderedSources) =
+              reorderSourcesByCitation(cachedEntry.answerText, cachedEntry.sources)
           return AskAiResponse(
-              answer = cachedEntry.answerText,
+              answer = rewrittenAnswer,
               sources = orderedSources,
               fromCache = true,
               slug = cachedEntry.slug,
@@ -186,7 +232,20 @@ constructor(
     }
 
     // Step 3: Execute search queries across all sources
-    val searchQueries = classificationResult.searchQueries.ifEmpty { listOf(question) }
+    val hypotheticalAnswer =
+        try {
+          openRouterClient.generateHypotheticalAnswer(maskedQuestion).result
+        } catch (e: Exception) {
+          log.debug("HyDE generation failed (non-fatal): ${e.message}")
+          null
+        }
+
+    val searchQueries =
+        classificationResult.searchQueries
+            .ifEmpty { listOf(question) }
+            .let { queries ->
+              if (hypotheticalAnswer != null) queries + hypotheticalAnswer else queries
+            }
     metrics.searchCount = searchQueries.size
     log.info("Executing ${searchQueries.size} search queries: $searchQueries")
 
@@ -195,7 +254,7 @@ constructor(
         searchQueries
             .flatMap { query ->
               try {
-                withTimeout(config.searchTimeoutSeconds * 1000L) {
+                withTimeout(config.searchTimeoutSeconds * MS_PER_SECOND) {
                   searchSourceRouter.searchAll(query, limitPerSource = config.resultsPerSource)
                 }
               } catch (e: Exception) {
@@ -207,14 +266,25 @@ constructor(
             }
             .distinctBy { it.url } // Deduplicate by URL
 
-    // Early stopping: limit to configured threshold
-    val deduplicatedResults = allSearchResults.take(config.maxTotalResults)
+    val deduplicatedResults =
+        allSearchResults
+            .groupBy { it.source }
+            .values
+            .flatMap { it.take(PER_SOURCE_DEDUP_CAP) }
+            .take(config.maxTotalResults)
 
-    log.debug("Found ${deduplicatedResults.size} unique search results")
+    val queryTerms = RelevanceScorer.extractQueryTerms(searchQueries)
+    val rankedResults =
+        deduplicatedResults
+            .map { it.copy(relevanceScore = RelevanceScorer.score(it, queryTerms, question)) }
+            .sortedByDescending { it.relevanceScore ?: 0.0 }
 
-    // Separate extractable content (for LLM) from non-extractable (PDFs, attachments)
+    log.debug("Found ${rankedResults.size} unique search results")
+
     val (extractableResults, additionalResources) =
-        deduplicatedResults.partition { it.hasExtractableContent }
+        rankedResults.partition { result ->
+          result.hasExtractableContent && (result.relevanceScore ?: 0.0) > 0.0
+        }
     log.debug(
         "Extractable: ${extractableResults.size}, Additional resources: ${additionalResources.size}")
 
@@ -226,7 +296,7 @@ constructor(
           "No search results found, returning canned response (requestId=${metrics.requestId}, searchQueries=$searchQueries, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)")
 
       val searchedSourcesList =
-          deduplicatedResults.map { it.source }.distinct().sorted().joinToString(", ")
+          rankedResults.map { it.source }.distinct().sorted().joinToString(", ")
       val searchedSources =
           if (searchedSourcesList.isNotEmpty()) "I searched: $searchedSourcesList"
           else "No search sources were available"
@@ -291,15 +361,14 @@ constructor(
     // Step 5: Cache the result
     // Sources used in answer generation (extractable content only)
     val sources = extractableResults.map { SourceLink(it.title, it.url, it.source) }
-    // Reorder sources so cited ones appear first
-    val orderedSources = reorderSourcesByCitation(answer, sources)
+    val (rewrittenAnswer, orderedSources) = reorderSourcesByCitation(answer, sources)
     // Additional resources not used in generation (PDFs, attachments)
     val additionalResourceLinks =
         additionalResources.map { SourceLink(it.title, it.url, it.source) }
 
     // Build metadata with search queries, token usage, and cost estimate
     val estimatedCost = calculateEstimatedCost(classificationLlmResult.usage, answerLlmResult.usage)
-    val sourceBreakdown = deduplicatedResults.groupingBy { it.source }.eachCount()
+    val sourceBreakdown = rankedResults.groupingBy { it.source }.eachCount()
     log.debug("Source breakdown: $sourceBreakdown")
 
     // Update metrics
@@ -320,13 +389,31 @@ constructor(
     var cacheId: Int? = null
 
     try {
-      // Cache all sources together for future reference
       val allSources = orderedSources + additionalResourceLinks
-      val cached = cacheRepository.save(question, answer, allSources, profileId, metadata)
+      // On refresh: update existing entry in-place so the slug stays stable and subsequent exact
+      // cache lookups return the fresh answer instead of the old one
+      val existingEntry = if (forceRefresh) cacheRepository.findByExactQuestion(question) else null
+      val cached =
+          if (existingEntry != null) {
+            log.info(
+                "Refreshing existing cache entry (id=${existingEntry.id}, slug=${existingEntry.slug})")
+            cacheRepository.updateExisting(existingEntry.id, rewrittenAnswer, allSources, metadata)
+          } else {
+            cacheRepository.save(question, rewrittenAnswer, allSources, profileId, metadata)
+          }
       slug = cached.slug
       cacheId = cached.id
       log.info(
-          "Cached new answer for question (slug=$slug, cacheId=$cacheId, profileId=$profileId)")
+          "Cached answer for question (slug=$slug, cacheId=$cacheId, profileId=$profileId, refresh=$forceRefresh)")
+
+      try {
+        val vector = embeddingClient.embed(question)
+        if (vector != null) {
+          cacheRepository.saveEmbedding(cached.id, vector)
+        }
+      } catch (e: Exception) {
+        log.warn("Failed to save embedding for cache entry ${cached.id} (non-fatal)", e)
+      }
     } catch (e: Exception) {
       log.warn("Failed to cache answer", e)
     }
@@ -335,7 +422,7 @@ constructor(
         "Generated fresh answer (requestId=${metrics.requestId}, searchQueries=${metrics.searchCount}, sources=${sourceBreakdown.size}, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)")
 
     return AskAiResponse(
-        answer = answer,
+        answer = rewrittenAnswer,
         sources = orderedSources,
         fromCache = false,
         slug = slug,
@@ -343,6 +430,252 @@ constructor(
         askedByUsername = username,
         metadata = metadata,
         additionalResources = additionalResourceLinks,
+    )
+  }
+
+  /**
+   * Process a user question and stream the AI-generated answer token-by-token. Mirrors the full
+   * ask() pipeline including cache lookups, HyDE, re-ranking, and cache writes.
+   *
+   * @param question The user's question
+   * @param username Username of the member asking the question (required)
+   * @param forceRefresh If true, bypass cache and regenerate a fresh answer
+   * @param onToken Callback invoked for each text token received from the LLM
+   * @return Ordered list of source links cited in the answer
+   */
+  @Suppress("TooGenericExceptionCaught", "InstanceOfCheckForException", "MaxLineLength")
+  suspend fun askStream(
+      question: String,
+      username: String,
+      forceRefresh: Boolean = false,
+      onToken: suspend (String) -> Unit,
+  ): AskAiStreamResult {
+    val metrics = RequestMetrics()
+    log.info("Stream: processing question (requestId=${metrics.requestId}): $question")
+
+    val profileId =
+        try {
+          memberRepository.getMemberOrInsert(username, enabled = null).id
+        } catch (e: Exception) {
+          log.error("Failed to look up profile for username: $username", e)
+          throw IllegalArgumentException("Could not find profile for username: $username", e)
+        }
+    log.info("Stream: profile resolved (profileId=$profileId, requestId=${metrics.requestId})")
+
+    // Step 1: exact cache hit — stream cached answer directly
+    if (!forceRefresh) {
+      val exactMatch = cacheRepository.findByExactQuestion(question)
+      if (exactMatch != null) {
+        log.info("Stream: exact cache hit (id=${exactMatch.id}, requestId=${metrics.requestId})")
+        cacheRepository.incrementHitCount(exactMatch.id)
+        val (rewrittenAnswer, orderedSources) =
+            reorderSourcesByCitation(exactMatch.answerText, exactMatch.sources)
+        onToken(rewrittenAnswer)
+        return AskAiStreamResult(
+            sources = orderedSources,
+            cacheId = exactMatch.id,
+            slug = exactMatch.slug,
+            fromCache = true,
+            metadata = exactMatch.metadata,
+        )
+      }
+    }
+    log.info("Stream: no exact cache hit, checking embedding match (requestId=${metrics.requestId})")
+
+    val maskedQuestion = piiMasker.mask(question)
+
+    // Embedding cache hit — skip on refresh
+    val embeddingMatch = if (!forceRefresh) findEmbeddingCacheMatch(maskedQuestion) else null
+    if (embeddingMatch != null) {
+      log.info(
+          "Stream: embedding cache hit (id=${embeddingMatch.id}, requestId=${metrics.requestId})")
+      cacheRepository.incrementHitCount(embeddingMatch.id)
+      val (rewrittenAnswer, orderedSources) =
+          reorderSourcesByCitation(embeddingMatch.answerText, embeddingMatch.sources)
+      onToken(rewrittenAnswer)
+      return AskAiStreamResult(
+          sources = orderedSources,
+          cacheId = embeddingMatch.id,
+          slug = embeddingMatch.slug,
+          fromCache = true,
+          metadata = embeddingMatch.metadata,
+      )
+    }
+
+    log.info("Stream: no embedding cache hit, checking budget (requestId=${metrics.requestId})")
+
+    // Budget guard — cache hits bypass this
+    if (config.monthlyBudgetUsd > 0.0) {
+      val monthlySpend = cacheRepository.getMonthlySpendUsd()
+      if (monthlySpend >= config.monthlyBudgetUsd) {
+        log.warn(
+            "Monthly LLM budget exceeded (spent=\$${String.format("%.2f", monthlySpend)}, " +
+                "budget=\$${String.format("%.2f", config.monthlyBudgetUsd)})")
+        onToken(
+            "The monthly Ask DMS AI budget has been reached. Please try again next month or " +
+                "post your question in the [Ask Dallas Makerspace]" +
+                "(https://talk.dallasmakerspace.org/c/ask-dallas-makerspace/82) forum.")
+        return AskAiStreamResult(sources = emptyList())
+      }
+    }
+
+    // LLM #1: classify and generate search queries
+    val classificationLlmResult =
+        retryWithBackoff(config.llmRetryAttempts) {
+          openRouterClient.classify(maskedQuestion, emptyList())
+        }
+    val classificationResult = classificationLlmResult.result
+
+    // LLM semantic cache hit — skip on refresh
+    if (!forceRefresh) {
+      val matchedCacheId = classificationResult.matchedCacheId
+      if (matchedCacheId != null) {
+        val cachedEntry = cacheRepository.getById(matchedCacheId)
+        if (cachedEntry != null) {
+          log.info(
+              "Stream: LLM semantic cache hit (id=${cachedEntry.id}, requestId=${metrics.requestId})")
+          cacheRepository.incrementHitCount(cachedEntry.id)
+          val (rewrittenAnswer, orderedSources) =
+              reorderSourcesByCitation(cachedEntry.answerText, cachedEntry.sources)
+          onToken(rewrittenAnswer)
+          return AskAiStreamResult(
+              sources = orderedSources,
+              cacheId = cachedEntry.id,
+              slug = cachedEntry.slug,
+              fromCache = true,
+              metadata = cachedEntry.metadata,
+          )
+        }
+      }
+    }
+
+    // HyDE: generate hypothetical answer as extra search query
+    val hypotheticalAnswer =
+        try {
+          openRouterClient.generateHypotheticalAnswer(maskedQuestion).result
+        } catch (e: Exception) {
+          log.debug("HyDE generation failed (non-fatal): ${e.message}")
+          null
+        }
+
+    val searchQueries =
+        classificationResult.searchQueries
+            .ifEmpty { listOf(question) }
+            .let { if (hypotheticalAnswer != null) it + hypotheticalAnswer else it }
+    metrics.searchCount = searchQueries.size
+    log.info("Stream: executing ${searchQueries.size} search queries: $searchQueries")
+
+    // Search
+    val allSearchResults =
+        searchQueries
+            .flatMap { query ->
+              try {
+                withTimeout(config.searchTimeoutSeconds * MS_PER_SECOND) {
+                  searchSourceRouter.searchAll(query, limitPerSource = config.resultsPerSource)
+                }
+              } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                log.warn("Stream: search failed for query: $query", e)
+                emptyList()
+              }
+            }
+            .distinctBy { it.url }
+
+    val deduplicatedResults =
+        allSearchResults
+            .groupBy { it.source }
+            .values
+            .flatMap { it.take(PER_SOURCE_DEDUP_CAP) }
+            .take(config.maxTotalResults)
+
+    val queryTerms = RelevanceScorer.extractQueryTerms(searchQueries)
+    val rankedResults =
+        deduplicatedResults
+            .map { it.copy(relevanceScore = RelevanceScorer.score(it, queryTerms, question)) }
+            .sortedByDescending { it.relevanceScore ?: 0.0 }
+
+    val (extractableResults, _) =
+        rankedResults.partition { result ->
+          result.hasExtractableContent && (result.relevanceScore ?: 0.0) > 0.0
+        }
+
+    if (extractableResults.isEmpty()) {
+      onToken(
+          "I couldn't find relevant information for that question. Please try the [Ask Dallas Makerspace](https://talk.dallasmakerspace.org/c/ask-dallas-makerspace/82) forum.")
+      return AskAiStreamResult(sources = emptyList())
+    }
+
+    // LLM #2: stream answer
+    val maskedSearchResults =
+        extractableResults.map { result ->
+          result.copy(
+              title = piiMasker.mask(result.title),
+              snippet = piiMasker.mask(result.snippet),
+          )
+        }
+
+    val answerBuilder = StringBuilder()
+    openRouterClient.generateAnswerStream(maskedQuestion, maskedSearchResults) { token ->
+      answerBuilder.append(token)
+      onToken(token)
+    }
+
+    val answer = answerBuilder.toString()
+    // For fresh streaming answers the text is already sent, so keep sources in the original
+    // relevance-ranked order — the LLM cited [1],[2],[3] in that order, so they already match.
+    val orderedSources = extractableResults.map { SourceLink(it.title, it.url, it.source) }
+
+    val estimatedCost = calculateEstimatedCost(classificationLlmResult.usage, null)
+    metrics.totalCost = estimatedCost
+    metrics.responseTimeMs = Duration.between(metrics.startTime, Instant.now()).toMillis()
+
+    val metadata =
+        AskAiMetadata(
+            searchQueries = searchQueries,
+            sourceBreakdown = rankedResults.groupingBy { it.source }.eachCount(),
+            classificationTokens = classificationLlmResult.usage,
+            answerTokens = null,
+            estimatedCostUsd = estimatedCost,
+            modelName = classificationLlmResult.modelName,
+        )
+
+    var slug: String? = null
+    var cacheId: Int? = null
+
+    try {
+      val existingEntry = if (forceRefresh) cacheRepository.findByExactQuestion(question) else null
+      val cached =
+          if (existingEntry != null) {
+            log.info(
+                "Stream refresh: updating existing cache entry (id=${existingEntry.id}, slug=${existingEntry.slug})")
+            cacheRepository.updateExisting(existingEntry.id, answer, orderedSources, metadata)
+          } else {
+            cacheRepository.save(question, answer, orderedSources, profileId, metadata)
+          }
+      slug = cached.slug
+      cacheId = cached.id
+      log.info(
+          "Stream: cached answer (slug=${cached.slug}, cacheId=${cached.id}, refresh=$forceRefresh)")
+
+      try {
+        val vector = embeddingClient.embed(question)
+        if (vector != null) cacheRepository.saveEmbedding(cached.id, vector)
+      } catch (e: Exception) {
+        log.warn("Failed to save embedding for cache entry ${cached.id} (non-fatal)", e)
+      }
+    } catch (e: Exception) {
+      log.warn("Stream: failed to cache answer", e)
+    }
+
+    log.info(
+        "Stream: generated fresh answer (requestId=${metrics.requestId}, searchQueries=${metrics.searchCount}, cost=\$${String.format("%.4f", metrics.totalCost)}, responseTime=${metrics.responseTimeMs}ms)")
+
+    return AskAiStreamResult(
+        sources = orderedSources,
+        cacheId = cacheId,
+        slug = slug,
+        responseTimeMs = metrics.responseTimeMs,
+        metadata = metadata,
     )
   }
 
@@ -387,14 +720,15 @@ constructor(
   suspend fun getBySlug(slug: String): AskAiResponse? {
     val entry = cacheRepository.findBySlug(slug) ?: return null
     cacheRepository.incrementHitCount(entry.id)
-    // Reorder sources so cited ones appear first
-    val orderedSources = reorderSourcesByCitation(entry.answerText, entry.sources)
+    val (rewrittenAnswer, orderedSources) =
+        reorderSourcesByCitation(entry.answerText, entry.sources)
     return AskAiResponse(
-        answer = entry.answerText,
+        answer = rewrittenAnswer,
         sources = orderedSources,
         fromCache = true,
         slug = entry.slug,
         cacheId = entry.id,
+        questionText = entry.questionText,
         askedByUsername = entry.askedByUsername,
         metadata = entry.metadata,
     )
@@ -418,18 +752,24 @@ constructor(
    * - Square brackets: [1], [2], [3]
    * - Guillemets: «1», «2», «3» Citations are 1-indexed, while the sources list is 0-indexed.
    */
+  /**
+   * Reorders sources so cited ones appear first (in citation order), then rewrites the citation
+   * numbers in the answer text to match the new positions. Returns both the rewritten answer and
+   * the reordered sources so callers can use a consistent pair.
+   *
+   * Without rewriting the answer text, [3] in the text would point to whatever source ends up at
+   * position 3 after reordering — which is the wrong source.
+   */
   private fun reorderSourcesByCitation(
       answer: String,
       sources: List<SourceLink>,
-  ): List<SourceLink> {
-    // Support multiple citation formats due to LLM variance
+  ): Pair<String, List<SourceLink>> {
     val citationPatterns =
         listOf(
             Regex("""\[(\d+)\]"""), // Square brackets: [1]
             Regex("""«(\d+)»"""), // Guillemets: «1»
         )
 
-    // Find all citations across all patterns
     val allMatches =
         citationPatterns
             .flatMap { pattern -> pattern.findAll(answer).toList() }
@@ -437,21 +777,32 @@ constructor(
 
     val citedIndices =
         allMatches
-            .map { it.groupValues[1].toInt() - 1 } // Convert 1-indexed citations to 0-indexed
-            .filter { it in sources.indices } // Only valid indices
-            .distinct() // Remove duplicates, keeping first occurrence order
+            .map { it.groupValues[1].toInt() - 1 }
+            .filter { it in sources.indices }
+            .distinct()
             .toList()
 
     if (citedIndices.isEmpty()) {
-      // No citations found, return sources as-is
-      return sources
+      return Pair(answer, sources)
     }
 
-    // Split into cited and uncited sources
     val citedSources = citedIndices.map { sources[it] }
     val uncitedSources = sources.filterIndexed { index, _ -> index !in citedIndices }
+    val reorderedSources = citedSources + uncitedSources
 
-    return citedSources + uncitedSources
+    // Build old 1-based → new 1-based mapping, then rewrite all citation markers in one pass.
+    val oldToNew = citedIndices.mapIndexed { newIdx, oldIdx -> (oldIdx + 1) to (newIdx + 1) }.toMap()
+    var rewrittenAnswer = answer
+    for (pattern in citationPatterns) {
+      rewrittenAnswer =
+          pattern.replace(rewrittenAnswer) { match ->
+            val oldNum = match.groupValues[1].toInt()
+            val newNum = oldToNew[oldNum] ?: return@replace match.value
+            match.value.replace(oldNum.toString(), newNum.toString())
+          }
+    }
+
+    return Pair(rewrittenAnswer, reorderedSources)
   }
 
   /**
@@ -476,6 +827,40 @@ constructor(
     return block() // Last attempt without catch
   }
 
+  @Suppress("ReturnCount", "TooGenericExceptionCaught")
+  private suspend fun findEmbeddingCacheMatch(question: String): AskAiCacheEntry? {
+    val questionVector =
+        try {
+          embeddingClient.embed(question)
+        } catch (e: Exception) {
+          log.warn("Embedding generation failed, skipping semantic cache match", e)
+          null
+        } ?: return null
+    val candidates = cacheRepository.getRecentWithEmbeddings(EMBEDDING_CACHE_RECENT_LIMIT)
+    if (candidates.isEmpty()) return null
+
+    var bestId = -1
+    var bestScore = 0.0
+
+    for ((id, vector) in candidates) {
+      val similarity = cosineSimilarity(questionVector, vector)
+      if (similarity > bestScore) {
+        bestScore = similarity
+        bestId = id
+      }
+    }
+
+    if (bestScore < EMBEDDING_SIMILARITY_THRESHOLD) return null
+    return cacheRepository.getById(bestId)
+  }
+
+  private fun cosineSimilarity(a: FloatArray, b: FloatArray): Double {
+    // Titan vectors are normalized, so dot product == cosine similarity
+    var dot = 0.0
+    val len = minOf(a.size, b.size)
+    for (i in 0 until len) dot += a[i] * b[i]
+    return dot
+  }
 }
 
 /** Summary of a cached question for display in the UI. */

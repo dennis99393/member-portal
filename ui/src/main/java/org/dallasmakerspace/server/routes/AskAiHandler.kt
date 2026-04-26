@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.thymeleaf.*
+import io.ktor.utils.io.writeStringUtf8
 import javax.inject.Inject
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.intOrNull
@@ -29,6 +30,12 @@ constructor(
   override suspend fun handleAuthenticated(call: ApplicationCall) {
     val path = call.request.path()
 
+    // Check if this is an SSE streaming request
+    if (path == "/ask-ai/stream") {
+      handleStreamRequest(call)
+      return
+    }
+
     // Check if this is a feedback POST request
     if (path == "/ask-ai/feedback" && call.request.httpMethod.value == "POST") {
       handleFeedbackRequest(call)
@@ -42,6 +49,38 @@ constructor(
       handleSlugRequest(call, slugMatch.groupValues[1])
     } else {
       handleMainPage(call)
+    }
+  }
+
+  private suspend fun handleStreamRequest(call: ApplicationCall) {
+    val question =
+        call.request.queryParameters["question"]
+            ?: run {
+              call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing question parameter"))
+              return
+            }
+    val refresh = call.request.queryParameters["refresh"]?.toBoolean() ?: false
+    val username =
+        userInfo["preferred_username"] as? String
+            ?: run {
+              call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "No username in session"))
+              return
+            }
+
+    call.response.header("Cache-Control", "no-cache")
+    call.response.header("X-Accel-Buffering", "no")
+
+    call.respondBytesWriter(contentType = ContentType.Text.EventStream) {
+      try {
+        memberService.streamAskAi(session.sessionId, username, question, refresh) { chunk ->
+          writeStringUtf8(chunk)
+          flush()
+        }
+      } catch (e: Exception) {
+        log.error("SSE streaming error for question: $question", e)
+        writeStringUtf8("event: error\ndata: An error occurred\n\n")
+        flush()
+      }
     }
   }
 
@@ -165,6 +204,7 @@ constructor(
         jsonMap["fromCache"] = true
         jsonMap["slug"] = slug
         response["cacheId"]?.let { jsonMap["cacheId"] = it }
+        response["questionText"]?.let { jsonMap["question"] = it }
         response["askedByUsername"]?.let { jsonMap["askedByUsername"] = it }
 
         // Extract metadata for display

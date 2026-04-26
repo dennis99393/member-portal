@@ -1,6 +1,7 @@
 package org.dallasmakerspace.askai.openrouter
 
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.models.AskAiCacheEntry
 import org.dallasmakerspace.models.ClassificationResult
@@ -98,6 +99,28 @@ ${searchResults.take(3).mapIndexed { idx, it -> "- According to «${idx + 1}», 
         result = result,
         usage = TokenUsage(promptTokens = 50, completionTokens = 25, totalTokens = 75),
         modelName = "mock-model")
+  }
+
+  override suspend fun generateHypotheticalAnswer(question: String): LlmResult<String> {
+    log.info("[MOCK] Generating hypothetical answer for: $question")
+    return LlmResult(
+        result =
+            "Members can access this by following the standard authorization process at Dallas Makerspace.",
+        usage = TokenUsage(promptTokens = 50, completionTokens = 30, totalTokens = 80),
+        modelName = "mock-model")
+  }
+
+  override suspend fun generateAnswerStream(
+      question: String,
+      searchResults: List<SearchResult>,
+      onToken: suspend (String) -> Unit,
+  ) {
+    log.info("[MOCK] Streaming answer for: $question")
+    val answer = "This is a **mock streaming response** for: $question"
+    answer.split(" ").forEach { word ->
+      onToken("$word ")
+      delay(50)
+    }
   }
 
   override fun estimateCost(inputTokens: Int, outputTokens: Int): Double = 0.0

@@ -26,8 +26,16 @@ fun Application.configureHttp() {
   val httpClient = getHttpClient()
 
   install(Compression) {
-    gzip()
-    deflate()
+    gzip {
+      condition {
+        request.headers[HttpHeaders.Accept]?.contains("text/event-stream") != true
+      }
+    }
+    deflate {
+      condition {
+        request.headers[HttpHeaders.Accept]?.contains("text/event-stream") != true
+      }
+    }
   }
   install(ForwardedHeaders)
   install(XForwardedHeaders)

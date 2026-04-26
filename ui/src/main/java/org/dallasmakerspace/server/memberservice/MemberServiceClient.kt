@@ -3,8 +3,10 @@ package org.dallasmakerspace.server.memberservice
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
+import io.ktor.utils.io.*
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
@@ -753,5 +755,43 @@ constructor(
       log.warn("Failed to kill active connection $activeConnectionId", ex)
       false
     }
+  }
+
+  suspend fun streamAskAi(
+      sessionId: String?,
+      username: String?,
+      question: String,
+      forceRefresh: Boolean = false,
+      onChunk: suspend (String) -> Unit,
+  ) {
+    val apiHeaders = getApiHeaders(sessionId, username)
+    val encodedQuestion = java.net.URLEncoder.encode(question, "UTF-8")
+    val url = buildString {
+      append("$baseUrl/ask-ai/stream?question=$encodedQuestion")
+      if (forceRefresh) append("&refresh=true")
+    }
+    val client =
+        HttpClient(CIO) {
+          engine {
+            endpoint {
+              requestTimeout = SSE_TIMEOUT_MS
+              connectTimeout = 10_000
+            }
+          }
+        }
+    client.use {
+      it.prepareGet(url) { headers { appendAll(apiHeaders) } }.execute { response ->
+        val channel = response.bodyAsChannel()
+        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+        while (!channel.isClosedForRead) {
+          val read = channel.readAvailable(buffer)
+          if (read > 0) onChunk(String(buffer, 0, read, Charsets.UTF_8))
+        }
+      }
+    }
+  }
+
+  companion object {
+    private const val SSE_TIMEOUT_MS = 300_000L
   }
 }

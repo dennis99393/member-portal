@@ -53,6 +53,19 @@ interface IOpenRouterClient {
   ): LlmResult<String>
 
   /**
+   * Generate a short hypothetical answer to help with query expansion (HyDE technique). The answer
+   * uses domain vocabulary to improve keyword search recall.
+   */
+  suspend fun generateHypotheticalAnswer(question: String): LlmResult<String>
+
+  /** Stream an answer token-by-token using the provided callback. */
+  suspend fun generateAnswerStream(
+      question: String,
+      searchResults: List<SearchResult>,
+      onToken: suspend (String) -> Unit,
+  )
+
+  /**
    * Estimate the cost in USD for a given number of input and output tokens. Each implementation
    * uses the pricing for its own provider and model.
    */
