@@ -23,7 +23,8 @@ fun main() {
   // TODO: remove this
   TrustManager.disableSSLCertificateChecking()
 
-  val server = embeddedServer(Netty, port = portStr.toInt(), host = "0.0.0.0") {
+  val server =
+      embeddedServer(Netty, port = portStr.toInt(), host = "0.0.0.0") {
         configureHealth()
         configureSerialization()
         configureMonitoring()
@@ -33,9 +34,11 @@ fun main() {
         configureElasticsearch()
         HealthState.markReady()
       }
-  Runtime.getRuntime().addShutdownHook(Thread {
-    Thread.sleep(15_000)
-    server.stop(gracePeriodMillis = 10_000, timeoutMillis = 30_000)
-  })
+  Runtime.getRuntime()
+      .addShutdownHook(
+          Thread {
+            Thread.sleep(15_000)
+            server.stop(gracePeriodMillis = 10_000, timeoutMillis = 30_000)
+          })
   server.start(wait = true)
 }
