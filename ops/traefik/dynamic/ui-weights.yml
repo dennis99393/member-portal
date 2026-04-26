@@ -11,5 +11,3 @@ http:
         services:
           - name: "ui-blue@docker"
             weight: 100
-          - name: "ui-green@docker"
-            weight: 0

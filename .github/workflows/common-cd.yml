@@ -253,8 +253,6 @@ jobs:
           if [ "${{ inputs.component }}" = "ui" ]; then
             cp /opt/traefik/dynamic/ui-weights.yml /opt/traefik/dynamic/ui-weights.yml.bak
 
-            if [ "$NEW" = "blue" ]; then OTHER="green"; else OTHER="blue"; fi
-
             cat > /tmp/ui-weights-new.yml <<EOF
           http:
             routers:
@@ -269,8 +267,6 @@ jobs:
                   services:
                     - name: "ui-${NEW}@docker"
                       weight: 100
-                    - name: "ui-${OTHER}@docker"
-                      weight: 0
           EOF
             mv /tmp/ui-weights-new.yml /opt/traefik/dynamic/ui-weights.yml
             echo "Traffic shifted to ui-${NEW}@docker (Traefik reloads within ~1s)"
