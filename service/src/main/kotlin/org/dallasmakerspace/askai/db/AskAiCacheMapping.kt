@@ -27,6 +27,7 @@ object AskAiCacheTable : IdTable<Int>("ask_ai_cache") {
   val lastHitAt = timestamp("last_hit_at").nullable()
   val metadata = text("metadata").nullable() // JSON serialized AskAiMetadata
   val totalCostUsd = decimal("total_cost_usd", 10, 6).nullable()
+  val embedding = text("embedding").nullable()
 
   override val id: Column<EntityID<Int>>
     get() = idColumn
@@ -46,6 +47,7 @@ class AskAiCacheDAO(id: EntityID<Int>) : Entity<Int>(id) {
   var lastHitAt by AskAiCacheTable.lastHitAt
   var metadata by AskAiCacheTable.metadata
   var totalCostUsd by AskAiCacheTable.totalCostUsd
+  var embedding by AskAiCacheTable.embedding
 }
 
 /** Exposed table for the MariaDB table - ask_ai_feedback. */

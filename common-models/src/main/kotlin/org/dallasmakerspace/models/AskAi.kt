@@ -25,6 +25,7 @@ data class AskAiResponse(
     val fromCache: Boolean,
     val slug: String? = null,
     val cacheId: Int? = null,
+    val questionText: String? = null,
     val askedByUsername: String? = null,
     val metadata: AskAiMetadata? = null,
     /** Additional resources (PDFs, attachments) that weren't used in answer generation. */
@@ -74,6 +75,17 @@ data class AskAiCacheEntry(
     val metadata: AskAiMetadata? = null,
 )
 
+/** Result returned after a streaming ask-ai request completes. */
+@Serializable
+data class AskAiStreamResult(
+    val sources: List<SourceLink>,
+    val cacheId: Int? = null,
+    val slug: String? = null,
+    val responseTimeMs: Long? = null,
+    val metadata: AskAiMetadata? = null,
+    val fromCache: Boolean = false,
+)
+
 /** Result from the classification LLM call. */
 @Serializable
 data class ClassificationResult(
@@ -91,4 +103,13 @@ data class SearchResult(
     val relevanceScore: Double? = null,
     /** Whether this result has extractable text content for LLM processing. */
     val hasExtractableContent: Boolean = true,
-)
+    val sourceCategory: String = OFFICIAL_DOCS,
+    val eventDateUtc: Long? = null,
+) {
+  companion object {
+    const val OFFICIAL_DOCS = "OFFICIAL_DOCS"
+    const val MEETING_NOTES = "MEETING_NOTES"
+    const val TALK_FORUM = "TALK_FORUM"
+    const val EVENTS = "EVENTS"
+  }
+}

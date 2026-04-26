@@ -6,12 +6,16 @@ import dagger.multibindings.ElementsIntoSet
 import javax.inject.Singleton
 import org.dallasmakerspace.askai.AskAiConfig
 import org.dallasmakerspace.askai.bedrock.BedrockClient
+import org.dallasmakerspace.askai.bedrock.BedrockEmbeddingClient
+import org.dallasmakerspace.askai.bedrock.IEmbeddingClient
+import org.dallasmakerspace.askai.bedrock.MockEmbeddingClient
 import org.dallasmakerspace.askai.confluence.ConfluenceApiClient
 import org.dallasmakerspace.askai.confluence.ConfluenceApiClientMock
 import org.dallasmakerspace.askai.confluence.IConfluenceApiClient
 import org.dallasmakerspace.askai.openrouter.IOpenRouterClient
 import org.dallasmakerspace.askai.openrouter.OpenRouterClient
 import org.dallasmakerspace.askai.openrouter.OpenRouterClientMock
+import org.dallasmakerspace.askai.search.CalendarSearchSource
 import org.dallasmakerspace.askai.search.ConfluenceSearchSource
 import org.dallasmakerspace.askai.search.DiscourseSearchSource
 import org.dallasmakerspace.askai.search.SearchSource
@@ -47,14 +51,23 @@ class AskAiModule {
         ConfluenceApiClient(appConfig, loggerFactory)
       }
 
+  @Provides
+  @Singleton
+  fun provideEmbeddingClient(appConfig: AppConfig, loggerFactory: LoggerFactory): IEmbeddingClient =
+      if (useMockServices(appConfig)) MockEmbeddingClient(loggerFactory)
+      else BedrockEmbeddingClient(loggerFactory)
+
   /**
    * Provides AskAI service configuration. Uses default values but could be extended to read from
    * AppConfig.
    */
   @Provides
   @Singleton
-  fun provideAskAiConfig(): AskAiConfig {
-    return AskAiConfig()
+  fun provideAskAiConfig(appConfig: AppConfig): AskAiConfig {
+    val monthlyBudget =
+        appConfig.getStringProperty("app.askai.monthly-budget-usd", "12.0")?.toDoubleOrNull()
+            ?: 12.0
+    return AskAiConfig(monthlyBudgetUsd = monthlyBudget)
   }
 
   /**
@@ -67,9 +80,10 @@ class AskAiModule {
   @ElementsIntoSet
   fun provideSearchSources(
       discourseSearchSource: DiscourseSearchSource,
-      confluenceSearchSource: ConfluenceSearchSource
+      confluenceSearchSource: ConfluenceSearchSource,
+      calendarSearchSource: CalendarSearchSource,
   ): Set<SearchSource> {
-    return setOf(discourseSearchSource, confluenceSearchSource)
+    return setOf(discourseSearchSource, confluenceSearchSource, calendarSearchSource)
   }
 
   private fun useMockServices(appConfig: AppConfig) =

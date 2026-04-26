@@ -1,6 +1,9 @@
 package org.dallasmakerspace.askai.db
 
 import java.security.MessageDigest
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -10,6 +13,8 @@ import org.dallasmakerspace.members.db.ProfileTable
 import org.dallasmakerspace.models.AskAiCacheEntry
 import org.dallasmakerspace.models.SourceLink
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.sum
 
 /**
  * Repository for managing the Ask AI cache. Provides data access layer for caching question-answer
@@ -208,6 +213,67 @@ class AskAiCacheRepository @Inject constructor(loggerFactory: LoggerFactory) {
     Pair(helpful.toInt(), notHelpful.toInt())
   }
 
+  suspend fun getMonthlySpendUsd(): Double = suspendTransaction {
+    val startOfMonth =
+        ZonedDateTime.now(CHICAGO_ZONE)
+            .with(TemporalAdjusters.firstDayOfMonth())
+            .withHour(0)
+            .withMinute(0)
+            .withSecond(0)
+            .withNano(0)
+            .withZoneSameInstant(ZoneId.of("UTC"))
+            .toInstant()
+    val sumExpr = AskAiCacheTable.totalCostUsd.sum()
+    AskAiCacheTable.slice(sumExpr)
+        .select { AskAiCacheTable.createdAt greaterEq startOfMonth }
+        .firstOrNull()
+        ?.getOrNull(sumExpr)
+        ?.toDouble() ?: 0.0
+  }
+
+  suspend fun updateExisting(
+      id: Int,
+      answer: String,
+      sources: List<SourceLink>,
+      metadata: org.dallasmakerspace.models.AskAiMetadata?,
+  ): AskAiCacheEntry = suspendTransaction {
+    val dao = AskAiCacheDAO.findById(id) ?: error("Cache entry $id not found during refresh update")
+    val sourcesJson = json.encodeToString(sources)
+    val metadataJson = metadata?.let { json.encodeToString(it) }
+    val totalCost = metadata?.estimatedCostUsd?.let { java.math.BigDecimal.valueOf(it) }
+    dao.apply {
+      answerText = answer
+      sourceLinks = sourcesJson
+      this.metadata = metadataJson
+      totalCostUsd = totalCost
+      createdAt = java.time.Instant.now()
+      embedding = null // cleared; caller saves fresh embedding separately
+    }
+    daoToModel(dao)
+  }
+
+  suspend fun saveEmbedding(id: Int, vector: FloatArray) = suspendTransaction {
+    AskAiCacheDAO.findById(id)?.apply { embedding = json.encodeToString(vector.toList()) }
+  }
+
+  suspend fun getRecentWithEmbeddings(limit: Int = 100): List<Pair<Int, FloatArray>> =
+      suspendTransaction {
+        AskAiCacheDAO.all()
+            .orderBy(AskAiCacheTable.createdAt to SortOrder.DESC)
+            .limit(limit)
+            .filter { it.embedding != null }
+            .mapNotNull { dao ->
+              val vectorJson = dao.embedding ?: return@mapNotNull null
+              try {
+                val vector = json.decodeFromString<List<Float>>(vectorJson).toFloatArray()
+                Pair(dao.id.value, vector)
+              } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+                log.warn("Failed to parse embedding for cache entry ${dao.id.value}", e)
+                null
+              }
+            }
+      }
+
   private fun hashQuestion(question: String): String {
     val normalized = question.lowercase().trim()
     val digest = MessageDigest.getInstance("SHA-256")
@@ -332,6 +398,7 @@ class AskAiCacheRepository @Inject constructor(loggerFactory: LoggerFactory) {
   companion object {
     private const val MAX_SLUG_LENGTH = 60
     private const val MAX_SLUG_COLLISION_ATTEMPTS = 100
+    private val CHICAGO_ZONE = ZoneId.of("America/Chicago")
   }
 
   private fun toKotlinInstant(javaInstant: java.time.Instant): kotlinx.datetime.Instant {
