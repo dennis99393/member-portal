@@ -300,6 +300,17 @@ jobs:
             echo "Service alias member-profile-service transferred to $NEW"
           fi
 
+      - name: Prime new container
+        shell: bash
+        continue-on-error: true
+        run: |
+          echo "Priming $NEW_NAME via /ping..."
+          sleep 2
+          curl -s -w "Prime: HTTP %{http_code} (%{time_total}s)\n" -o /dev/null \
+            --max-time 30 \
+            -H "Host: members.dallasmakerspace.org" \
+            http://localhost:8080/ping
+
       - name: Persist live color
         shell: bash
         run: |
