@@ -1,5 +1,6 @@
 services:
   traefik:
+    container_name: member-profile-taefik
     image: traefik:v3.6
     restart: unless-stopped
     ports:
