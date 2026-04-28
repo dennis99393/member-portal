@@ -221,11 +221,13 @@ jobs:
             # Bake alias into docker run so it survives container restarts.
             # docker network connect --alias is lost on restart; --network-alias is not.
             NETWORK_FLAGS="--network member-portal --network-alias member-profile-service"
+            PORT_FLAGS="-p ${{ inputs.internal_port }}:${{ inputs.internal_port }}"
           fi
 
           ENV_FILE=$(eval echo "${{ inputs.env_file_path }}")
           docker run -d --restart unless-stopped \
             $NETWORK_FLAGS \
+            ${PORT_FLAGS:-} \
             --env-file "$ENV_FILE" \
             --name "$NEW_NAME" \
             --label "portal.component=${{ inputs.component }}" \
