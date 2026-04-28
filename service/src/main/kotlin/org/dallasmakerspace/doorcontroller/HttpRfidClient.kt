@@ -317,7 +317,13 @@ class HttpRfidClient(
     return events
   }
 
-  /** Parses datetime string like "2025-11-22 12:08:38" to Unix timestamp in milliseconds. */
+  /**
+   * Parses datetime string to Unix timestamp in milliseconds.
+   *
+   * Supports two formats:
+   * - "2025-11-22 12:08:38" (YYYY-MM-DD HH:MM:SS)
+   * - "4/28/2026 18:27:50"  (M/D/YYYY HH:MM:SS)
+   */
   private fun parseDateTime(dateTime: String): Long {
     return try {
       log.debug("Parsing datetime: '$dateTime'")
@@ -325,37 +331,49 @@ class HttpRfidClient(
       log.debug("  Split into ${parts.size} parts: ${parts.joinToString(", ")}")
 
       if (parts.size == 2) {
-        val dateParts = parts[0].split("-")
+        val dateStr = parts[0]
         val timeParts = parts[1].split(":")
 
-        log.debug("  Date parts: ${dateParts.joinToString("-")}")
-        log.debug("  Time parts: ${timeParts.joinToString(":")}")
+        val (year, month, day) =
+            if (dateStr.contains('/')) {
+              // M/D/YYYY
+              val dateParts = dateStr.split("/")
+              if (dateParts.size != 3) {
+                log.warn("  Invalid slash-delimited date: '$dateStr'")
+                return 0L
+              }
+              Triple(dateParts[2].toInt(), dateParts[0].toInt(), dateParts[1].toInt())
+            } else {
+              // YYYY-MM-DD
+              val dateParts = dateStr.split("-")
+              if (dateParts.size != 3) {
+                log.warn("  Invalid dash-delimited date: '$dateStr'")
+                return 0L
+              }
+              Triple(dateParts[0].toInt(), dateParts[1].toInt(), dateParts[2].toInt())
+            }
 
-        if (dateParts.size == 3 && timeParts.size == 3) {
-          val year = dateParts[0].toInt()
-          val month = dateParts[1].toInt()
-          val day = dateParts[2].toInt()
-          val hour = timeParts[0].toInt()
-          val minute = timeParts[1].toInt()
-          val second = timeParts[2].toInt()
-
-          log.debug(
-              "  Parsed: year=$year, month=$month, day=$day, " +
-                  "hour=$hour, minute=$minute, second=$second")
-
-          // Create timestamp using java.time
-          val result =
-              java.time.LocalDateTime.of(year, month, day, hour, minute, second)
-                  .atZone(java.time.ZoneId.of("America/Chicago"))
-                  .toInstant()
-                  .toEpochMilli()
-
-          log.debug("  Result: $result ms")
-          result
-        } else {
-          log.warn("  Invalid part counts: date=${dateParts.size}, time=${timeParts.size}")
-          0L
+        if (timeParts.size != 3) {
+          log.warn("  Invalid time part count: ${timeParts.size}")
+          return 0L
         }
+
+        val hour = timeParts[0].toInt()
+        val minute = timeParts[1].toInt()
+        val second = timeParts[2].toInt()
+
+        log.debug(
+            "  Parsed: year=$year, month=$month, day=$day, " +
+                "hour=$hour, minute=$minute, second=$second")
+
+        val result =
+            java.time.LocalDateTime.of(year, month, day, hour, minute, second)
+                .atZone(java.time.ZoneId.of("America/Chicago"))
+                .toInstant()
+                .toEpochMilli()
+
+        log.debug("  Result: $result ms")
+        result
       } else {
         log.warn("  Invalid split count: ${parts.size} (expected 2)")
         0L
