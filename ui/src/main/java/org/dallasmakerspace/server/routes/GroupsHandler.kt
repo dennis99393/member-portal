@@ -40,7 +40,8 @@ constructor(
       memberService.hasPrerequisiteClasses(requestedGroupSlug, session.sessionId)
     }
     val featureEnabledDeferred = async {
-      memberServiceClient.getFeatureFlag("groups.member-management-enabled", session.sessionId)
+      val isInfraUser = authz.can(Permission.MANAGE_CONFIG.name)
+      memberServiceClient.getFeatureFlag("groups.member-management-enabled", session.sessionId, isInfraUser)
     }
 
     val requestedGroup = groupDeferred.await()
