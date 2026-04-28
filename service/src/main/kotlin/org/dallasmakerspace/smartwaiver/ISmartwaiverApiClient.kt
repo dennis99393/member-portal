@@ -11,4 +11,6 @@ interface ISmartwaiverApiClient {
    * @return List of waiver signing data
    */
   suspend fun getWaivers(fromDate: LocalDate, toDate: LocalDate): List<WaiverSigningData>
+
+  suspend fun getWaiverDetails(fromDate: LocalDate, toDate: LocalDate): List<SmartwaiverSummary>
 }

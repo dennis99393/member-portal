@@ -65,6 +65,16 @@ object ConfigRegistry {
           type = ConfigValueType.StringType,
       )
 
+  val WAIVER_REPORT_ALLOWED_USERNAMES =
+      ConfigKey(
+          key = "waiver-report.allowed-usernames",
+          description =
+              "Comma-separated usernames granted access to the Recent Signed Waivers report",
+          category = "Waiver Report",
+          defaultValue = "",
+          type = ConfigValueType.StringType,
+      )
+
   val ALL: List<ConfigKey<*>> =
       listOf(
           VOTING_ELECTIONS_URL,
@@ -74,5 +84,6 @@ object ConfigRegistry {
           REMOTE_ACCESS_JUMP_SERVER_AD_GROUP,
           REMOTE_ACCESS_MASTERCAM_CONNECTION_IDS,
           REMOTE_ACCESS_MASTERCAM_AD_GROUP,
+          WAIVER_REPORT_ALLOWED_USERNAMES,
       )
 }

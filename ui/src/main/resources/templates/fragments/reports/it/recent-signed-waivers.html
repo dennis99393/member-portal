@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Recent Signed Waivers</title>
+</head>
+<body>
+<div th:fragment="report">
+    <!-- Restriction note - ALWAYS shown to all users -->
+    <div class="alert alert-info" role="alert">
+        <strong>Note:</strong> This report is restricted to IT Infrastructure team and Officers.
+        It shows recently signed waivers to help identify name/email mismatches with MakerManager.
+    </div>
+
+    <!-- Report content - ONLY shown to authorized users -->
+    <div th:if="${isWaiverReportAuthorized}">
+        <div>
+            <br>
+            When a new member creates a MakerManager account, MakerManager
+            <a href="https://github.com/Dallas-Makerspace/makermanager/blob/d87d9cbddd9e80ec15bf441b7c413a34c7d43405/src/Controller/Component/SmartwaiverComponent.php#L24"
+               target="_blank" rel="noopener">validates their waiver</a>
+            by searching SmartWaiver for a waiver matching their <strong>first name</strong> and <strong>last
+            name</strong>,
+            then confirming the <strong>email</strong> matches case-insensitively.
+            All three fields must match exactly — a typo in any one of them will cause account creation to fail.
+            Use this report to spot mismatches between what was entered on the waiver and what the member entered in
+            MakerManager.
+            <br><br><br>
+        </div>
+        <!-- Time range selector -->
+        <div class="mb-3 d-flex align-items-center gap-2">
+            <label for="waiverTimeRange" class="form-label mb-0 fw-semibold">Time range:</label>
+            <select id="waiverTimeRange" class="form-select w-auto">
+                <option value="0" selected>Today</option>
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+            </select>
+        </div>
+
+        <dms-data-visualizer
+                id="recent-signed-waivers-visualizer"
+                dataUrl="/backend-api/data-viz/recent-signed-waivers?days=0"
+                renderAs="table"
+                title="Recent Signed Waivers"
+                showCount="true"
+                description=""
+                filterable="true"
+                alwaysShowRawData="true"
+        ></dms-data-visualizer>
+    </div>
+
+    <script>
+        (function () {
+            const select = document.getElementById('waiverTimeRange');
+            const visualizer = document.getElementById('recent-signed-waivers-visualizer');
+            if (!select || !visualizer) return;
+            select.addEventListener('change', function () {
+                visualizer.dataUrl = '/backend-api/data-viz/recent-signed-waivers?days=' + encodeURIComponent(select.value);
+                visualizer._fetchData();
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

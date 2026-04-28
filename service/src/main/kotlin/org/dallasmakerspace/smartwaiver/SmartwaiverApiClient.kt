@@ -206,6 +206,28 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) :
     }
   }
 
+  override suspend fun getWaiverDetails(
+      fromDate: LocalDate,
+      toDate: LocalDate
+  ): List<SmartwaiverSummary> {
+    val apiKey = appConfig.requireStringProperty("app.smartwaiver.apiKey")
+    try {
+      val searchMetadata = initiateSearch(apiKey, fromDate, toDate)
+      val totalPages = searchMetadata.pages ?: 0
+      val pagesToFetch = minOf(totalPages, MAX_PAGES)
+      val pageResults = coroutineScope {
+        (0 until pagesToFetch)
+            .map { async { fetchSearchResults(apiKey, searchMetadata.guid, it) } }
+            .awaitAll()
+      }
+      return pageResults.flatMap { it.searchResults ?: emptyList() }
+    } catch (e: IOException) {
+      throw SmartwaiverApiException("Failed to fetch waiver details", e)
+    } catch (e: kotlinx.serialization.SerializationException) {
+      throw SmartwaiverApiException("Failed to parse waiver details response", e)
+    }
+  }
+
   private fun parseWaivers(waivers: List<SmartwaiverSummary>): List<WaiverSigningData> {
     return waivers.map { waiver ->
       val createdOn = LocalDateTime.parse(waiver.createdOn, smartwaiverDateFormatter)

@@ -37,6 +37,7 @@ class DmsDataVisualizer extends LitElement {
         paginated: { type: Boolean },
         pageSize: { type: Number },
         paginateAfter: { type: Number },
+        showCount: { type: Boolean },
         _chartData: { type: Object },
         _errorMessage: { type: String },
         _loading: { type: Boolean },
@@ -99,6 +100,7 @@ class DmsDataVisualizer extends LitElement {
         this.pageSize = 20;
         this.paginateAfter = 20;
         this.alwaysShowRawData = false;
+        this.showCount = false;
         this._chartData = null;
         this._errorMessage = '';
         this._loading = false;
@@ -120,6 +122,10 @@ class DmsDataVisualizer extends LitElement {
 
     connectedCallback() {
         super.connectedCallback();
+        this._fetchData();
+    }
+
+    reload() {
         this._fetchData();
     }
 
@@ -147,10 +153,17 @@ class DmsDataVisualizer extends LitElement {
         }
     }
 
+    get _displayTitle() {
+        if (this.showCount && this._chartData?.data != null) {
+            return `${this.title} (${this._chartData.data.length} found)`;
+        }
+        return this.title;
+    }
+
     render() {
         return html`
       <div class="container">
-        ${this.title ? html`<h2>${this.title}</h2>` : ''}
+        ${this._displayTitle ? html`<h2>${this._displayTitle}</h2>` : ''}
         ${this.description ? html`<p>${unsafeHTML(this.description)}</p>` : ''}
         ${this._loading
             ? html`

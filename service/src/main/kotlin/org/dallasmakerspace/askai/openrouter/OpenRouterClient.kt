@@ -154,7 +154,10 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) :
             if (data == "[DONE]") break
             try {
               val chunk = json.decodeFromString<OpenRouterStreamChunk>(data)
-              chunk.choices.firstOrNull()?.delta?.content
+              chunk.choices
+                  .firstOrNull()
+                  ?.delta
+                  ?.content
                   ?.takeIf { it.isNotEmpty() }
                   ?.let { onToken(it) }
             } catch (e: Exception) {

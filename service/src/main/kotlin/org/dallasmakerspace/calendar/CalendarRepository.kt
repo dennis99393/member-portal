@@ -446,7 +446,8 @@ constructor(private val genericRepository: GenericRepository, loggerFactory: Log
       LIMIT $limit
     """
 
-    log.debug("Fetching events by ${keywords.size} keywords in window [$startStr, $endStr] (limit: $limit)")
+    log.debug(
+        "Fetching events by ${keywords.size} keywords in window [$startStr, $endStr] (limit: $limit)")
 
     val result =
         try {

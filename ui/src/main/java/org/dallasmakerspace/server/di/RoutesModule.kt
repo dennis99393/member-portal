@@ -156,7 +156,8 @@ class RoutesModule {
   fun providesReportHandler(
       loggerFactory: LoggerFactory,
       userInfoProvider: UserInfoProvider,
-  ): IRouteHandler = ReportHandler(loggerFactory, userInfoProvider)
+      memberServiceClient: MemberServiceClient,
+  ): IRouteHandler = ReportHandler(loggerFactory, userInfoProvider, memberServiceClient)
 
   @IntoMap
   @Provides

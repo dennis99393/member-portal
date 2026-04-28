@@ -480,7 +480,8 @@ constructor(
         )
       }
     }
-    log.info("Stream: no exact cache hit, checking embedding match (requestId=${metrics.requestId})")
+    log.info(
+        "Stream: no exact cache hit, checking embedding match (requestId=${metrics.requestId})")
 
     val maskedQuestion = piiMasker.mask(question)
 
@@ -791,7 +792,8 @@ constructor(
     val reorderedSources = citedSources + uncitedSources
 
     // Build old 1-based → new 1-based mapping, then rewrite all citation markers in one pass.
-    val oldToNew = citedIndices.mapIndexed { newIdx, oldIdx -> (oldIdx + 1) to (newIdx + 1) }.toMap()
+    val oldToNew =
+        citedIndices.mapIndexed { newIdx, oldIdx -> (oldIdx + 1) to (newIdx + 1) }.toMap()
     var rewrittenAnswer = answer
     for (pattern in citationPatterns) {
       rewrittenAnswer =

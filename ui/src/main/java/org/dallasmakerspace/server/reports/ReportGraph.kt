@@ -96,6 +96,12 @@ object ReportGraph {
                                     "Past members with enabled AD accounts (badge 0000000)",
                                 urlSlug = "lapsed-members-active-ad",
                             ),
+                            ReportNode(
+                                name = "Recent Signed Waivers",
+                                description =
+                                    "Waivers signed in the past 24 hrs / 7 days / 30 days (Infra/Officers only)",
+                                urlSlug = "recent-signed-waivers",
+                            ),
                         ),
                 ),
                 ReportNode(

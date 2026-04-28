@@ -55,6 +55,7 @@ data class SmartwaiverSummary(
     @SerialName("firstName") val firstName: String? = null,
     @SerialName("middleName") val middleName: String? = null,
     @SerialName("lastName") val lastName: String? = null,
+    @SerialName("email") val email: String? = null,
     @SerialName("dob") val dob: String? = null,
     @SerialName("isMinor") val isMinor: Boolean? = null,
     @SerialName("tags") val tags: List<String>? = null

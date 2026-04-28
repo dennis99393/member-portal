@@ -34,8 +34,8 @@ private val CALENDAR_GENERIC_TERMS =
     )
 
 /**
- * Search source for DMS calendar events. Searches event names within a ±30-day window so AskAi
- * can answer questions about upcoming and recent classes, SIGs, and other events.
+ * Search source for DMS calendar events. Searches event names within a ±30-day window so AskAi can
+ * answer questions about upcoming and recent classes, SIGs, and other events.
  *
  * Uses MariaDB server-side max_statement_time (1.5 s) for timeout protection — see
  * CalendarRepository for rationale on why coroutine withTimeout is not used here.
@@ -65,7 +65,8 @@ constructor(
     val sqlKeywords = keywords.filter { it !in CALENDAR_GENERIC_TERMS }.ifEmpty { keywords }
 
     val now = LocalDateTime.now(ZoneOffset.UTC)
-    log.info("CalendarSearch: keywords=$keywords sqlKeywords=$sqlKeywords window=[${now.minusDays(WINDOW_DAYS)}, ${now.plusDays(WINDOW_DAYS)}] limit=$limit")
+    log.info(
+        "CalendarSearch: keywords=$keywords sqlKeywords=$sqlKeywords window=[${now.minusDays(WINDOW_DAYS)}, ${now.plusDays(WINDOW_DAYS)}] limit=$limit")
 
     val events =
         calendarService.getEventsByKeywords(
@@ -77,7 +78,8 @@ constructor(
 
     log.info("CalendarSearch: ${events.size} event(s) returned")
     events.forEach { ev ->
-      log.info("CalendarSearch: event id=${ev.id} name='${ev.name}' start=${ev.eventStart} status=${ev.status} utcMs=${ev.eventStartUtcMs} organizer=${ev.organizerUsername}")
+      log.info(
+          "CalendarSearch: event id=${ev.id} name='${ev.name}' start=${ev.eventStart} status=${ev.status} utcMs=${ev.eventStartUtcMs} organizer=${ev.organizerUsername}")
     }
 
     return events.map { ev ->
