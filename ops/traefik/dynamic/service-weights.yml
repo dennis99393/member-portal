@@ -1,0 +1,13 @@
+http:
+  routers:
+    service:
+      rule: "PathPrefix(`/`)"
+      entryPoints:
+        - service
+      service: service-weighted
+  services:
+    service-weighted:
+      weighted:
+        services:
+          - name: "service-blue@docker"
+            weight: 100

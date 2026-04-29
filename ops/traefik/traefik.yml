@@ -1,6 +1,8 @@
 entryPoints:
   web:
     address: ":8080"
+  service:
+    address: ":8081"
   traefik:
     address: ":8082"
 

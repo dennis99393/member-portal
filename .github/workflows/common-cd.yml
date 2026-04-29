@@ -217,17 +217,20 @@ jobs:
               --label traefik.http.services.ui-${NEW}.loadbalancer.healthcheck.timeout=2s"
             NETWORK_FLAGS="--network member-portal"
           else
-            TRAEFIK_LABELS=""
+            TRAEFIK_LABELS="\
+              --label traefik.enable=true \
+              --label traefik.http.services.service-${NEW}.loadbalancer.server.port=${{ inputs.internal_port }} \
+              --label traefik.http.services.service-${NEW}.loadbalancer.healthcheck.path=${{ inputs.healthcheck_path }} \
+              --label traefik.http.services.service-${NEW}.loadbalancer.healthcheck.interval=5s \
+              --label traefik.http.services.service-${NEW}.loadbalancer.healthcheck.timeout=2s"
             # Bake alias into docker run so it survives container restarts.
             # docker network connect --alias is lost on restart; --network-alias is not.
             NETWORK_FLAGS="--network member-portal --network-alias member-profile-service"
-            PORT_FLAGS="-p ${{ inputs.internal_port }}:${{ inputs.internal_port }}"
           fi
 
           ENV_FILE=$(eval echo "${{ inputs.env_file_path }}")
           docker run -d --restart unless-stopped \
             $NETWORK_FLAGS \
-            ${PORT_FLAGS:-} \
             --env-file "$ENV_FILE" \
             --name "$NEW_NAME" \
             --label "portal.component=${{ inputs.component }}" \
@@ -288,8 +291,27 @@ jobs:
             mv /tmp/ui-weights-new.yml /opt/traefik/dynamic/ui-weights.yml
             echo "Traffic shifted to ui-${NEW}@docker (Traefik reloads within ~1s)"
           else
-            # New container already has the alias on all networks from the start step.
-            # Just take the old container off the network so it stops serving.
+            cp /opt/traefik/dynamic/service-weights.yml /opt/traefik/dynamic/service-weights.yml.bak
+
+            cat > /tmp/service-weights-new.yml <<EOF
+          http:
+            routers:
+              service:
+                rule: "PathPrefix(\`/\`)"
+                entryPoints:
+                  - service
+                service: service-weighted
+            services:
+              service-weighted:
+                weighted:
+                  services:
+                    - name: "service-${NEW}@docker"
+                      weight: 100
+          EOF
+            mv /tmp/service-weights-new.yml /opt/traefik/dynamic/service-weights.yml
+            echo "Traffic shifted to service-${NEW}@docker (Traefik reloads within ~1s)"
+
+            # Disconnect old container from Docker networks to stop internal (alias) traffic too
             if [ "$LIVE" != "none" ]; then
               docker network disconnect member-portal "$OLD_NAME" || true
               if [ -n "$EXTRA_NETWORKS" ]; then
@@ -298,8 +320,6 @@ jobs:
                 done
               fi
             fi
-
-            echo "Service alias member-profile-service transferred to $NEW"
           fi
 
       - name: Prime new container
@@ -356,6 +376,10 @@ jobs:
               echo "UI weights restored"
             fi
           else
+            if [ -f /opt/traefik/dynamic/service-weights.yml.bak ]; then
+              mv /opt/traefik/dynamic/service-weights.yml.bak /opt/traefik/dynamic/service-weights.yml
+              echo "Service weights restored"
+            fi
             if [ "$LIVE" != "none" ]; then
               docker network connect --alias member-profile-service member-portal "$OLD_NAME" 2>/dev/null || true
               if [ -n "$EXTRA_NETWORKS" ]; then
