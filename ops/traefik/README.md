@@ -9,21 +9,22 @@ blue-green traffic splitting internally via Docker network DNS — containers do
 ## Host layout
 
 ```
-/opt/traefik/
-  traefik.yml                  # static config (copy from ops/traefik/)
-  docker-compose.traefik.yml   # compose file (copy from ops/traefik/)
+/opt/member-profile-traefik/
+  traefik.yml                      # static config (copy from ops/traefik/)
+  docker-compose.traefik.yml       # compose file (copy from ops/traefik/)
   dynamic/
-    ui-weights.yml             # live blue/green weights (copy from ops/traefik/dynamic/)
+    ui-weights.yml                 # live blue/green weights (copy from ops/traefik/dynamic/)
+    service-weights.yml            # live blue/green weights (copy from ops/traefik/dynamic/)
 /opt/portal/state/
-  ui.live                      # current live color: "blue" or "green"
-  service.live                 # current live color: "blue" or "green"
+  ui.live                          # current live color: "blue" or "green"
+  service.live                     # current live color: "blue" or "green"
 ```
 
 ## Start / stop
 
 ```bash
 # Start (only needed once, or after host reboots)
-cd /opt/traefik
+cd /opt/member-profile-traefik
 docker compose -f docker-compose.traefik.yml up -d
 
 # Stop
@@ -60,7 +61,7 @@ docker inspect traefik --format '{{.State.Health.Status}}'
 docker logs traefik -f --tail 50
 
 # Check current blue/green weights
-cat /opt/traefik/dynamic/ui-weights.yml
+cat /opt/member-profile-traefik/dynamic/ui-weights.yml
 
 # Check which color is live
 cat /opt/portal/state/ui.live
@@ -73,7 +74,7 @@ If you ever need to manually shift traffic (e.g., emergency rollback):
 
 ```bash
 # Roll back to blue
-cat > /opt/traefik/dynamic/ui-weights.yml <<EOF
+cat > /opt/member-profile-traefik/dynamic/ui-weights.yml <<EOF
 http:
   services:
     ui-weighted:
@@ -96,12 +97,12 @@ scp ops/traefik/traefik.yml              <docker-host>:/tmp/traefik.yml
 scp ops/traefik/docker-compose.traefik.yml <docker-host>:/tmp/docker-compose.traefik.yml
 scp ops/traefik/dynamic/ui-weights.yml   <docker-host>:/tmp/ui-weights.yml
 
-ssh <docker-host> "sudo mv /tmp/traefik.yml /opt/traefik/ && \
-                   sudo mv /tmp/docker-compose.traefik.yml /opt/traefik/ && \
-                   sudo mv /tmp/ui-weights.yml /opt/traefik/dynamic/"
+ssh <docker-host> "sudo mv /tmp/traefik.yml /opt/member-profile-traefik/ && \
+                   sudo mv /tmp/docker-compose.traefik.yml /opt/member-profile-traefik/ && \
+                   sudo mv /tmp/ui-weights.yml /opt/member-profile-traefik/dynamic/"
 
 # Static config changes require a restart; dynamic changes are picked up automatically
-cd /opt/traefik && docker compose -f docker-compose.traefik.yml restart
+cd /opt/member-profile-traefik && docker compose -f docker-compose.traefik.yml restart
 ```
 
     

@@ -271,7 +271,7 @@ jobs:
           EXTRA_NETWORKS="${{ inputs.additional_networks }}"
 
           if [ "${{ inputs.component }}" = "ui" ]; then
-            cp /opt/traefik/dynamic/ui-weights.yml /opt/traefik/dynamic/ui-weights.yml.bak
+            cp /opt/member-profile-traefik/dynamic/ui-weights.yml /opt/member-profile-traefik/dynamic/ui-weights.yml.bak
 
             cat > /tmp/ui-weights-new.yml <<EOF
           http:
@@ -288,10 +288,10 @@ jobs:
                     - name: "ui-${NEW}@docker"
                       weight: 100
           EOF
-            mv /tmp/ui-weights-new.yml /opt/traefik/dynamic/ui-weights.yml
+            mv /tmp/ui-weights-new.yml /opt/member-profile-traefik/dynamic/ui-weights.yml
             echo "Traffic shifted to ui-${NEW}@docker (Traefik reloads within ~1s)"
           else
-            cp /opt/traefik/dynamic/service-weights.yml /opt/traefik/dynamic/service-weights.yml.bak
+            cp /opt/member-profile-traefik/dynamic/service-weights.yml /opt/member-profile-traefik/dynamic/service-weights.yml.bak
 
             cat > /tmp/service-weights-new.yml <<EOF
           http:
@@ -308,7 +308,7 @@ jobs:
                     - name: "service-${NEW}@docker"
                       weight: 100
           EOF
-            mv /tmp/service-weights-new.yml /opt/traefik/dynamic/service-weights.yml
+            mv /tmp/service-weights-new.yml /opt/member-profile-traefik/dynamic/service-weights.yml
             echo "Traffic shifted to service-${NEW}@docker (Traefik reloads within ~1s)"
 
             # Disconnect old container from Docker networks to stop internal (alias) traffic too
@@ -371,13 +371,13 @@ jobs:
           docker rm "$NEW_NAME" 2>/dev/null || true
 
           if [ "${{ inputs.component }}" = "ui" ]; then
-            if [ -f /opt/traefik/dynamic/ui-weights.yml.bak ]; then
-              mv /opt/traefik/dynamic/ui-weights.yml.bak /opt/traefik/dynamic/ui-weights.yml
+            if [ -f /opt/member-profile-traefik/dynamic/ui-weights.yml.bak ]; then
+              mv /opt/member-profile-traefik/dynamic/ui-weights.yml.bak /opt/member-profile-traefik/dynamic/ui-weights.yml
               echo "UI weights restored"
             fi
           else
-            if [ -f /opt/traefik/dynamic/service-weights.yml.bak ]; then
-              mv /opt/traefik/dynamic/service-weights.yml.bak /opt/traefik/dynamic/service-weights.yml
+            if [ -f /opt/member-profile-traefik/dynamic/service-weights.yml.bak ]; then
+              mv /opt/member-profile-traefik/dynamic/service-weights.yml.bak /opt/member-profile-traefik/dynamic/service-weights.yml
               echo "Service weights restored"
             fi
             if [ "$LIVE" != "none" ]; then
