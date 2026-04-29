@@ -32,7 +32,9 @@ suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) 
   // Do not log redirect responses and static files
   if (response.status() == HttpStatusCode.TemporaryRedirect ||
       request.uri.startsWith("/static") ||
-      request.uri.startsWith("/favicon.ico")) {
+      request.uri.startsWith("/favicon.ico") ||
+      request.uri == "/health/ready" ||
+      request.uri == "/health/live") {
     return
   }
 

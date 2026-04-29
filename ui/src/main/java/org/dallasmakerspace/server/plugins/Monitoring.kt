@@ -37,7 +37,17 @@ fun Application.configureMonitoring() {
 
   install(CallLogging) {
     level = Level.INFO
-    filter { call -> call.request.path().startsWith("/static").not() }
+    filter { call ->
+      val path = call.request.path()
+      !path.startsWith("/static") &&
+          path != "/readyz" &&
+          path != "/healthz" &&
+          path != "/sw.js" &&
+          path != "/manifest.json" &&
+          path != "/favicon.ico" &&
+          path != "/apple-touch-icon.png" &&
+          path != "/apple-touch-icon-precomposed.png"
+    }
 
     format { call ->
       val status = call.response.status()

@@ -38,10 +38,15 @@ fun Application.configureElasticsearch() {
 suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) {
   val request = call.request
   val response = call.response
-  // Do not log redirect responses and static files
   if (response.status() == HttpStatusCode.TemporaryRedirect ||
       request.uri.startsWith("/static") ||
-      request.uri.startsWith("/favicon.ico")) {
+      request.uri.startsWith("/favicon.ico") ||
+      request.uri == "/readyz" ||
+      request.uri == "/healthz" ||
+      request.uri == "/sw.js" ||
+      request.uri == "/manifest.json" ||
+      request.uri == "/apple-touch-icon.png" ||
+      request.uri == "/apple-touch-icon-precomposed.png") {
     return
   }
 

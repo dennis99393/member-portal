@@ -19,6 +19,8 @@ fun Application.configureMonitoring() {
     logger = loggerFactory.create(Application::class.java)
     callIdMdc()
 
+    filter { call -> call.request.path() != "/health/ready" }
+
     format { call ->
       val status = call.response.status()
       val httpMethod = call.request.httpMethod.value
