@@ -43,11 +43,16 @@ fun Application.configureCommonModel(memberServiceClient: MemberServiceClient) {
     val remoteAccessEnabled =
         getCachedFlag(memberServiceClient, "remote-access.enabled", sessionId, isInfraUser)
     cmLog.info("CommonModel: remoteAccessEnabled=$remoteAccessEnabled")
+    val currentUsername = call.sessions.get<UserSession>()?.userId ?: ""
     proceedWith(
         ThymeleafContent(
             body.template,
             body.model +
-                mapOf("isInfraUser" to isInfraUser, "remoteAccessEnabled" to remoteAccessEnabled),
+                mapOf(
+                    "isInfraUser" to isInfraUser,
+                    "remoteAccessEnabled" to remoteAccessEnabled,
+                    "current_username" to currentUsername,
+                ),
             body.etag,
             body.contentType,
             body.locale,
