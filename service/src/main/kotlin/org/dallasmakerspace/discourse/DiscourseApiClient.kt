@@ -92,7 +92,7 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
           return json.decodeFromString<DiscourseUserProfile>(responseBody)
         }
         HttpStatusCode.NotFound -> {
-          throw DiscourseApiException("User not found: $username")
+          throw DiscourseUserNotFoundException(username)
         }
         HttpStatusCode.Forbidden -> {
           throw DiscourseApiException("Access denied when fetching user profile for: $username")
@@ -102,6 +102,8 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : ID
               "Failed to fetch user profile for $username: ${response.status} - ${response.bodyAsText()}")
         }
       }
+    } catch (e: DiscourseApiException) {
+      throw e
     } catch (e: IOException) {
       throw DiscourseApiException("Failed to fetch user profile for $username", e)
     } catch (e: kotlinx.serialization.SerializationException) {

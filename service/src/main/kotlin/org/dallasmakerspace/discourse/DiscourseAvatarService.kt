@@ -51,6 +51,9 @@ constructor(private val discourseApiClient: IDiscourseApiClient, loggerFactory: 
 
       log.debug("Successfully refreshed avatar template for $username: $avatarTemplate")
       avatarTemplate
+    } catch (e: DiscourseUserNotFoundException) {
+      log.info("Skipping avatar refresh for $username — user not found in Discourse")
+      null
     } catch (e: DiscourseApiException) {
       log.warn("Failed to refresh avatar template for $username: ${e.message}")
       null

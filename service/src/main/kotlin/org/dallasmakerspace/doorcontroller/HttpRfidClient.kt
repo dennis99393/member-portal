@@ -167,6 +167,12 @@ class HttpRfidClient(
             val html = response.bodyAsText()
             log.debug("Received HTML response (${html.length} chars)")
 
+            if (isLoginPage(html)) {
+              log.info(
+                  "Controller at $ip returned login page — session expired, skipping swipes fetch")
+              return@withContext emptyList()
+            }
+
             if (attempt > 1) {
               log.info("Successfully fetched swipes from $ip after $attempt attempts")
             }
@@ -192,6 +198,9 @@ class HttpRfidClient(
 
         emptyList()
       }
+
+  private fun isLoginPage(html: String): Boolean =
+      html.contains("action=ACT_ID_1") || (html.contains("UserName:") && html.contains("Password:"))
 
   /**
    * Parses swipe events from HTML table.
@@ -238,13 +247,13 @@ class HttpRfidClient(
           log.info("  Delta: ${delta}ms = ${deltaMinutes} minutes = $deltaHours hours")
           delta
         } else {
-          log.error("Could not find server time in pagination! Timestamps will be inaccurate!")
-          log.error(
-              "Looking for pattern: 'Page  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; YYYY-MM-DD HH:MM:SS</p>'")
-          log.error("HTML length: ${html.length} chars")
-          // Show a larger snippet to help debug
-          val snippet = html.substring(0, minOf(1500, html.length))
-          log.error("HTML snippet (first 1500 chars): $snippet")
+          log.warn(
+              "Could not find server time in pagination for $ip — timestamps will be inaccurate")
+          log.debug(
+              "Expected pattern: 'Page  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; YYYY-MM-DD HH:MM:SS</p>'")
+          log.debug("HTML length: ${html.length} chars")
+          log.debug(
+              "HTML snippet (first 1500 chars): ${html.substring(0, minOf(1500, html.length))}")
           0L
         }
 
@@ -322,7 +331,7 @@ class HttpRfidClient(
    *
    * Supports two formats:
    * - "2025-11-22 12:08:38" (YYYY-MM-DD HH:MM:SS)
-   * - "4/28/2026 18:27:50"  (M/D/YYYY HH:MM:SS)
+   * - "4/28/2026 18:27:50" (M/D/YYYY HH:MM:SS)
    */
   private fun parseDateTime(dateTime: String): Long {
     return try {
