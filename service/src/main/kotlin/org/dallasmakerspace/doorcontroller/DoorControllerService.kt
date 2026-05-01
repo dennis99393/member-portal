@@ -33,7 +33,9 @@ constructor(
                 ip = controller.ip,
                 username = config.username,
                 password = config.password,
-                timeoutSeconds = config.timeoutSeconds,
+                connectTimeoutSeconds = config.timeoutSeconds,
+                requestTimeoutSeconds = config.timeoutSeconds,
+                socketTimeoutSeconds = config.timeoutSeconds,
                 loggerFactory = loggerFactory)
       }
 

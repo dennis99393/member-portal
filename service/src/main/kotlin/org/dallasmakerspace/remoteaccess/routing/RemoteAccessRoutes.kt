@@ -22,6 +22,6 @@ fun Route.remoteAccessRoutes(remoteAccessService: RemoteAccessService) {
               return@delete
             }
     remoteAccessService.killActiveConnection(identifier)
-    call.respond(ApiResponse(Status.SUCCESS, "Killed active connection", emptyMap<String, Any>()))
+    call.respond(ApiResponse(Status.SUCCESS, "Killed active connection", null))
   }
 }

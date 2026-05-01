@@ -14,6 +14,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSession
 import org.apache.http.HttpHost
 import org.apache.http.HttpRequestInterceptor
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.ssl.SSLContextBuilder
@@ -52,9 +53,14 @@ object ElasticsearchClientManager {
 
     @Suppress("MagicNumber")
     val restClientBuilder: RestClientBuilder =
-        RestClient.builder(HttpHost(esHost, 9200, "https")).setHttpClientConfigCallback {
-          httpClientBuilder
-        }
+        RestClient.builder(HttpHost(esHost, 9200, "https"))
+            .setHttpClientConfigCallback { httpClientBuilder }
+            .setRequestConfigCallback { requestConfigBuilder: RequestConfig.Builder ->
+              requestConfigBuilder
+                  .setConnectTimeout(5_000) // 5 s (default: 1 s)
+                  .setSocketTimeout(30_000) // 30 s (default: 30 s, made explicit)
+                  .setConnectionRequestTimeout(5_000) // 5 s (default: 500 ms)
+            }
 
     val restClient = restClientBuilder.build()
     val transport = RestClientTransport(restClient, JacksonJsonpMapper())

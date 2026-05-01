@@ -20,23 +20,29 @@ import org.dallasmakerspace.core.LoggerFactory
  * @param ip IP address of the controller
  * @param username Web interface username
  * @param password Web interface password
- * @param timeoutSeconds Timeout in seconds for HTTP requests (default: 5)
+ * @param connectTimeoutSeconds Timeout in seconds for establishing a TCP connection (default: 10)
+ * @param requestTimeoutSeconds Timeout in seconds for the full HTTP request/response cycle
+ *   (default: 15)
+ * @param socketTimeoutSeconds Timeout in seconds for socket reads between data packets
+ *   (default: 15)
  * @param loggerFactory Logger factory for creating logger instance
  */
 class HttpRfidClient(
     private val ip: String,
     private val username: String,
     private val password: String,
-    private val timeoutSeconds: Int = 5,
+    private val connectTimeoutSeconds: Int = 10,
+    private val requestTimeoutSeconds: Int = 15,
+    private val socketTimeoutSeconds: Int = 15,
     loggerFactory: LoggerFactory,
 ) : Closeable {
   private val log = loggerFactory.create(HttpRfidClient::class.java)
   private val httpClient =
       HttpClient(CIO) {
         install(HttpTimeout) {
-          requestTimeoutMillis = timeoutSeconds * 1000L
-          connectTimeoutMillis = timeoutSeconds * 1000L
-          socketTimeoutMillis = timeoutSeconds * 1000L
+          connectTimeoutMillis = connectTimeoutSeconds * 1000L
+          requestTimeoutMillis = requestTimeoutSeconds * 1000L
+          socketTimeoutMillis = socketTimeoutSeconds * 1000L
         }
       }
   private val baseUrl = "http://$ip"
