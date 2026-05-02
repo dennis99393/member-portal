@@ -2,7 +2,9 @@ package org.dallasmakerspace.dataviz.reports.it
 
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
@@ -19,7 +21,9 @@ import org.dallasmakerspace.models.DataType
 import org.dallasmakerspace.models.DataVizResponse
 
 private val CHICAGO_ZONE = ZoneId.of("America/Chicago")
+private val UTC_ZONE = ZoneOffset.UTC
 private val MONTH_PATTERN = Regex("""^\d{4}-\d{2}$""")
+private val UTC_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 private const val MILLIS_IN_SECOND = 1000f
 
 @Singleton
@@ -40,6 +44,21 @@ constructor(
         if (rawMonth != null && MONTH_PATTERN.matches(rawMonth)) rawMonth
         else LocalDate.now(CHICAGO_ZONE).format(DateTimeFormatter.ofPattern("yyyy-MM"))
 
+    val yearMonth = YearMonth.parse(month)
+    val startUtc =
+        yearMonth
+            .atDay(1)
+            .atStartOfDay(CHICAGO_ZONE)
+            .withZoneSameInstant(UTC_ZONE)
+            .toLocalDateTime()
+    val endUtc =
+        yearMonth
+            .plusMonths(1)
+            .atDay(1)
+            .atStartOfDay(CHICAGO_ZONE)
+            .withZoneSameInstant(UTC_ZONE)
+            .toLocalDateTime()
+
     val query =
         """
         SET STATEMENT max_statement_time=5 FOR
@@ -49,10 +68,11 @@ constructor(
             last_name,
             username,
             email,
-                  whmcs_real_user_id
+            whmcs_real_user_id
         FROM `dms-makermanager`.users
         WHERE ad_active = 1
-          AND DATE_FORMAT(CONVERT_TZ(created, 'UTC', 'America/Chicago'), '%Y-%m') = '$month'
+          AND created >= '${UTC_FORMATTER.format(startUtc)}'
+          AND created < '${UTC_FORMATTER.format(endUtc)}'
         ORDER BY created DESC
         """
             .trimIndent()
@@ -113,8 +133,7 @@ constructor(
                       "Email" to JsonPrimitive(row["email"]?.toString() ?: ""),
                       "Account Type" to accountTypeBadge,
                       "Joined" to JsonPrimitive(row["joined"]?.toString() ?: ""),
-                  )
-          )
+                  ))
         } ?: emptyList()
 
     val timeTaken = System.currentTimeMillis() - startTime
