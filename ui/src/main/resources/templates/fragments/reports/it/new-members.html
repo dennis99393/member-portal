@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>New Member Signups</title>
+</head>
+<body>
+<div th:fragment="report">
+    <!-- Restriction note - ALWAYS shown to all users -->
+    <div class="alert alert-info" role="alert">
+        <strong>Note:</strong> This report is restricted to IT Infrastructure team, Officers, and Board members.
+    </div>
+
+    <!-- Report content - ONLY shown to authorized users -->
+    <div th:if="${authz.can('MANAGE_BADGES') or authz.can('MANAGE_CONFIG')}">
+        <!-- Month picker -->
+        <div class="mb-3 d-flex align-items-center gap-2">
+            <label for="newMembersMonth" class="form-label mb-0 fw-semibold">Month:</label>
+            <select id="newMembersMonth" class="form-select w-auto"></select>
+        </div>
+
+        <dms-data-visualizer
+                id="new-members-visualizer"
+                dataUrl="/backend-api/data-viz/new-members"
+                renderAs="table"
+                title="New Member Signups"
+                showCount="true"
+                filterable="true"
+                alwaysShowRawData="true"
+        ></dms-data-visualizer>
+    </div>
+
+    <script th:if="${authz.can('MANAGE_BADGES') or authz.can('MANAGE_CONFIG')}">
+        (function () {
+            const select = document.getElementById('newMembersMonth');
+            const visualizer = document.getElementById('new-members-visualizer');
+            if (!select || !visualizer) return;
+
+            const now = new Date();
+            for (let i = 0; i < 6; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                const label = d.toLocaleString('en-US', {month: 'long', year: 'numeric'});
+                const opt = new Option(label, value, i === 0, i === 0);
+                select.add(opt);
+            }
+
+            select.addEventListener('change', function () {
+                visualizer._chartData = null;
+                visualizer.dataUrl = '/backend-api/data-viz/new-members?month=' + encodeURIComponent(select.value);
+                visualizer._fetchData();
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

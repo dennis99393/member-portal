@@ -102,6 +102,12 @@ object ReportGraph {
                                     "Waivers signed in the past 24 hrs / 7 days / 30 days (Infra/Officers only)",
                                 urlSlug = "recent-signed-waivers",
                             ),
+                            ReportNode(
+                                name = "New Member Signups",
+                                description =
+                                    "Members who joined in a given month (Infra/Officers/Board only)",
+                                urlSlug = "new-members",
+                            ),
                         ),
                 ),
                 ReportNode(
