@@ -126,6 +126,7 @@ constructor(
             "Month" to month,
             "Total records" to "${dataItems.size}",
             "Time taken" to "$timeTakenInSec sec",
+            "SQL Query" to query,
         )
 
     return DataVizResponse(
