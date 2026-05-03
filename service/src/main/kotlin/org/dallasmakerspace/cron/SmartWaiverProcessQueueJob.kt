@@ -26,7 +26,7 @@ constructor(
     var processed = 0
     var failed = 0
 
-    for ((uniqueId, event) in entries) {
+    for ((queueId, uniqueId, event) in entries) {
       if (event != EVENT_NEW_WAIVER) {
         log.warn("Skipping unexpected event type '$event' for waiver $uniqueId")
         continue
@@ -36,7 +36,7 @@ constructor(
         val waiver = smartwaiverApiClient.getWaiver(uniqueId)
         log.info("Fetched waiver $uniqueId (${System.currentTimeMillis() - t0}ms)")
 
-        smartWaiverRepository.insertWaiverAndMarkProcessed(waiver, uniqueId)
+        smartWaiverRepository.insertWaiverAndMarkProcessed(waiver, queueId)
         log.info("Processed waiver $uniqueId")
         processed++
       } catch (e: Exception) {

@@ -8,7 +8,6 @@ import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import org.dallasmakerspace.core.DBMasterConnection
 import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update
@@ -86,40 +85,51 @@ class SmartWaiverRepository @Inject constructor() {
         SmartWaiverTable.select { SmartWaiverTable.waiverId eq waiverId }.firstOrNull() != null
       }
 
-  suspend fun insertWebhookQueueEntry(uniqueId: String, event: String): Boolean =
-      newSuspendedTransaction(Dispatchers.IO, db = DBMasterConnection.db) {
-        val result =
-            SmartWaiverWebhookQueueTable.insertIgnore {
-              it[SmartWaiverWebhookQueueTable.uniqueId] = uniqueId
-              it[SmartWaiverWebhookQueueTable.event] = event
-              it[receivedAt] = LocalDateTime.now().format(DATETIME_FORMAT)
-            }
-        result.insertedCount > 0
-      }
-
-  suspend fun getUnprocessedQueueEntries(): List<Pair<String, String>> {
-    val cutoff = LocalDateTime.now().minusDays(QUEUE_LOOKBACK_DAYS).format(DATETIME_FORMAT)
-    val result = mutableListOf<Pair<String, String>>()
+  suspend fun insertWebhookQueueEntry(uniqueId: String, event: String): Boolean {
+    var alreadyQueued = false
     newSuspendedTransaction(Dispatchers.IO, db = DBMasterConnection.db) {
       exec(
-          "SELECT unique_id, event FROM `dms-makermanager`.smartwaiver_webhook_queue " +
-              "WHERE processed_at IS NULL AND received_at >= '$cutoff'") { rs ->
+          "SELECT COUNT(*) FROM `dms-makermanager`.smartwaiver_hooks " +
+              "WHERE unique_id = '$uniqueId' AND processed_at IS NULL") { rs ->
+            if (rs.next()) alreadyQueued = rs.getInt(1) > 0
+          }
+    }
+    if (alreadyQueued) return false
+    newSuspendedTransaction(Dispatchers.IO, db = DBMasterConnection.db) {
+      SmartWaiverHooksTable.insert {
+        it[SmartWaiverHooksTable.uniqueId] = uniqueId
+        it[hook] = event
+        it[createdAt] = LocalDateTime.now().format(DATETIME_FORMAT)
+      }
+    }
+    return true
+  }
+
+  suspend fun getUnprocessedQueueEntries(): List<Triple<Int, String, String>> {
+    val cutoff = LocalDateTime.now().minusDays(QUEUE_LOOKBACK_DAYS).format(DATETIME_FORMAT)
+    val result = mutableListOf<Triple<Int, String, String>>()
+    newSuspendedTransaction(Dispatchers.IO, db = DBMasterConnection.db) {
+      exec(
+          "SELECT id, unique_id, hook FROM `dms-makermanager`.smartwaiver_hooks " +
+              "WHERE processed_at IS NULL AND created_at >= '$cutoff'") { rs ->
             while (rs.next()) {
-              result.add(rs.getString("unique_id") to rs.getString("event"))
+              result.add(Triple(rs.getInt("id"), rs.getString("unique_id"), rs.getString("hook")))
             }
           }
     }
     return result
   }
 
-  suspend fun insertWaiverAndMarkProcessed(waiver: SmartwaiverFullWaiver, uniqueId: String) =
+  suspend fun insertWaiverAndMarkProcessed(waiver: SmartwaiverFullWaiver, queueId: Int) =
       newSuspendedTransaction(Dispatchers.IO, db = DBMasterConnection.db) {
         val exists =
             SmartWaiverTable.select { SmartWaiverTable.waiverId eq waiver.waiverId }
                 .firstOrNull() != null
         if (!exists) doInsert(waiver)
-        SmartWaiverWebhookQueueTable.update({ SmartWaiverWebhookQueueTable.uniqueId eq uniqueId }) {
-          it[processedAt] = LocalDateTime.now().format(DATETIME_FORMAT)
+        val now = LocalDateTime.now().format(DATETIME_FORMAT)
+        SmartWaiverHooksTable.update({ SmartWaiverHooksTable.id eq queueId }) {
+          it[processedAt] = now
+          it[updatedAt] = now
         }
       }
 

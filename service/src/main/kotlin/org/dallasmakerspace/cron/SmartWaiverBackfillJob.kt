@@ -52,14 +52,12 @@ constructor(
     val t1 = System.currentTimeMillis()
     val summaries = smartwaiverApiClient.getWaiverDetails(from, to)
     log.info(
-        "getWaiverDetails: ${summaries.size} summaries fetched (${System.currentTimeMillis() - t1}ms)"
-    )
+        "getWaiverDetails: ${summaries.size} summaries fetched (${System.currentTimeMillis() - t1}ms)")
 
     val t2 = System.currentTimeMillis()
     val existingIds = smartWaiverRepository.findExistingWaiverIds(summaries.map { it.waiverId })
     log.info(
-        "findExistingWaiverIds: ${existingIds.size} already in DB (${System.currentTimeMillis() - t2}ms)"
-    )
+        "findExistingWaiverIds: ${existingIds.size} already in DB (${System.currentTimeMillis() - t2}ms)")
 
     val toInsert = summaries.filter { it.waiverId !in existingIds }
     log.info("${toInsert.size} new waivers to insert")
