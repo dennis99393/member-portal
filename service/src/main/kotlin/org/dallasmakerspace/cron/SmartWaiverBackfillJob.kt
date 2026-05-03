@@ -39,7 +39,7 @@ constructor(
     val maxDate = smartWaiverRepository.getMaxDateCompleted()
     log.info("getMaxDateCompleted=${maxDate} (${System.currentTimeMillis() - t0}ms)")
 
-    val from = maxDate?.plusDays(1) ?: BACKFILL_START
+    val from = maxDate?.plusDays(0) ?: BACKFILL_START
 
     if (!from.isBefore(today)) {
       log.info("Backfill complete — from=$from is not before today=$today")
@@ -52,12 +52,14 @@ constructor(
     val t1 = System.currentTimeMillis()
     val summaries = smartwaiverApiClient.getWaiverDetails(from, to)
     log.info(
-        "getWaiverDetails: ${summaries.size} summaries fetched (${System.currentTimeMillis() - t1}ms)")
+        "getWaiverDetails: ${summaries.size} summaries fetched (${System.currentTimeMillis() - t1}ms)"
+    )
 
     val t2 = System.currentTimeMillis()
     val existingIds = smartWaiverRepository.findExistingWaiverIds(summaries.map { it.waiverId })
     log.info(
-        "findExistingWaiverIds: ${existingIds.size} already in DB (${System.currentTimeMillis() - t2}ms)")
+        "findExistingWaiverIds: ${existingIds.size} already in DB (${System.currentTimeMillis() - t2}ms)"
+    )
 
     val toInsert = summaries.filter { it.waiverId !in existingIds }
     log.info("${toInsert.size} new waivers to insert")
@@ -67,6 +69,12 @@ constructor(
     log.info("insertSmartWaiverBatchFromSummaries: done (${System.currentTimeMillis() - t3}ms)")
 
     return BackfillResult(
-        from, to, summaries.size, toInsert.size, existingIds.size, done = !to.isBefore(today))
+        from,
+        to,
+        summaries.size,
+        toInsert.size,
+        existingIds.size,
+        done = !to.isBefore(today),
+    )
   }
 }
