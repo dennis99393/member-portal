@@ -1,7 +1,11 @@
 package org.dallasmakerspace.webhook.handlers
 
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import org.dallasmakerspace.cron.SmartWaiverProcessQueueJob
 import org.dallasmakerspace.smartwaiver.SmartWaiverRepository
 import org.dallasmakerspace.webhook.WebhookHandler
 import org.dallasmakerspace.webhook.WebhookResult
@@ -14,6 +18,7 @@ class SmartWaiverWebhook
 @Inject
 constructor(
     private val smartWaiverRepository: SmartWaiverRepository,
+    private val processQueueJob: SmartWaiverProcessQueueJob,
 ) : WebhookHandler() {
 
   private val logger = LoggerFactory.getLogger(SmartWaiverWebhook::class.java)
@@ -32,6 +37,7 @@ constructor(
 
       val queued = smartWaiverRepository.insertWebhookQueueEntry(request.uniqueId, request.event)
       if (!queued) logger.warn("Duplicate webhook delivery ignored: ${request.uniqueId}")
+      CoroutineScope(Dispatchers.IO).launch { processQueueJob.run() }
       WebhookResult(true, "Queued waiver: ${request.uniqueId}")
     } catch (e: Exception) {
       logger.error("Error queuing SmartWaiver webhook", e)
