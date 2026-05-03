@@ -16,6 +16,7 @@ import org.dallasmakerspace.cron.DoorSwipesCronJob
 import org.dallasmakerspace.cron.MemberRefreshCronJob
 import org.dallasmakerspace.cron.ShowAndTellCronJob
 import org.dallasmakerspace.cron.SmartWaiverBackfillJob
+import org.dallasmakerspace.cron.SmartWaiverProcessQueueJob
 import org.dallasmakerspace.dataviz.DataVizRouter
 import org.dallasmakerspace.dataviz.di.DataVizModule
 import org.dallasmakerspace.discourse.FeaturedProjectsService
@@ -77,6 +78,8 @@ interface AppComponent {
   fun getDoorSwipesCronJob(): DoorSwipesCronJob
 
   fun getSmartWaiverBackfillJob(): SmartWaiverBackfillJob
+
+  fun getSmartWaiverProcessQueueJob(): SmartWaiverProcessQueueJob
 
   fun getCalendarService(): CalendarService
 

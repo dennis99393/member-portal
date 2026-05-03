@@ -31,6 +31,7 @@ import org.dallasmakerspace.cron.MemberRefreshCronJobParams
 import org.dallasmakerspace.cron.ShowAndTellCronJob
 import org.dallasmakerspace.cron.ShowAndTellCronJobParams
 import org.dallasmakerspace.cron.SmartWaiverBackfillJob
+import org.dallasmakerspace.cron.SmartWaiverProcessQueueJob
 import org.dallasmakerspace.dataviz.DataVizRouter
 import org.dallasmakerspace.di.DaggerAppComponent
 import org.dallasmakerspace.discourse.FeaturedProjectsService
@@ -106,6 +107,9 @@ fun Application.configureRouting() {
     }
     val backfillJob: SmartWaiverBackfillJob by lazy {
       DaggerAppComponent.create().getSmartWaiverBackfillJob()
+    }
+    val processQueueJob: SmartWaiverProcessQueueJob by lazy {
+      DaggerAppComponent.create().getSmartWaiverProcessQueueJob()
     }
     val dataVizRouter: DataVizRouter by lazy { DaggerAppComponent.create().getDataVizRouter() }
     val webhookRouter: WebhookRouter by lazy { DaggerAppComponent.create().getWebhookRouter() }
@@ -485,6 +489,11 @@ fun Application.configureRouting() {
         get("/cron/backfill-smartwaiver") {
           val result = backfillJob.run()
           call.respondText(result.toText(), ContentType.Text.Plain)
+        }
+
+        get("/cron/process-smartwaiver-queue") {
+          val result = processQueueJob.run()
+          call.respondText(result, ContentType.Text.Plain)
         }
       }
 
