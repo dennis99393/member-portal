@@ -87,6 +87,7 @@ object RouteFactory {
     REMOTE_ACCESS("/remote-access"),
     REMOTE_ACCESS_CONNECT("/remote-access/connect/{connectionId}"),
     REMOTE_ACCESS_DISCONNECT("/remote-access/disconnect/{connectionId}"),
+    SMARTWAIVER_WEBHOOK("/webhook/smartwaiver"),
   }
 }
 

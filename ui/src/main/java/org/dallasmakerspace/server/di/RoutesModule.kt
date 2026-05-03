@@ -37,6 +37,7 @@ import org.dallasmakerspace.server.routes.ShortLinkDetailsHandler
 import org.dallasmakerspace.server.routes.ShortLinkRedirectHandler
 import org.dallasmakerspace.server.routes.ShortLinksAdminHandler
 import org.dallasmakerspace.server.routes.ShortLinksHandler
+import org.dallasmakerspace.server.routes.SmartWaiverWebhookHandler
 import org.dallasmakerspace.server.routes.SuggestedEventsHandler
 import org.dallasmakerspace.server.voterregistration.VoterRegistrationManager
 
@@ -300,4 +301,12 @@ class RoutesModule {
       memberServiceClient: MemberServiceClient,
   ): IRouteHandler =
       RemoteAccessDisconnectHandler(loggerFactory, userInfoProvider, memberServiceClient)
+
+  @IntoMap
+  @Provides
+  @StringKey("/webhook/smartwaiver")
+  fun providesSmartWaiverWebhookHandler(
+      loggerFactory: LoggerFactory,
+      appConfig: AppConfig,
+  ): IRouteHandler = SmartWaiverWebhookHandler(loggerFactory, appConfig)
 }

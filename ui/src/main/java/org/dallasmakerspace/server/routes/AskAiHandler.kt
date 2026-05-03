@@ -56,7 +56,8 @@ constructor(
     val question =
         call.request.queryParameters["question"]
             ?: run {
-              call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing question parameter"))
+              call.respond(
+                  HttpStatusCode.BadRequest, mapOf("error" to "Missing question parameter"))
               return
             }
     val refresh = call.request.queryParameters["refresh"]?.toBoolean() ?: false

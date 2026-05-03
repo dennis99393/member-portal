@@ -93,6 +93,27 @@ class SmartwaiverApiClientMock @Inject constructor(loggerFactory: LoggerFactory)
     )
   }
 
+  override suspend fun getWaiver(waiverId: String): SmartwaiverFullWaiver {
+    log.info("Mock: Fetching waiver $waiverId")
+    return SmartwaiverFullWaiver(
+        waiverId = waiverId,
+        title = MOCK_WAIVER_TITLE,
+        createdOn = "2024-01-01 10:00:00",
+        firstName = "Test",
+        lastName = "User",
+        email = "test.user@example.com",
+        dob = "1990-01-01",
+        customWaiverFields =
+            mapOf(
+                "field-1" to
+                    SmartwaiverCustomField(
+                        value = "Online", displayText = "How did you hear about us?"),
+                "field-2" to
+                    SmartwaiverCustomField(value = "Friend", displayText = "Referral source"),
+            ),
+    )
+  }
+
   private fun w(
       today: LocalDate,
       daysAgo: Long,

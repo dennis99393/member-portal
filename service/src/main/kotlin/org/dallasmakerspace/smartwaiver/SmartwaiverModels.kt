@@ -69,3 +69,30 @@ data class WaiverSigningData(
 
 class SmartwaiverApiException(message: String, cause: Throwable? = null) :
     Exception(message, cause)
+
+@Serializable
+data class SmartwaiverCustomField(
+    val value: String = "",
+    val displayText: String = "",
+)
+
+@Serializable
+data class SmartwaiverFullWaiver(
+    val waiverId: String,
+    val title: String? = null,
+    val createdOn: String? = null,
+    val firstName: String? = null,
+    val lastName: String? = null,
+    val email: String? = null,
+    val dob: String? = null,
+    val customWaiverFields: Map<String, SmartwaiverCustomField> = emptyMap(),
+)
+
+@Serializable
+data class SmartwaiverFullWaiverResponse(
+    val version: Int? = null,
+    val id: String? = null,
+    val ts: String? = null,
+    val type: String? = null,
+    val waiver: SmartwaiverFullWaiver? = null,
+)

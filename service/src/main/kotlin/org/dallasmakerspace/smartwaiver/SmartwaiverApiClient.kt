@@ -228,6 +228,33 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) :
     }
   }
 
+  override suspend fun getWaiver(waiverId: String): SmartwaiverFullWaiver {
+    val apiKey = appConfig.requireStringProperty("app.smartwaiver.apiKey")
+    val url = "$SMARTWAIVER_BASE_URL/waivers/$waiverId"
+
+    val response =
+        getClient().use {
+          it.request(url) {
+            method = HttpMethod.Get
+            header("sw-api-key", apiKey)
+          }
+        }
+
+    return when (response.status) {
+      HttpStatusCode.OK -> {
+        val responseBody = response.bodyAsText()
+        val waiverResponse = json.decodeFromString<SmartwaiverFullWaiverResponse>(responseBody)
+        waiverResponse.waiver
+            ?: throw SmartwaiverApiException("Waiver missing in response for id: $waiverId")
+      }
+      HttpStatusCode.NotFound -> throw SmartwaiverApiException("Waiver not found: $waiverId")
+      HttpStatusCode.Unauthorized -> throw SmartwaiverApiException("Unauthorized: Invalid API key")
+      else ->
+          throw SmartwaiverApiException(
+              "Failed to fetch waiver $waiverId: ${response.status} - ${response.bodyAsText()}")
+    }
+  }
+
   private fun parseWaivers(waivers: List<SmartwaiverSummary>): List<WaiverSigningData> {
     return waivers.map { waiver ->
       val createdOn = LocalDateTime.parse(waiver.createdOn, smartwaiverDateFormatter)

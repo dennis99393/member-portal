@@ -27,14 +27,10 @@ fun Application.configureHttp() {
 
   install(Compression) {
     gzip {
-      condition {
-        request.headers[HttpHeaders.Accept]?.contains("text/event-stream") != true
-      }
+      condition { request.headers[HttpHeaders.Accept]?.contains("text/event-stream") != true }
     }
     deflate {
-      condition {
-        request.headers[HttpHeaders.Accept]?.contains("text/event-stream") != true
-      }
+      condition { request.headers[HttpHeaders.Accept]?.contains("text/event-stream") != true }
     }
   }
   install(ForwardedHeaders)

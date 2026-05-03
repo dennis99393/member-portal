@@ -120,6 +120,10 @@ fun Application.configureRouting() {
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handleBase(call) }
 
+    post(RouteFactory.Paths.SMARTWAIVER_WEBHOOK.path) {
+      RouteFactory.getHandler(call)?.handleBase(call)
+    }
+
     // PWA routes - no authentication required
     get(RouteFactory.Paths.MANIFEST.path) { RouteFactory.getHandler(call)?.handleBase(call) }
     get(RouteFactory.Paths.OFFLINE.path) { RouteFactory.getHandler(call)?.handleBase(call) }

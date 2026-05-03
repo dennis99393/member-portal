@@ -780,14 +780,15 @@ constructor(
           }
         }
     client.use {
-      it.prepareGet(url) { headers { appendAll(apiHeaders) } }.execute { response ->
-        val channel = response.bodyAsChannel()
-        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-        while (!channel.isClosedForRead) {
-          val read = channel.readAvailable(buffer)
-          if (read > 0) onChunk(String(buffer, 0, read, Charsets.UTF_8))
-        }
-      }
+      it.prepareGet(url) { headers { appendAll(apiHeaders) } }
+          .execute { response ->
+            val channel = response.bodyAsChannel()
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            while (!channel.isClosedForRead) {
+              val read = channel.readAvailable(buffer)
+              if (read > 0) onChunk(String(buffer, 0, read, Charsets.UTF_8))
+            }
+          }
     }
   }
 
