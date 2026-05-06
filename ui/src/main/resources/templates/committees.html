@@ -87,7 +87,7 @@
                         <div th:if="${committee.chairpersons != null and !committee.chairpersons.empty}">
                             <div th:each="chair : ${committee.chairpersons}" class="mb-1">
                                 <dms-member-card
-                                        th:attr="username=${chair.username},displayName=${chair.displayName},avatarUrl=${chair.avatarUrl}"
+                                        th:attr="username=${chair.username}"
                                         state="mini">
                                 </dms-member-card>
                             </div>
@@ -135,7 +135,7 @@
                             <div th:if="${committee.chairpersons != null and !committee.chairpersons.empty}">
                                 <div th:each="chair : ${committee.chairpersons}" class="mb-2">
                                     <dms-member-card
-                                            th:attr="username=${chair.username},displayName=${chair.displayName},avatarUrl=${chair.avatarUrl}"
+                                            th:attr="username=${chair.username}"
                                             state="mini">
                                     </dms-member-card>
                                 </div>

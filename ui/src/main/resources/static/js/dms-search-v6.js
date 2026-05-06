@@ -399,8 +399,6 @@ class DMSSearch extends HTMLElement {
                 if (item.type === 'member') {
                     const memberCard = document.createElement('dms-member-card');
                     memberCard.setAttribute('username', item.username);
-                    memberCard.setAttribute('displayName', item.displayName);
-                    memberCard.setAttribute('avatarUrl', item.avatarUrl || '');
                     memberCard.setAttribute('state', 'mini');
                     li.appendChild(memberCard);
                     li.addEventListener('click', () => this.handleMemberClick(item));

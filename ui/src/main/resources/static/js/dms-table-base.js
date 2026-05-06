@@ -414,19 +414,10 @@ class DmsTableBase extends LitElement {
             return html`<a href="${url}" target="_blank" rel="noopener noreferrer" class="cell-link">${text}</a>`;
         }
 
-        // Check if cell is a MEMBER object (has username, displayName, avatarUrl properties)
+        // Check if cell is a MEMBER object (has username property)
         if (cell !== null && typeof cell === 'object' && 'username' in cell) {
             const username = cell.username || '';
-            const displayName = cell.displayName || username;
-            const avatarUrl = cell.avatarUrl || '';
-
-            // Return the dms-member-card component as HTML
-            return html`<dms-member-card
-                username="${username}"
-                displayName="${displayName}"
-                avatarUrl="${avatarUrl}"
-                state="mini">
-            </dms-member-card>`;
+            return html`<dms-member-card username="${username}" state="mini"></dms-member-card>`;
         }
 
         // Check if cell is a BADGE object (has variant and text properties)

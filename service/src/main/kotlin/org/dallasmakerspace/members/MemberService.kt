@@ -286,6 +286,9 @@ constructor(
                     members = emptyList(),
                 )
               }
+          if (dbMember.avatarUrl.isNullOrBlank()) {
+            dbMember.avatarUrl = dbMember.discourseAvatarUrl
+          }
 
           dbMember
         }

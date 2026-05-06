@@ -5,6 +5,9 @@ import io.ktor.resources.*
 @Resource("/members")
 class Members(val loggedInDays: Int = 90) {
 
+  @Resource("batch")
+  class Batch(val parent: Members = Members())
+
   @Resource("{username}")
   class DMSMember(
       val parent: Members = Members(),

@@ -150,6 +150,14 @@ fun Application.configureRouting() {
           call.respond(ApiResponse(Status.SUCCESS, "Member ${member.username}", member))
         }
 
+        post<Members.Batch> {
+          @Suppress("UNCHECKED_CAST")
+          val body = call.receive<Map<String, List<String>>>()
+          val usernames = body["usernames"] ?: emptyList()
+          val members = memberService.getMembersByUsernameList(usernames)
+          call.respond(ApiResponse(Status.SUCCESS, "Fetched ${members.size} members", members))
+        }
+
         /** Activity Log operations - requires member:read since it's member data * */
         get<Members.DMSMember.ActivityLog> { activityLogRequested ->
           // Get activity log ...
