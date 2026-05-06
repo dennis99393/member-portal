@@ -122,8 +122,8 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
     val administrators =
         (adResult["administrators"] as? Array<*>)?.map { it.toString() } ?: emptyList()
 
-    // Parse members and nested groups
-    val (members, nestedGroups) = parseMembersAndGroups(adResult)
+    // Parse members and nested groups, including disabled accounts for the single-group view
+    val (members, nestedGroups) = parseMembersAndGroups(adResult, includeDisabled = true)
 
     return ADGroup(
         cn = adResult["cn"].toString(),
@@ -202,7 +202,8 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
    * @return Pair of (List of ADUser objects, List of group DNs)
    */
   private fun parseMembersAndGroups(
-      attributeMap: Map<String, Any?>?
+      attributeMap: Map<String, Any?>?,
+      includeDisabled: Boolean = false,
   ): Pair<List<ADUser>, List<String>> {
     if (attributeMap.isNullOrEmpty()) return Pair(emptyList(), emptyList())
 
@@ -218,7 +219,7 @@ constructor(private val activeDirectoryClient: IActiveDirectoryClient) : IActive
         userDNs
             .chunked(100)
             .flatMap { subChunk -> getMembersByDnList(subChunk) }
-            .filter { it.enabled }
+            .let { if (includeDisabled) it else it.filter { u -> u.enabled } }
             .distinctBy { it.sAMAccountName }
 
     return Pair(users, groupDNs)

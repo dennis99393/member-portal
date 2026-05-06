@@ -70,41 +70,48 @@ constructor(
               .groupBy { it.memberUsername }
               .mapValues { (_, events) -> events.maxOf { it.eventTimestamp } }
 
-      // Process members to add proper avatar URLs
-      val processedMembers =
+      fun processMember(member: org.dallasmakerspace.models.DMSMember): MutableMap<String, Any?> {
+        val avatarUrl =
+            member.avatarUrl
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { url ->
+                  when {
+                    url.startsWith("//") -> "https:$url"
+                    else -> "https://talk.dallasmakerspace.org$url"
+                  }.replace("{size}", "144")
+                } ?: ""
+        return mutableMapOf(
+            "username" to member.username,
+            "displayName" to member.displayName,
+            "avatarUrl" to avatarUrl,
+            "discourseUsername" to member.discourseUsername,
+            "discourseAvatarUrl" to member.discourseAvatarUrl,
+            "discordUserId" to member.discordUserId,
+        )
+      }
+
+      val sortKey: (org.dallasmakerspace.models.DMSMember) -> kotlinx.datetime.LocalDateTime = { m ->
+        memberTimestamps[m.username] ?: kotlinx.datetime.LocalDateTime(1970, 1, 1, 0, 0, 0)
+      }
+
+      val activeMembers =
           requestedGroup.members
-              // Sort by most recent addition first
-              .sortedByDescending { member ->
-                memberTimestamps[member.username]
-                    ?: kotlinx.datetime.LocalDateTime(1970, 1, 1, 0, 0, 0)
-              }
-              .map { member ->
-                val avatarUrl =
-                    member.avatarUrl
-                        ?.takeIf { it.isNotEmpty() }
-                        ?.let { url ->
-                          when {
-                            url.startsWith("//") -> "https:$url"
-                            else -> "https://talk.dallasmakerspace.org$url"
-                          }.replace("{size}", "144")
-                        } ?: ""
+              .filter { it.enabled }
+              .sortedByDescending(sortKey)
+              .map { processMember(it) }
 
-                // Create a map with processed avatar URL
-                mutableMapOf<String, Any?>(
-                    "username" to member.username,
-                    "displayName" to member.displayName,
-                    "avatarUrl" to avatarUrl,
-                    "discourseUsername" to member.discourseUsername,
-                    "discourseAvatarUrl" to member.discourseAvatarUrl,
-                    "discordUserId" to member.discordUserId,
-                )
-              }
+      val inactiveMembers =
+          requestedGroup.members
+              .filter { !it.enabled }
+              .sortedByDescending(sortKey)
+              .map { processMember(it) }
 
-      // Generate JSON array string for excluded usernames
+      // JSON for the member picker excluded list — include all members regardless of enabled status
       val memberUsernamesJson =
           requestedGroup.members.joinToString(",", "[", "]") { "\"${it.username}\"" }
 
-      jsonMap["members"] = processedMembers
+      if (activeMembers.isNotEmpty()) jsonMap["members"] = activeMembers
+      if (inactiveMembers.isNotEmpty()) jsonMap["inactiveMembers"] = inactiveMembers
       jsonMap["memberlist_incomplete"] = requestedGroup.membersListIncomplete
       jsonMap["memberUsernamesJson"] = memberUsernamesJson
     }

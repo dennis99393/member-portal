@@ -120,41 +120,93 @@
             <!-- Assigned members card -->
             <div class="dms-card shadow-sm mt-4">
                 <div class="card-body">
-                    <h4 class="card-title mt-3 mb-4 dms-card-title">Members Assigned <span th:if="${members}"
-                                                                                           th:text="'(' + ${#lists.size(members)} + ' active)'"></span>
-                    </h4>
+                    <h4 class="card-title mt-3 mb-3 dms-card-title">Members Assigned</h4>
                     <!-- Member management UI - only shown when feature is enabled and user has admin role -->
-                    <div th:if="${canManageMembers}" class="mb-4">
+                    <div th:if="${canManageMembers}" class="mb-3">
                         <dms-member-picker
                             th:attr="group-slug=${slug},excluded-usernames=${memberUsernamesJson}">
                         </dms-member-picker>
                     </div>
-                    <div class="card-text">
-                        <div th:if="${members}" class="member-list"
-                             style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
-                            <div th:each="member : ${members}" class="member-item"
-                                 style="padding: 10px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; overflow: hidden; position: relative;">
-                                <button th:if="${canManageMembers}"
-                                        class="dms-remove-member-btn btn btn-sm p-0"
-                                        th:attr="data-username=${member.username},data-group-slug=${slug}"
-                                        title="Remove member"
-                                        style="position: absolute; top: 6px; right: 6px; color: #adb5bd; background: none; border: none; line-height: 1; z-index: 1;">
-                                    <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+                    <div class="card-text" th:if="${members != null or inactiveMembers != null}">
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link"
+                                        th:classappend="${members != null ? 'active' : ''}"
+                                        id="active-tab" data-bs-toggle="tab"
+                                        data-bs-target="#active-members" type="button" role="tab"
+                                        aria-controls="active-members"
+                                        th:attr="aria-selected=${members != null ? 'true' : 'false'}">
+                                    Active
+                                    <span class="badge bg-primary ms-1"
+                                          th:text="${members != null ? #lists.size(members) : 0}"></span>
                                 </button>
-                                <dms-member-card
-                                        th:attr="username=${member.username}"
-                                        state="mini">
-                                </dms-member-card>
+                            </li>
+                            <li class="nav-item" role="presentation" th:if="${inactiveMembers != null}">
+                                <button class="nav-link"
+                                        th:classappend="${members == null ? 'active' : ''}"
+                                        id="inactive-tab" data-bs-toggle="tab"
+                                        data-bs-target="#inactive-members" type="button" role="tab"
+                                        aria-controls="inactive-members"
+                                        th:attr="aria-selected=${members == null ? 'true' : 'false'}">
+                                    Inactive
+                                    <span class="badge bg-secondary ms-1"
+                                          th:text="${#lists.size(inactiveMembers)}"></span>
+                                </button>
+                            </li>
+                        </ul>
+                        <!-- Tab content -->
+                        <div class="tab-content">
+                            <!-- Active members tab -->
+                            <div class="tab-pane fade"
+                                 th:classappend="${members != null ? 'show active' : ''}"
+                                 id="active-members" role="tabpanel" aria-labelledby="active-tab">
+                                <div th:if="${members != null}" class="member-list"
+                                     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
+                                    <div th:each="member : ${members}" class="member-item"
+                                         style="padding: 10px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; overflow: hidden; position: relative;">
+                                        <button th:if="${canManageMembers}"
+                                                class="dms-remove-member-btn btn btn-sm p-0"
+                                                th:attr="data-username=${member.username},data-group-slug=${slug}"
+                                                title="Remove member"
+                                                style="position: absolute; top: 6px; right: 6px; color: #adb5bd; background: none; border: none; line-height: 1; z-index: 1;">
+                                            <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+                                        </button>
+                                        <dms-member-card
+                                                th:attr="username=${member.username}"
+                                                state="mini">
+                                        </dms-member-card>
+                                    </div>
+                                </div>
+                                <div th:unless="${members != null}" class="text-muted py-2">
+                                    No active members in this group.
+                                </div>
+                                <div th:if="${memberlist_incomplete}" class="alert alert-warning mt-3" role="alert">
+                                    <strong>⚠️ Note:</strong> Only some of the assigned members are listed above.
+                                    To check if a specific member has been assigned to this group please check the member
+                                    profile.
+                                </div>
                             </div>
-                            <div th:if="${memberlist_incomplete}" class="alert alert-warning mt-3" role="alert">
-                                <strong>⚠️ Note:</strong> Only some of the assigned members are listed above.
-                                To check if a specific member has been assigned to this group please check the member
-                                profile.
+                            <!-- Inactive members tab -->
+                            <div class="tab-pane fade"
+                                 th:classappend="${members == null ? 'show active' : ''}"
+                                 id="inactive-members" role="tabpanel" aria-labelledby="inactive-tab"
+                                 th:if="${inactiveMembers != null}">
+                                <div class="member-list"
+                                     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
+                                    <div th:each="member : ${inactiveMembers}" class="member-item"
+                                         style="padding: 10px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; overflow: hidden; position: relative; opacity: 0.65;">
+                                        <dms-member-card
+                                                th:attr="username=${member.username}"
+                                                state="mini">
+                                        </dms-member-card>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div th:unless="${members}" class="text-muted">
-                            No members assigned to this group yet.
-                        </div>
+                    </div>
+                    <div th:unless="${members != null or inactiveMembers != null}" class="text-muted">
+                        No members assigned to this group yet.
                     </div>
                 </div>
             </div>
@@ -173,6 +225,10 @@
 <script src="/static/js/dms-relative-date.js" type="module"></script>
 <script src="/static/js/dms-member-picker.js" type="module"></script>
 <script src="/static/js/dms-page-loader.js" defer></script>
+<style>
+.dms-card .nav-tabs .nav-link { color: #6c757d; }
+.dms-card .nav-tabs .nav-link.active { color: #0b9cc9; }
+</style>
 <style th:if="${canManageMembers}">
 .dms-remove-member-btn:hover { color: #dc3545 !important; }
 .dms-remove-member-btn:hover .material-symbols-outlined { color: #dc3545; }

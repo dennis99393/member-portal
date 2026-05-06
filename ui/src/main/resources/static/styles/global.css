@@ -34,7 +34,7 @@ div.error-details > p { color: #c1c1c1; }
 .navbar-brand {
     color: white !important;
 }
-.nav-link {
+.custom-navbar .nav-link {
     color: white !important;
 }
 .dropdown-toggle::after {
