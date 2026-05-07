@@ -598,6 +598,17 @@ constructor(
     }
   }
 
+  suspend fun getTotalActiveDays(username: String, sessionId: String?): Int? {
+    return try {
+      val apiHeaders = getApiHeaders(sessionId)
+      val result = dmsHttpClient.get("$baseUrl/members/$username/total-active-time", apiHeaders)
+      (result["data"] as? Number)?.toInt()
+    } catch (ex: Exception) {
+      log.warn("Failed to get total active days for $username", ex)
+      null
+    }
+  }
+
   suspend fun getDebugInfo(
       username: String,
       sessionId: String?,

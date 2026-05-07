@@ -29,6 +29,7 @@ import org.dallasmakerspace.server.routes.OidcCallbackHandler
 import org.dallasmakerspace.server.routes.PingHandler
 import org.dallasmakerspace.server.routes.ProfileDebugInfoHandler
 import org.dallasmakerspace.server.routes.ProfileFeaturedProjectsHandler
+import org.dallasmakerspace.server.routes.ProfileTotalActiveTimeHandler
 import org.dallasmakerspace.server.routes.ProfileHandler
 import org.dallasmakerspace.server.routes.ProfileMeHandler
 import org.dallasmakerspace.server.routes.ReportHandler
@@ -99,6 +100,15 @@ class RoutesModule {
       memberServiceClient: MemberServiceClient,
   ): IRouteHandler =
       ProfileFeaturedProjectsHandler(loggerFactory, userInfoProvider, memberServiceClient)
+
+  @IntoMap
+  @Provides
+  @StringKey("/profile/@{preferred_username}/total-active-time")
+  fun providesProfileTotalActiveTimeHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberService: MemberService,
+  ): IRouteHandler = ProfileTotalActiveTimeHandler(loggerFactory, userInfoProvider, memberService)
 
   @IntoMap
   @Provides

@@ -43,5 +43,7 @@ class Members(val loggedInDays: Int = 90) {
     @Resource("fix-badge") class FixBadge(val parent: DMSMember)
 
     @Resource("debug-info") class DebugInfo(val parent: DMSMember)
+
+    @Resource("total-active-time") class TotalActiveTime(val parent: DMSMember)
   }
 }

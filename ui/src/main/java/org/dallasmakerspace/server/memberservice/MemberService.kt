@@ -251,6 +251,10 @@ constructor(
     return memberServiceClient.getBadgeFromActiveDirectory(username, sessionId)
   }
 
+  suspend fun getTotalActiveDays(username: String, sessionId: String?): Int? {
+    return memberServiceClient.getTotalActiveDays(username, sessionId)
+  }
+
   suspend fun getDebugInfo(
       username: String,
       sessionId: String?,

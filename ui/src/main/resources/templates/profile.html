@@ -217,7 +217,11 @@
 
                         <div class="d-flex align-items-center mb-3">
                             <span class="material-symbols-outlined card-item-icon">update</span>
-                            <span>Total time at DMS: <span th:text="${membership_duration}"></span></span>
+                            <span th:if="${enabled}">Total time at DMS: <span th:text="${membership_duration}"></span></span>
+                            <span th:unless="${enabled}">Total time at DMS:
+                                <span id="membershipDurationAsync"
+                                      th:attr="data-username=${preferred_username}">…</span>
+                            </span>
                         </div>
 
                         <div th:if="${discourse_username}" class="d-flex align-items-center mb-3">
@@ -888,6 +892,22 @@
                 container.innerHTML = '<span class="text-danger small">Failed to load debug info.</span>';
             }
         }
+    })();
+</script>
+
+<!-- Total Active Time Async Loader (disabled profiles only) -->
+<script>
+    (function() {
+        'use strict';
+        const el = document.getElementById('membershipDurationAsync');
+        if (!el) return;
+        const username = el.dataset.username;
+        fetch('/profile/@' + username + '/total-active-time')
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                el.textContent = (data && data.total_active_duration) ? data.total_active_duration : 'Unknown';
+            })
+            .catch(function() { el.textContent = 'Unknown'; });
     })();
 </script>
 

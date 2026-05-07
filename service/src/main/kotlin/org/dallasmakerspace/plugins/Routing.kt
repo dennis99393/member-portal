@@ -223,6 +223,16 @@ fun Application.configureRouting() {
               ))
         }
 
+        get<Members.DMSMember.TotalActiveTime> { request ->
+          val totalActiveDays = memberService.getTotalActiveDays(request.parent.username)
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS,
+                  "Total active time for ${request.parent.username}",
+                  totalActiveDays,
+              ))
+        }
+
         /** Debug info operations - get debug info for member * */
         get<Members.DMSMember.DebugInfo> { debugInfoRequest ->
           val debugInfo = memberService.getDebugInfo(debugInfoRequest.parent.username)

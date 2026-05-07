@@ -926,6 +926,26 @@ constructor(
    * @param username The username of the member
    * @return MemberDebugInfo with status from all three systems
    */
+  suspend fun getTotalActiveDays(username: String): Int? {
+    val relatedAccounts = makerManagerDataService.getAccountInfoMap(listOf(username))
+    val accountInfo = relatedAccounts[username] ?: return null
+    val account =
+        if (accountInfo.isPrimaryAccount) accountInfo.primaryAccount
+        else accountInfo.addonAccounts.find { it.username == username }
+    account ?: return null
+    val whmcsId = account.whmcsId
+    val regDate =
+        accountInfo.regDate?.let { date ->
+          java.time.LocalDate.of(date.year, date.monthNumber, date.dayOfMonth)
+        } ?: whmcsDataService.getAccountRegdate(whmcsId) ?: return null
+    val accountStatus =
+        whmcsDataService.getAccountInfoMap(listOf(whmcsId), regDate)[whmcsId] ?: return null
+    return accountStatus.timeline
+        .filter { it.type == org.dallasmakerspace.db.master.TimelineEntryType.ACTIVE }
+        .sumOf { it.durationDays }
+        .takeIf { it > 0 }
+  }
+
   suspend fun getDebugInfo(username: String): org.dallasmakerspace.models.MemberDebugInfo {
     // Get AD account status
     val adAccountEnabled =
