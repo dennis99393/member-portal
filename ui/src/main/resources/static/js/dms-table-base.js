@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'https://esm.sh/lit@3.3.0';
 import { unsafeHTML } from 'https://esm.sh/lit@3.3.0/directives/unsafe-html.js';
+import { fetchMember } from './dms-member-service.js';
 
 /**
  * DmsTableBase - A base table component for rendering both regular and metadata tables.
@@ -209,6 +210,20 @@ class DmsTableBase extends LitElement {
         changedProperties.has('pageSize') ||
         changedProperties.has('_currentPage')) {
             this._updatePagination();
+        }
+
+        if (this.filterable && changedProperties.has('rows')) {
+            this._eagerFetchMembers();
+        }
+    }
+
+    _eagerFetchMembers() {
+        for (const row of this.rows) {
+            for (const cell of row) {
+                if (cell !== null && typeof cell === 'object' && 'username' in cell && cell.username) {
+                    fetchMember(cell.username);
+                }
+            }
         }
     }
 
