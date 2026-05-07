@@ -29,6 +29,7 @@
         .machine-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.15) !important; }
         .status-badge-free { background-color: #198754; }
         .status-badge-inuse { background-color: #dc3545; }
+        .status-badge-offline { background-color: #6c757d; }
         .protocol-icon { font-size: 1.4rem; color: #6c757d; }
         .category-header { border-left: 4px solid #0b9cc9; padding-left: 0.75rem; }
     </style>
@@ -67,16 +68,24 @@
                         </div>
 
                         <div class="mb-3">
-                            <span th:if="${!machine.inUse}"
+                            <span th:if="${machine.status == 'AVAILABLE'}"
                                   class="badge status-badge-free text-white">Available</span>
-                            <span th:if="${machine.inUse}"
+                            <span th:if="${machine.status == 'IN_USE'}"
                                   class="badge status-badge-inuse text-white"
                                   th:text="'In use by ' + ${machine.occupantUsername}">In use</span>
+                            <span th:if="${machine.status == 'OFFLINE'}"
+                                  class="badge status-badge-offline text-white">Offline</span>
                         </div>
 
                         <div class="mt-auto">
+                            <!-- Offline -->
+                            <button th:if="${machine.status == 'OFFLINE'}"
+                                    class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">cloud_off</span>
+                                Offline
+                            </button>
                             <!-- Available and user has access -->
-                            <a th:if="${category.userHasAccess && !machine.inUse}"
+                            <a th:if="${category.userHasAccess && machine.status == 'AVAILABLE'}"
                                th:href="'/remote-access/connect/' + ${machine.connectionId}"
                                target="_blank"
                                class="btn btn-primary btn-sm w-100">
@@ -84,10 +93,10 @@
                                 Connect
                             </a>
                             <!-- In use -->
-                            <button th:if="${machine.inUse}"
+                            <button th:if="${machine.status == 'IN_USE'}"
                                     class="btn btn-secondary btn-sm w-100" disabled>In Use</button>
                             <!-- Kill session (infra only) -->
-                            <button th:if="${canKillConnections && machine.inUse}"
+                            <button th:if="${canKillConnections && machine.status == 'IN_USE'}"
                                     th:data-connection-id="${machine.connectionId}"
                                     th:data-occupant="${machine.occupantUsername}"
                                     class="btn btn-danger btn-sm w-100 mt-1 kill-btn">
@@ -95,7 +104,7 @@
                                 Kill Session
                             </button>
                             <!-- No access -->
-                            <button th:if="${!category.userHasAccess && !machine.inUse}"
+                            <button th:if="${!category.userHasAccess && machine.status == 'AVAILABLE'}"
                                     class="btn btn-outline-secondary btn-sm w-100" disabled
                                     th:title="'Requires: ' + ${category.requiredAdGroup}">
                                 <span class="material-symbols-outlined" style="font-size:1rem;vertical-align:middle">lock</span>
