@@ -10,16 +10,10 @@ data class GuacamoleTokenResponse(
 )
 
 @Serializable
-data class GuacamoleConnectionParameters(
-    @SerialName("hostname") val hostname: String = "",
-)
-
-@Serializable
 data class GuacamoleConnection(
     @SerialName("identifier") val identifier: String,
     @SerialName("name") val name: String,
     @SerialName("protocol") val protocol: String,
-    @SerialName("parameters") val parameters: GuacamoleConnectionParameters = GuacamoleConnectionParameters(),
 )
 
 @Serializable

@@ -10,7 +10,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import org.dallasmakerspace.config.ConfigOverrideService
 import org.dallasmakerspace.core.LoggerFactory
-import org.dallasmakerspace.guacamole.GuacamoleConnection
 import org.dallasmakerspace.guacamole.IGuacamoleApiClient
 
 private const val PROBE_TIMEOUT_MS = 2_000
@@ -67,12 +66,18 @@ constructor(
             }
             .distinct()
 
-    // Launch TCP probes in parallel for all known connections
+    // Fetch hostname from Guacamole and TCP-probe each VM in parallel
     val probeJobs =
         allConnectionIds.mapNotNull { id ->
-          connectionById[id]?.let { conn -> id to async { probeConnectivity(conn) } }
+          connectionById[id]?.let { conn ->
+            id to
+                async {
+                  val hostname = guacamoleApiClient.getConnectionHostname(id)
+                  probeConnectivity(hostname, conn.protocol)
+                }
+          }
         }
-    // All probes are running concurrently; await each in turn
+    // All jobs are running concurrently; await each in turn
     val reachabilityById = buildMap<String, Boolean> {
       for ((id, deferred) in probeJobs) put(id, deferred.await())
     }
@@ -121,10 +126,10 @@ constructor(
     }
   }
 
-  private suspend fun probeConnectivity(conn: GuacamoleConnection): Boolean {
-    val host = conn.parameters.hostname
+  private suspend fun probeConnectivity(hostname: String, protocol: String): Boolean {
+    val host = hostname
     if (host.isBlank()) return true
-    val port = if (conn.protocol == "rdp") PORT_RDP else PORT_SSH
+    val port = if (protocol == "rdp") PORT_RDP else PORT_SSH
     return withContext(Dispatchers.IO) {
       try {
         Socket().use { socket ->
@@ -132,7 +137,7 @@ constructor(
           true
         }
       } catch (e: Exception) {
-        log.debug("VM {} ({}:{}) unreachable: {}", conn.name, host, port, e.message)
+        log.debug("VM ({}:{}) unreachable: {}", host, port, e.message)
         false
       }
     }

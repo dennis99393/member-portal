@@ -33,4 +33,9 @@ class GuacamoleApiClientMock @Inject constructor(loggerFactory: LoggerFactory) :
   override suspend fun killActiveConnection(identifier: String) {
     log.info("Mock: killActiveConnection identifier=$identifier")
   }
+
+  override suspend fun getConnectionHostname(id: String): String {
+    log.info("Mock: getConnectionHostname id=$id")
+    return ""
+  }
 }

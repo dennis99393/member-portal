@@ -129,6 +129,27 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : IG
     }
   }
 
+  override suspend fun getConnectionHostname(id: String): String {
+    val token = getToken()
+    try {
+      val response =
+          newClient().use { client ->
+            client.get("$baseUrl/api/session/data/postgresql/connections/$id/parameters") {
+              header("Guacamole-Token", token)
+            }
+          }
+      if (response.status != HttpStatusCode.OK) return ""
+      return json.parseToJsonElement(response.bodyAsText())
+          .jsonObject["hostname"]
+          ?.jsonPrimitive
+          ?.content
+          ?: ""
+    } catch (e: Exception) {
+      log.warn("Failed to fetch hostname for connection $id", e)
+      return ""
+    }
+  }
+
   override suspend fun killActiveConnection(identifier: String) {
     val token = getToken()
     val response =

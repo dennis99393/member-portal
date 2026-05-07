@@ -6,4 +6,6 @@ interface IGuacamoleApiClient {
   suspend fun getActiveConnections(): List<GuacamoleActiveConnection>
 
   suspend fun killActiveConnection(identifier: String)
+
+  suspend fun getConnectionHostname(id: String): String
 }
