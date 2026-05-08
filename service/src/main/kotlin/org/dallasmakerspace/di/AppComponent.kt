@@ -42,6 +42,7 @@ import org.dallasmakerspace.webhook.di.WebhookModule
             DiscourseModule::class,
             GuacamoleModule::class,
             DoorControllerModule::class,
+            MasterDbModule::class,
             MembersModule::class,
             DataVizModule::class,
             ShortLinksModule::class,

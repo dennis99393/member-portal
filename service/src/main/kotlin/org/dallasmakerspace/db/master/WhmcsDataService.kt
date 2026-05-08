@@ -14,9 +14,9 @@ constructor(
     private val time: Time,
     private val whmcsDataRepository: WhmcsDataRepository,
     private val voterRegistrationManager: VoterRegistrationManager
-) {
+) : IWhmcsDataService {
   /** Get account info for a list of WHMCS user IDs. */
-  suspend fun getAccountInfoMap(whmcsIdList: List<Int>): Map<Int, AccountStatus> {
+  override suspend fun getAccountInfoMap(whmcsIdList: List<Int>): Map<Int, AccountStatus> {
     val startDate: LocalDate =
         time.getToday().minusDays(VoterRegistrationManager.MEMBER_IN_GOOD_STANDING_DAYS)
     return getAccountInfoMap(whmcsIdList, startDate)
@@ -28,7 +28,7 @@ constructor(
    * @param whmcsIdList List of WHMCS user IDs
    * @param startDate Start date for the check (how far back to scan)
    */
-  suspend fun getAccountInfoMap(
+  override suspend fun getAccountInfoMap(
       whmcsIdList: List<Int>,
       startDate: LocalDate
   ): Map<Int, AccountStatus> {
@@ -161,7 +161,7 @@ constructor(
         timeline = timeline)
   }
 
-  suspend fun getAccountRegdate(whmcsId: Int): LocalDate? {
+  override suspend fun getAccountRegdate(whmcsId: Int): LocalDate? {
     return whmcsDataRepository.getAccountRegdate(whmcsId)
   }
 }

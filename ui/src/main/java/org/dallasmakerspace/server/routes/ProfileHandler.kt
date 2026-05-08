@@ -144,7 +144,7 @@ constructor(
     }
 
     // Await elections URL and events — both have been running throughout all synchronous processing
-    jsonMap["elections_url"] = requireNotNull(electionsUrlDeferred.await())
+    jsonMap["elections_url"] = electionsUrlDeferred.await() ?: ""
     val events = eventsDeferred.await()
     if (events.isNotEmpty()) {
       val formattedEvents =

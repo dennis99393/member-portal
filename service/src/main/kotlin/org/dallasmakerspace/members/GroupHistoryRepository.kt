@@ -21,7 +21,7 @@ import org.jetbrains.exposed.sql.select
 import org.slf4j.LoggerFactory
 
 /** Manages the group history records. CRUD operations using GroupHistoryDAO. */
-class GroupHistoryRepository @Inject constructor() {
+class GroupHistoryRepository @Inject constructor() : IGroupHistoryRepository {
   private val logger = LoggerFactory.getLogger(GroupHistoryRepository::class.java)
 
   /**
@@ -30,7 +30,7 @@ class GroupHistoryRepository @Inject constructor() {
    * @param groupId The ID of the group.
    * @return List of group history records.
    */
-  suspend fun getGroupHistoryById(groupId: Int): List<GroupHistory> = suspendTransaction {
+  override suspend fun getGroupHistoryById(groupId: Int): List<GroupHistory> = suspendTransaction {
     GroupHistoryTable.join(
             actorProfileAlias,
             JoinType.INNER,
@@ -60,7 +60,7 @@ class GroupHistoryRepository @Inject constructor() {
    * @param groupName The name of the group.
    * @return List of group history records from the last 6 months.
    */
-  suspend fun getGroupHistoryByName(groupName: String): List<GroupHistory> = suspendTransaction {
+  override suspend fun getGroupHistoryByName(groupName: String): List<GroupHistory> = suspendTransaction {
     val sixMonthsAgo = LocalDateTime.now().minusMonths(6)
 
     GroupHistoryTable.join(
@@ -95,7 +95,7 @@ class GroupHistoryRepository @Inject constructor() {
    * @param memberId The ID of the member.
    * @return List of group history records.
    */
-  suspend fun getMemberGroupHistoryById(memberId: Int): List<GroupHistory> = suspendTransaction {
+  override suspend fun getMemberGroupHistoryById(memberId: Int): List<GroupHistory> = suspendTransaction {
     GroupHistoryTable.join(
             actorProfileAlias,
             JoinType.INNER,
@@ -125,7 +125,7 @@ class GroupHistoryRepository @Inject constructor() {
    * @param username The username of the member.
    * @return List of group history records.
    */
-  suspend fun getMemberGroupHistoryByUsername(username: String): List<GroupHistory> =
+  override suspend fun getMemberGroupHistoryByUsername(username: String): List<GroupHistory> =
       suspendTransaction {
         GroupHistoryTable.join(
                 actorProfileAlias,
@@ -160,13 +160,13 @@ class GroupHistoryRepository @Inject constructor() {
    * @param eventTimestamp The timestamp when the event occurred.
    * @return The inserted group history record.
    */
-  suspend fun insertGroupHistory(
+  override suspend fun insertGroupHistory(
       actorId: Int,
       memberId: Int,
       groupId: Int,
       actionType: ActionType,
       eventTimestamp: java.time.LocalDateTime,
-      source: String = "AD_WEBHOOK",
+      source: String,
   ): GroupHistory = suspendTransaction {
     val historyDao =
         GroupHistoryDAO.new {
@@ -210,7 +210,7 @@ class GroupHistoryRepository @Inject constructor() {
    * @param dn The distinguished name of the group (optional).
    * @return The ID of the group.
    */
-  suspend fun getOrCreateGroup(name: String, dn: String? = null): Int = suspendTransaction {
+  override suspend fun getOrCreateGroup(name: String, dn: String?): Int = suspendTransaction {
     val existingGroup = GroupDAO.find { GroupsTable.name eq name }.firstOrNull()
 
     if (existingGroup != null) {
@@ -227,7 +227,7 @@ class GroupHistoryRepository @Inject constructor() {
     }
   }
 
-  suspend fun hasPortalInitiatedRecord(
+  override suspend fun hasPortalInitiatedRecord(
       memberId: Int,
       groupId: Int,
       actionType: ActionType,

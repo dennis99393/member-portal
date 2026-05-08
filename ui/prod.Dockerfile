@@ -6,6 +6,7 @@ RUN addgroup -g 1001 appuser && \
     adduser -D -u 1001 -G appuser appuser
 
 ENV TZ="America/Chicago"
+ENV ENV_DEV_MODE=false
 
 # Set the working directory in the container
 WORKDIR /app

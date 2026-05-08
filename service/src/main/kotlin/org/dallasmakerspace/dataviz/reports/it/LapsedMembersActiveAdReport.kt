@@ -7,7 +7,7 @@ import kotlinx.serialization.json.buildJsonObject
 import org.dallasmakerspace.activedirectory.ActiveDirectoryClient
 import org.dallasmakerspace.dataviz.DataVizReport
 import org.dallasmakerspace.db.master.GenericRepository
-import org.dallasmakerspace.db.master.WhmcsDataService
+import org.dallasmakerspace.db.master.IWhmcsDataService
 import org.dallasmakerspace.members.MemberService
 import org.dallasmakerspace.models.DataField
 import org.dallasmakerspace.models.DataItem
@@ -20,7 +20,7 @@ constructor(
     private val adClient: ActiveDirectoryClient,
     private val memberService: MemberService,
     private val genericRepository: GenericRepository,
-    private val whmcsDataService: WhmcsDataService,
+    private val whmcsDataService: IWhmcsDataService,
 ) : DataVizReport() {
   override fun getName(): String {
     return "lapsed-members-active-ad"

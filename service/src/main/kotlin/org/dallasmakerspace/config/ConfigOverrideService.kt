@@ -8,14 +8,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.serialization.json.Json
 import org.dallasmakerspace.config.db.ConfigOverrideDAO
-import org.dallasmakerspace.config.db.ConfigOverrideRepository
+import org.dallasmakerspace.config.db.IConfigOverrideRepository
 import org.dallasmakerspace.core.LoggerFactory
 
 @Singleton
 class ConfigOverrideService
 @Inject
 constructor(
-    private val repository: ConfigOverrideRepository,
+    private val repository: IConfigOverrideRepository,
     loggerFactory: LoggerFactory,
 ) {
   private val log = loggerFactory.create(javaClass)

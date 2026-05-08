@@ -7,14 +7,32 @@ import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
 import java.io.File
 import java.net.URL
 import java.security.MessageDigest
+import org.dallasmakerspace.server.auth.UserInfoProvider
+import org.dallasmakerspace.server.di.DaggerAppComponent
 import org.dallasmakerspace.server.routes.RouteFactory
 
 fun Application.configureRouting() {
+  val appConfig = DaggerAppComponent.create().getAppConfig()
 
   routing {
+    // Dev-only: bypass Keycloak by injecting a fake session
+    if (appConfig.isDevelopmentMode()) {
+      get("/dev-login") {
+        val redirectUrl = call.request.queryParameters["redirectUrl"] ?: "/"
+        call.sessions.set(
+            UserSession(
+                accessToken = UserInfoProvider.DEV_TOKEN,
+                sessionId = "devmode",
+                userId = "user1",
+            ))
+        call.respondRedirect(redirectUrl, permanent = false)
+      }
+    }
+
     authenticate("DMS") {
       get(RouteFactory.Paths.LOGIN.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       get(RouteFactory.Paths.OIDC_CALLBACK.path) {

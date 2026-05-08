@@ -53,8 +53,10 @@ fun Application.configureHttp() {
       challenge {
         val currentUri = call.request.uri
         val encodedUri = java.net.URLEncoder.encode(currentUri, "UTF-8")
-        call.respondRedirect(
-            "${RouteFactory.Paths.LOGIN.path}?redirectUrl=$encodedUri", permanent = false)
+        val loginPath =
+            if (appConfig.isDevelopmentMode()) "/dev-login"
+            else RouteFactory.Paths.LOGIN.path
+        call.respondRedirect("$loginPath?redirectUrl=$encodedUri", permanent = false)
       }
     }
   }

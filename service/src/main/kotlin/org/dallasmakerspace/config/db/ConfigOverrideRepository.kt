@@ -7,23 +7,23 @@ import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.members.db.suspendTransaction
 import org.jetbrains.exposed.sql.SortOrder
 
-class ConfigOverrideRepository @Inject constructor(loggerFactory: LoggerFactory) {
+class ConfigOverrideRepository @Inject constructor(loggerFactory: LoggerFactory) : IConfigOverrideRepository {
   private val log = loggerFactory.create(javaClass)
 
-  suspend fun getCurrent(key: String): ConfigOverrideDAO? = suspendTransaction {
+  override suspend fun getCurrent(key: String): ConfigOverrideDAO? = suspendTransaction {
     ConfigOverrideDAO.find { ConfigOverrideTable.configKey eq key }
         .orderBy(ConfigOverrideTable.changedAt to SortOrder.DESC)
         .limit(1)
         .firstOrNull()
   }
 
-  suspend fun getHistory(key: String): List<ConfigOverrideDAO> = suspendTransaction {
+  override suspend fun getHistory(key: String): List<ConfigOverrideDAO> = suspendTransaction {
     ConfigOverrideDAO.find { ConfigOverrideTable.configKey eq key }
         .orderBy(ConfigOverrideTable.changedAt to SortOrder.DESC)
         .toList()
   }
 
-  suspend fun getAllCurrent(): Map<String, ConfigOverrideDAO> = suspendTransaction {
+  override suspend fun getAllCurrent(): Map<String, ConfigOverrideDAO> = suspendTransaction {
     ConfigOverrideDAO.all()
         .orderBy(ConfigOverrideTable.changedAt to SortOrder.DESC)
         .toList()
@@ -32,14 +32,14 @@ class ConfigOverrideRepository @Inject constructor(loggerFactory: LoggerFactory)
   }
 
   @Suppress("LongParameterList")
-  suspend fun append(
+  override suspend fun append(
       key: String,
       value: String,
       type: String,
       changedBy: String,
       reason: String,
-      isReset: Boolean = false,
-      infraOnly: Boolean = false,
+      isReset: Boolean,
+      infraOnly: Boolean,
   ): ConfigOverrideDAO = suspendTransaction {
     ConfigOverrideDAO.new {
       configKey = key

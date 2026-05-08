@@ -12,8 +12,9 @@ import org.dallasmakerspace.models.AccountInfo
 @Singleton
 class MakerManagerDataService
 @Inject
-constructor(private val makerManagerDataRepository: MakerManagerDataRepository) {
-  suspend fun getAccountInfoMap(usernames: List<String>): Map<String, AccountInfo> {
+constructor(private val makerManagerDataRepository: MakerManagerDataRepository) :
+    IMakerManagerDataService {
+  override suspend fun getAccountInfoMap(usernames: List<String>): Map<String, AccountInfo> {
     // Get related accounts - this includes the account(s) being queried and any related
     // accounts like the primary account or addon accounts
     val relatedAccountsMap = makerManagerDataRepository.getRelatedAccountsMap(usernames)
@@ -44,7 +45,7 @@ constructor(private val makerManagerDataRepository: MakerManagerDataRepository) 
    *
    * @return List of MakerManagerUserInfo containing all users
    */
-  suspend fun getAllUsers(): List<MakerManagerUserInfo> {
+  override suspend fun getAllUsers(): List<MakerManagerUserInfo> {
     return makerManagerDataRepository.getAllUsers()
   }
 }

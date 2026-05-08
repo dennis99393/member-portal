@@ -22,28 +22,23 @@ class ActiveDirectoryServiceMock @Inject constructor() : IActiveDirectoryService
 
   /** {@inheritDoc} */
   override fun getGroup(groupname: String): ADGroup {
+    val groupMembers =
+        sampleMembersMap.values.filter { user ->
+          user.groups.any { it.cn.equals(groupname, ignoreCase = true) }
+        }
     return ADGroup(
         cn = groupname,
         description = "Mock group description",
         distinguishedName = "CN=$groupname,OU=Groups,DC=dms,DC=local",
         objectGuid = "mock-guid",
-        members = emptyList(),
+        members = groupMembers,
         membersListIncomplete = false,
         administrators = emptyList())
   }
 
   /** {@inheritDoc} */
   override fun getMultipleGroups(groupnames: List<String>): List<ADGroup> {
-    return groupnames.map { groupname ->
-      ADGroup(
-          cn = groupname,
-          description = "Mock group description",
-          distinguishedName = "CN=$groupname,OU=Groups,DC=dms,DC=local",
-          objectGuid = "mock-guid",
-          members = emptyList(),
-          membersListIncomplete = false,
-          administrators = emptyList())
-    }
+    return groupnames.map { groupname -> getGroup(groupname) }
   }
 
   /** {@inheritDoc} */

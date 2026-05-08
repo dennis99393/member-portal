@@ -13,10 +13,10 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toKotlinLocalDate
-import org.dallasmakerspace.activedirectory.ActiveDirectoryService
+import org.dallasmakerspace.activedirectory.IActiveDirectoryService
 import org.dallasmakerspace.core.LoggerFactory
-import org.dallasmakerspace.db.master.MakerManagerDataService
-import org.dallasmakerspace.db.master.WhmcsDataService
+import org.dallasmakerspace.db.master.IMakerManagerDataService
+import org.dallasmakerspace.db.master.IWhmcsDataService
 import org.dallasmakerspace.discourse.DiscourseAvatarService
 import org.dallasmakerspace.discourse.DiscourseService
 import org.dallasmakerspace.models.ActivityLogEvent
@@ -32,13 +32,13 @@ constructor(
     loggerFactory: LoggerFactory,
     private val discourseService: DiscourseService,
     private val discourseAvatarService: DiscourseAvatarService,
-    private val memberRepository: MemberRepository,
-    private val whmcsDataService: WhmcsDataService,
+    private val memberRepository: IMemberRepository,
+    private val whmcsDataService: IWhmcsDataService,
     private val activityLogService: ActivityLogService,
-    private val makerManagerDataService: MakerManagerDataService,
-    private val activeDirectoryService: ActiveDirectoryService,
+    private val makerManagerDataService: IMakerManagerDataService,
+    private val activeDirectoryService: IActiveDirectoryService,
     private val voterRegistrationManager: VoterRegistrationManager,
-    private val groupHistoryRepository: GroupHistoryRepository,
+    private val groupHistoryRepository: IGroupHistoryRepository,
 ) {
   private val log = loggerFactory.create(javaClass)
 

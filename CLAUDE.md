@@ -9,6 +9,30 @@ This is a Gradle multi-module monorepo containing two Kotlin/Ktor applications f
 - **service/** - Backend REST API service (Ktor 3.0.1, Kotlin 2.0.21)
 - **ui/** - Web UI with SSO (Ktor 2.3.5, Kotlin 1.9.23, Thymeleaf)
 
+## Browser Testing Workflow
+
+To test UI changes in the browser, start both modules in the background, wait for startup, then use browser tools.
+
+### Start both modules
+```bash
+# Run both concurrently (cross-platform, no external tools required)
+./gradlew runAll        # Linux/macOS
+.\gradlew.bat runAll    # Windows
+```
+
+Wait ~60 seconds for Gradle + JVM startup, then verify both are up:
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8081  # service — expect non-connection-error
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8000  # ui — expect 200 or 302
+```
+
+### URLs
+- **UI:** http://localhost:8000
+- **Service API:** http://localhost:8081
+
+### Stop both modules
+Press `Ctrl-C` — the shutdown hook in `runAll` kills both child processes.
+
 ## Common Commands
 
 ### Root Level (Both Projects)

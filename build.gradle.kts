@@ -27,3 +27,60 @@ allprojects {
     group = "org.dallasmakerspace"
     version = "0.0.1"
 }
+
+tasks.register("runAll") {
+    group = "application"
+    description = "Runs service and ui subprojects concurrently"
+    doLast {
+        val isWindows = System.getProperty("os.name").lowercase().contains("windows")
+        val gradlew = if (isWindows) listOf("cmd", "/c", "gradlew.bat") else listOf("./gradlew")
+
+        data class Proc(val label: String, val task: String)
+        val configs = listOf(Proc("service", ":service:run"), Proc("ui", ":ui:run"))
+
+        // Accumulate every PID we've ever seen in each process tree. We snapshot
+        // continuously because cmd.exe (the direct child on Windows) exits fast,
+        // leaving the Gradle/Ktor JVMs as orphans that descendants() can no longer reach.
+        val trackedPids = java.util.concurrent.ConcurrentHashMap.newKeySet<Long>()
+
+        fun startProcess(cfg: Proc): Process {
+            // --no-daemon keeps the Gradle JVM alive as a direct child of cmd.exe,
+            // giving us a stable, walkable process tree for the lifetime of the server.
+            val process = ProcessBuilder(gradlew + listOf(cfg.task, "--no-daemon"))
+                .directory(rootDir)
+                .redirectErrorStream(true)
+                .start()
+            trackedPids.add(process.pid())
+            Thread {
+                while (process.isAlive) {
+                    try { process.toHandle().descendants().forEach { trackedPids.add(it.pid()) }
+                    } catch (_: Exception) {}
+                    Thread.sleep(500)
+                }
+            }.also { it.isDaemon = true; it.start() }
+            Thread {
+                process.inputStream.bufferedReader().forEachLine { println("[${cfg.label}] $it") }
+            }.also { it.isDaemon = true; it.start() }
+            return process
+        }
+
+        fun killAll() {
+            trackedPids.forEach { pid -> ProcessHandle.of(pid).ifPresent { it.destroyForcibly() } }
+        }
+
+        println("> Starting service (:8081) and ui (:8000) — Ctrl-C to stop both")
+        val processes = configs.map { startProcess(it) }
+
+        // Shutdown hook covers the --no-daemon case (JVM shuts down directly).
+        // finally covers the Gradle daemon case: the daemon doesn't shut down on
+        // Ctrl+C, but Gradle interrupts the task thread, which unblocks join() and
+        // runs the finally block.
+        Runtime.getRuntime().addShutdownHook(Thread(::killAll))
+        try {
+            val threads = processes.map { Thread { it.waitFor() }.also(Thread::start) }
+            threads.forEach(Thread::join)
+        } finally {
+            killAll()
+        }
+    }
+}

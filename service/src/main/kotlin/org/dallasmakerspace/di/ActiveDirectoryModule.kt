@@ -21,7 +21,6 @@ class ActiveDirectoryModule {
   ): IActiveDirectoryClient =
       if (useMockServices(appConfig)) {
         ActiveDirectoryClientMock()
-        // ActiveDirectoryClient(appConfig)
       } else {
         ActiveDirectoryClient(appConfig, loggerFactory)
       }
@@ -35,9 +34,8 @@ class ActiveDirectoryModule {
       appConfig: AppConfig,
       activeDirectoryClient: IActiveDirectoryClient
   ): IActiveDirectoryService =
-      if (appConfig.requireBooleanProperty("ktor.development")) {
+      if (useMockServices(appConfig)) {
         ActiveDirectoryServiceMock()
-        // ActiveDirectoryService(appConfig, activeDirectoryClient)
       } else {
         ActiveDirectoryService(activeDirectoryClient)
       }

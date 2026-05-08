@@ -13,7 +13,7 @@ import org.jetbrains.exposed.sql.and
  * Manages member data. Fetches and updates member data. Contains validation and orchestration logic
  * for updating member data.
  */
-class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
+class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) : IMemberRepository {
   private val log = loggerFactory.create(javaClass)
 
   /**
@@ -23,7 +23,7 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
    * @param username The username of the member to fetch.
    * @return The member data.
    */
-  suspend fun getMemberOrInsert(username: String, enabled: Boolean?): DMSMember {
+  override suspend fun getMemberOrInsert(username: String, enabled: Boolean?): DMSMember {
     val existingMember = suspendTransaction {
       ProfileDAO.find { ProfileTable.username eq username }
           .firstOrNull()
@@ -51,7 +51,7 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
    * @param username The username of the member to update.
    * @param member The member data to update.
    */
-  suspend fun updateMember(username: String, member: DMSMember) {
+  override suspend fun updateMember(username: String, member: DMSMember) {
     suspendTransaction {
       val existingMember =
           ProfileDAO.find { ProfileTable.username eq username }.firstOrNull()
@@ -74,11 +74,11 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
    *
    * @return A list of all member data.
    */
-  suspend fun getAllMembers(): List<DMSMember> {
+  override suspend fun getAllMembers(): List<DMSMember> {
     return suspendTransaction { ProfileDAO.all().map { daoToProfileModel(it) } }
   }
 
-  suspend fun updateMembers(memberList: List<DMSMember>) {
+  override suspend fun updateMembers(memberList: List<DMSMember>) {
     memberList.forEach { member ->
       suspendTransaction {
         val existingMember =
@@ -106,7 +106,7 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
    * @param avatarUrl The new discourse avatar URL.
    * @return true if the update was successful, false if the member doesn't exist.
    */
-  suspend fun updateDiscourseAvatarUrl(username: String, avatarUrl: String): Boolean {
+  override suspend fun updateDiscourseAvatarUrl(username: String, avatarUrl: String): Boolean {
     return try {
       suspendTransaction {
         val existingMember = ProfileDAO.find { ProfileTable.username eq username }.firstOrNull()
@@ -132,7 +132,7 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
    * @param avatarUpdates A map of username to avatar URL.
    * @return A map of username to success status (true if updated, false if failed).
    */
-  suspend fun updateDiscourseAvatarUrls(avatarUpdates: Map<String, String>): Map<String, Boolean> {
+  override suspend fun updateDiscourseAvatarUrls(avatarUpdates: Map<String, String>): Map<String, Boolean> {
     val results = mutableMapOf<String, Boolean>()
 
     avatarUpdates.forEach { (username, avatarUrl) ->
@@ -168,7 +168,7 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
    *
    * @return A list of members with discourse usernames that need avatar updates.
    */
-  suspend fun getMembersNeedingAvatarRefresh(): List<DMSMember> {
+  override suspend fun getMembersNeedingAvatarRefresh(): List<DMSMember> {
     return suspendTransaction {
       ProfileDAO.find {
             ProfileTable.discourseUsername.isNotNull() and ProfileTable.discourseAvatarUrl.isNull()
@@ -182,7 +182,7 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
    *
    * @return A list of members with discourse usernames.
    */
-  suspend fun getMembersWithDiscourseUsernames(): List<DMSMember> {
+  override suspend fun getMembersWithDiscourseUsernames(): List<DMSMember> {
     return suspendTransaction {
       ProfileDAO.find { ProfileTable.discourseUsername.isNotNull() }.map { daoToProfileModel(it) }
     }
@@ -195,7 +195,7 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
    * @param usernames The list of usernames to fetch.
    * @return A map of username to DMSMember for found members.
    */
-  suspend fun getMembersByUsernames(usernames: List<String>): Map<String, DMSMember> {
+  override suspend fun getMembersByUsernames(usernames: List<String>): Map<String, DMSMember> {
     if (usernames.isEmpty()) return emptyMap()
     return suspendTransaction {
       ProfileDAO.find { ProfileTable.username inList usernames }
@@ -204,7 +204,7 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) {
     }
   }
 
-  suspend fun getMembersByDiscourseUsernames(
+  override suspend fun getMembersByDiscourseUsernames(
       discourseUsernames: List<String>
   ): Map<String, DMSMember> {
     if (discourseUsernames.isEmpty()) return emptyMap()
