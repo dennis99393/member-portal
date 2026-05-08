@@ -16,8 +16,10 @@ import org.dallasmakerspace.plugins.configureSerialization
 
 fun main() {
 
-  val appConfig = DaggerAppComponent.create().getAppConfig()
+  val appComponent = DaggerAppComponent.create()
+  val appConfig = appComponent.getAppConfig()
   val portStr = appConfig.requireStringProperty("ktor.deployment.port")
+  val healthProbeMemberService = appComponent.getMemberService()
 
   // Disable SSL certificate verification until we can embed our root CA cert sig
   // TODO: remove this
@@ -25,7 +27,7 @@ fun main() {
 
   val server =
       embeddedServer(Netty, port = portStr.toInt(), host = "0.0.0.0") {
-        configureHealth()
+        configureHealth(healthProbeMemberService)
         configureSerialization()
         configureMonitoring()
         configureHTTP()

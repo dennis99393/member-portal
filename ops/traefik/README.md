@@ -6,6 +6,17 @@ manually on the host and treated as infrastructure alongside the docker networks
 nginx sits in front and proxies `:443` → `:8080` on the docker host. Traefik listens on `:8080` and handles
 blue-green traffic splitting internally via Docker network DNS — containers do not bind host ports.
 
+## Deploy sequence (service)
+
+CI follows this order to prevent startup-window 500s:
+
+1. Start new container on `member-portal` **without** the `member-profile-service` DNS alias
+2. Poll `/health/ready` until 200 (up to 60 s) — container initialises LDAP pool, etc. in isolation
+3. Reconnect container to `member-portal` **with** alias — Docker DNS now resolves `member-profile-service` to the new container
+4. Update `service-weights.yml` — Traefik shifts external traffic to new container
+5. Disconnect old container from `member-portal` — alias removed, no more internal or external traffic
+6. Drain 30 s, then stop and remove old container
+
 ## Host layout
 
 ```
