@@ -40,7 +40,7 @@ object ElasticsearchClientManager {
     var failed = 0
     for (entry in toRetry) {
       try {
-        client.index { i -> i.index("logs").document(entry) }
+        client.index { i -> i.index("member-portal-logs").document(entry) }
       } catch (e: IOException) {
         failed++
         retryQueue.offer(entry)

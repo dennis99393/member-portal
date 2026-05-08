@@ -57,7 +57,7 @@ suspend fun logToElasticsearch(call: PipelineCall, client: ElasticsearchClient) 
 
   withContext(Dispatchers.IO) {
     try {
-      client.index { i -> i.index("logs").document(logEntry) }
+      client.index { i -> i.index("member-portal-logs").document(logEntry) }
     } catch (e: IOException) {
       ElasticsearchClientManager.log.error("Failed to log to Elasticsearch", e)
     }
