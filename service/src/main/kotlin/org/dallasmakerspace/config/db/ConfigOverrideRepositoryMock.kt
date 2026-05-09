@@ -17,5 +17,6 @@ class ConfigOverrideRepositoryMock @Inject constructor() : IConfigOverrideReposi
       reason: String,
       isReset: Boolean,
       infraOnly: Boolean,
-  ): ConfigOverrideDAO = throw UnsupportedOperationException("Config writes are not supported in mock mode")
+  ): ConfigOverrideDAO =
+      throw UnsupportedOperationException("Config writes are not supported in mock mode")
 }

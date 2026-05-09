@@ -3,7 +3,11 @@ package org.dallasmakerspace.remoteaccess
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class MachineStatus { AVAILABLE, IN_USE, OFFLINE }
+enum class MachineStatus {
+  AVAILABLE,
+  IN_USE,
+  OFFLINE
+}
 
 @Serializable
 data class RemoteAccessMachineDTO(

@@ -7,7 +7,8 @@ import org.dallasmakerspace.core.LoggerFactory
 import org.dallasmakerspace.members.db.suspendTransaction
 import org.jetbrains.exposed.sql.SortOrder
 
-class ConfigOverrideRepository @Inject constructor(loggerFactory: LoggerFactory) : IConfigOverrideRepository {
+class ConfigOverrideRepository @Inject constructor(loggerFactory: LoggerFactory) :
+    IConfigOverrideRepository {
   private val log = loggerFactory.create(javaClass)
 
   override suspend fun getCurrent(key: String): ConfigOverrideDAO? = suspendTransaction {

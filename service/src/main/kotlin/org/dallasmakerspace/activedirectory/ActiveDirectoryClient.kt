@@ -550,7 +550,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
                     badgeNumberList.map {
                       Filter.createEqualityFilter(
                           "employeeID",
-                          it,
+                          it.trim(),
                       )
                     }),
             ))
@@ -572,7 +572,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
             "whenCreated",
         )
     return searchResult.searchEntries.associate { entry ->
-      val badgeNumber = entry.getAttributeValue("employeeID")
+      val badgeNumber = entry.getAttributeValue("employeeID")?.trim() ?: ""
 
       badgeNumber to
           entry.attributes.associate {

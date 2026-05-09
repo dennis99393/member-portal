@@ -13,6 +13,7 @@ import org.dallasmakerspace.dataviz.reports.calendar.GroupCalendarReport
 import org.dallasmakerspace.dataviz.reports.calendar.TopAttendees
 import org.dallasmakerspace.dataviz.reports.calendar.TopOrganizers
 import org.dallasmakerspace.dataviz.reports.groups.GroupHistoryReport
+import org.dallasmakerspace.dataviz.reports.interlock.InterlockUsageReport
 import org.dallasmakerspace.dataviz.reports.it.BadgeValidationAdReport
 import org.dallasmakerspace.dataviz.reports.it.BadgeValidationMergedReport
 import org.dallasmakerspace.dataviz.reports.it.LapsedMembersActiveAdReport
@@ -43,6 +44,7 @@ class DataVizModule {
       signedWaivers: SignedWaivers,
       groupHistoryReport: GroupHistoryReport,
       badgeSwipesReport: BadgeSwipesReport,
+      interlockUsageReport: InterlockUsageReport,
       badgeValidationReport: BadgeValidationReport,
       badgeValidationAdReport: BadgeValidationAdReport,
       badgeValidationMergedReport: BadgeValidationMergedReport,
@@ -64,6 +66,7 @@ class DataVizModule {
         signedWaivers,
         groupHistoryReport,
         badgeSwipesReport,
+        interlockUsageReport,
         badgeValidationReport,
         badgeValidationAdReport,
         badgeValidationMergedReport,

@@ -132,7 +132,9 @@ class MemberRepository @Inject constructor(loggerFactory: LoggerFactory) : IMemb
    * @param avatarUpdates A map of username to avatar URL.
    * @return A map of username to success status (true if updated, false if failed).
    */
-  override suspend fun updateDiscourseAvatarUrls(avatarUpdates: Map<String, String>): Map<String, Boolean> {
+  override suspend fun updateDiscourseAvatarUrls(
+      avatarUpdates: Map<String, String>
+  ): Map<String, Boolean> {
     val results = mutableMapOf<String, Boolean>()
 
     avatarUpdates.forEach { (username, avatarUrl) ->

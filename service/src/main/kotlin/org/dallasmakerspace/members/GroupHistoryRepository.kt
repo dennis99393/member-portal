@@ -60,34 +60,35 @@ class GroupHistoryRepository @Inject constructor() : IGroupHistoryRepository {
    * @param groupName The name of the group.
    * @return List of group history records from the last 6 months.
    */
-  override suspend fun getGroupHistoryByName(groupName: String): List<GroupHistory> = suspendTransaction {
-    val sixMonthsAgo = LocalDateTime.now().minusMonths(6)
+  override suspend fun getGroupHistoryByName(groupName: String): List<GroupHistory> =
+      suspendTransaction {
+        val sixMonthsAgo = LocalDateTime.now().minusMonths(6)
 
-    GroupHistoryTable.join(
-            actorProfileAlias,
-            JoinType.INNER,
-            GroupHistoryTable.actorId,
-            actorProfileAlias[ProfileTable.idColumn],
-        )
-        .join(
-            memberProfileAlias,
-            JoinType.INNER,
-            GroupHistoryTable.memberId,
-            memberProfileAlias[ProfileTable.idColumn],
-        )
-        .join(
-            groupsAlias,
-            JoinType.INNER,
-            GroupHistoryTable.groupId,
-            groupsAlias[GroupsTable.idColumn],
-        )
-        .select {
-          (groupsAlias[GroupsTable.name] eq groupName) and
-              (GroupHistoryTable.eventTimestamp greaterEq sixMonthsAgo)
-        }
-        .orderBy(GroupHistoryTable.eventTimestamp, SortOrder.DESC)
-        .map { daoToGroupHistoryModel(it) }
-  }
+        GroupHistoryTable.join(
+                actorProfileAlias,
+                JoinType.INNER,
+                GroupHistoryTable.actorId,
+                actorProfileAlias[ProfileTable.idColumn],
+            )
+            .join(
+                memberProfileAlias,
+                JoinType.INNER,
+                GroupHistoryTable.memberId,
+                memberProfileAlias[ProfileTable.idColumn],
+            )
+            .join(
+                groupsAlias,
+                JoinType.INNER,
+                GroupHistoryTable.groupId,
+                groupsAlias[GroupsTable.idColumn],
+            )
+            .select {
+              (groupsAlias[GroupsTable.name] eq groupName) and
+                  (GroupHistoryTable.eventTimestamp greaterEq sixMonthsAgo)
+            }
+            .orderBy(GroupHistoryTable.eventTimestamp, SortOrder.DESC)
+            .map { daoToGroupHistoryModel(it) }
+      }
 
   /**
    * Fetches the group history records for a specific member.
@@ -95,29 +96,30 @@ class GroupHistoryRepository @Inject constructor() : IGroupHistoryRepository {
    * @param memberId The ID of the member.
    * @return List of group history records.
    */
-  override suspend fun getMemberGroupHistoryById(memberId: Int): List<GroupHistory> = suspendTransaction {
-    GroupHistoryTable.join(
-            actorProfileAlias,
-            JoinType.INNER,
-            GroupHistoryTable.actorId,
-            actorProfileAlias[ProfileTable.idColumn],
-        )
-        .join(
-            memberProfileAlias,
-            JoinType.INNER,
-            GroupHistoryTable.memberId,
-            memberProfileAlias[ProfileTable.idColumn],
-        )
-        .join(
-            groupsAlias,
-            JoinType.INNER,
-            GroupHistoryTable.groupId,
-            groupsAlias[GroupsTable.idColumn],
-        )
-        .select { GroupHistoryTable.memberId eq memberId }
-        .orderBy(GroupHistoryTable.eventTimestamp, SortOrder.DESC)
-        .map { daoToGroupHistoryModel(it) }
-  }
+  override suspend fun getMemberGroupHistoryById(memberId: Int): List<GroupHistory> =
+      suspendTransaction {
+        GroupHistoryTable.join(
+                actorProfileAlias,
+                JoinType.INNER,
+                GroupHistoryTable.actorId,
+                actorProfileAlias[ProfileTable.idColumn],
+            )
+            .join(
+                memberProfileAlias,
+                JoinType.INNER,
+                GroupHistoryTable.memberId,
+                memberProfileAlias[ProfileTable.idColumn],
+            )
+            .join(
+                groupsAlias,
+                JoinType.INNER,
+                GroupHistoryTable.groupId,
+                groupsAlias[GroupsTable.idColumn],
+            )
+            .select { GroupHistoryTable.memberId eq memberId }
+            .orderBy(GroupHistoryTable.eventTimestamp, SortOrder.DESC)
+            .map { daoToGroupHistoryModel(it) }
+      }
 
   /**
    * Fetches the group history records by member username.

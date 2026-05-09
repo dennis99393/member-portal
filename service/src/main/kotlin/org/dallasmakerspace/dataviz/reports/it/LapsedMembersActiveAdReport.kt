@@ -4,7 +4,7 @@ import javax.inject.Inject
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import org.dallasmakerspace.activedirectory.ActiveDirectoryClient
+import org.dallasmakerspace.activedirectory.IActiveDirectoryClient
 import org.dallasmakerspace.dataviz.DataVizReport
 import org.dallasmakerspace.db.master.GenericRepository
 import org.dallasmakerspace.db.master.IWhmcsDataService
@@ -17,7 +17,7 @@ import org.dallasmakerspace.models.DataVizResponse
 class LapsedMembersActiveAdReport
 @Inject
 constructor(
-    private val adClient: ActiveDirectoryClient,
+    private val adClient: IActiveDirectoryClient,
     private val memberService: MemberService,
     private val genericRepository: GenericRepository,
     private val whmcsDataService: IWhmcsDataService,

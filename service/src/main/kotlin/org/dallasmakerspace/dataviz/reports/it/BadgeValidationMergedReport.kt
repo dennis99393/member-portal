@@ -3,7 +3,7 @@ package org.dallasmakerspace.dataviz.reports.it
 import javax.inject.Inject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import org.dallasmakerspace.activedirectory.ActiveDirectoryClient
+import org.dallasmakerspace.activedirectory.IActiveDirectoryClient
 import org.dallasmakerspace.dataviz.DataVizReport
 import org.dallasmakerspace.db.master.GenericRepository
 import org.dallasmakerspace.members.MemberService
@@ -16,7 +16,7 @@ class BadgeValidationMergedReport
 @Inject
 constructor(
     private val genericRepository: GenericRepository,
-    private val adClient: ActiveDirectoryClient,
+    private val adClient: IActiveDirectoryClient,
     private val memberService: MemberService,
 ) : DataVizReport() {
   override fun getName(): String {

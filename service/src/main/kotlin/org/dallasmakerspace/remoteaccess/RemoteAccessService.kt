@@ -78,15 +78,13 @@ constructor(
           }
         }
     // All jobs are running concurrently; await each in turn
-    val reachabilityById = buildMap<String, Boolean> {
-      for ((id, deferred) in probeJobs) put(id, deferred.await())
-    }
+    val reachabilityById =
+        buildMap<String, Boolean> { for ((id, deferred) in probeJobs) put(id, deferred.await()) }
 
     RemoteAccessCategory.entries.map { category ->
       val connectionIdsRaw = configOverrideService.get(category.connectionIdsConfigKey)
       val requiredAdGroup = configOverrideService.get(category.adGroupConfigKey)
-      val connectionIds =
-          connectionIdsRaw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+      val connectionIds = connectionIdsRaw.split(",").map { it.trim() }.filter { it.isNotEmpty() }
 
       val machines =
           connectionIds.mapNotNull { id ->

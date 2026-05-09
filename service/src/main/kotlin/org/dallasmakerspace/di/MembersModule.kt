@@ -34,8 +34,7 @@ abstract class MembersModule {
 
     @Provides
     fun provideGroupHistoryRepository(appConfig: AppConfig): IGroupHistoryRepository =
-        if (useMockServices(appConfig)) GroupHistoryRepositoryMock()
-        else GroupHistoryRepository()
+        if (useMockServices(appConfig)) GroupHistoryRepositoryMock() else GroupHistoryRepository()
 
     private fun useMockServices(appConfig: AppConfig) =
         appConfig.requireBooleanProperty("ktor.development") &&

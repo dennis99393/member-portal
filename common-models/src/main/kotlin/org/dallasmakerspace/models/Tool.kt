@@ -1,0 +1,33 @@
+package org.dallasmakerspace.models
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Tool(
+    val id: Int,
+    val name: String,
+    val committeeId: Int,
+    val interlockTag: String,
+    val timeoutSeconds: Int,
+    val prerequisiteGroup: String?,
+    val prerequisiteGroupSlug: String?,
+)
+
+object Tools {
+    val ALL =
+        listOf(
+            Tool(
+                id = 1,
+                name = "Auto Lift 1",
+                committeeId = 17,
+                interlockTag = "auto-lift-1",
+                timeoutSeconds = 30,
+                prerequisiteGroup = "Automotive 102 (Lift Training)",
+                prerequisiteGroupSlug = "automotive-102-lift-training",
+            )
+        )
+
+    fun findBySlug(slug: String): Tool? = ALL.find { it.interlockTag == slug }
+
+    fun byCommittee(): Map<Committee, List<Tool>> = ALL.groupBy { Committees.findById(it.committeeId)!! }
+}

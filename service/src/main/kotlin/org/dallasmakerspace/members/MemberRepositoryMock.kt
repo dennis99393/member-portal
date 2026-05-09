@@ -31,9 +31,8 @@ class MemberRepositoryMock @Inject constructor() : IMemberRepository {
 
   override suspend fun updateDiscourseAvatarUrls(
       avatarUpdates: Map<String, String>
-  ): Map<String, Boolean> = avatarUpdates.mapValues { (username, url) ->
-    updateDiscourseAvatarUrl(username, url)
-  }
+  ): Map<String, Boolean> =
+      avatarUpdates.mapValues { (username, url) -> updateDiscourseAvatarUrl(username, url) }
 
   override suspend fun getMembersNeedingAvatarRefresh(): List<DMSMember> =
       store.values.filter { it.discourseUsername != null && it.discourseAvatarUrl == null }

@@ -151,8 +151,7 @@ fun Application.configureRouting() {
         }
 
         post<Members.Batch> {
-          @Suppress("UNCHECKED_CAST")
-          val body = call.receive<Map<String, List<String>>>()
+          @Suppress("UNCHECKED_CAST") val body = call.receive<Map<String, List<String>>>()
           val usernames = body["usernames"] ?: emptyList()
           val members = memberService.getMembersByUsernameList(usernames)
           call.respond(ApiResponse(Status.SUCCESS, "Fetched ${members.size} members", members))

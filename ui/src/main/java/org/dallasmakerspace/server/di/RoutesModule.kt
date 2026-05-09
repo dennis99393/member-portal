@@ -17,6 +17,7 @@ import org.dallasmakerspace.server.routes.AskAiHandler
 import org.dallasmakerspace.server.routes.BackendApiHandler
 import org.dallasmakerspace.server.routes.CommitteeDetailHandler
 import org.dallasmakerspace.server.routes.CommitteesHandler
+import org.dallasmakerspace.server.routes.InterlockToolsHandler
 import org.dallasmakerspace.server.routes.ConfigAdminHandler
 import org.dallasmakerspace.server.routes.GroupMemberManagementHandler
 import org.dallasmakerspace.server.routes.GroupsHandler
@@ -235,6 +236,14 @@ class RoutesModule {
       userInfoProvider: UserInfoProvider,
       memberService: MemberService
   ): IRouteHandler = CommitteeDetailHandler(loggerFactory, userInfoProvider, memberService)
+
+  @IntoMap
+  @Provides
+  @StringKey("/interlock-tools")
+  fun providesInterlockToolsHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+  ): IRouteHandler = InterlockToolsHandler(loggerFactory, userInfoProvider)
 
   @IntoMap
   @Provides

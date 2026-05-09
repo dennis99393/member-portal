@@ -440,9 +440,9 @@ class DmsTableBase extends LitElement {
             const variant = cell.variant || 'info';
             const text = cell.text || '';
             const icon = cell.icon || '';
+            const tooltip = cell.tooltip || '';
 
-            // Return a badge span with icon
-            return html`<span class="badge badge-${variant}">
+            return html`<span class="badge badge-${variant}" title="${tooltip}">
                 ${icon ? html`<span class="material-symbols-outlined">${icon}</span>` : ''}
                 ${text}
             </span>`;

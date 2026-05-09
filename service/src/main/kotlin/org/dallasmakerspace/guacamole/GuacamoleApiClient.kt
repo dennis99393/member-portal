@@ -139,11 +139,11 @@ constructor(private val appConfig: AppConfig, loggerFactory: LoggerFactory) : IG
             }
           }
       if (response.status != HttpStatusCode.OK) return ""
-      return json.parseToJsonElement(response.bodyAsText())
+      return json
+          .parseToJsonElement(response.bodyAsText())
           .jsonObject["hostname"]
           ?.jsonPrimitive
-          ?.content
-          ?: ""
+          ?.content ?: ""
     } catch (e: Exception) {
       log.warn("Failed to fetch hostname for connection $id", e)
       return ""

@@ -220,6 +220,20 @@ object Committees {
               chairGroupName = "Financial Committee Chair",
               isActive = true,
           ),
+          Committee(
+              id = 17,
+              name = "Automotive",
+              chairGroupName = "Automotive Committee Chair",
+              groupPrefixes = listOf("Automotive"),
+              isActive = true,
+          ),
+          Committee(
+              id = 18,
+              name = "Animatronics",
+              chairGroupName = "Animatronics Committee Chair",
+              groupPrefixes = listOf("Animatronics"),
+              isActive = true,
+          ),
       )
 
   fun findById(id: Int): Committee? = ALL.find { it.id == id }
