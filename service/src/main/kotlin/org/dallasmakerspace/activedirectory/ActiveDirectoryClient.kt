@@ -41,6 +41,7 @@ constructor(appConfig: AppConfig, loggerFactory: LoggerFactory) : IActiveDirecto
       )
 
   init {
+    ldapPool.setMaxWaitTimeMillis(10_000L)
     log.info("$TAG/init Configured LDAP server: $bindHost:$bindPort")
     log.info(
         "$TAG/init LDAP connection pool initialized with $INITIAL_LDAP_CONNECTIONS initial connections, max $MAX_LDAP_CONNECTIONS")

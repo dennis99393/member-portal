@@ -102,17 +102,21 @@ constructor(
           val duration = formatDuration(session.startTime, session.shutdownTime)
 
           val shutdownJson = buildJsonObject {
-            when (session.shutdownType) {
-              "IDLE_TIMEOUT" -> {
+            when {
+              !session.authorized -> {
+                put("variant", JsonPrimitive("light"))
+                put("text", JsonPrimitive("—"))
+              }
+              session.shutdownType == "IDLE_TIMEOUT" -> {
                 put("variant", JsonPrimitive("secondary"))
                 put("text", JsonPrimitive("IDLE TIMEOUT"))
               }
-              "STARTUP_CURRENT" -> {
+              session.shutdownType == "STARTUP_CURRENT" -> {
                 put("variant", JsonPrimitive("danger"))
                 put("text", JsonPrimitive("STARTUP CURRENT"))
                 put("tooltip", JsonPrimitive("User error: start button pressed at the same time as badging in"))
               }
-              "MANUAL_BADGE_OUT" -> {
+              session.shutdownType == "MANUAL_BADGE_OUT" -> {
                 put("variant", JsonPrimitive("primary"))
                 put("text", JsonPrimitive("BADGE OUT"))
               }

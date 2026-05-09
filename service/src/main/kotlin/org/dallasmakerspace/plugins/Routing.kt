@@ -348,15 +348,27 @@ fun Application.configureRouting() {
         }
 
         get<Groups.DMSGroup> { groupRequested ->
-          val group = memberService.getGroup(groupRequested.groupslug)
-          call.respond(ApiResponse(Status.SUCCESS, "Group ${group.name}", group))
+          try {
+            val group = memberService.getGroup(groupRequested.groupslug)
+            call.respond(ApiResponse(Status.SUCCESS, "Group ${group.name}", group))
+          } catch (e: org.dallasmakerspace.activedirectory.ADException) {
+            call.respond(
+                HttpStatusCode.NotFound,
+                ApiResponse(Status.ERROR, e.message ?: "Group not found", null))
+          }
         }
 
         get<Groups.DMSGroup.HasPrerequisiteClasses> { request ->
-          val groupSlug = request.parent.groupslug
-          val group = groupsService.getGroup(groupSlug)
-          val hasClasses = calendarService.hasPrerequisiteEvents(group.name)
-          call.respond(ApiResponse(Status.SUCCESS, "Has prerequisite classes", hasClasses))
+          try {
+            val groupSlug = request.parent.groupslug
+            val group = groupsService.getGroup(groupSlug)
+            val hasClasses = calendarService.hasPrerequisiteEvents(group.name)
+            call.respond(ApiResponse(Status.SUCCESS, "Has prerequisite classes", hasClasses))
+          } catch (e: org.dallasmakerspace.activedirectory.ADException) {
+            call.respond(
+                HttpStatusCode.NotFound,
+                ApiResponse(Status.ERROR, e.message ?: "Group not found", null))
+          }
         }
 
         post("/calendar/upcoming-events") {
