@@ -10,7 +10,6 @@ data class Tool(
     val interlockTag: String,
     val timeoutSeconds: Int,
     val prerequisiteGroup: String?,
-    val prerequisiteGroupSlug: String?,
 )
 
 object Tools {
@@ -23,7 +22,6 @@ object Tools {
                 interlockTag = "auto-lift-1",
                 timeoutSeconds = 30,
                 prerequisiteGroup = "Automotive 102 (Lift Training)",
-                prerequisiteGroupSlug = "automotive-102-lift-training",
             )
         )
 

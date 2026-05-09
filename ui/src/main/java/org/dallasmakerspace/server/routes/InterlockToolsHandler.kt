@@ -7,6 +7,7 @@ import io.ktor.server.thymeleaf.*
 import javax.inject.Inject
 import org.dallasmakerspace.models.Committees
 import org.dallasmakerspace.models.Tools
+import org.dallasmakerspace.server.models.getSlugFromName
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 
@@ -33,7 +34,7 @@ constructor(
                           "name" to tool.name,
                           "interlockTag" to tool.interlockTag,
                           "prerequisiteGroup" to tool.prerequisiteGroup,
-                          "prerequisiteGroupSlug" to tool.prerequisiteGroupSlug,
+                          "prerequisiteGroupSlug" to tool.prerequisiteGroup?.let { getSlugFromName(it) },
                           "timeoutSeconds" to tool.timeoutSeconds,
                       )
                     },
@@ -55,7 +56,7 @@ constructor(
               "committeeName" to (committee?.name ?: ""),
               "committeeSlug" to (committee?.slug ?: ""),
               "prerequisiteGroup" to tool.prerequisiteGroup,
-              "prerequisiteGroupSlug" to tool.prerequisiteGroupSlug,
+              "prerequisiteGroupSlug" to tool.prerequisiteGroup?.let { getSlugFromName(it) },
               "timeoutSeconds" to tool.timeoutSeconds,
           )
       call.respond(ThymeleafContent("interlock-tool-detail", model))
