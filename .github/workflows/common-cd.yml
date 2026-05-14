@@ -158,6 +158,9 @@ jobs:
     name: Deploy to Production
     runs-on: self-hosted
     timeout-minutes: 10
+    concurrency:
+      group: deploy-${{ inputs.component }}
+      cancel-in-progress: false
 
     environment:
       name: production
@@ -281,14 +284,46 @@ jobs:
 
           echo "Alias 'member-profile-service' attached to $NEW_NAME"
 
+      - name: Prime new container
+        shell: bash
+        continue-on-error: true
+        run: |
+          NEW_IP=$(docker inspect "$NEW_NAME" \
+            --format '{{(index .NetworkSettings.Networks "member-portal").IPAddress}}')
+          echo "Priming $NEW_NAME at ${NEW_IP}:${{ inputs.internal_port }} (3 requests to warm JVM)..."
+          for i in 1 2 3; do
+            curl -s -o /dev/null \
+              -w "Prime $i: HTTP %{http_code} (%{time_total}s)\n" \
+              --max-time 10 \
+              "http://${NEW_IP}:${{ inputs.internal_port }}${{ inputs.healthcheck_path }}" || true
+          done
+
+      - name: Wait for Traefik to confirm new backend healthy
+        shell: bash
+        run: |
+          if [ "${{ inputs.component }}" = "ui" ]; then
+            SVC="ui-${NEW}@docker"
+          else
+            SVC="service-${NEW}@docker"
+          fi
+          echo "Waiting for Traefik to report $SVC as UP..."
+          for i in $(seq 1 20); do
+            STATUS=$(curl -sf "http://localhost:8082/api/http/services/$SVC" 2>/dev/null \
+              | grep -o '"UP"' | head -1 || echo "")
+            if [ "$STATUS" = '"UP"' ]; then
+              echo "Traefik confirmed $SVC UP after $((i * 3))s"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "WARNING: Traefik did not confirm backend UP in 60s — proceeding anyway"
+
       - name: Cutover traffic to new container
         shell: bash
         run: |
           EXTRA_NETWORKS="${{ inputs.additional_networks }}"
 
           if [ "${{ inputs.component }}" = "ui" ]; then
-            cp /opt/member-profile-traefik/dynamic/ui-weights.yml /opt/member-profile-traefik/dynamic/ui-weights.yml.bak
-
             cat > /tmp/ui-weights-new.yml <<EOF
           http:
             routers:
@@ -307,8 +342,6 @@ jobs:
             mv /tmp/ui-weights-new.yml /opt/member-profile-traefik/dynamic/ui-weights.yml
             echo "Traffic shifted to ui-${NEW}@docker (Traefik reloads within ~1s)"
           else
-            cp /opt/member-profile-traefik/dynamic/service-weights.yml /opt/member-profile-traefik/dynamic/service-weights.yml.bak
-
             cat > /tmp/service-weights-new.yml <<EOF
           http:
             routers:
@@ -326,6 +359,7 @@ jobs:
           EOF
             mv /tmp/service-weights-new.yml /opt/member-profile-traefik/dynamic/service-weights.yml
             echo "Traffic shifted to service-${NEW}@docker (Traefik reloads within ~1s)"
+            sleep 3   # let Traefik drain in-flight requests from OLD before yanking its network
 
             # Disconnect old container from Docker networks to stop internal (alias) traffic too
             if [ "$LIVE" != "none" ]; then
@@ -338,20 +372,8 @@ jobs:
             fi
           fi
 
-      - name: Prime new container
-        shell: bash
-        continue-on-error: true
-        run: |
-          echo "Priming $NEW_NAME via /ping..."
-          sleep 2
-          curl -s -w "Prime: HTTP %{http_code} (%{time_total}s)\n" -o /dev/null \
-            --max-time 30 \
-            -H "Host: members.dallasmakerspace.org" \
-            http://localhost:8080/ping
-
-      - name: Persist live color
-        shell: bash
-        run: |
+          # Record cutover and persist live color atomically with the traffic shift
+          echo "CUTOVER_DONE=1" >> "$GITHUB_ENV"
           mkdir -p /opt/portal/state
           echo "$NEW" > /opt/portal/state/${{ inputs.component }}.live
           echo "${{ inputs.component }} live = $NEW"
@@ -386,24 +408,63 @@ jobs:
           docker stop "$NEW_NAME" 2>/dev/null || true
           docker rm "$NEW_NAME" 2>/dev/null || true
 
-          if [ "${{ inputs.component }}" = "ui" ]; then
-            if [ -f /opt/member-profile-traefik/dynamic/ui-weights.yml.bak ]; then
-              mv /opt/member-profile-traefik/dynamic/ui-weights.yml.bak /opt/member-profile-traefik/dynamic/ui-weights.yml
-              echo "UI weights restored"
-            fi
-          else
-            if [ -f /opt/member-profile-traefik/dynamic/service-weights.yml.bak ]; then
-              mv /opt/member-profile-traefik/dynamic/service-weights.yml.bak /opt/member-profile-traefik/dynamic/service-weights.yml
-              echo "Service weights restored"
-            fi
-            if [ "$LIVE" != "none" ]; then
-              docker network connect --alias member-profile-service member-portal "$OLD_NAME" 2>/dev/null || true
-              if [ -n "$EXTRA_NETWORKS" ]; then
-                for network in $EXTRA_NETWORKS; do
-                  docker network connect --alias member-profile-service "$network" "$OLD_NAME" 2>/dev/null || true
-                done
+          if [ "${CUTOVER_DONE:-0}" = "1" ]; then
+            # Cutover ran: regenerate weights pointing back to the previously live color,
+            # restore the state file, and (for service) reconnect the old container to Docker
+            # networks so alias-based internal traffic resumes.
+            if [ "${{ inputs.component }}" = "ui" ]; then
+              cat > /opt/member-profile-traefik/dynamic/ui-weights.yml <<EOF
+          http:
+            routers:
+              ui:
+                rule: "PathPrefix(\`/\`)"
+                entryPoints:
+                  - web
+                service: ui-weighted
+            services:
+              ui-weighted:
+                weighted:
+                  services:
+                    - name: "ui-${LIVE}@docker"
+                      weight: 100
+          EOF
+              echo "UI weights restored to ui-${LIVE}@docker"
+            else
+              cat > /opt/member-profile-traefik/dynamic/service-weights.yml <<EOF
+          http:
+            routers:
+              service:
+                rule: "PathPrefix(\`/\`)"
+                entryPoints:
+                  - service
+                service: service-weighted
+            services:
+              service-weighted:
+                weighted:
+                  services:
+                    - name: "service-${LIVE}@docker"
+                      weight: 100
+          EOF
+              echo "Service weights restored to service-${LIVE}@docker"
+              if [ "$LIVE" != "none" ]; then
+                docker network connect --alias member-profile-service member-portal "$OLD_NAME" 2>/dev/null || true
+                if [ -n "$EXTRA_NETWORKS" ]; then
+                  for network in $EXTRA_NETWORKS; do
+                    docker network connect --alias member-profile-service "$network" "$OLD_NAME" 2>/dev/null || true
+                  done
+                fi
               fi
             fi
+
+            mkdir -p /opt/portal/state
+            if [ "$LIVE" = "none" ]; then
+              rm -f /opt/portal/state/${{ inputs.component }}.live
+            else
+              echo "$LIVE" > /opt/portal/state/${{ inputs.component }}.live
+            fi
+            echo "State file restored to $LIVE"
+          else
+            echo "Cutover did not run — weights and state file are unchanged"
           fi
 
           echo "Rollback complete — $OLD_NAME should still be serving"
