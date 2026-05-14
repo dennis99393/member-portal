@@ -102,7 +102,7 @@
                                     </div>
                                 </div>
                                 <div th:if="${#lists.size(group.members) > 6}" class="mt-2 text-muted small text-end">
-                                    and <span th:text="${#lists.size(group.members) - 6}"></span> more...
+                                    and <a th:href="'/groups/' + ${group.slug}" class="text-muted"><span th:text="${#lists.size(group.members) - 6}"></span> more...</a>
                                 </div>
                             </div>
                             <span th:if="${group.members == null or group.members.empty}"
