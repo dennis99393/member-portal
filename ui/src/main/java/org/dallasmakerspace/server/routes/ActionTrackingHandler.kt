@@ -53,7 +53,9 @@ class ActionTrackingHandler @Inject constructor(loggerFactory: LoggerFactory) : 
       call.application.launch(Dispatchers.IO) {
         try {
           log.debug("Logging user action to Elasticsearch: $logEntry")
-          ElasticsearchClientManager.client.index { i -> i.index("member-portal-logs").document(logEntry) }
+          ElasticsearchClientManager.client.index { i ->
+            i.index("member-portal-logs").document(logEntry)
+          }
         } catch (e: IOException) {
           ElasticsearchClientManager.enqueueForRetry(logEntry)
         }

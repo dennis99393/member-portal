@@ -4,8 +4,8 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import javax.inject.Inject
-import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.auth.UserInfoProvider
+import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
 import org.dallasmakerspace.server.plugins.AuthException
 
@@ -34,8 +34,7 @@ constructor(
     } catch (e: Exception) {
       log.warn("Failed to fetch total active time for member: $requestedUsername", e)
       call.respond(
-          HttpStatusCode.InternalServerError,
-          mapOf("error" to "Failed to fetch total active time"))
+          HttpStatusCode.InternalServerError, mapOf("error" to "Failed to fetch total active time"))
     }
   }
 

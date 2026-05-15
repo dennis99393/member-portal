@@ -27,6 +27,7 @@ object RouteFactory {
         .replace("/groups/[^/]+$".toRegex(), "/groups/{group_slug}")
         .replace("/reports.*".toRegex(), "/reports/{path...}")
         .replace("/backend-api/.*".toRegex(), "/backend-api/{path...}")
+        .replace("/cameras-api/.*".toRegex(), "/cameras-api/{path...}")
         .replace(
             "/profile/@[a-zA-Z0-9_-]*/debug-info".toRegex(),
             "/profile/@{preferred_username}/debug-info")
@@ -90,6 +91,8 @@ object RouteFactory {
     REMOTE_ACCESS_CONNECT("/remote-access/connect/{connectionId}"),
     REMOTE_ACCESS_DISCONNECT("/remote-access/disconnect/{connectionId}"),
     SMARTWAIVER_WEBHOOK("/webhook/smartwaiver"),
+    CAMERAS("/cameras"),
+    CAMERAS_API("/cameras-api/{path...}"),
   }
 }
 

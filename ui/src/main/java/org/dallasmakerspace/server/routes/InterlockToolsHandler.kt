@@ -7,9 +7,9 @@ import io.ktor.server.thymeleaf.*
 import javax.inject.Inject
 import org.dallasmakerspace.models.Committees
 import org.dallasmakerspace.models.Tools
-import org.dallasmakerspace.server.models.getSlugFromName
 import org.dallasmakerspace.server.auth.UserInfoProvider
 import org.dallasmakerspace.server.common.logging.LoggerFactory
+import org.dallasmakerspace.server.models.getSlugFromName
 
 class InterlockToolsHandler
 @Inject
@@ -34,13 +34,15 @@ constructor(
                           "name" to tool.name,
                           "interlockTag" to tool.interlockTag,
                           "prerequisiteGroup" to tool.prerequisiteGroup,
-                          "prerequisiteGroupSlug" to tool.prerequisiteGroup?.let { getSlugFromName(it) },
+                          "prerequisiteGroupSlug" to
+                              tool.prerequisiteGroup?.let { getSlugFromName(it) },
                           "timeoutSeconds" to tool.timeoutSeconds,
                       )
                     },
             )
           }
-      call.respond(ThymeleafContent("interlock-tools", mapOf("toolsByCommittee" to toolsByCommittee)))
+      call.respond(
+          ThymeleafContent("interlock-tools", mapOf("toolsByCommittee" to toolsByCommittee)))
     } else {
       // Detail / report view
       val tool = Tools.findBySlug(toolSlug)

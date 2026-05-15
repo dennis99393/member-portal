@@ -5,6 +5,7 @@ import dagger.Provides
 import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
 import org.dallasmakerspace.server.auth.UserInfoProvider
+import org.dallasmakerspace.server.chronoring.ChronoRingClient
 import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.memberservice.MemberService
@@ -15,14 +16,16 @@ import org.dallasmakerspace.server.remoteaccess.RemoteAccessHandler
 import org.dallasmakerspace.server.routes.ActionTrackingHandler
 import org.dallasmakerspace.server.routes.AskAiHandler
 import org.dallasmakerspace.server.routes.BackendApiHandler
+import org.dallasmakerspace.server.routes.CamerasApiHandler
+import org.dallasmakerspace.server.routes.CamerasHandler
 import org.dallasmakerspace.server.routes.CommitteeDetailHandler
 import org.dallasmakerspace.server.routes.CommitteesHandler
-import org.dallasmakerspace.server.routes.InterlockToolsHandler
 import org.dallasmakerspace.server.routes.ConfigAdminHandler
 import org.dallasmakerspace.server.routes.GroupMemberManagementHandler
 import org.dallasmakerspace.server.routes.GroupsHandler
 import org.dallasmakerspace.server.routes.IRouteHandler
 import org.dallasmakerspace.server.routes.IndexHandler
+import org.dallasmakerspace.server.routes.InterlockToolsHandler
 import org.dallasmakerspace.server.routes.LoginHandler
 import org.dallasmakerspace.server.routes.ManifestHandler
 import org.dallasmakerspace.server.routes.OfflineHandler
@@ -30,9 +33,9 @@ import org.dallasmakerspace.server.routes.OidcCallbackHandler
 import org.dallasmakerspace.server.routes.PingHandler
 import org.dallasmakerspace.server.routes.ProfileDebugInfoHandler
 import org.dallasmakerspace.server.routes.ProfileFeaturedProjectsHandler
-import org.dallasmakerspace.server.routes.ProfileTotalActiveTimeHandler
 import org.dallasmakerspace.server.routes.ProfileHandler
 import org.dallasmakerspace.server.routes.ProfileMeHandler
+import org.dallasmakerspace.server.routes.ProfileTotalActiveTimeHandler
 import org.dallasmakerspace.server.routes.ReportHandler
 import org.dallasmakerspace.server.routes.SearchPreloadHandler
 import org.dallasmakerspace.server.routes.ShortLinkDetailsHandler
@@ -320,6 +323,23 @@ class RoutesModule {
       memberServiceClient: MemberServiceClient,
   ): IRouteHandler =
       RemoteAccessDisconnectHandler(loggerFactory, userInfoProvider, memberServiceClient)
+
+  @IntoMap
+  @Provides
+  @StringKey("/cameras")
+  fun providesCamerasHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+  ): IRouteHandler = CamerasHandler(loggerFactory, userInfoProvider)
+
+  @IntoMap
+  @Provides
+  @StringKey("/cameras-api/{path...}")
+  fun providesCamerasApiHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      chronoRingClient: ChronoRingClient,
+  ): IRouteHandler = CamerasApiHandler(loggerFactory, userInfoProvider, chronoRingClient)
 
   @IntoMap
   @Provides

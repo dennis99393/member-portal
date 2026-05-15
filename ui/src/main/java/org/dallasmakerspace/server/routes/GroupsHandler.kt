@@ -90,9 +90,10 @@ constructor(
         )
       }
 
-      val sortKey: (org.dallasmakerspace.models.DMSMember) -> kotlinx.datetime.LocalDateTime = { m ->
-        memberTimestamps[m.username] ?: kotlinx.datetime.LocalDateTime(1970, 1, 1, 0, 0, 0)
-      }
+      val sortKey: (org.dallasmakerspace.models.DMSMember) -> kotlinx.datetime.LocalDateTime =
+          { m ->
+            memberTimestamps[m.username] ?: kotlinx.datetime.LocalDateTime(1970, 1, 1, 0, 0, 0)
+          }
 
       val activeMembers =
           requestedGroup.members

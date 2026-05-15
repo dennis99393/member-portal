@@ -140,6 +140,9 @@ fun Application.configureRouting() {
       delete(RouteFactory.Paths.GROUP_MEMBER_DETAIL.path) {
         RouteFactory.getHandler(call)?.handleBase(call)
       }
+      get(RouteFactory.Paths.CAMERAS.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.CAMERAS_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      post(RouteFactory.Paths.CAMERAS_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
     }
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handleBase(call) }
