@@ -18,6 +18,8 @@ import org.dallasmakerspace.server.routes.AskAiHandler
 import org.dallasmakerspace.server.routes.BackendApiHandler
 import org.dallasmakerspace.server.routes.CamerasApiHandler
 import org.dallasmakerspace.server.routes.CamerasHandler
+import org.dallasmakerspace.server.routes.ScannerHandler
+import org.dallasmakerspace.server.routes.ScannerStatusApiHandler
 import org.dallasmakerspace.server.routes.CommitteeDetailHandler
 import org.dallasmakerspace.server.routes.CommitteesHandler
 import org.dallasmakerspace.server.routes.ConfigAdminHandler
@@ -340,6 +342,23 @@ class RoutesModule {
       userInfoProvider: UserInfoProvider,
       chronoRingClient: ChronoRingClient,
   ): IRouteHandler = CamerasApiHandler(loggerFactory, userInfoProvider, chronoRingClient)
+
+  @IntoMap
+  @Provides
+  @StringKey("/personal-bin-scanner")
+  fun providesScannerHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+  ): IRouteHandler = ScannerHandler(loggerFactory, userInfoProvider)
+
+  @IntoMap
+  @Provides
+  @StringKey("/scanner-api/status/{username}")
+  fun providesScannerStatusApiHandler(
+      loggerFactory: LoggerFactory,
+      userInfoProvider: UserInfoProvider,
+      memberServiceClient: MemberServiceClient,
+  ): IRouteHandler = ScannerStatusApiHandler(loggerFactory, userInfoProvider, memberServiceClient)
 
   @IntoMap
   @Provides

@@ -143,6 +143,10 @@ fun Application.configureRouting() {
       get(RouteFactory.Paths.CAMERAS.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       get(RouteFactory.Paths.CAMERAS_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
       post(RouteFactory.Paths.CAMERAS_API.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.PERSONAL_BIN_SCANNER.path) { RouteFactory.getHandler(call)?.handleBase(call) }
+      get(RouteFactory.Paths.SCANNER_STATUS_API.path) {
+        RouteFactory.getHandler(call)?.handleBase(call)
+      }
     }
 
     get(RouteFactory.Paths.PING.path) { RouteFactory.getHandler(call)?.handleBase(call) }

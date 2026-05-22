@@ -28,6 +28,7 @@ object RouteFactory {
         .replace("/reports.*".toRegex(), "/reports/{path...}")
         .replace("/backend-api/.*".toRegex(), "/backend-api/{path...}")
         .replace("/cameras-api/.*".toRegex(), "/cameras-api/{path...}")
+        .replace("/scanner-api/status/[^/]+".toRegex(), "/scanner-api/status/{username}")
         .replace(
             "/profile/@[a-zA-Z0-9_-]*/debug-info".toRegex(),
             "/profile/@{preferred_username}/debug-info")
@@ -93,6 +94,8 @@ object RouteFactory {
     SMARTWAIVER_WEBHOOK("/webhook/smartwaiver"),
     CAMERAS("/cameras"),
     CAMERAS_API("/cameras-api/{path...}"),
+    PERSONAL_BIN_SCANNER("/personal-bin-scanner"),
+    SCANNER_STATUS_API("/scanner-api/status/{username}"),
   }
 }
 

@@ -920,6 +920,88 @@ constructor(
     }
   }
 
+  private fun isUserInGroup(username: String, groupCn: String): Boolean {
+    return try {
+      activeDirectoryService.getMemberByUsername(username).groups.any { it.cn == groupCn }
+    } catch (e: Exception) {
+      log.warn("Could not check group '$groupCn' membership for '$username', defaulting to false", e)
+      false
+    }
+  }
+
+  private suspend fun computeWhmcsStatus(username: String): WhmcsStatusSummary {
+    val relatedAccounts = makerManagerDataService.getAccountInfoMap(listOf(username))
+    val accountInfo =
+        relatedAccounts[username] ?: return WhmcsStatusSummary(null, false, null, emptyList())
+    val account =
+        if (accountInfo.isPrimaryAccount) accountInfo.primaryAccount
+        else accountInfo.addonAccounts.find { it.username == username }
+    account ?: return WhmcsStatusSummary(null, false, null, emptyList())
+
+    val whmcsId = account.whmcsId
+    val regDate =
+        accountInfo.regDate?.let { date ->
+          java.time.LocalDate.of(date.year, date.monthNumber, date.dayOfMonth)
+        } ?: whmcsDataService.getAccountRegdate(whmcsId)
+    regDate ?: return WhmcsStatusSummary(null, false, null, emptyList())
+
+    val accountStatus =
+        whmcsDataService.getAccountInfoMap(listOf(whmcsId), regDate)[whmcsId]
+            ?: return WhmcsStatusSummary(null, false, null, emptyList())
+
+    val timeline =
+        accountStatus.timeline.map { entry ->
+          org.dallasmakerspace.models.TimelineEntryInfo(
+              type =
+                  when (entry.type) {
+                    org.dallasmakerspace.db.master.TimelineEntryType.ACTIVE ->
+                        org.dallasmakerspace.models.TimelineEntryType.ACTIVE
+                    org.dallasmakerspace.db.master.TimelineEntryType.GAP ->
+                        org.dallasmakerspace.models.TimelineEntryType.GAP
+                  },
+              startDate = entry.startDate.toKotlinLocalDate(),
+              endDate = entry.endDate?.toKotlinLocalDate(),
+              durationDays = entry.durationDays,
+          )
+        }
+    val whmcsActive =
+        timeline.lastOrNull()?.let {
+          it.type == org.dallasmakerspace.models.TimelineEntryType.ACTIVE && it.endDate == null
+        } ?: false
+
+    return WhmcsStatusSummary(accountStatus.daysInCurrentStatus, whmcsActive, regDate, timeline)
+  }
+
+  suspend fun getScannerStatus(
+      username: String,
+      actorUsername: String?,
+  ): ScannerStatusResponse? {
+    val mmUsers = makerManagerDataService.getAllUsers()
+    val mmUser = mmUsers.find { it.username == username } ?: return null
+
+    val whmcsStatus = computeWhmcsStatus(username)
+    val dbMember = memberRepository.getMembersByUsernames(listOf(username))[username]
+
+    val isPrivileged =
+        actorUsername != null &&
+            withContext(Dispatchers.IO) {
+              isUserInInfraGroup(actorUsername) || isUserInGroup(actorUsername, LOGISTICS_CHAIR_GROUP_CN)
+            }
+
+    return ScannerStatusResponse(
+        username = username,
+        firstName = mmUser.firstName,
+        lastName = mmUser.lastName,
+        isActive = mmUser.adActive,
+        daysInCurrentStatus = whmcsStatus.daysInCurrentStatus,
+        regDate = whmcsStatus.regDate?.toString(),
+        phone = if (isPrivileged) mmUser.phone else null,
+        email = if (isPrivileged) mmUser.email else null,
+        discourseUsername = dbMember?.discourseUsername,
+        discordUserId = dbMember?.discordUserId,
+    )
+  }
+
   /**
    * Gets debug information for a member, including AD status, MM status, and WHMCS status.
    *
@@ -947,101 +1029,48 @@ constructor(
   }
 
   suspend fun getDebugInfo(username: String): org.dallasmakerspace.models.MemberDebugInfo {
-    // Get AD account status
     val adAccountEnabled =
         try {
-          val adUser = activeDirectoryService.getMemberByUsername(username)
-          adUser.enabled
+          activeDirectoryService.getMemberByUsername(username).enabled
         } catch (e: Exception) {
           log.error("Failed to get AD account status for $username", e)
           false
         }
 
-    // Get MM AD Active status
     val mmAdActive =
         try {
-          val users = makerManagerDataService.getAllUsers()
-          users.find { it.username == username }?.adActive ?: false
+          makerManagerDataService.getAllUsers().find { it.username == username }?.adActive ?: false
         } catch (e: Exception) {
           log.error("Failed to get MM AD active status for $username", e)
           false
         }
 
-    // Get WHMCS status with full history from registration date (no caps)
-    val relatedAccounts = makerManagerDataService.getAccountInfoMap(listOf(username))
-    val accountInfo = relatedAccounts[username]
-    var whmcsActive = false
-    var daysInCurrentWhmcsStatus: Int? = null
-    var totalActiveDays: Int? = null
-    var timeline = emptyList<org.dallasmakerspace.models.TimelineEntryInfo>()
-
-    if (accountInfo != null) {
-      val account =
-          if (accountInfo.isPrimaryAccount) accountInfo.primaryAccount
-          else accountInfo.addonAccounts.find { it.username == username }
-
-      account?.let {
-        val whmcsId = it.whmcsId
-
-        // Get full history from WHMCS registration date (no caps)
-        // First, try to get regDate from WHMCS directly if not already populated
-        val regDate =
-            accountInfo.regDate?.let { date ->
-              java.time.LocalDate.of(date.year, date.monthNumber, date.dayOfMonth)
-            } ?: whmcsDataService.getAccountRegdate(whmcsId)
-
-        // Use registration date if available
-        if (regDate != null) {
-          // Get the account status from WHMCS with full history
-          val accountStatus = whmcsDataService.getAccountInfoMap(listOf(whmcsId), regDate)[whmcsId]
-          if (accountStatus != null) {
-            // Convert timeline to kotlinx LocalDate
-            timeline =
-                accountStatus.timeline.map { entry ->
-                  org.dallasmakerspace.models.TimelineEntryInfo(
-                      type =
-                          when (entry.type) {
-                            org.dallasmakerspace.db.master.TimelineEntryType.ACTIVE ->
-                                org.dallasmakerspace.models.TimelineEntryType.ACTIVE
-                            org.dallasmakerspace.db.master.TimelineEntryType.GAP ->
-                                org.dallasmakerspace.models.TimelineEntryType.GAP
-                          },
-                      startDate = entry.startDate.toKotlinLocalDate(),
-                      endDate = entry.endDate?.toKotlinLocalDate(),
-                      durationDays = entry.durationDays)
-                }
-
-            // Determine if currently active from timeline
-            // Member is active if last timeline entry is ACTIVE with no end date (ongoing)
-            whmcsActive =
-                timeline.lastOrNull()?.let {
-                  it.type == org.dallasmakerspace.models.TimelineEntryType.ACTIVE &&
-                      it.endDate == null
-                } ?: false
-
-            // Get days in current status from the properly calculated field
-            daysInCurrentWhmcsStatus = accountStatus.daysInCurrentStatus
-
-            // Calculate total active days (sum of all ACTIVE periods)
-            totalActiveDays =
-                timeline
-                    .filter { it.type == org.dallasmakerspace.models.TimelineEntryType.ACTIVE }
-                    .sumOf { it.durationDays }
-          }
-        }
-      }
-    }
+    val whmcsStatus = computeWhmcsStatus(username)
 
     return org.dallasmakerspace.models.MemberDebugInfo(
         adAccountEnabled = adAccountEnabled,
         mmAdActive = mmAdActive,
-        whmcsActive = whmcsActive,
-        daysInCurrentWhmcsStatus = daysInCurrentWhmcsStatus,
-        totalActiveDays = totalActiveDays,
-        timeline = timeline,
+        whmcsActive = whmcsStatus.whmcsActive,
+        daysInCurrentWhmcsStatus = whmcsStatus.daysInCurrentStatus,
+        totalActiveDays =
+            if (whmcsStatus.regDate != null)
+                whmcsStatus.timeline
+                    .filter { it.type == org.dallasmakerspace.models.TimelineEntryType.ACTIVE }
+                    .sumOf { it.durationDays }
+            else null,
+        timeline = whmcsStatus.timeline,
     )
   }
 }
 
+private const val LOGISTICS_CHAIR_GROUP_CN = "Logistics Committee Chair"
+
 /** Cached WHMCS account metadata for a username; populated at startup from MakerManager. */
 private data class WhmcsAccountCacheEntry(val whmcsId: Int, val isPrimaryAccount: Boolean)
+
+private data class WhmcsStatusSummary(
+    val daysInCurrentStatus: Int?,
+    val whmcsActive: Boolean,
+    val regDate: java.time.LocalDate?,
+    val timeline: List<org.dallasmakerspace.models.TimelineEntryInfo>,
+)

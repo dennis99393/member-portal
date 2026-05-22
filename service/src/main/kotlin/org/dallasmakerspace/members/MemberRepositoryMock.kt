@@ -53,8 +53,14 @@ class MemberRepositoryMock @Inject constructor() : IMemberRepository {
   companion object {
     private val SEED_MEMBERS =
         listOf(
-            DMSMember(id = 1, username = "user1", enabled = true),
-            DMSMember(id = 2, username = "user2", enabled = false),
+            DMSMember(id = 1, username = "user1", enabled = true, discourseUsername = "user1"),
+            DMSMember(
+                id = 2,
+                username = "user2",
+                enabled = false,
+                discourseUsername = "user2",
+                discordUserId = "987654321012345678",
+            ),
         )
   }
 }

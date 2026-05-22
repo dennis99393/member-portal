@@ -243,6 +243,19 @@ fun Application.configureRouting() {
               ))
         }
 
+        /** Scanner status — focused endpoint for bin QR scanner * */
+        get<Members.DMSMember.ScannerStatus> { request ->
+          val actorUsername = call.request.headers["X-Actor-Username"]
+          val status = memberService.getScannerStatus(request.parent.username, actorUsername)
+              ?: return@get call.respond(HttpStatusCode.NotFound)
+          call.respond(
+              ApiResponse(
+                  Status.SUCCESS,
+                  "Scanner status for ${request.parent.username}",
+                  status,
+              ))
+        }
+
         get("/featured-projects") {
           val username = call.request.queryParameters["username"]
           val projects =

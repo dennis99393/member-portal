@@ -58,7 +58,6 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
       val message =
           try {
             if (body.contains("message")) {
-              // Try to parse as JSON and extract the message attribute
               val json = objectMapper.readValue(body, Map::class.java)
               (json["message"] as? String) ?: "Status: ${resp.status}, Response: $body"
             } else {
@@ -68,7 +67,7 @@ class DMSHttpClient @Inject constructor(loggerFactory: LoggerFactory) {
             log.warn("get: Failed to parse error response as JSON: ${e.message}")
             "Status: ${resp.status}, Response: $body"
           }
-      throw HttpException(message)
+      throw HttpException(message, resp.status.value)
     }
   }
 

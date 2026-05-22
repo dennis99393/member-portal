@@ -44,5 +44,7 @@ class Members(val loggedInDays: Int = 90) {
     @Resource("debug-info") class DebugInfo(val parent: DMSMember)
 
     @Resource("total-active-time") class TotalActiveTime(val parent: DMSMember)
+
+    @Resource("scanner-status") class ScannerStatus(val parent: DMSMember)
   }
 }

@@ -18,6 +18,7 @@ import org.dallasmakerspace.models.DMSMember
 import org.dallasmakerspace.models.FeaturedProject
 import org.dallasmakerspace.server.common.AppConfig
 import org.dallasmakerspace.server.common.DMSHttpClient
+import org.dallasmakerspace.server.common.HttpException
 import org.dallasmakerspace.server.common.logging.LoggerFactory
 import org.dallasmakerspace.server.models.EventSummary
 import org.dallasmakerspace.server.models.SearchPreloadResponse
@@ -595,6 +596,26 @@ constructor(
     } catch (ex: Exception) {
       log.warn("Failed to get badge from Active Directory for $username", ex)
       null
+    }
+  }
+
+  suspend fun getScannerStatus(
+      username: String,
+      sessionId: String?,
+      actorUsername: String?,
+  ): Map<String, Any?>? {
+    val baseHeaders = getApiHeaders(sessionId)
+    val apiHeaders =
+        StringValues.build {
+          baseHeaders.forEach { key, values -> values.forEach { value -> append(key, value) } }
+          actorUsername?.let { append("X-Actor-Username", it) }
+        }
+    return try {
+      val result = dmsHttpClient.get("$baseUrl/members/$username/scanner-status", apiHeaders)
+      @Suppress("UNCHECKED_CAST")
+      result["data"] as? Map<String, Any?>
+    } catch (ex: HttpException) {
+      if (ex.httpStatus == HttpStatusCode.NotFound.value) null else throw ex
     }
   }
 
