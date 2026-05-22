@@ -269,6 +269,15 @@ class DmsMemberCard extends LitElement {
 
     connectedCallback() {
         super.connectedCallback();
+        // @font-face rules must live in the document (not a shadow root) to propagate
+        // into Shadow DOM. Inject once so any page using this component gets the font.
+        if (!document.querySelector('link[data-dms-material-symbols]')) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0';
+            link.setAttribute('data-dms-material-symbols', '');
+            document.head.appendChild(link);
+        }
         _observerCallbacks.set(this, () => {
             this._intersected = true;
             if (this.username) this._fetch();
